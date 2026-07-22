@@ -1,0 +1,16 @@
+node_modules
+.next
+.expo
+.turbo
+dist
+build
+coverage
+playwright-report
+test-results
+pnpm-lock.yaml
+apps/mobile/ios
+apps/mobile/android
+Pre-docs
+Implementation Docs
+UI screens
+supabase/migrations

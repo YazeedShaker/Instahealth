@@ -1,0 +1,283 @@
+/* ═══════════════════════════════════════════════════════
+   InstaHealth Design Tokens — tokens.css
+   Source of truth for all design decisions
+   Import this once in your globals.css or layout.tsx
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Fonts ────────────────────────────────────────────────
+   Cairo + Atkinson Hyperlegible are loaded per-app:
+   web via next/font (apps/web/app/layout.tsx), mobile via expo-font.
+   No remote @import here — keeps builds hermetic. ───────── */
+
+/* ── Color Scale ──────────────────────────────────────── */
+:root {
+  /* Primary — Teal Green (brand palette) */
+  --ih-primary-50: #e5f7f4;
+  --ih-primary-100: #bfedea;
+  --ih-primary-200: #80dbdb; /* derived */
+  --ih-primary-300: #3dcec4; /* derived */
+  --ih-primary-400: #02c39a; /* Caribbean Green — PRIMARY CTA */
+  --ih-primary-500: #00a896; /* Persian Green */
+  --ih-primary-600: #028090; /* Cerulean */
+  --ih-primary-700: #05668d; /* Dark Cerulean — deep anchor */
+  --ih-primary-800: #044f6e; /* derived */
+  --ih-primary-900: #023449; /* derived */
+  --ih-primary-950: #011d29; /* derived */
+
+  /* Accent — Cream (the differentiator) */
+  --ih-accent-100: #fafbea;
+  --ih-accent-200: #f5f8d2;
+  --ih-accent-300: #f0f3bd; /* Pale Yellow — ACCENT */
+  --ih-accent-400: #e2e89a;
+  --ih-accent-500: #c8cf6a;
+
+  /* Neutrals (cool-gray — pairs with teal well) */
+  --ih-neutral-0: #ffffff;
+  --ih-neutral-50: #f6f8f9;
+  --ih-neutral-100: #eef1f3;
+  --ih-neutral-200: #e0e5e8;
+  --ih-neutral-300: #cdd4d8;
+  --ih-neutral-400: #b0bbc2;
+  --ih-neutral-500: #8597a1;
+  --ih-neutral-600: #5e737c;
+  --ih-neutral-700: #3d5059;
+  --ih-neutral-800: #22333a;
+  --ih-neutral-900: #111c21;
+  --ih-neutral-950: #070e12;
+
+  /* Semantic */
+  --ih-success: #02c39a;
+  --ih-success-bg: #e5f7f4;
+  --ih-warning: #d97706;
+  --ih-warning-bg: #fef3c7;
+  --ih-error: #dc2626;
+  --ih-error-bg: #fee2e2;
+  --ih-info: #028090;
+  --ih-info-bg: #e0f2f4;
+
+  /* Booking status */
+  --ih-status-confirmed: #02c39a;
+  --ih-status-pending: #d97706;
+  --ih-status-completed: #5e737c;
+  --ih-status-cancelled: #dc2626;
+  --ih-status-no-show: #9ca3af;
+
+  /* ── Typography ─────────────────────────────────────── */
+  --ih-font-arabic: 'Cairo', 'Noto Sans Arabic', sans-serif;
+  --ih-font-english: 'Atkinson Hyperlegible', 'Helvetica Neue', sans-serif;
+  --ih-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Size scale (fluid between mobile and desktop) */
+  --ih-text-xs: 0.75rem; /* 12px */
+  --ih-text-sm: 0.875rem; /* 14px */
+  --ih-text-base: 1rem; /* 16px */
+  --ih-text-md: 1.125rem; /* 18px */
+  --ih-text-lg: 1.25rem; /* 20px */
+  --ih-text-xl: 1.5rem; /* 24px */
+  --ih-text-2xl: 1.875rem; /* 30px */
+  --ih-text-3xl: 2.25rem; /* 36px */
+  --ih-text-4xl: 3rem; /* 48px */
+
+  /* Weight */
+  --ih-weight-light: 300;
+  --ih-weight-regular: 400;
+  --ih-weight-medium: 500;
+  --ih-weight-semibold: 600;
+  --ih-weight-bold: 700;
+  --ih-weight-extrabold: 800;
+
+  /* Line height */
+  --ih-leading-tight: 1.2;
+  --ih-leading-snug: 1.35;
+  --ih-leading-normal: 1.5;
+  --ih-leading-relaxed: 1.65;
+  --ih-leading-loose: 1.8;
+
+  /* ── Spacing (4px base grid) ─────────────────────────── */
+  --ih-space-0: 0;
+  --ih-space-1: 0.25rem; /* 4px  */
+  --ih-space-2: 0.5rem; /* 8px  */
+  --ih-space-3: 0.75rem; /* 12px */
+  --ih-space-4: 1rem; /* 16px */
+  --ih-space-5: 1.25rem; /* 20px */
+  --ih-space-6: 1.5rem; /* 24px */
+  --ih-space-8: 2rem; /* 32px */
+  --ih-space-10: 2.5rem; /* 40px */
+  --ih-space-12: 3rem; /* 48px */
+  --ih-space-16: 4rem; /* 64px */
+  --ih-space-20: 5rem; /* 80px */
+  --ih-space-24: 6rem; /* 96px */
+
+  /* ── Border Radius ───────────────────────────────────── */
+  --ih-radius-none: 0;
+  --ih-radius-xs: 0.25rem; /* 4px  — subtle rounding */
+  --ih-radius-sm: 0.5rem; /* 8px  — inputs, chips */
+  --ih-radius-md: 0.75rem; /* 12px — cards */
+  --ih-radius-lg: 1rem; /* 16px — panels */
+  --ih-radius-xl: 1.5rem; /* 24px — modals */
+  --ih-radius-2xl: 2rem; /* 32px — large panels */
+  --ih-radius-full: 9999px; /* pills, avatars */
+
+  /* ── Shadows (elevation system) ─────────────────────── */
+  --ih-shadow-none: none;
+  --ih-shadow-xs: 0 1px 2px 0 rgba(5, 102, 141, 0.06);
+  --ih-shadow-sm: 0 1px 3px 0 rgba(5, 102, 141, 0.08), 0 1px 2px -1px rgba(5, 102, 141, 0.06);
+  --ih-shadow-md: 0 4px 6px -1px rgba(5, 102, 141, 0.1), 0 2px 4px -2px rgba(5, 102, 141, 0.06);
+  --ih-shadow-lg: 0 10px 15px -3px rgba(5, 102, 141, 0.1), 0 4px 6px -4px rgba(5, 102, 141, 0.06);
+  --ih-shadow-xl: 0 20px 25px -5px rgba(5, 102, 141, 0.12), 0 8px 10px -6px rgba(5, 102, 141, 0.06);
+  --ih-shadow-2xl: 0 25px 50px -12px rgba(5, 102, 141, 0.18);
+
+  /* Primary glow (for CTA buttons, active states) */
+  --ih-glow-sm: 0 0 0 3px rgba(2, 195, 154, 0.2);
+  --ih-glow-md: 0 0 0 4px rgba(2, 195, 154, 0.25);
+
+  /* ── Breakpoints ─────────────────────────────────────── */
+  /* Use in JS/TS — CSS uses media queries directly */
+  /* xs: 0 | sm: 480px | md: 768px | lg: 1024px | xl: 1280px | 2xl: 1536px */
+
+  /* ── Motion tokens ───────────────────────────────────── */
+  --ih-duration-instant: 80ms;
+  --ih-duration-fast: 180ms;
+  --ih-duration-normal: 350ms;
+  --ih-duration-slow: 600ms;
+  --ih-ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+  --ih-ease-sharp: cubic-bezier(0.4, 0, 0.2, 1);
+  --ih-ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ── Light Theme (default — patient app) ─────────────── */
+[data-theme='light'],
+:root {
+  --ih-bg: #ffffff;
+  --ih-bg-subtle: #f6f8f9;
+  --ih-bg-tinted: #f0f3bd1a; /* cream tint 10% */
+
+  --ih-surface: #ffffff;
+  --ih-surface-raised: #ffffff;
+  --ih-surface-overlay: rgba(255, 255, 255, 0.95);
+  --ih-surface-sidebar: #05668d; /* dark cerulean sidebar */
+  --ih-surface-header: #ffffff;
+
+  --ih-border: #e0e5e8;
+  --ih-border-strong: #cdd4d8;
+  --ih-border-focus: #02c39a;
+
+  --ih-text-primary: #111c21;
+  --ih-text-secondary: #3d5059;
+  --ih-text-tertiary: #5e737c;
+  --ih-text-placeholder: #b0bbc2;
+  --ih-text-inverse: #ffffff;
+  --ih-text-on-primary: #ffffff;
+  --ih-text-accent: #02c39a;
+
+  --ih-interactive: #02c39a;
+  --ih-interactive-hover: #00a896;
+  --ih-interactive-active: #028090;
+
+  --ih-shadow-card: var(--ih-shadow-sm);
+  --ih-shadow-raised: var(--ih-shadow-md);
+  --ih-shadow-floating: var(--ih-shadow-xl);
+}
+
+/* ── Dark Theme (dashboards, night mode) ─────────────── */
+[data-theme='dark'] {
+  --ih-bg: #070e12;
+  --ih-bg-subtle: #0e1820;
+  --ih-bg-tinted: rgba(2, 195, 154, 0.05);
+
+  --ih-surface: #111c21;
+  --ih-surface-raised: #22333a;
+  --ih-surface-overlay: rgba(17, 28, 33, 0.95);
+  --ih-surface-sidebar: #070e12;
+  --ih-surface-header: #111c21;
+
+  --ih-border: rgba(255, 255, 255, 0.08);
+  --ih-border-strong: rgba(255, 255, 255, 0.14);
+  --ih-border-focus: #02c39a;
+
+  --ih-text-primary: #ffffff;
+  --ih-text-secondary: rgba(255, 255, 255, 0.7);
+  --ih-text-tertiary: rgba(255, 255, 255, 0.45);
+  --ih-text-placeholder: rgba(255, 255, 255, 0.28);
+  --ih-text-inverse: #111c21;
+  --ih-text-on-primary: #ffffff;
+  --ih-text-accent: #02c39a;
+
+  --ih-interactive: #02c39a;
+  --ih-interactive-hover: #00a896;
+  --ih-interactive-active: #028090;
+
+  --ih-shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+  --ih-shadow-raised: 0 4px 12px 0 rgba(0, 0, 0, 0.4);
+  --ih-shadow-floating: 0 20px 40px 0 rgba(0, 0, 0, 0.6);
+}
+
+/* ── Base Styles ─────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background: var(--ih-bg);
+  color: var(--ih-text-primary);
+  line-height: var(--ih-leading-relaxed);
+  transition:
+    background-color var(--ih-duration-normal) var(--ih-ease-smooth),
+    color var(--ih-duration-normal) var(--ih-ease-smooth);
+}
+
+/* Direction-aware font switching */
+:root[dir='rtl'],
+[dir='rtl'] {
+  font-family: var(--ih-font-arabic);
+}
+:root[dir='ltr'],
+[dir='ltr'] {
+  font-family: var(--ih-font-english);
+}
+
+/* ── Focus styles (WCAG AA compliant) ───────────────── */
+:focus-visible {
+  outline: 2px solid var(--ih-border-focus);
+  outline-offset: 2px;
+  border-radius: var(--ih-radius-xs);
+}
+
+/* ── Scrollbar styling ───────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--ih-bg-subtle);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--ih-border-strong);
+  border-radius: var(--ih-radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ih-text-placeholder);
+}
+
+/* ── Reduced motion ──────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

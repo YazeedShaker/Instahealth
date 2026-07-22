@@ -9,6 +9,7 @@
 ## Context
 
 Two launch partners expose the shape of this problem:
+
 - **Saridar Labs** — primarily lab tests today, but may add scans / home collection later.
 - **Town Hospital** — genuinely multi-category from day one: labs + scans + doctor consultations.
 
@@ -37,6 +38,7 @@ The `service_categories.is_active` flag is the control dial (seed data ships wit
 active; scans/doctors/etc. inactive).
 
 **The rule:**
+
 - Onboard a provider's **complete** service menu into the database, even categories we haven't
   launched. Data is complete and launch-ready.
 - **Only show and allow booking of services whose category `is_active = true`.** A branch may have
@@ -49,6 +51,7 @@ how trust breaks on booking #1. The dial lets ops readiness — not data availab
 bookable. For MVP the active set is: **labs, scans, doctor appointments.**
 
 **Implications for specs:**
+
 - **F04 (branch profile):** query groups services by category; filter to `is_active` categories only.
 - **A03 (admin service catalog):** admin can toggle category `is_active` — this is the launch switch.
 - **A02 (provider onboarding):** onboarding captures the full menu regardless of active state.
@@ -67,6 +70,7 @@ The schema is already correct: each `services` row has its own `preparation_note
 display logic needs to follow the data.
 
 **The rule:**
+
 - **No blanket branch-level preparation note.**
 - As the patient selects services, collect the prep notes of **only the selected** services.
 - Show a consolidated preparation callout (cream accent) reflecting the actual selection. Omit
@@ -78,6 +82,7 @@ display logic needs to follow the data.
   screen, and in the reminder SMS.
 
 **Implications for specs:**
+
 - **F04 / F05:** a pure function in `packages/core/business` — e.g.
   `computePreparationNotes(selectedServices): PreparationNote[]` — deduplicates, consolidates fasting
   to the longest duration, and returns the notes to display. Unit-tested (this is exactly the kind of
@@ -95,4 +100,4 @@ display logic needs to follow the data.
    (longest fast wins, duplicates merged), shown only when relevant, via a shared core function
    reused at selection, confirmation, and SMS.
 
-*Last updated: July 2026.*
+_Last updated: July 2026._

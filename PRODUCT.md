@@ -27,13 +27,13 @@
 
 Palette (from Coolors — the InstaHealth brand):
 
-| Token | Hex | Role |
-|---|---|---|
-| `primary-400` | `#02C39A` Caribbean Green | **Primary CTA, links, active states** |
-| `primary-500` | `#00A896` Persian Green | Hover states, secondary |
-| `primary-600` | `#028090` Cerulean | Secondary actions, info |
-| `primary-700` | `#05668D` Dark Cerulean | Sidebar, headers, deep anchor |
-| `accent-300` | `#F0F3BD` Cream | Highlights, warm tags, **the differentiator** |
+| Token         | Hex                       | Role                                          |
+| ------------- | ------------------------- | --------------------------------------------- |
+| `primary-400` | `#02C39A` Caribbean Green | **Primary CTA, links, active states**         |
+| `primary-500` | `#00A896` Persian Green   | Hover states, secondary                       |
+| `primary-600` | `#028090` Cerulean        | Secondary actions, info                       |
+| `primary-700` | `#05668D` Dark Cerulean   | Sidebar, headers, deep anchor                 |
+| `accent-300`  | `#F0F3BD` Cream           | Highlights, warm tags, **the differentiator** |
 
 Neutrals: cool-gray scale (`neutral-0` white → `neutral-950` near-black).
 Semantic: success `#02C39A`, warning `#D97706`, error `#DC2626`, info `#028090`.
@@ -54,6 +54,7 @@ This is a health app used by older patients and people with visual impairments. 
 not optional. We chose **Atkinson Hyperlegible** (Braille Institute font) specifically for this.
 
 **Contrast minimums (AA):**
+
 - **Normal text (< 18px):** contrast ratio **≥ 4.5:1** against its background
 - **Large text (≥ 18px bold or ≥ 24px):** contrast ratio **≥ 3:1**
 - **UI components & focus indicators:** **≥ 3:1** against adjacent colors
@@ -61,11 +62,13 @@ not optional. We chose **Atkinson Hyperlegible** (Braille Institute font) specif
   Use `primary-600`/`primary-700` for text on light. `primary-400` is for fills and large elements.
 
 **Contrast enforcement:**
+
 - The cream `#F0F3BD` is a background/accent only — text on cream must be `primary-700` or darker.
 - White text requires a background darker than `neutral-600`.
 - Test every text/background pairing. When unsure, run it through a contrast checker.
 
 **Beyond contrast:**
+
 - **Touch targets ≥ 44×44px.** Every button, link, tappable slot. No exceptions on mobile.
 - **Focus visible:** every interactive element has a visible focus ring (`--ih-border-focus`,
   2px, offset 2px). Never `outline: none` without a replacement.
@@ -163,6 +166,7 @@ prominently at selection, confirmation, and in the reminder SMS. Use the cream a
 ## 10. Performance budget
 
 **Mobile patient app (native):**
+
 - **Cold start < 2s** to interactive on a mid-range Android device.
 - **60fps** scrolling and transitions — no jank on branch lists or slot pickers.
 - **Optimistic UI** where safe (e.g. selecting a slot feels instant while the hold is created).
@@ -172,6 +176,7 @@ prominently at selection, confirmation, and in the reminder SMS. Use the cream a
 - **Bundle discipline:** keep the JS bundle lean; lazy-load heavy screens (maps) via Expo Router.
 
 **Web (dashboard/admin, later patient PWA):**
+
 - FCP < 1.8s, LCP < 2.5s on 4G. Branch profile pages (patient PWA) server-rendered for SEO.
 - No layout shift (CLS < 0.1). First-load JS < 200KB gzipped for the patient PWA entry.
 
@@ -187,4 +192,4 @@ prominently at selection, confirmation, and in the reminder SMS. Use the cream a
 
 ---
 
-*Last updated: July 2026 · This document evolves with the product. Update it when a design decision is made so the reasoning is never lost.*
+_Last updated: July 2026 · This document evolves with the product. Update it when a design decision is made so the reasoning is never lost._

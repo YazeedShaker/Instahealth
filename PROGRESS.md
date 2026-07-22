@@ -9,6 +9,7 @@
 ## How to use this file
 
 After each feature merges to `main`, add an entry under **Shipped** with:
+
 - Date, feature ID + name, PR link
 - What was built (files/packages touched)
 - Key decisions made during the build
@@ -20,12 +21,13 @@ Keep **Current status** and **Next up** accurate at all times.
 
 ## Current status
 
-**Phase:** Design done → Foundation setup (SETUP-01 next)
+**Phase:** Scaffold done (SETUP-01) → CI wiring verification (SETUP-02 next)
 **Milestone target:** Labs + Scans booking working end-to-end at Town Hospital & Saridar Labs
 **Environment:** Supabase `instahealth-dev` live (Frankfurt). Design system published in Claude Design.
-Core patient screens approved. No app code yet.
+Core patient screens approved. Monorepo scaffolded — both app shells boot with tokens/fonts/RTL.
 
 **Launch partners secured:**
+
 - ✅ Town Hospital (New Cairo) — labs, scans, doctor appointments — full access confirmed
 - ✅ Saridar Labs — lab tests — owner confirmed, ready to test
 
@@ -41,8 +43,8 @@ visual contract. Then specs → Claude Code.
 ## Next up (in order)
 
 - [x] **DESIGN-01** — ✅ DONE. Core patient screens approved in Claude Design (see Shipped).
-- [ ] **SETUP-01** — Monorepo scaffold: `apps/mobile` (Expo) + `apps/web` (Next.js) + `packages/*`,
-      Turborepo, pnpm, tsconfig, ESLint, Prettier, tokens, CI skeleton
+- [x] **SETUP-01** — ✅ DONE. Monorepo scaffold: `apps/mobile` (Expo) + `apps/web` (Next.js) +
+      `packages/*`, Turborepo, pnpm, tsconfig, ESLint, Prettier, tokens, CI skeleton (see Shipped)
 - [ ] **SETUP-02** — CI/CD pipeline (GitHub Actions: lint, typecheck, test, build, security, Vercel + EAS)
 - [ ] **CORE-01** — Core package: DB types, Zod schemas, Supabase client, business logic, constants
 - [ ] **F01** — Mobile: patient auth (phone OTP via Vonage)
@@ -60,9 +62,52 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 
 ## Shipped
 
+### 2026-07-22 · SETUP-01 — Monorepo scaffold
+
+Turborepo + pnpm workspaces stood up with both app shells and all three packages. Both placeholders
+prove tokens + fonts + RTL on their platform; all CI-equivalent gates pass locally (lint, typecheck,
+unit w/ coverage, web build, mobile Metro bundle, Playwright smoke, `pnpm audit --audit-level=high`).
+
+**Built:** root workspace (turbo.json, tsconfig.base, Prettier, .env.example), `packages/config`
+(shared ESLint presets — eslintrc + flat), `packages/design-tokens` (tokens.css/ts from DESIGN-01 +
+`nativewind.ts` mapping + unit tests, 100% coverage), `packages/core` (empty structure, barrel
+exports — CORE-01 fills it), `apps/mobile` (Expo SDK 57, Expo Router, NativeWind v4, forced RTL via
+`I18nManager`, Cairo + Atkinson via `@expo-google-fonts`, Zod env validation, Maestro smoke flow,
+eas.json + EAS projectId wired), `apps/web` (Next 15.5, Tailwind v4 via `@config` → shared tokens,
+next/font Cairo + Atkinson, TanStack Query provider, Zod env validation, Playwright smoke).
+
+**Versions locked:** Node 20 (CI) · pnpm 9.15.9 · turbo 2.10 · TypeScript 5.7–6.0 (per workspace) ·
+Next.js 15.5.21 · React 19 · Expo SDK 57 / RN 0.86 · NativeWind 4.2.6 + Tailwind 3.4 (mobile) ·
+Tailwind 4 (web) · ESLint 9 flat config · Vitest 3.2.7 · Playwright 1.5x.
+
+**Decisions during build:**
+
+- Expo SDK 57 (spec said 52+; generator default, keeps us current).
+- Google-Fonts remote `@import` removed from `tokens.css` — fonts load per-app (next/font web,
+  expo-font mobile) so builds are hermetic.
+- `--max-warnings=0` and `--coverage` are baked into workspace scripts, NOT passed via
+  `pnpm turbo X -- --flag` (pnpm swallows the `--`; the original ci.yml pattern breaks — fixed).
+- `turbo.json` has `globalEnv` for the four public Supabase vars (turbo strict env filtering would
+  otherwise strip them in CI).
+- Security: pnpm overrides pin `sharp ^0.35` and `vite ^6.4.3` (audit highs via next/vitest chains).
+- `react-native-css-interop` added as direct mobile dep (pnpm strict layout; Metro can't resolve it
+  transitively).
+- Mobile `test:e2e` is a stub until SETUP-02 wires Maestro against a real dev build in CI.
+
+**For SETUP-02 / next session:**
+
+- `supabase/` folder has only a README — the 5 migrations + 4 Edge Functions must be pulled from the
+  live project via `supabase link && supabase db pull` (MCP account lacks access to this project).
+- `deploy.yml` is a placeholder; Vercel Git integration + EAS wiring verified end-to-end in SETUP-02.
+- `VERCEL_TOKEN` secret not yet set (needs a token from the Vercel account).
+- `eas init --id 52149366-…` still needs an interactive `eas login` run once to confirm the link
+  (projectId is already in app.config.ts).
+
 ### 2026-07 · DESIGN-01 — Patient app core screens (Claude Design)
+
 Six core patient screens mocked, iterated, and approved in Claude Design, in the published InstaHealth
 design system (teal/cream, Cairo/Atkinson), mobile, Arabic RTL:
+
 1. Onboarding / auth (welcome, phone entry, OTP) — Arabic-only UI
 2. Home / discovery (categories, provider cards, tab bar)
 3. Branch / provider profile (multi-category grouping, selection, expandable prep note)
@@ -71,6 +116,7 @@ design system (teal/cream, Cairo/Atkinson), mobile, Arabic RTL:
 6. My Bookings (list + detail + cancel modal)
 
 **Decisions captured during design review** (each would have been a costly rebuild if found in code):
+
 - Preparation notes per-service, computed from selection, expandable inline → `DECISION-provider-data-model.md`
 - Provider profiles multi-category, grouped, active-category-gated → `DECISION-provider-data-model.md`
 - Booking step 1 = read-only review, not re-selection → `DECISION-booking-flow.md`
@@ -85,7 +131,7 @@ _Approved screens are now the visual contract. Feature specs reference them; Cla
 
 ---
 
-_Next entry after SETUP-01._
+_Next entry after SETUP-02._
 
 ---
 
@@ -144,4 +190,4 @@ _Next entry after SETUP-01._
 
 ---
 
-*This file is the memory of the project. Keep it honest and current.*
+_This file is the memory of the project. Keep it honest and current._

@@ -12,7 +12,6 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PNPM_VERSION: 9
   NODE_VERSION: 20
 
 jobs:
@@ -24,9 +23,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # pnpm version comes from packageManager in package.json — do not also pin here
       - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -44,12 +42,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with: { version: 9 }
       - uses: actions/setup-node@v4
         with: { node-version: 20, cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - name: ESLint (zero warnings allowed)
-        run: pnpm turbo lint -- --max-warnings=0
+        # --max-warnings=0 is baked into each workspace's lint script
+        run: pnpm turbo lint
       - name: Prettier check
         run: pnpm format:check
 
@@ -63,7 +61,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with: { version: 9 }
       - uses: actions/setup-node@v4
         with: { node-version: 20, cache: pnpm }
       - run: pnpm install --frozen-lockfile
@@ -80,18 +77,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with: { version: 9 }
       - uses: actions/setup-node@v4
         with: { node-version: 20, cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - name: Vitest with coverage
-        run: pnpm turbo test:unit -- --coverage
+        # --coverage is baked into workspace test:unit scripts where tests exist
+        run: pnpm turbo test:unit
       - name: Upload coverage
         uses: actions/upload-artifact@v4
         with:
           name: coverage
-          path: coverage/
+          path: packages/*/coverage/
           retention-days: 7
+          if-no-files-found: warn
 
   # ────────────────────────────────────────────────
   # 5. Build — web builds clean, mobile bundles clean
@@ -103,7 +101,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with: { version: 9 }
       - uses: actions/setup-node@v4
         with: { node-version: 20, cache: pnpm }
       - run: pnpm install --frozen-lockfile
@@ -132,7 +129,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with: { version: 9 }
       - uses: actions/setup-node@v4
         with: { node-version: 20, cache: pnpm }
       - run: pnpm install --frozen-lockfile
@@ -162,14 +158,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with: { version: 9 }
       - uses: actions/setup-node@v4
         with: { node-version: 20, cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - name: Install Maestro
         run: curl -Ls "https://get.maestro.mobile.dev" | bash
       - name: Build Expo dev client (iOS simulator)
-        run: pnpm --filter=@instahealth/mobile exec expo prebuild --platform ios
+        run: pnpm --filter=@instahealth/mobile exec expo prebuild --platform ios --no-install
         env:
           EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_TEST_URL }}
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_TEST_ANON_KEY }}
@@ -188,9 +183,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Verify all jobs succeeded
+        # skipped/cancelled upstream jobs must also block the merge — a skipped
+        # pipeline is not a green pipeline
         run: |
-          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
-            echo "One or more CI jobs failed."
+          if [[ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}" == "true" ]]; then
+            echo "One or more CI jobs failed, was cancelled, or was skipped."
             exit 1
           fi
           echo "All CI checks passed."
