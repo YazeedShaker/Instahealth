@@ -1,0 +1,96 @@
+name: Security
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+  schedule:
+    # Weekly full scan, Monday 03:00 UTC
+    - cron: '0 3 * * 1'
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ────────────────────────────────────────────────
+  # Dependency vulnerability audit
+  # ────────────────────────────────────────────────
+  dependency-audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: Audit dependencies (fail on high/critical)
+        run: pnpm audit --audit-level=high
+
+  # ────────────────────────────────────────────────
+  # Secret scanning — no keys/tokens in the repo
+  # ────────────────────────────────────────────────
+  secret-scan:
+    name: Secret Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history for gitleaks
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ────────────────────────────────────────────────
+  # CodeQL — static analysis for security bugs
+  # ────────────────────────────────────────────────
+  codeql:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-and-quality
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+  # ────────────────────────────────────────────────
+  # Custom check: service role key must never be in client code (web OR mobile)
+  # ────────────────────────────────────────────────
+  client-secret-guard:
+    name: Client Secret Guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure service role key never in client bundles
+        run: |
+          # Web: SERVICE_ROLE only allowed in server files (api routes, actions, .server.)
+          WEB_MATCHES=$(grep -rn "SERVICE_ROLE" apps/web/components apps/web/app 2>/dev/null \
+            | grep -v "\.server\." | grep -v "/api/" | grep -v "route.ts" | grep -v "actions.ts" || true)
+          # Mobile: SERVICE_ROLE must NEVER appear anywhere in the mobile app
+          MOBILE_MATCHES=$(grep -rn "SERVICE_ROLE" apps/mobile 2>/dev/null || true)
+          FAIL=0
+          if [[ -n "$WEB_MATCHES" ]]; then
+            echo "❌ SERVICE_ROLE key referenced in web client code:"; echo "$WEB_MATCHES"; FAIL=1
+          fi
+          if [[ -n "$MOBILE_MATCHES" ]]; then
+            echo "❌ SERVICE_ROLE key referenced in mobile app (NEVER allowed):"; echo "$MOBILE_MATCHES"; FAIL=1
+          fi
+          # Also guard against EXPO_PUBLIC_ prefixing any secret
+          EXPO_SECRET=$(grep -rn "EXPO_PUBLIC_.*SERVICE_ROLE\|EXPO_PUBLIC_.*SECRET\|EXPO_PUBLIC_.*HMAC" apps/mobile 2>/dev/null || true)
+          if [[ -n "$EXPO_SECRET" ]]; then
+            echo "❌ A secret is exposed via EXPO_PUBLIC_ (bundled into the app):"; echo "$EXPO_SECRET"; FAIL=1
+          fi
+          if [[ "$FAIL" == "1" ]]; then exit 1; fi
+          echo "✅ No service role key or exposed secrets in client code (web + mobile)."

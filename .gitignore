@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Builds
+.next/
+.expo/
+dist/
+build/
+out/
+.turbo/
+*.tsbuildinfo
+
+# Env — never commit real values
+.env
+.env.*
+!.env.example
+
+# Testing
+coverage/
+playwright-report/
+test-results/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Native (Expo prebuild output — regenerated)
+apps/mobile/ios/
+apps/mobile/android/
+
+# Vercel
+.vercel/
+
+# Local working material — not part of the codebase
+Pre-docs/
+Implementation Docs/
+UI screens/

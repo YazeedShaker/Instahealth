@@ -1,0 +1,28 @@
+name: Deploy
+
+# NOTE (SETUP-01): placeholder deploy pipeline. Vercel's GitHub integration handles
+# web preview/production deploys once the repo is imported (Root Directory: apps/web).
+# This workflow is verified and fully wired end-to-end in SETUP-02.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy-web:
+    name: Deploy Web (Vercel)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify Vercel token present
+        run: |
+          if [[ -z "${{ secrets.VERCEL_TOKEN }}" ]]; then
+            echo "VERCEL_TOKEN not set — skipping CLI deploy (Vercel Git integration deploys on push)."
+            exit 0
+          fi
+          echo "VERCEL_TOKEN is configured. CLI-based deploy gets wired in SETUP-02."

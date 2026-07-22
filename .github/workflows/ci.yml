@@ -1,0 +1,196 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+# Cancel in-progress runs for the same PR/branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PNPM_VERSION: 9
+  NODE_VERSION: 20
+
+jobs:
+  # ────────────────────────────────────────────────
+  # 1. Install & cache — all other jobs depend on this
+  # ────────────────────────────────────────────────
+  setup:
+    name: Setup & Install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+  # ────────────────────────────────────────────────
+  # 2. Lint — ESLint, fails on warnings
+  # ────────────────────────────────────────────────
+  lint:
+    name: Lint
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: ESLint (zero warnings allowed)
+        run: pnpm turbo lint -- --max-warnings=0
+      - name: Prettier check
+        run: pnpm format:check
+
+  # ────────────────────────────────────────────────
+  # 3. Typecheck — strict, no `any`
+  # ────────────────────────────────────────────────
+  typecheck:
+    name: Typecheck
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: TypeScript strict check
+        run: pnpm turbo typecheck
+
+  # ────────────────────────────────────────────────
+  # 4. Unit tests — Vitest (business logic coverage)
+  # ────────────────────────────────────────────────
+  unit-tests:
+    name: Unit Tests
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: Vitest with coverage
+        run: pnpm turbo test:unit -- --coverage
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 7
+
+  # ────────────────────────────────────────────────
+  # 5. Build — web builds clean, mobile bundles clean
+  # ────────────────────────────────────────────────
+  build:
+    name: Build
+    needs: [lint, typecheck]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: Build all apps & packages
+        run: pnpm turbo build
+        env:
+          # Dummy values for build-time — real values in Vercel / EAS
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+          EXPO_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+      - name: Upload web build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-web
+          path: apps/web/.next/
+          retention-days: 1
+
+  # ────────────────────────────────────────────────
+  # 6a. Web E2E — Playwright (dashboard/admin flows)
+  # ────────────────────────────────────────────────
+  e2e-web:
+    name: E2E Web (Playwright)
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Run Playwright
+        run: pnpm turbo test:e2e --filter=@instahealth/web
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_TEST_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_TEST_ANON_KEY }}
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/
+          retention-days: 7
+
+  # ────────────────────────────────────────────────
+  # 6b. Mobile E2E — Maestro (patient flows)
+  # Runs on macOS with an iOS simulator + Expo dev build.
+  # ────────────────────────────────────────────────
+  e2e-mobile:
+    name: E2E Mobile (Maestro)
+    needs: build
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: Install Maestro
+        run: curl -Ls "https://get.maestro.mobile.dev" | bash
+      - name: Build Expo dev client (iOS simulator)
+        run: pnpm --filter=@instahealth/mobile exec expo prebuild --platform ios
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_TEST_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_TEST_ANON_KEY }}
+      - name: Run Maestro smoke flows
+        run: |
+          export PATH="$PATH":"$HOME/.maestro/bin"
+          pnpm --filter=@instahealth/mobile test:e2e
+
+  # ────────────────────────────────────────────────
+  # 7. All-green gate — required check for merge
+  # ────────────────────────────────────────────────
+  ci-passed:
+    name: CI Passed
+    if: always()
+    needs: [lint, typecheck, unit-tests, build, e2e-web, e2e-mobile]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify all jobs succeeded
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
+            echo "One or more CI jobs failed."
+            exit 1
+          fi
+          echo "All CI checks passed."
