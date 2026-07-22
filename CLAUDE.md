@@ -14,6 +14,7 @@ book a real time slot, pay digitally, and get a confirmed booking. The platform 
 per booking.
 
 **Launch partners (already committed):**
+
 - **Town Hospital** — full hospital in New Cairo / Fifth Settlement (104+ consultants, 30+ specialties, 24/7 labs & radiology). Doctor appointments + scans + labs.
 - **Saridar Labs** — lab chain. Lab tests.
 
@@ -33,28 +34,28 @@ integration. The allocation grows as we prove we can fill it.
 product. The web app is the provider dashboard + admin panel (desktop tools) plus, later, a public
 patient PWA for SEO/discovery. Build order reflects this — see §11.
 
-| Layer | Choice | Notes |
-|---|---|---|
-| **Patient app** | **React Native + Expo (SDK 52+)** | THE main product. Expo Router, EAS Build |
-| **Web (dashboard/admin)** | **Next.js 15** (App Router) | Provider dashboard, admin panel, later patient PWA |
-| Language | **TypeScript** (strict mode) | No `any`. Ever. |
-| Monorepo | **Turborepo + pnpm workspaces** | Shared core between mobile and web |
-| Database | **Supabase** (PostgreSQL 15) | Already provisioned — see §6 |
-| Auth | **Supabase Auth** | Patients: phone OTP. Providers: email/password. Admin: email + TOTP |
-| Styling (mobile) | **NativeWind v4** (Tailwind for RN) + design tokens | RTL via `I18nManager`. Same tokens as web |
-| Styling (web) | **Tailwind CSS v4** + design tokens | RTL-first. Tokens from `packages/design-tokens` |
-| State (server) | **TanStack Query v5** | All server data — works in both RN and web |
-| State (client) | **Zustand** | Booking flow, UI state only — works in both |
-| Forms | **React Hook Form + Zod** | Zod schemas live in shared core |
-| Payments | **Paymob** | Card, Fawry, Vodafone Cash. RN: Paymob SDK / web checkout |
-| SMS | **Vonage** | Arabic Unicode, via Supabase Edge Function |
-| Maps | **react-native-maps** (mobile) / **Google Maps JS** (web) | Branch discovery |
-| Push (mobile) | **Expo Notifications** | Booking updates, reminders (complements SMS) |
-| Hosting (web) | **Vercel** | Dashboard/admin + preview deploys |
-| Distribution (mobile) | **EAS Build + App Store + Play Store** | Apple $99/yr, Google $25 one-time |
-| Analytics | **PostHog** | RN + web SDKs. Product analytics, funnels |
-| Testing | **Vitest** (unit) · **Playwright** (web E2E) · **Maestro** (mobile E2E) | See §9 |
-| CI/CD | **GitHub Actions → Vercel + EAS** | Blocking gates — see §9 |
+| Layer                     | Choice                                                                  | Notes                                                               |
+| ------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| **Patient app**           | **React Native + Expo (SDK 52+)**                                       | THE main product. Expo Router, EAS Build                            |
+| **Web (dashboard/admin)** | **Next.js 15** (App Router)                                             | Provider dashboard, admin panel, later patient PWA                  |
+| Language                  | **TypeScript** (strict mode)                                            | No `any`. Ever.                                                     |
+| Monorepo                  | **Turborepo + pnpm workspaces**                                         | Shared core between mobile and web                                  |
+| Database                  | **Supabase** (PostgreSQL 15)                                            | Already provisioned — see §6                                        |
+| Auth                      | **Supabase Auth**                                                       | Patients: phone OTP. Providers: email/password. Admin: email + TOTP |
+| Styling (mobile)          | **NativeWind v4** (Tailwind for RN) + design tokens                     | RTL via `I18nManager`. Same tokens as web                           |
+| Styling (web)             | **Tailwind CSS v4** + design tokens                                     | RTL-first. Tokens from `packages/design-tokens`                     |
+| State (server)            | **TanStack Query v5**                                                   | All server data — works in both RN and web                          |
+| State (client)            | **Zustand**                                                             | Booking flow, UI state only — works in both                         |
+| Forms                     | **React Hook Form + Zod**                                               | Zod schemas live in shared core                                     |
+| Payments                  | **Paymob**                                                              | Card, Fawry, Vodafone Cash. RN: Paymob SDK / web checkout           |
+| SMS                       | **Vonage**                                                              | Arabic Unicode, via Supabase Edge Function                          |
+| Maps                      | **react-native-maps** (mobile) / **Google Maps JS** (web)               | Branch discovery                                                    |
+| Push (mobile)             | **Expo Notifications**                                                  | Booking updates, reminders (complements SMS)                        |
+| Hosting (web)             | **Vercel**                                                              | Dashboard/admin + preview deploys                                   |
+| Distribution (mobile)     | **EAS Build + App Store + Play Store**                                  | Apple $99/yr, Google $25 one-time                                   |
+| Analytics                 | **PostHog**                                                             | RN + web SDKs. Product analytics, funnels                           |
+| Testing                   | **Vitest** (unit) · **Playwright** (web E2E) · **Maestro** (mobile E2E) | See §9                                                              |
+| CI/CD                     | **GitHub Actions → Vercel + EAS**                                       | Blocking gates — see §9                                             |
 
 ---
 
@@ -107,10 +108,11 @@ instahealth/
 
 **The golden rule of the monorepo:** Any logic that both apps need goes in `packages/core`, NOT in
 `apps/mobile` or `apps/web`. Types, validation, API calls, business rules — all shared. The mobile
-app and web app are just different *presentation shells* over the same core. If you write a Zod
+app and web app are just different _presentation shells_ over the same core. If you write a Zod
 schema, a type, or a booking calculation inside an app instead of core, you have made a mistake.
 
 **Mobile vs web split of responsibilities:**
+
 - `apps/mobile` — the patient experience. Discovery, booking, confirmation, history, profile. Native.
 - `apps/web` — provider dashboard (receptionists confirming bookings) + admin panel. Desktop tools.
   The patient PWA on web comes much later as an SEO/discovery surface, not the primary experience.
@@ -123,6 +125,7 @@ We build the mobile patient app AND the web dashboard/admin. They share one core
 logic. This discipline is what makes two apps sustainable.
 
 **Goes in `packages/core` (platform-agnostic — no DOM, no React Native, no React DOM):**
+
 - All TypeScript types and interfaces
 - All Zod schemas (validation)
 - Supabase client creation + all typed database queries
@@ -131,11 +134,13 @@ logic. This discipline is what makes two apps sustainable.
 - Pure formatting helpers (Arabic date formatting, EGP currency, phone normalization)
 
 **Stays in `apps/mobile` (React Native only):**
+
 - RN screens and components (Expo Router, `<View>`, `<Text>`, NativeWind)
 - Native APIs (location, push notifications, secure storage, camera)
 - Mobile navigation
 
 **Stays in `apps/web` (web only):**
+
 - React DOM components (`.tsx` with DOM), Next.js routing, server actions
 - Tailwind styling, browser APIs
 
@@ -178,6 +183,7 @@ Key tables: `users`, `providers`, `branches`, `service_categories`, `services`,
 `reviews`, `provider_users`, `admin_users`, `notifications`.
 
 **Critical database rules:**
+
 - **Never bypass RLS from the client.** The anon key respects RLS. The service role key
   (server-only, never in client bundle) bypasses it — use only in API routes / server actions.
 - **Booking confirmation is atomic** — always via the `confirm_booking()` Postgres function.
@@ -213,6 +219,7 @@ exists, build labs + scans first (they share one mechanic).
 This is an Arabic-first product. Get this wrong and the whole app feels broken to users.
 
 **Mobile (React Native) — RTL via `I18nManager`:**
+
 - RN handles RTL at the layout engine level. Force it on with `I18nManager.forceRTL(true)` and
   `allowRTL(true)` at app startup so the patient app is always RTL regardless of device locale.
 - Use **logical layout props** — `start`/`end`, `marginStart`/`marginEnd`, NOT `left`/`right`.
@@ -223,10 +230,12 @@ This is an Arabic-first product. Get this wrong and the whole app feels broken t
 - Changing `forceRTL` requires an app reload — set it once, early, before first render.
 
 **Web (dashboard/admin) — RTL via `dir`:**
+
 - Provider/admin surfaces may be LTR (staff are comfortable with standard layout). The future
   patient PWA on web is RTL via `dir="rtl"` and Tailwind logical properties (`ms-*`/`me-*`).
 
 **Both platforms:**
+
 - Phone input accepts both Arabic (٠١٢) and Western (012) numerals.
 - All SMS in Arabic Unicode. Egyptian format `01X XXXX XXXX` → normalize to `201XXXXXXXXX` (in core).
 - Arabic dates via the shared `formatArabicDate()` helper (in core), never raw locale formatting.
@@ -256,6 +265,7 @@ This is an Arabic-first product. Get this wrong and the whole app feels broken t
 Every PR must pass ALL of these before merge to `main`. Red = no merge.
 
 **Pipeline (GitHub Actions):**
+
 1. **Install & cache** (pnpm)
 2. **Lint** — ESLint, fails on warnings (mobile + web + core)
 3. **Typecheck** — `tsc --noEmit`, strict, no `any`
@@ -267,6 +277,7 @@ Every PR must pass ALL of these before merge to `main`. Red = no merge.
 9. **Production gate** — merge to `main` → web to Vercel, mobile via EAS Build to stores
 
 **Mobile-specific CI notes:**
+
 - Mobile E2E uses **Maestro** (simpler than Detox for RN flows) against an Expo dev build.
 - EAS builds are heavier — don't run a full store build on every PR. Run type/lint/unit + a Maestro
   smoke on PRs; trigger EAS `preview` builds on demand and `production` builds on release tags.
@@ -274,6 +285,7 @@ Every PR must pass ALL of these before merge to `main`. Red = no merge.
   without a human release step.
 
 **Testing discipline:**
+
 - **Business logic** (`packages/core/business`) — unit tested thoroughly. Slot math, commission,
   booking state transitions, price totals. This is where bugs cost money. AAA pattern. Shared by both apps.
 - **Components** — test behavior, not implementation. React Testing Library (web) / RN Testing Library (mobile).
@@ -331,6 +343,7 @@ the minimum needed to close the loop. Everything else follows.
 ## 12. Definition of done (per feature)
 
 A feature is DONE when:
+
 - [ ] All acceptance criteria in its spec pass
 - [ ] (Mobile) Works on a real device — iOS and Android — not just the simulator
 - [ ] (Mobile) Works in forced RTL via `I18nManager`; direction-implying icons flip correctly
@@ -344,4 +357,4 @@ A feature is DONE when:
 
 ---
 
-*Last updated: July 2026 · Keep this file current — it is the single source of truth for how we build.*
+_Last updated: July 2026 · Keep this file current — it is the single source of truth for how we build._

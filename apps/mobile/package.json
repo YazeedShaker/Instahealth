@@ -1,0 +1,49 @@
+{
+  "name": "@instahealth/mobile",
+  "main": "expo-router/entry",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc --noEmit",
+    "build": "expo export --platform ios --platform android --output-dir dist",
+    "test:e2e": "node -e \"console.log('Maestro E2E runs against a dev build - wired end-to-end in SETUP-02. Flow: e2e/smoke.test.yaml')\""
+  },
+  "dependencies": {
+    "@expo-google-fonts/atkinson-hyperlegible": "^0.4.1",
+    "@expo-google-fonts/cairo": "^0.4.2",
+    "@instahealth/core": "workspace:*",
+    "@instahealth/design-tokens": "workspace:*",
+    "expo": "~57.0.8",
+    "expo-constants": "~57.0.7",
+    "expo-font": "~57.0.1",
+    "expo-linking": "~57.0.4",
+    "expo-router": "~57.0.8",
+    "expo-splash-screen": "~57.0.5",
+    "expo-status-bar": "~57.0.1",
+    "expo-system-ui": "~57.0.1",
+    "nativewind": "^4.2.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.86.0",
+    "react-native-css-interop": "^0.2.6",
+    "react-native-gesture-handler": "~2.32.0",
+    "react-native-reanimated": "4.5.0",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0",
+    "react-native-web": "~0.21.0",
+    "react-native-worklets": "0.10.0",
+    "tailwindcss": "^3.4.19",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "eslint": "^9",
+    "eslint-config-expo": "^57.0.0",
+    "typescript": "~6.0.3"
+  }
+}

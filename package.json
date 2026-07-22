@@ -1,0 +1,32 @@
+{
+  "name": "instahealth",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "turbo dev",
+    "dev:mobile": "turbo dev --filter=@instahealth/mobile",
+    "dev:web": "turbo dev --filter=@instahealth/web",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test:unit": "turbo test:unit",
+    "test:e2e": "turbo test:e2e",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "pnpm": {
+    "overrides": {
+      "sharp": "^0.35.0",
+      "vite": "^6.4.3"
+    }
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1",
+    "prettier": "^3.4.2",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.3"
+  }
+}

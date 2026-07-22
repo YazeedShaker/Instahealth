@@ -1,0 +1,10 @@
+@import 'tailwindcss';
+@config '../tailwind.config.ts';
+
+/* Shared design tokens — CSS custom properties (--ih-*) from packages/design-tokens */
+@import '@instahealth/design-tokens/tokens.css';
+
+body {
+  background: var(--ih-bg);
+  color: var(--ih-text-primary);
+}

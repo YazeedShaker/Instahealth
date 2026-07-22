@@ -45,13 +45,15 @@ instahealth/
 ```
 
 **`pnpm-workspace.yaml`:**
+
 ```yaml
 packages:
-  - "apps/*"
-  - "packages/*"
+  - 'apps/*'
+  - 'packages/*'
 ```
 
 **Root `package.json` scripts:**
+
 ```json
 {
   "scripts": {
@@ -70,6 +72,7 @@ packages:
 ```
 
 **`tsconfig.base.json`** — strict mode ON:
+
 ```json
 {
   "compilerOptions": {
@@ -87,6 +90,7 @@ packages:
   }
 }
 ```
+
 > `any` is banned via ESLint rule `@typescript-eslint/no-explicit-any: error`.
 
 ### 2. Packages (structure only — implementation in later specs)
@@ -136,6 +140,7 @@ apps/mobile/
 ```
 
 **Expo essentials:**
+
 - Expo SDK 52+, Expo Router (file-based)
 - `app.config.ts`: set `extra.eas`, enable RTL, register fonts (Cairo, Atkinson Hyperlegible via `expo-font`)
 - Force RTL at startup: `I18nManager.allowRTL(true); I18nManager.forceRTL(true)`
@@ -204,12 +209,12 @@ POSTHOG_HOST=
 {
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
-    "build":     { "dependsOn": ["^build"], "outputs": [".next/**", "dist/**", ".expo/**"] },
-    "lint":      {},
+    "build": { "dependsOn": ["^build"], "outputs": [".next/**", "dist/**", ".expo/**"] },
+    "lint": {},
     "typecheck": { "dependsOn": ["^build"] },
     "test:unit": { "dependsOn": ["^build"] },
-    "test:e2e":  { "dependsOn": ["build"] },
-    "dev":       { "cache": false, "persistent": true }
+    "test:e2e": { "dependsOn": ["build"] },
+    "dev": { "cache": false, "persistent": true }
   }
 }
 ```
@@ -273,6 +278,7 @@ POSTHOG_HOST=
 ## When done
 
 Update `PROGRESS.md`:
+
 - Move SETUP-01 from "Next up" to "Shipped" with date + what was built + any decisions
 - Note the exact Node/pnpm/Next versions locked in
 - Flag anything the next spec (SETUP-02 / CORE-01) needs to know
