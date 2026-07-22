@@ -22,8 +22,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # pnpm version comes from packageManager in package.json — do not also pin here
       - uses: pnpm/action-setup@v4
-        with: { version: 9 }
       - uses: actions/setup-node@v4
         with: { node-version: 20, cache: pnpm }
       - run: pnpm install --frozen-lockfile
@@ -36,6 +36,9 @@ jobs:
   secret-scan:
     name: Secret Scan
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write # gitleaks comments on PRs when it finds leaks
     steps:
       - uses: actions/checkout@v4
         with:
@@ -50,6 +53,9 @@ jobs:
   # ────────────────────────────────────────────────
   codeql:
     name: CodeQL Analysis
+    # CodeQL needs GitHub Advanced Security on private repos — runs automatically
+    # once the repo is public or GHAS is enabled
+    if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
     permissions:
       security-events: write
