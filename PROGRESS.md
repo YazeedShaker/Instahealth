@@ -62,7 +62,7 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 
 ## Shipped
 
-### 2026-07-22 · SETUP-01 — Monorepo scaffold
+### 2026-07-22 · SETUP-01 — Monorepo scaffold ([PR #1](https://github.com/YazeedShaker/Instahealth/pull/1))
 
 Turborepo + pnpm workspaces stood up with both app shells and all three packages. Both placeholders
 prove tokens + fonts + RTL on their platform; all CI-equivalent gates pass locally (lint, typecheck,
