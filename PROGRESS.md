@@ -21,7 +21,7 @@ Keep **Current status** and **Next up** accurate at all times.
 
 ## Current status
 
-**Phase:** Scaffold done (SETUP-01) → CI wiring verification (SETUP-02 next)
+**Phase:** Core package done (CORE-01) → Mobile auth (F01 next); SETUP-02 CI/deploy verification pending
 **Milestone target:** Labs + Scans booking working end-to-end at Town Hospital & Saridar Labs
 **Environment:** Supabase `instahealth-dev` live (Frankfurt). Design system published in Claude Design.
 Core patient screens approved. Monorepo scaffolded — both app shells boot with tokens/fonts/RTL.
@@ -46,7 +46,8 @@ visual contract. Then specs → Claude Code.
 - [x] **SETUP-01** — ✅ DONE. Monorepo scaffold: `apps/mobile` (Expo) + `apps/web` (Next.js) +
       `packages/*`, Turborepo, pnpm, tsconfig, ESLint, Prettier, tokens, CI skeleton (see Shipped)
 - [ ] **SETUP-02** — CI/CD pipeline (GitHub Actions: lint, typecheck, test, build, security, Vercel + EAS)
-- [ ] **CORE-01** — Core package: DB types, Zod schemas, Supabase client, business logic, constants
+- [x] **CORE-01** — ✅ DONE. Core package: DB types, Zod schemas, Supabase client, business logic,
+      constants (see Shipped)
 - [ ] **F01** — Mobile: patient auth (phone OTP via Vonage)
 - [ ] **F02–F04** — Mobile: home, map/list discovery, search, branch profile
 - [ ] **F05–F06** — Mobile: booking flow (select → slot/hold → details → Paymob) + confirmation
@@ -61,6 +62,45 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 ---
 
 ## Shipped
+
+### 2026-07-23 · CORE-01 — Shared core package
+
+`packages/core` filled per `docs/SPEC-CORE-01-core-package.md`. **92 tests, 100% line coverage
+(98.8% branch)** on `business/` + `schemas/` + `constants/` — Vitest thresholds gate 95/95/95/90
+so it can't regress. Both apps compile importing the barrel; placeholders now render live core
+constants.
+
+**Built:**
+
+- `types/` — `database.ts` generated from the LIVE dev project (15 tables + 7 RPC function
+  signatures), `helpers.types.ts` (Tables<…> aliases + named rows), `domain.types.ts`
+  (SelectedService, PreparationNote/Result, SlotView, BookingSummary).
+- `client/` — `createClient({ url, anonKey, storage? })` (storage injection is the only platform
+  variance; RN passes AsyncStorage at F01) + `createServiceClient` (server-only, key injected,
+  JSDoc + client-secret-guard boundary). No `process.env` anywhere in core.
+- `business/` — `computePreparationNotes()` (longest fast wins, duplicates merged, locked summary
+  copy in core) + `parseFastingHours()` (parses fasting from note text incl. Arabic-Indic digits
+  and ranges; "لا يشترط صيام" → null); `slots.ts` display math (DB functions stay authoritative);
+  `pricing.ts` in integer piasters (invalid/missing commission rate THROWS); `phone.ts` E.164
+  normalization mirroring send-sms rules; `format.ts` pinned to Africa/Cairo.
+- `schemas/` — phone/auth/booking/review/common.
+- `constants/` — SLOT_HOLD_MINUTES et al; magic numbers trace here.
+- Root `pnpm gen:types` script + package README documenting regeneration after every migration.
+- ESLint `no-restricted-imports` bans react/react-native/next/expo in core — enforced in CI.
+
+**Decisions:**
+
+- **Bilingual error pattern (§6): message KEYS.** Every Zod issue's `message` is a stable key
+  (`phone.invalid`); `schemas/messages.ts` maps keys → { ar, en }; UIs call
+  `getErrorMessage(issue.message, locale)`. One pattern everywhere.
+- Money math in integer piasters, rounding half-up at the boundary only.
+- Date/time formatting pinned to Africa/Cairo — slots are Egypt wall-clock, they must not shift
+  with the viewer's device timezone.
+- Spec's `client/` dir naming used (supersedes the older `api/` name in CLAUDE.md §3 tree).
+
+**For F01 (next):** consume `otpRequestSchema` / `otpVerifySchema`, `normalizeEgyptianPhone`,
+`createClient()` (inject AsyncStorage as the `storage` adapter + Expo env), and
+`getErrorMessage()` for field errors. OTP length/resend constants are in core.
 
 ### 2026-07-22 · SETUP-01 — Monorepo scaffold ([PR #1](https://github.com/YazeedShaker/Instahealth/pull/1))
 

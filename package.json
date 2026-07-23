@@ -15,7 +15,8 @@
     "test:unit": "turbo test:unit",
     "test:e2e": "turbo test:e2e",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "gen:types": "supabase gen types typescript --project-id yesxxpkyelhyojkxgmcb > packages/core/src/types/database.ts"
   },
   "pnpm": {
     "overrides": {

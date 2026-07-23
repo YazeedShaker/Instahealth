@@ -1,5 +1,5 @@
 import { colors } from '@instahealth/design-tokens'
-import { CORE_TYPES_READY } from '@instahealth/core'
+import { CURRENCY, SLOT_HOLD_MINUTES } from '@instahealth/core'
 import { Pressable, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -32,9 +32,9 @@ export default function Index() {
           <Text className="font-arabic-semibold text-base text-white">احجز الآن</Text>
         </Pressable>
 
-        {/* Proof: core package resolves from mobile ({String(CORE_TYPES_READY)} until CORE-01) */}
+        {/* Proof: core package resolves from mobile */}
         <Text className="font-english text-xs text-ih-neutral-400 w-full text-right">
-          core ready: {String(CORE_TYPES_READY)} · tokens: {colors.primary[400]}
+          core: {CURRENCY} · hold {SLOT_HOLD_MINUTES}m · tokens: {colors.primary[400]}
         </Text>
       </View>
     </SafeAreaView>

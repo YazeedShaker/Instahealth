@@ -1,0 +1,171 @@
+import { describe, expect, test } from 'vitest'
+
+import { otpRequestSchema, otpVerifySchema } from './auth.schema'
+import {
+  confirmBookingSchema,
+  createSlotHoldSchema,
+  serviceSelectionSchema,
+  slotChoiceSchema,
+} from './booking.schema'
+import { coordinatesSchema, paginationSchema, uuidSchema } from './common.schema'
+import { errorMessages, getErrorMessage } from './messages'
+import { phoneSchema } from './phone.schema'
+import { reviewSchema } from './review.schema'
+
+const BRANCH_ID = '3f3f3f3f-1111-4222-8333-444444444444'
+const OTHER_BRANCH_ID = '5a5a5a5a-1111-4222-8333-444444444444'
+const SERVICE_ID = '7b7b7b7b-1111-4222-8333-444444444444'
+
+function firstMessage(result: {
+  success: boolean
+  error?: { issues: Array<{ message: string }> }
+}): string {
+  if (result.success || !result.error) throw new Error('expected a failed parse')
+  return result.error.issues[0]?.message ?? ''
+}
+
+describe('phoneSchema', () => {
+  test('valid input passes and transforms to E.164', () => {
+    expect(phoneSchema.parse('010 1234 5678')).toBe('+201012345678')
+    expect(phoneSchema.parse('٠١٠١٢٣٤٥٦٧٨')).toBe('+201012345678')
+  })
+
+  test('invalid phone yields the phone.invalid key', () => {
+    expect(firstMessage(phoneSchema.safeParse('01312345678'))).toBe('phone.invalid')
+  })
+
+  test('empty phone yields the phone.required key', () => {
+    expect(firstMessage(phoneSchema.safeParse(''))).toBe('phone.required')
+  })
+})
+
+describe('auth schemas', () => {
+  test('otp request normalizes the phone', () => {
+    expect(otpRequestSchema.parse({ phone: '01012345678' })).toEqual({ phone: '+201012345678' })
+  })
+
+  test('otp verify transforms Arabic-Indic code digits to western', () => {
+    const parsed = otpVerifySchema.parse({ phone: '01012345678', code: '١٢٣٤٥٦' })
+    expect(parsed.code).toBe('123456')
+  })
+
+  test('wrong-length or non-numeric code yields otp.invalid', () => {
+    expect(firstMessage(otpVerifySchema.safeParse({ phone: '01012345678', code: '12345' }))).toBe(
+      'otp.invalid',
+    )
+    expect(firstMessage(otpVerifySchema.safeParse({ phone: '01012345678', code: 'abcdef' }))).toBe(
+      'otp.invalid',
+    )
+  })
+})
+
+describe('booking schemas', () => {
+  test('valid selection passes', () => {
+    const parsed = serviceSelectionSchema.parse({
+      branchId: BRANCH_ID,
+      services: [{ branchServiceId: SERVICE_ID, branchId: BRANCH_ID }],
+    })
+    expect(parsed.services).toHaveLength(1)
+  })
+
+  test('empty selection yields booking.services.empty', () => {
+    expect(
+      firstMessage(serviceSelectionSchema.safeParse({ branchId: BRANCH_ID, services: [] })),
+    ).toBe('booking.services.empty')
+  })
+
+  test('services from another branch yield booking.services.mixedBranch', () => {
+    const result = serviceSelectionSchema.safeParse({
+      branchId: BRANCH_ID,
+      services: [
+        { branchServiceId: SERVICE_ID, branchId: BRANCH_ID },
+        { branchServiceId: SERVICE_ID, branchId: OTHER_BRANCH_ID },
+      ],
+    })
+    expect(firstMessage(result)).toBe('booking.services.mixedBranch')
+  })
+
+  test('slot choice and hold payload validate uuids', () => {
+    expect(slotChoiceSchema.parse({ slotId: BRANCH_ID }).slotId).toBe(BRANCH_ID)
+    expect(
+      firstMessage(createSlotHoldSchema.safeParse({ slotId: 'nope', userId: BRANCH_ID })),
+    ).toBe('common.uuid.invalid')
+  })
+
+  test('confirm booking accepts valid method, rejects unknown method', () => {
+    const parsed = confirmBookingSchema.parse({ bookingId: BRANCH_ID, paymentMethod: 'cash' })
+    expect(parsed.paymentMethod).toBe('cash')
+    expect(
+      firstMessage(
+        confirmBookingSchema.safeParse({ bookingId: BRANCH_ID, paymentMethod: 'bitcoin' }),
+      ),
+    ).toBe('booking.paymentMethod.invalid')
+  })
+})
+
+describe('reviewSchema', () => {
+  test('valid review passes; comment is optional', () => {
+    expect(reviewSchema.parse({ bookingId: BRANCH_ID, rating: 5 }).rating).toBe(5)
+  })
+
+  test('out-of-range or fractional rating yields review.rating.range', () => {
+    expect(firstMessage(reviewSchema.safeParse({ bookingId: BRANCH_ID, rating: 0 }))).toBe(
+      'review.rating.range',
+    )
+    expect(firstMessage(reviewSchema.safeParse({ bookingId: BRANCH_ID, rating: 6 }))).toBe(
+      'review.rating.range',
+    )
+    expect(firstMessage(reviewSchema.safeParse({ bookingId: BRANCH_ID, rating: 4.5 }))).toBe(
+      'review.rating.range',
+    )
+  })
+
+  test('over-long comment yields review.comment.tooLong', () => {
+    const result = reviewSchema.safeParse({
+      bookingId: BRANCH_ID,
+      rating: 4,
+      comment: 'س'.repeat(501),
+    })
+    expect(firstMessage(result)).toBe('review.comment.tooLong')
+  })
+})
+
+describe('common schemas', () => {
+  test('uuid schema accepts uuids and rejects with common.uuid.invalid', () => {
+    expect(uuidSchema.parse(BRANCH_ID)).toBe(BRANCH_ID)
+    expect(firstMessage(uuidSchema.safeParse('123'))).toBe('common.uuid.invalid')
+  })
+
+  test('pagination applies defaults and caps the limit', () => {
+    expect(paginationSchema.parse({})).toEqual({ limit: 20, offset: 0 })
+    expect(firstMessage(paginationSchema.safeParse({ limit: 51 }))).toBe(
+      'common.pagination.invalid',
+    )
+    expect(firstMessage(paginationSchema.safeParse({ offset: -1 }))).toBe(
+      'common.pagination.invalid',
+    )
+  })
+
+  test('coordinates bounds are enforced', () => {
+    expect(coordinatesSchema.parse({ lat: 30.04, lng: 31.24 })).toEqual({ lat: 30.04, lng: 31.24 })
+    expect(firstMessage(coordinatesSchema.safeParse({ lat: 91, lng: 0 }))).toBe(
+      'common.coordinates.invalid',
+    )
+    expect(firstMessage(coordinatesSchema.safeParse({ lat: 0, lng: -181 }))).toBe(
+      'common.coordinates.invalid',
+    )
+  })
+})
+
+describe('bilingual messages', () => {
+  test('every message key resolves in both locales', () => {
+    for (const key of Object.keys(errorMessages)) {
+      expect(getErrorMessage(key, 'ar').length).toBeGreaterThan(0)
+      expect(getErrorMessage(key, 'en').length).toBeGreaterThan(0)
+    }
+  })
+
+  test('unknown keys fall back to the key itself', () => {
+    expect(getErrorMessage('nope.missing', 'en')).toBe('nope.missing')
+  })
+})
