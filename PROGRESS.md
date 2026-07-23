@@ -45,7 +45,10 @@ visual contract. Then specs → Claude Code.
 - [x] **DESIGN-01** — ✅ DONE. Core patient screens approved in Claude Design (see Shipped).
 - [x] **SETUP-01** — ✅ DONE. Monorepo scaffold: `apps/mobile` (Expo) + `apps/web` (Next.js) +
       `packages/*`, Turborepo, pnpm, tsconfig, ESLint, Prettier, tokens, CI skeleton (see Shipped)
-- [ ] **SETUP-02** — CI/CD pipeline (GitHub Actions: lint, typecheck, test, build, security, Vercel + EAS)
+- [~] **SETUP-02** — CI/CD pipeline: gates verified green since SETUP-01; Vercel preview+production
+  wiring VERIFIED (PR #2); on-demand EAS build workflow wired (`deploy.yml`, workflow_dispatch,
+  EXPO_TOKEN). Remaining: Maestro-in-CI against a real dev build (currently a stub) + first
+  dispatched EAS build run.
 - [x] **CORE-01** — ✅ DONE. Core package: DB types, Zod schemas, Supabase client, business logic,
       constants (see Shipped)
 - [x] **F01** — ✅ DONE. Mobile: patient auth (phone OTP via Vonage) — see Shipped
