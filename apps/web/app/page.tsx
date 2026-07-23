@@ -1,4 +1,4 @@
-import { CORE_TYPES_READY } from '@instahealth/core'
+import { CURRENCY, SLOT_HOLD_MINUTES } from '@instahealth/core'
 import { colors } from '@instahealth/design-tokens'
 
 // Placeholder — proves tokens, fonts, and RTL work on web.
@@ -50,7 +50,7 @@ export default function Home() {
       </button>
 
       <p dir="ltr" className="text-xs" style={{ color: 'var(--ih-neutral-400)' }}>
-        core ready: {String(CORE_TYPES_READY)} · tokens resolve: {colors.primary[400]}
+        core: {CURRENCY} · hold {SLOT_HOLD_MINUTES}m · tokens resolve: {colors.primary[400]}
       </p>
     </main>
   )

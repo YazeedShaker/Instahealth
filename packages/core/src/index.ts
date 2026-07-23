@@ -1,7 +1,28 @@
-// @instahealth/core — shared types, schemas, API, business logic, constants.
-// Structure only for now: CORE-01 fills these in. Both apps import from this barrel.
-export * from './types'
-export * from './schemas'
-export * from './api'
-export * from './business'
+// @instahealth/core — the single source of truth for all shared domain logic.
+// Apps import ONLY from this barrel — never from deep paths.
+
+// Types
+export * from './types/helpers.types'
+export * from './types/domain.types'
+
+// Client factories
+export * from './client/createClient'
+export * from './client/createServiceClient'
+
+// Business logic
+export * from './business/preparation'
+export * from './business/slots'
+export * from './business/pricing'
+export * from './business/phone'
+export * from './business/format'
+
+// Schemas
+export * from './schemas/messages'
+export * from './schemas/common.schema'
+export * from './schemas/phone.schema'
+export * from './schemas/auth.schema'
+export * from './schemas/booking.schema'
+export * from './schemas/review.schema'
+
+// Constants
 export * from './constants'

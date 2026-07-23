@@ -15,3 +15,4 @@ Implementation Docs
 UI screens
 supabase/migrations
 supabase/functions
+packages/core/src/types/database.ts
