@@ -1,28 +1,59 @@
 name: Deploy
 
-# NOTE (SETUP-01): placeholder deploy pipeline. Vercel's GitHub integration handles
-# web preview/production deploys once the repo is imported (Root Directory: apps/web).
-# This workflow is verified and fully wired end-to-end in SETUP-02.
+# SETUP-02 deploy wiring — status:
+# • WEB: Vercel's GitHub integration owns deploys (project `instahealth-web`,
+#   root apps/web). VERIFIED end-to-end 2026-07-23: preview per PR (PR #2) and
+#   production on merge to main. No CLI deploy needed here — the "Vercel" check
+#   on each PR is the gate. VERCEL_TOKEN is set as a repo secret for future
+#   CLI needs (e.g. env pulls), not used by this workflow.
+# • MOBILE: EAS builds are heavy, so they are ON-DEMAND (workflow_dispatch),
+#   never per-PR (CLAUDE.md §9). Trigger from the Actions tab; profile
+#   `preview` produces an internal-distribution build.
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
+    inputs:
+      platform:
+        description: 'EAS build platform'
+        type: choice
+        options: [android, ios, all]
+        default: android
+      profile:
+        description: 'EAS build profile'
+        type: choice
+        options: [preview, development, production]
+        default: preview
 
 concurrency:
   group: deploy-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  deploy-web:
-    name: Deploy Web (Vercel)
+  eas-build:
+    name: EAS Build (${{ inputs.profile }}, ${{ inputs.platform }})
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify Vercel token present
+      # pnpm version comes from packageManager in package.json — do not also pin here
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Verify EXPO_TOKEN present
         run: |
-          if [[ -z "${{ secrets.VERCEL_TOKEN }}" ]]; then
-            echo "VERCEL_TOKEN not set — skipping CLI deploy (Vercel Git integration deploys on push)."
-            exit 0
+          if [[ -z "${{ secrets.EXPO_TOKEN }}" ]]; then
+            echo "EXPO_TOKEN secret is not set — cannot build." && exit 1
           fi
-          echo "VERCEL_TOKEN is configured. CLI-based deploy gets wired in SETUP-02."
+      - name: Start EAS build
+        working-directory: apps/mobile
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          npx eas-cli@latest build \
+            --platform ${{ inputs.platform }} \
+            --profile ${{ inputs.profile }} \
+            --non-interactive \
+            --no-wait
+          echo "Build queued on EAS — track it at https://expo.dev/accounts/instahealth/projects/instahealth/builds"

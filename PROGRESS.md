@@ -21,7 +21,7 @@ Keep **Current status** and **Next up** accurate at all times.
 
 ## Current status
 
-**Phase:** Core package done (CORE-01) → Mobile auth (F01 next); SETUP-02 CI/deploy verification pending
+**Phase:** Mobile auth done (F01) → Discovery (F02 next)
 **Milestone target:** Labs + Scans booking working end-to-end at Town Hospital & Saridar Labs
 **Environment:** Supabase `instahealth-dev` live (Frankfurt). Design system published in Claude Design.
 Core patient screens approved. Monorepo scaffolded — both app shells boot with tokens/fonts/RTL.
@@ -45,10 +45,13 @@ visual contract. Then specs → Claude Code.
 - [x] **DESIGN-01** — ✅ DONE. Core patient screens approved in Claude Design (see Shipped).
 - [x] **SETUP-01** — ✅ DONE. Monorepo scaffold: `apps/mobile` (Expo) + `apps/web` (Next.js) +
       `packages/*`, Turborepo, pnpm, tsconfig, ESLint, Prettier, tokens, CI skeleton (see Shipped)
-- [ ] **SETUP-02** — CI/CD pipeline (GitHub Actions: lint, typecheck, test, build, security, Vercel + EAS)
+- [~] **SETUP-02** — CI/CD pipeline: gates verified green since SETUP-01; Vercel preview+production
+  wiring VERIFIED (PR #2); on-demand EAS build workflow wired (`deploy.yml`, workflow_dispatch,
+  EXPO_TOKEN). Remaining: Maestro-in-CI against a real dev build (currently a stub) + first
+  dispatched EAS build run.
 - [x] **CORE-01** — ✅ DONE. Core package: DB types, Zod schemas, Supabase client, business logic,
       constants (see Shipped)
-- [ ] **F01** — Mobile: patient auth (phone OTP via Vonage)
+- [x] **F01** — ✅ DONE. Mobile: patient auth (phone OTP via Vonage) — see Shipped
 - [ ] **F02–F04** — Mobile: home, map/list discovery, search, branch profile
 - [ ] **F05–F06** — Mobile: booking flow (select → slot/hold → details → Paymob) + confirmation
 - [ ] **P01–P06** — Web: provider dashboard (build alongside F05–F06 to close the loop)
@@ -62,6 +65,41 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 ---
 
 ## Shipped
+
+### 2026-07-23 · F01 — Patient phone-OTP authentication (mobile)
+
+Full onboarding flow built to the DESIGN-01 handoff bundle (`design/onboarding/`): welcome →
+phone → OTP → (first-time) name → Home placeholder. Route groups `(auth)` / `(app)` with
+protection in the group layouts; Supabase Auth phone flow; session survives restarts via
+AsyncStorage injected into core's `createClient()`. 21 unit tests on the pure auth modules.
+
+**For F02 (hand-off):**
+
+- **Auth store** (`features/auth/store.ts`, Zustand): `{ status, session, profile, pendingPhone,
+lastOtpRequestedAt, lockout, sessionExpired }` + actions. `useProfile()`
+  (`features/auth/useProfile.ts`) fetches/creates the profile via TanStack Query and syncs it in.
+- **Route-group pattern:** `(auth)/_layout` redirects signed-in-with-name users to Home;
+  `(app)/_layout` redirects signed-out users to welcome; `app/index.tsx` routes on launch via
+  the pure `getAuthDestination()`. F02 replaces `(app)/home.tsx` and adds tabs to `(app)/_layout`.
+- Reusable: `PrimaryButton`, `BackButton`, `PhoneInput`, `OtpInput`, `toArabicDigits()`.
+
+**Decisions / deviations (verified against the live DB):**
+
+- The spec's "existing DB trigger creates the users row" does NOT exist, and there is no
+  `full_name` column. Instead: `ensureProfile()` creates the patient's own row client-side —
+  which is exactly what the RLS policy "users: patient inserts own row" was written for — and
+  `name_ar` is the profile-name field.
+- The OTP screen gets the phone via the auth store, NOT a route param (CLAUDE.md §8: phone
+  numbers never in URLs; overrides the spec's param note).
+- Client lockout after 3 failed OTP attempts = 5 min (UX only; server limits are Supabase's).
+
+**Verified prerequisites:** phone provider enabled + static test number works end-to-end
+(`+201000000001` / `123456` issues a real session — probed against the live project). Real-SMS
+Arabic delivery on a physical device remains a manual founder check.
+
+**Maestro:** `e2e/auth-flow.test.yaml` covers the five spec scenarios (fresh install, persistence,
+returning user, wrong-OTP lockout, invalid phone). Runs for real once SETUP-02 wires the dev-build
+job; the CI Maestro step is still the SETUP-01 stub.
 
 ### 2026-07-23 · CORE-01 — Shared core package
 

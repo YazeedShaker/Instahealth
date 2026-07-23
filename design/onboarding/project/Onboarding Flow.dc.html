@@ -1,0 +1,508 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <link
+          rel="stylesheet"
+          href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/fonts.css"
+        />
+        <link
+          rel="stylesheet"
+          href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/colors.css"
+        />
+        <link
+          rel="stylesheet"
+          href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/typography.css"
+        />
+        <link
+          rel="stylesheet"
+          href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/spacing.css"
+        />
+        <link
+          rel="stylesheet"
+          href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/effects.css"
+        />
+        <link
+          rel="stylesheet"
+          href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/themes.css"
+        />
+        <link
+          rel="stylesheet"
+          href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/base.css"
+        />
+        <link
+          rel="stylesheet"
+          href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/styles.css"
+        />
+        <script src="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/_ds_bundle.js"></script>
+        <script src="./image-slot.js"></script>
+        <style>
+          body {
+            margin: 0;
+            background: var(--ih-neutral-100);
+            font-family: 'Cairo', 'Atkinson Hyperlegible', sans-serif;
+          }
+          a {
+            color: var(--ih-primary-600);
+          }
+          a:hover {
+            color: var(--ih-primary-700);
+          }
+          input:focus {
+            outline: none;
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          display: flex;
+          gap: 48px;
+          justify-content: center;
+          align-items: flex-start;
+          padding: 48px 32px;
+          flex-wrap: wrap;
+        "
+      >
+        <!-- ═══ Screen 1 — Welcome ═══ -->
+        <div data-screen-label="1 · الترحيب">
+          <x-import
+            component-from-global-scope="IOSDevice"
+            from="./ios-frame.jsx"
+            hint-size="390px,844px"
+          >
+            <div
+              dir="rtl"
+              style="
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                background: var(--ih-neutral-0);
+                padding: 60px 24px 20px;
+              "
+            >
+              <div style="display: flex; align-items: center; gap: 10px; padding-top: 8px">
+                <div
+                  style="
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 12px;
+                    background: linear-gradient(
+                      135deg,
+                      var(--ih-primary-700),
+                      var(--ih-primary-400)
+                    );
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #fff;
+                    font-size: 20px;
+                  "
+                >
+                  ♥
+                </div>
+                <div
+                  dir="ltr"
+                  style="
+                    font-family: 'Cairo', sans-serif;
+                    font-weight: 800;
+                    font-size: 22px;
+                    letter-spacing: -0.02em;
+                  "
+                >
+                  <span style="color: var(--ih-neutral-800)">Insta</span
+                  ><span style="color: var(--ih-primary-400)">Health</span>
+                </div>
+              </div>
+              <div
+                style="
+                  flex: 1;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: center;
+                  gap: 28px;
+                  min-height: 0;
+                "
+              >
+                <div
+                  style="
+                    background: rgba(240, 243, 189, 0.35);
+                    border-radius: 24px;
+                    padding: 14px;
+                    height: 300px;
+                    box-sizing: border-box;
+                  "
+                >
+                  <image-slot
+                    id="hero-welcome"
+                    shape="rounded"
+                    radius="16"
+                    placeholder="صورة ترحيبية — Drop hero illustration"
+                  ></image-slot>
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                    text-align: center;
+                    padding: 0 4px;
+                  "
+                >
+                  <h1
+                    style="
+                      margin: 0;
+                      font-family: 'Cairo', sans-serif;
+                      font-weight: 800;
+                      font-size: 27px;
+                      line-height: 1.4;
+                      color: var(--ih-neutral-800);
+                      text-wrap: pretty;
+                    "
+                  >
+                    خدمتك الطبية أونلاين — احجز في دقائق
+                  </h1>
+                  <p
+                    style="
+                      margin: 0;
+                      font-size: 16px;
+                      line-height: 1.6;
+                      color: var(--ih-neutral-600);
+                    "
+                  >
+                    اعثر على أقرب معمل أو عيادة، قارن الأسعار، واحجز موعدك بكل سهولة.
+                  </p>
+                </div>
+              </div>
+              <div style="padding-bottom: 12px">
+                <x-import
+                  component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button"
+                  size="lg"
+                  full-width="{{ true }}"
+                  hint-size="100%,52px"
+                  >ابدأ</x-import
+                >
+              </div>
+            </div>
+          </x-import>
+        </div>
+
+        <!-- ═══ Screen 2 — Phone entry ═══ -->
+        <div data-screen-label="2 · رقم الهاتف">
+          <x-import
+            component-from-global-scope="IOSDevice"
+            from="./ios-frame.jsx"
+            hint-size="390px,844px"
+          >
+            <div
+              dir="rtl"
+              style="
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                background: var(--ih-neutral-0);
+                padding: 60px 24px 20px;
+              "
+            >
+              <div style="padding: 8px 0 28px">
+                <div
+                  style="
+                    width: 44px;
+                    height: 44px;
+                    border-radius: 999px;
+                    background: var(--ih-neutral-50);
+                    border: 1px solid var(--ih-neutral-200);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 18px;
+                    color: var(--ih-neutral-700);
+                    cursor: pointer;
+                  "
+                >
+                  →
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 10px">
+                <h1
+                  style="
+                    margin: 0;
+                    font-family: 'Cairo', sans-serif;
+                    font-weight: 700;
+                    font-size: 24px;
+                    color: var(--ih-neutral-800);
+                  "
+                >
+                  ما هو رقم هاتفك؟
+                </h1>
+                <p
+                  style="margin: 0; font-size: 15px; line-height: 1.6; color: var(--ih-neutral-600)"
+                >
+                  سنرسل لك رمز تحقق عبر رسالة نصية للتأكد من رقمك.
+                </p>
+              </div>
+              <div style="margin-top: 28px; display: flex; flex-direction: column; gap: 10px">
+                <div style="font-size: 13px; font-weight: 600; color: var(--ih-neutral-600)">
+                  رقم الهاتف
+                </div>
+                <div style="display: flex; gap: 10px">
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 6px;
+                      padding: 0 14px;
+                      min-height: 52px;
+                      border: 1.5px solid var(--ih-neutral-200);
+                      border-radius: 8px;
+                      background: var(--ih-neutral-50);
+                      font-size: 16px;
+                      font-weight: 600;
+                      color: var(--ih-neutral-700);
+                      white-space: nowrap;
+                    "
+                  >
+                    <span>🇪🇬</span><span dir="ltr">+20</span>
+                  </div>
+                  <input
+                    dir="ltr"
+                    inputmode="numeric"
+                    placeholder="10 1234 5678"
+                    value="{{ phone }}"
+                    onInput="{{ onPhoneInput }}"
+                    style="flex: 1; min-width: 0; min-height: 52px; padding: 0 16px; border: 1.5px solid {{ phoneBorder }}; border-radius: 8px; font-family: 'Cairo', sans-serif; font-size: 18px; letter-spacing: 0.04em; color: var(--ih-neutral-800); text-align: left; transition: border-color 180ms;"
+                  />
+                </div>
+                <div style="font-size: 13px; color: var(--ih-neutral-500); line-height: 1.6">
+                  مثال: ٠١٠٠ ١٢٣ ٤٥٦٧ — لن نشارك رقمك مع أي جهة.
+                </div>
+              </div>
+              <div style="flex: 1"></div>
+              <div style="padding-bottom: 12px">
+                <x-import
+                  component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button"
+                  size="lg"
+                  full-width="{{ true }}"
+                  disabled="{{ phoneIncomplete }}"
+                  hint-size="100%,52px"
+                  >التالي</x-import
+                >
+              </div>
+            </div>
+          </x-import>
+        </div>
+
+        <!-- ═══ Screen 3 — OTP ═══ -->
+        <div data-screen-label="3 · رمز التحقق">
+          <x-import
+            component-from-global-scope="IOSDevice"
+            from="./ios-frame.jsx"
+            hint-size="390px,844px"
+          >
+            <div
+              dir="rtl"
+              style="
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                background: var(--ih-neutral-0);
+                padding: 60px 24px 20px;
+              "
+            >
+              <div style="padding: 8px 0 28px">
+                <div
+                  style="
+                    width: 44px;
+                    height: 44px;
+                    border-radius: 999px;
+                    background: var(--ih-neutral-50);
+                    border: 1px solid var(--ih-neutral-200);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 18px;
+                    color: var(--ih-neutral-700);
+                    cursor: pointer;
+                  "
+                >
+                  →
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 10px">
+                <h1
+                  style="
+                    margin: 0;
+                    font-family: 'Cairo', sans-serif;
+                    font-weight: 700;
+                    font-size: 24px;
+                    color: var(--ih-neutral-800);
+                  "
+                >
+                  أدخل رمز التحقق
+                </h1>
+                <p
+                  style="margin: 0; font-size: 15px; line-height: 1.6; color: var(--ih-neutral-600)"
+                >
+                  أرسلنا رمزاً من ٦ أرقام إلى
+                  <span
+                    dir="ltr"
+                    style="font-weight: 700; color: var(--ih-neutral-800); white-space: nowrap"
+                    >+20 10 1234 5678</span
+                  >
+                </p>
+                <div>
+                  <a
+                    href="#"
+                    onClick="{{ noNav }}"
+                    style="
+                      font-size: 14px;
+                      font-weight: 600;
+                      text-decoration: none;
+                      border-bottom: 1px solid currentColor;
+                      padding-bottom: 1px;
+                    "
+                    >تعديل الرقم</a
+                  >
+                </div>
+              </div>
+              <div style="margin-top: 32px; display: flex; flex-direction: column; gap: 16px">
+                <div dir="ltr" style="display: flex; gap: 10px; justify-content: center">
+                  <sc-for list="{{ otpBoxes }}" as="box" hint-placeholder-count="6">
+                    <input
+                      inputmode="numeric"
+                      maxlength="1"
+                      data-idx="{{ $index }}"
+                      value="{{ box.val }}"
+                      onInput="{{ onOtpInput }}"
+                      onKeyDown="{{ onOtpKeyDown }}"
+                      onFocus="{{ onOtpFocus }}"
+                      style="width: 46px; height: 56px; text-align: center; font-family: 'Cairo', sans-serif; font-size: 24px; font-weight: 700; color: var(--ih-neutral-800); border: 1.5px solid {{ box.border }}; border-radius: 8px; background: {{ box.bg }}; transition: border-color 180ms;"
+                    />
+                  </sc-for>
+                </div>
+                <sc-if value="{{ showError }}" hint-placeholder-val="{{ false }}">
+                  <div
+                    style="
+                      display: flex;
+                      gap: 6px;
+                      justify-content: center;
+                      align-items: center;
+                      font-size: 14px;
+                      color: var(--ih-error);
+                    "
+                  >
+                    <span aria-hidden="true">⚠</span> الرمز غير صحيح — تأكد من الرقم وحاول مرة أخرى
+                  </div>
+                </sc-if>
+                <div style="text-align: center; font-size: 14px; color: var(--ih-neutral-600)">
+                  <sc-if value="{{ canResend }}" hint-placeholder-val="{{ false }}">
+                    <a
+                      href="#"
+                      onClick="{{ onResend }}"
+                      style="font-weight: 700; text-decoration: none"
+                      >إعادة إرسال الرمز</a
+                    >
+                  </sc-if>
+                  <sc-if value="{{ waiting }}" hint-placeholder-val="{{ true }}">
+                    <span
+                      >يمكنك إعادة إرسال الرمز خلال
+                      <span
+                        dir="ltr"
+                        style="
+                          font-weight: 700;
+                          color: var(--ih-primary-600);
+                          unicode-bidi: isolate;
+                        "
+                        >{{ timerText }}</span
+                      ></span
+                    >
+                  </sc-if>
+                </div>
+              </div>
+              <div style="flex: 1"></div>
+              <div style="padding-bottom: 12px">
+                <x-import
+                  component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button"
+                  size="lg"
+                  full-width="{{ true }}"
+                  disabled="{{ otpIncomplete }}"
+                  hint-size="100%,52px"
+                  >تأكيد</x-import
+                >
+              </div>
+            </div>
+          </x-import>
+        </div>
+      </div>
+    </x-dc>
+    <script
+      type="text/x-dc"
+      data-dc-script
+      data-props='{"$preview": {"width": 1420, "height": 980}, "resendSeconds": {"editor": "range", "default": 59, "min": 15, "max": 120, "step": 1, "unit": "s", "tsType": "number", "section": "OTP"}, "showOtpError": {"editor": "boolean", "default": false, "tsType": "boolean", "section": "OTP"}}'
+    >
+      class Component extends DCLogic {
+        state = { phone: "", otp: ["", "", "", "", "", ""], secondsLeft: null, focusedIdx: -1 };
+        componentDidMount() {
+          this.setState({ secondsLeft: this.resendTotal() });
+          this.timer = setInterval(() => {
+            this.setState(s => ({ secondsLeft: s.secondsLeft > 0 ? s.secondsLeft - 1 : 0 }));
+          }, 1000);
+        }
+        componentWillUnmount() { clearInterval(this.timer); }
+        resendTotal() { return this.props.resendSeconds ?? 59; }
+        toArabicDigits(str) {
+          const d = "٠١٢٣٤٥٦٧٨٩";
+          return String(str).replace(/[0-9]/g, c => d[+c]);
+        }
+        renderVals() {
+          const showError = this.props.showOtpError ?? false;
+          const secs = this.state.secondsLeft ?? this.resendTotal();
+          const canResend = secs === 0;
+          const timerText = this.toArabicDigits(Math.floor(secs / 60) + ":" + String(secs % 60).padStart(2, "0"));
+          const otpBoxes = this.state.otp.map((val, i) => ({
+            val,
+            border: showError ? "var(--ih-error)" : (this.state.focusedIdx === i ? "var(--ih-primary-400)" : (val ? "var(--ih-primary-500)" : "var(--ih-neutral-200)")),
+            bg: showError ? "var(--ih-error-bg)" : (val ? "var(--ih-primary-50)" : "var(--ih-neutral-0)"),
+          }));
+          return {
+            phone: this.state.phone,
+            phoneBorder: this.state.phone.length ? "var(--ih-primary-400)" : "var(--ih-neutral-200)",
+            phoneIncomplete: this.state.phone.replace(/\D/g, "").length < 10,
+            onPhoneInput: (e) => {
+              const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+              const parts = [digits.slice(0, 2), digits.slice(2, 6), digits.slice(6, 10)].filter(Boolean);
+              this.setState({ phone: parts.join(" ") });
+            },
+            otpBoxes, showError, canResend, waiting: !canResend, timerText,
+            otpIncomplete: this.state.otp.some(v => !v),
+            onOtpInput: (e) => {
+              const i = +e.target.dataset.idx;
+              const v = e.target.value.replace(/\D/g, "").slice(-1);
+              const otp = [...this.state.otp]; otp[i] = v;
+              this.setState({ otp });
+              if (v && i < 5) {
+                const next = e.target.parentElement.querySelector(`[data-idx="${i + 1}"]`);
+                if (next) next.focus();
+              }
+            },
+            onOtpKeyDown: (e) => {
+              const i = +e.target.dataset.idx;
+              if (e.key === "Backspace" && !this.state.otp[i] && i > 0) {
+                const prev = e.target.parentElement.querySelector(`[data-idx="${i - 1}"]`);
+                if (prev) prev.focus();
+              }
+            },
+            onOtpFocus: (e) => this.setState({ focusedIdx: +e.target.dataset.idx }),
+            onResend: (e) => { e.preventDefault(); this.setState({ secondsLeft: this.resendTotal() }); },
+            noNav: (e) => e.preventDefault(),
+          };
+        }
+      }
+    </script>
+  </body>
+</html>
