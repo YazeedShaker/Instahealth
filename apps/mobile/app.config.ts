@@ -4,6 +4,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: 'InstaHealth',
   slug: 'instahealth',
+  owner: 'instahealth',
   version: '0.1.0',
   orientation: 'portrait',
   icon: './assets/images/icon.png',
