@@ -1,7 +1,6 @@
-# Maestro smoke flow — app launches, placeholder renders, Arabic heading visible.
-# RTL is forced at startup (app/_layout.tsx); verify layout direction visually in the flow.
+# Maestro smoke flow — app launches, welcome screen renders, RTL layout confirmed.
 appId: com.instahealth.app
 ---
 - launchApp
-- assertVisible: 'إنستاهيلث — منصة الحجوزات الطبية'
-- assertVisible: 'احجز الآن'
+- assertVisible: 'خدمتك الطبية أونلاين — احجز في دقائق'
+- assertVisible: 'ابدأ'

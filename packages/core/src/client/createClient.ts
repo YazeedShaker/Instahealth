@@ -5,6 +5,9 @@ import { createClient as createSupabaseClient, type SupabaseClient } from '@supa
 
 import type { Database } from '../types/database'
 
+// Re-exported so apps can type auth state without depending on @supabase/supabase-js directly.
+export type { AuthError, Session, User } from '@supabase/supabase-js'
+
 /** Minimal storage contract — structurally compatible with Supabase's SupportedStorage.
  * React Native injects AsyncStorage through this; web omits it and uses the default.
  * This injection is the ONLY platform variance allowed in core. */

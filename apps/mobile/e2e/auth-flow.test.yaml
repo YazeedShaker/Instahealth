@@ -1,0 +1,102 @@
+# Maestro E2E — full F01 auth flow using the STATIC TEST NUMBER configured in
+# Supabase Auth (+201000000001 → OTP 123456). CI never sends real SMS.
+# Wired to run in CI as part of SETUP-02's Maestro job.
+appId: com.instahealth.app
+---
+# Fresh install → welcome → phone → OTP → name → Home
+- clearState
+- launchApp
+- assertVisible: 'خدمتك الطبية أونلاين — احجز في دقائق'
+- tapOn:
+    id: 'welcome-start'
+- assertVisible: 'ما هو رقم هاتفك؟'
+
+# Invalid phone (013 prefix) → inline error, no request sent
+- tapOn:
+    id: 'phone-input'
+- inputText: '01312345678'
+- tapOn:
+    id: 'phone-next'
+- assertVisible:
+    id: 'phone-error'
+
+# Valid static test number
+- tapOn:
+    id: 'phone-input'
+- eraseText: 11
+- inputText: '01000000001'
+- tapOn:
+    id: 'phone-next'
+- assertVisible: 'أدخل رمز التحقق'
+
+# Wrong OTP ×3 → locked state visible
+- tapOn:
+    id: 'otp-box-0'
+- inputText: '000000'
+- tapOn:
+    id: 'otp-confirm'
+- assertVisible:
+    id: 'otp-error'
+- tapOn:
+    id: 'otp-box-0'
+- inputText: '000000'
+- tapOn:
+    id: 'otp-confirm'
+- tapOn:
+    id: 'otp-box-0'
+- inputText: '000000'
+- tapOn:
+    id: 'otp-confirm'
+- assertVisible:
+    id: 'otp-locked'
+
+# NOTE: the lockout is 5 minutes — the remaining steps run as a separate launch
+# below so this flow stays deterministic without waiting.
+
+# Relaunch (state cleared) → correct OTP path → name entry → Home
+- clearState
+- launchApp
+- tapOn:
+    id: 'welcome-start'
+- tapOn:
+    id: 'phone-input'
+- inputText: '01000000001'
+- tapOn:
+    id: 'phone-next'
+- tapOn:
+    id: 'otp-box-0'
+- inputText: '123456'
+- tapOn:
+    id: 'otp-confirm'
+- assertVisible: 'ما هو اسمك؟'
+- tapOn:
+    id: 'name-input'
+- inputText: 'مستخدم التجربة'
+- tapOn:
+    id: 'name-continue'
+- assertVisible:
+    id: 'home-greeting'
+
+# Relaunch WITHOUT clearing state → session persists, straight to Home
+- launchApp
+- assertVisible:
+    id: 'home-greeting'
+
+# Logout → welcome; sign in again → returning user skips name entry
+- tapOn:
+    id: 'home-logout'
+- assertVisible: 'خدمتك الطبية أونلاين — احجز في دقائق'
+- tapOn:
+    id: 'welcome-start'
+- tapOn:
+    id: 'phone-input'
+- inputText: '01000000001'
+- tapOn:
+    id: 'phone-next'
+- tapOn:
+    id: 'otp-box-0'
+- inputText: '123456'
+- tapOn:
+    id: 'otp-confirm'
+- assertVisible:
+    id: 'home-greeting'
