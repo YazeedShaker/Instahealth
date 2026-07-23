@@ -1,0 +1,15 @@
+# Supabase CLI config — local link to the live project.
+# The live project (instahealth-dev, Frankfurt) is the source of truth; see README.md.
+project_id = "yesxxpkyelhyojkxgmcb"
+
+[functions.cleanup-holds]
+verify_jwt = true
+
+[functions.send-sms]
+verify_jwt = true
+
+[functions.booking-reminder]
+verify_jwt = true
+
+[functions.generate-slots]
+verify_jwt = true
