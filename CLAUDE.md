@@ -4,6 +4,10 @@
 > It defines the architecture, conventions, and non-negotiable rules for the entire platform.
 > When in doubt, follow this document over any other instinct.
 
+> **Also read `docs/ENGINEERING-WORKFLOW.md` before writing code** — it defines
+> HOW sessions operate: gate sequence, commit/PR rules, DB-change procedure,
+> and the accumulated toolchain gotchas. CLAUDE.md is the what; that file is the how.
+
 ---
 
 ## 1. What we are building
