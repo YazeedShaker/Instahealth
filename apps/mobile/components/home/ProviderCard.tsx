@@ -5,6 +5,7 @@ import {
   toArabicDigits,
 } from '@instahealth/core'
 import { colors } from '@instahealth/design-tokens'
+import { useRouter } from 'expo-router'
 import { Pressable, Text, View } from 'react-native'
 
 import type { HomeBranchWithDistance } from '../../features/home/types'
@@ -16,9 +17,10 @@ interface ProviderCardProps {
 }
 
 // The nearby-provider card from the approved Home mockup: name, type badge,
-// distance, open/closed chip, first-available-slot line, احجز button (stub —
-// branch profile is F04). Type derives from the branch's ACTIVE categories.
+// distance, open/closed chip, first-available-slot line. Card and احجز both
+// open the F04 branch profile. Type derives from the branch's ACTIVE categories.
 export function ProviderCard({ branch, firstSlot, now }: ProviderCardProps) {
+  const router = useRouter()
   const isHospital = branch.categorySlugs.includes('scans')
   const typeBadge = isHospital ? 'مستشفى' : 'معمل تحاليل'
   const icon = isHospital ? '🏥' : '🔬'
@@ -27,9 +29,14 @@ export function ProviderCard({ branch, firstSlot, now }: ProviderCardProps) {
   const distanceLabel = branch.distanceKm !== null ? formatDistanceAr(branch.distanceKm) : null
   const slotLabel = firstSlot ? getFirstAvailableSlotLabel(firstSlot, now) : null
 
+  const openProfile = () => router.push(`/(app)/branch/${branch.id}`)
+
   return (
-    <View
+    <Pressable
       testID={`provider-card-${branch.id}`}
+      accessibilityRole="button"
+      accessibilityLabel={branch.nameAr}
+      onPress={openProfile}
       className="gap-2.5 rounded-ih-md border border-ih-neutral-200 bg-ih-neutral-0 p-4"
     >
       <View className="flex-row items-start justify-between gap-2.5">
@@ -97,15 +104,17 @@ export function ProviderCard({ branch, firstSlot, now }: ProviderCardProps) {
           </Text>
         )}
         <Pressable
+          testID={`provider-book-${branch.id}`}
           accessibilityRole="button"
           accessibilityLabel={`احجز في ${branch.nameAr}`}
           disabled={slotLabel === null}
+          onPress={openProfile}
           className="h-9 min-w-[72px] items-center justify-center rounded-ih-sm bg-ih-primary-400 px-4"
           style={slotLabel === null ? { opacity: 0.45 } : undefined}
         >
           <Text className="font-arabic-semibold text-sm text-white">احجز</Text>
         </Pressable>
       </View>
-    </View>
+    </Pressable>
   )
 }

@@ -13,6 +13,8 @@ apps/mobile/android
 Pre-docs
 Implementation Docs
 UI screens
+# Claude Design handoff bundles — exported prototypes, not our code style
+design/*/project
 supabase/migrations
 supabase/functions
 packages/core/src/types/database.ts

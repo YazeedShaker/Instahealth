@@ -21,7 +21,7 @@ Keep **Current status** and **Next up** accurate at all times.
 
 ## Current status
 
-**Phase:** Home & Discovery done (F02) → Branch Profile (F04 next, then F03 Search)
+**Phase:** Branch Profile done (F04) → Search (F03) next, then Booking (F05–F06)
 **Milestone target:** Labs + Scans booking working end-to-end at Town Hospital & Saridar Labs
 **Environment:** Supabase `instahealth-dev` live (Frankfurt). Design system published in Claude Design.
 Core patient screens approved. Monorepo scaffolded — both app shells boot with tokens/fonts/RTL.
@@ -53,7 +53,8 @@ visual contract. Then specs → Claude Code.
       constants (see Shipped)
 - [x] **F01** — ✅ DONE. Mobile: patient auth (phone OTP via Vonage) — see Shipped
 - [x] **F02** — ✅ DONE. Mobile: Home & Discovery + launch-partner seed + users-row trigger (see Shipped)
-- [ ] **F03–F04** — Mobile: search + branch profile (F04 first — F03 rides after it)
+- [x] **F04** — ✅ DONE. Mobile: branch profile & service selection (see Shipped)
+- [ ] **F03** — Mobile: search (rides on F04's branch route)
 - [ ] **F05–F06** — Mobile: booking flow (select → slot/hold → details → Paymob) + confirmation
 - [ ] **P01–P06** — Web: provider dashboard (build alongside F05–F06 to close the loop)
 - [ ] **F07–F09** — Mobile: bookings history, cancel, reviews, profile
@@ -66,6 +67,59 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 ---
 
 ## Shipped
+
+### 2026-07-25 · F04 — Branch profile & service selection (mobile)
+
+Built to the approved branch-profile mockup: `app/(app)/branch/[id].tsx` (deep-linkable
+`instahealth://branch/<id>`, signed-in via the `(app)` group guard). Photo gallery header
+(dots + counter; styled placeholder while seeded branches have no photos), provider info
+(name, derived type badge, rating, open/closed chip with **expandable full-week schedule**,
+distance from the Home location state, address), **اتصال / الاتجاهات** actions row,
+"أقرب المواعيد" read-only preview chips, services **grouped by category** (DB `icon` +
+`name_ar` headers, core ordering labs → scans → doctors), thin in-list search, per-row
+prep chips (يتطلب صياماً / تحضيراً), live **preparation strip** (cream, expandable in place,
+from `computePreparationNotes`), sticky **احجز الآن** bar with running total + Arabic
+dual/plural count. Unknown/inactive id → friendly error with back-to-Home; skeletons per
+mockup. Home's `ProviderCard` (card + احجز) now navigates here. Booking stub
+`app/(app)/booking/index.tsx` shows قريباً + selection recap — F05 replaces it.
+
+**Core additions** (all tested; core now 150 tests, 100% line coverage):
+`groupServicesByCategory()` / `summarizeSelection()` / `formatServiceCountAr()` /
+`formatEgpDigitsAr()` in `business/selection.ts` (+ `BranchServiceItem`, `CategoryGroup`,
+`SelectionSummary` domain types); hours.ts gained `getCairoDayKey()`, `DAY_LABELS_AR`,
+`WEEK_DAY_ORDER`, `formatDayHoursAr()` for the week schedule.
+
+**For F05 (hand-off):**
+
+- **Booking store** (`features/booking/store.ts`, Zustand): `{ branchId, branchNameAr,
+selectedServices, openBranch, toggleService, clearSelection, reset }`. `openBranch()`
+  keeps the selection for the same branch, resets on a different one. The branch screen
+  calls it on load — F05 reads the store, never re-selects.
+- **Queries** (`features/branch/queries.ts`): `useBranchProfile(id)` (cache key
+  `['branch', id]`, maps rows → `BranchServiceItem` incl. one-time `parseFastingHours`);
+  `useBranchSlotsPreview(id)` (`['branch', id, 'slots-preview']`, 3-day window, filters
+  full slots via `getSlotStatus` with holds=0 — F05 must count holds for real picking).
+- **Stub route to replace:** `app/(app)/booking/index.tsx`. Its Tabs registration
+  (`booking/index` with `tabBarStyle: { display: 'none' }`) already hides the tab bar for
+  the flow; keep that pattern for the other 3 steps (or move the flow to its own group).
+
+**Decisions / notes:**
+
+- **Tab bar stays visible on the branch profile** (destination, per
+  DECISION-navigation-safe-areas) — the sticky CTA sits above it, so the tab bar provides
+  the bottom safe-area clearance. In the booking flow the tab bar is hidden.
+- **CTA label is the spec's "احجز الآن"** (mockup said "احجز موعد" — spec wins, named twice).
+- **Row prep-chip rule:** fasting chip when `fastingHours > 0`; generic تحضير chip for other
+  real prep; notes starting "لا يشترط" get NO chip (reassurance, not preparation). The
+  strip itself is core-authoritative (`computePreparationNotes` includes any non-empty note).
+- **Call button dials `branches.phone` and is hidden when NULL** — no hotline column exists;
+  Kerdasa's seeded phone IS the 19232 hotline (data-level fallback, verified). If a future
+  branch lands with no phone, add a provider-level hotline column rather than hardcoding.
+- Prices/totals render Arabic-Indic digits + latin "EGP" suffix per the mockup; the core
+  `summarizeSelection` label uses "ج.م" per the spec example (both from core helpers).
+- Maestro: `e2e/branch-profile.test.yaml` covers the full spec flow (Town select fasting +
+  non-fasting → consolidated strip → stub recap → Saridar reset). Runs when SETUP-02's
+  Maestro CI job lands.
 
 ### 2026-07-25 · F02 — Home & Discovery + launch-partner seed + users-row trigger
 

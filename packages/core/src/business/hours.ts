@@ -84,6 +84,34 @@ export function isBranchOpenNow(hours: BranchHours, now: Date): boolean {
   return minutes >= openMinutes || minutes < closeMinutes
 }
 
+/** Egypt's week starts Saturday — the order the full-week schedule renders in. */
+export const WEEK_DAY_ORDER: DayKey[] = [...DAY_KEYS]
+
+export const DAY_LABELS_AR: Record<DayKey, string> = {
+  sat: 'السبت',
+  sun: 'الأحد',
+  mon: 'الاثنين',
+  tue: 'الثلاثاء',
+  wed: 'الأربعاء',
+  thu: 'الخميس',
+  fri: 'الجمعة',
+}
+
+/** Which Egypt-wall-clock weekday `now` falls on — for highlighting "today"
+ * in the expandable schedule. */
+export function getCairoDayKey(now: Date): DayKey {
+  return getCairoDayAndMinutes(now).dayKey
+}
+
+/** One schedule row: "مغلق", "مفتوح ٢٤ ساعة", or "٨ص – ١٠م". */
+export function formatDayHoursAr(day: BranchDayHours): string {
+  if (day.closed || day.open === null || day.close === null) return 'مغلق'
+  if (timeToMinutes(day.open) === 0 && timeToMinutes(day.close) === MINUTES_PER_DAY) {
+    return 'مفتوح ٢٤ ساعة'
+  }
+  return `${formatTimeShortAr(day.open)} – ${formatTimeShortAr(day.close)}`
+}
+
 export interface OpenStatus {
   isOpen: boolean
   /** "١٠م" — today's closing time for the "مفتوح حتى …" chip; null for 24/7 branches. */
