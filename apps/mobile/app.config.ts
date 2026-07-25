@@ -41,6 +41,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     'expo-font',
+    [
+      'expo-location',
+      {
+        locationWhenInUsePermission: 'نستخدم موقعك لعرض أقرب المراكز الطبية إليك.',
+      },
+    ],
   ],
   experiments: {
     typedRoutes: false,

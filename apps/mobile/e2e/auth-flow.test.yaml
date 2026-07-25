@@ -83,6 +83,8 @@ appId: com.instahealth.app
     id: 'home-greeting'
 
 # Logout → welcome; sign in again → returning user skips name entry
+# (logout lives on the حسابي tab since F02)
+- tapOn: 'حسابي'
 - tapOn:
     id: 'home-logout'
 - assertVisible: 'خدمتك الطبية أونلاين — احجز في دقائق'

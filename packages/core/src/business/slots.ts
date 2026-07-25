@@ -46,3 +46,55 @@ export function getRemainingHoldSeconds(expiresAt: Date, now: Date): number {
 export function isHoldExpiringSoon(remainingSeconds: number): boolean {
   return remainingSeconds < HOLD_WARNING_SECONDS
 }
+
+// ── First-available-slot label (Home provider cards) ─────────────────────────
+
+import { formatTimeShortAr, type SupportedLocale } from './format'
+
+export interface FirstAvailableSlot {
+  slotDate: string // YYYY-MM-DD (Egypt wall-clock date)
+  slotTime: string // HH:MM[:SS]
+}
+
+const CAIRO_DATE = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Cairo' }) // YYYY-MM-DD
+const CAIRO_WEEKDAY_AR = new Intl.DateTimeFormat('ar-EG', {
+  timeZone: 'Africa/Cairo',
+  weekday: 'long',
+})
+const CAIRO_WEEKDAY_EN = new Intl.DateTimeFormat('en-EG', {
+  timeZone: 'Africa/Cairo',
+  weekday: 'long',
+})
+const DAY_MS = 24 * 60 * 60 * 1000
+
+function slotDateAtNoonUtc(slotDate: string): Date {
+  return new Date(`${slotDate}T12:00:00Z`)
+}
+
+function formatTimeShortEn(time: string): string {
+  const [hourStr = '0', minuteStr = '00'] = time.split(':')
+  const hour = Number(hourStr) % 24
+  const minute = Number(minuteStr)
+  const suffix = hour < 12 ? 'AM' : 'PM'
+  const hour12 = hour % 12 === 0 ? 12 : hour % 12
+  return `${hour12}:${String(minute).padStart(2, '0')} ${suffix}`
+}
+
+/** "اليوم ٣:٣٠م" / "غداً ٩ص" / "الأحد ٩ص" — the Home-card first-slot line. */
+export function getFirstAvailableSlotLabel(
+  slot: FirstAvailableSlot,
+  now: Date,
+  locale: SupportedLocale = 'ar',
+): string {
+  const today = CAIRO_DATE.format(now)
+  const tomorrow = CAIRO_DATE.format(new Date(now.getTime() + DAY_MS))
+  const timeLabel =
+    locale === 'ar' ? formatTimeShortAr(slot.slotTime) : formatTimeShortEn(slot.slotTime)
+
+  if (slot.slotDate === today) return locale === 'ar' ? `اليوم ${timeLabel}` : `Today ${timeLabel}`
+  if (slot.slotDate === tomorrow)
+    return locale === 'ar' ? `غداً ${timeLabel}` : `Tomorrow ${timeLabel}`
+
+  const weekdayFormatter = locale === 'ar' ? CAIRO_WEEKDAY_AR : CAIRO_WEEKDAY_EN
+  return `${weekdayFormatter.format(slotDateAtNoonUtc(slot.slotDate))} ${timeLabel}`
+}

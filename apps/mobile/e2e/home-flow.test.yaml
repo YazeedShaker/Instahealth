@@ -1,0 +1,58 @@
+# Maestro E2E — F02 Home & Discovery (static test number +201000000001 / 123456).
+# Wired to run in CI when SETUP-02's Maestro job lands (real dev build required).
+appId: com.instahealth.app
+---
+# Login with the static test number (returning user path)
+- clearState
+- launchApp
+- tapOn:
+    id: 'welcome-start'
+- tapOn:
+    id: 'phone-input'
+- inputText: '01000000001'
+- tapOn:
+    id: 'phone-next'
+- tapOn:
+    id: 'otp-box-0'
+- inputText: '123456'
+- tapOn:
+    id: 'otp-confirm'
+
+# Deny location when the OS prompt appears (covers the graceful-degradation path)
+- tapOn:
+    id: 'location-later'
+    optional: true
+
+# Home shows real partner cards from the DB
+- assertVisible: 'أقرب المراكز إليك'
+- assertVisible: 'مستشفى تاون.*'
+- assertVisible: 'ساريدار.*'
+
+# Tap تحاليل → filters to labs providers (both partners have labs, list stays populated)
+- tapOn:
+    id: 'category-labs'
+- assertVisible: 'ساريدار.*'
+
+# Tap أشعة → scans-only providers (Town has scans; Saridar disappears)
+- tapOn:
+    id: 'category-labs'
+- tapOn:
+    id: 'category-scans'
+- assertVisible: 'مستشفى تاون.*'
+- assertNotVisible: 'ساريدار — الدقي'
+
+# Clear filter, list renders sorted (location denied → name order, no distances)
+- tapOn:
+    id: 'category-scans'
+- assertVisible: 'أقرب المراكز إليك'
+
+# Pull-to-refresh works
+- swipe:
+    from:
+      id: 'home-list'
+    direction: DOWN
+- assertVisible: 'أقرب المراكز إليك'
+
+# Doctors stays coming-soon and non-navigating
+- assertVisible:
+    id: 'category-doctors-coming-soon'
