@@ -47,9 +47,27 @@ export function isHoldExpiringSoon(remainingSeconds: number): boolean {
   return remainingSeconds < HOLD_WARNING_SECONDS
 }
 
+export type HoldChipState = 'calm' | 'warning' | 'expired'
+
+/** Single source for the hold-chip UI state (approved calm→amber design):
+ * calm while comfortable, warning under HOLD_WARNING_SECONDS, expired at 0. */
+export function getHoldChipState(remainingSeconds: number): HoldChipState {
+  if (remainingSeconds <= 0) return 'expired'
+  if (isHoldExpiringSoon(remainingSeconds)) return 'warning'
+  return 'calm'
+}
+
+/** "٠٩:٢٣" — the MM:SS countdown figure (Arabic-Indic, zero-padded). */
+export function formatHoldCountdown(remainingSeconds: number): string {
+  const clamped = Math.max(0, remainingSeconds)
+  const minutes = String(Math.floor(clamped / SECONDS_PER_MINUTE)).padStart(2, '0')
+  const seconds = String(clamped % SECONDS_PER_MINUTE).padStart(2, '0')
+  return toArabicDigits(`${minutes}:${seconds}`)
+}
+
 // ── First-available-slot label (Home provider cards) ─────────────────────────
 
-import { formatTimeShortAr, type SupportedLocale } from './format'
+import { formatTimeShortAr, toArabicDigits, type SupportedLocale } from './format'
 
 export interface FirstAvailableSlot {
   slotDate: string // YYYY-MM-DD (Egypt wall-clock date)

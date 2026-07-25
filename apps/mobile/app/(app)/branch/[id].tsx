@@ -98,7 +98,7 @@ export default function BranchProfileScreen() {
           ) : null}
         </View>
       </ScrollView>
-      <StickyBookingBar summary={summary} onBook={() => router.push('/(app)/booking')} />
+      <StickyBookingBar summary={summary} onBook={() => router.push('/(app)/booking/slot')} />
     </View>
   )
 }

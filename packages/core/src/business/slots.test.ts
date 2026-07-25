@@ -1,7 +1,14 @@
 import { describe, expect, test } from 'vitest'
 
 import { HOLD_WARNING_SECONDS, SLOT_HOLD_MINUTES } from '../constants'
-import { getRemainingHoldSeconds, getSlotStatus, holdExpiresAt, isHoldExpiringSoon } from './slots'
+import {
+  formatHoldCountdown,
+  getHoldChipState,
+  getRemainingHoldSeconds,
+  getSlotStatus,
+  holdExpiresAt,
+  isHoldExpiringSoon,
+} from './slots'
 
 describe('getSlotStatus', () => {
   test('available when capacity remains beyond bookings and holds', () => {
@@ -65,5 +72,34 @@ describe('isHoldExpiringSoon', () => {
 
   test('true all the way down to 0', () => {
     expect(isHoldExpiringSoon(0)).toBe(true)
+  })
+})
+
+describe('getHoldChipState', () => {
+  test('calm above the warning threshold', () => {
+    expect(getHoldChipState(600)).toBe('calm')
+    expect(getHoldChipState(HOLD_WARNING_SECONDS)).toBe('calm')
+  })
+
+  test('warning strictly under the threshold', () => {
+    expect(getHoldChipState(HOLD_WARNING_SECONDS - 1)).toBe('warning')
+    expect(getHoldChipState(1)).toBe('warning')
+  })
+
+  test('expired at zero and below', () => {
+    expect(getHoldChipState(0)).toBe('expired')
+    expect(getHoldChipState(-5)).toBe('expired')
+  })
+})
+
+describe('formatHoldCountdown', () => {
+  test('renders zero-padded Arabic-Indic MM:SS', () => {
+    expect(formatHoldCountdown(572)).toBe('٠٩:٣٢')
+    expect(formatHoldCountdown(60)).toBe('٠١:٠٠')
+    expect(formatHoldCountdown(7)).toBe('٠٠:٠٧')
+  })
+
+  test('clamps negatives to ٠٠:٠٠', () => {
+    expect(formatHoldCountdown(-10)).toBe('٠٠:٠٠')
   })
 })

@@ -49,23 +49,17 @@ appId: com.instahealth.app
     id: 'prep-strip-toggle'
 - assertVisible: 'صيام من ٨ إلى ١٢ ساعة.*'
 
-# Count + total correct, CTA enabled → tap through to the booking stub
+# Count + total correct, CTA enabled → tap through to the booking flow (F05)
 - assertVisible: 'خدمتان'
 - tapOn:
     id: 'book-now'
 
-# Booking stub shows the SAME selection
-- assertVisible: 'إتمام الحجز'
-- assertVisible: 'قريباً'
-- assertVisible:
-    id: 'booking-recap'
-- assertVisible: 'سكر صائم'
-- assertVisible: 'صورة دم كاملة (CBC)'
-- assertVisible: 'خدمتان.*'
+# Slot picker opens (step 2) — selection carried over
+- assertVisible: 'اختر الموعد المناسب'
 
 # Back to the profile, back to Home
 - tapOn:
-    id: 'booking-back'
+    id: 'booking-flow-back'
 - assertVisible: 'أقرب المواعيد'
 - tapOn:
     id: 'branch-back'

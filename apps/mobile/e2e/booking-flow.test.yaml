@@ -1,0 +1,91 @@
+# Maestro E2E — F05 Slot Selection, Hold & Review
+# (static test number +201000000001 / 123456; Town Hospital is 24/7 so slots
+# always exist. Runs against a dev build when SETUP-02's Maestro job lands.)
+appId: com.instahealth.app
+---
+# Login with the static test number
+- clearState
+- launchApp
+- tapOn:
+    id: 'welcome-start'
+- tapOn:
+    id: 'phone-input'
+- inputText: '01000000001'
+- tapOn:
+    id: 'phone-next'
+- tapOn:
+    id: 'otp-box-0'
+- inputText: '123456'
+- tapOn:
+    id: 'otp-confirm'
+- tapOn:
+    id: 'location-later'
+    optional: true
+
+# F04: Town Hospital → select two services → into the flow
+- assertVisible: 'أقرب المراكز إليك'
+- tapOn:
+    id: 'provider-card-bbbb0000-0000-4000-8000-000000000001'
+- tapOn: 'سكر صائم'
+- tapOn: 'صورة دم كاملة (CBC)'
+- tapOn:
+    id: 'book-now'
+
+# Step 2: slot picker shows real seeded slots, day strip + periods
+- assertVisible: 'اختر الموعد المناسب'
+- assertVisible: 'المواعيد المتاحة'
+
+# Pick the first visible slot → hold chip appears (timer running)
+- tapOn:
+    text: '.*[صم]'
+    index: 0
+- assertVisible:
+    id: 'hold-chip'
+- assertVisible: 'خذ وقتك بهدوء'
+
+# التالي → review shows branch, services, slot, total, prep, patient data
+- tapOn:
+    id: 'slot-next'
+- assertVisible: 'مراجعة الحجز'
+- assertVisible:
+    id: 'order-summary'
+- assertVisible: 'سكر صائم'
+- assertVisible: 'صورة دم كاملة (CBC)'
+- assertVisible: 'الإجمالي'
+- assertVisible:
+    id: 'prep-strip'
+- assertVisible: '✓ مؤكد'
+- assertVisible:
+    id: 'hold-chip'
+
+# متابعة للدفع → payment stub shows the recap + pending ref
+- tapOn:
+    id: 'review-continue'
+- assertVisible: 'الدفع — قريباً'
+- assertVisible:
+    id: 'order-summary'
+- assertVisible:
+    id: 'payment-booking-ref'
+
+# Back out of the whole flow to Home
+- tapOn:
+    id: 'booking-flow-back'
+- assertVisible: 'مراجعة الحجز'
+- tapOn:
+    id: 'booking-flow-back'
+- assertVisible: 'اختر الموعد المناسب'
+- tapOn:
+    id: 'booking-flow-back'
+- assertVisible: 'أقرب المواعيد'
+- tapOn:
+    id: 'branch-back'
+- assertVisible: 'أقرب المراكز إليك'
+
+# Re-enter the flow → the old hold is NOT reused (fresh picker, no timer)
+- tapOn:
+    id: 'provider-card-bbbb0000-0000-4000-8000-000000000001'
+- tapOn:
+    id: 'book-now'
+- assertVisible: 'اختر الموعد المناسب'
+- assertNotVisible:
+    id: 'hold-chip'

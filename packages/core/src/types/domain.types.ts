@@ -19,6 +19,10 @@ export interface SelectedService {
  * joined branch query (price from branch_services, fasting parsed via
  * `parseFastingHours`), never re-derived in UI. */
 export interface BranchServiceItem extends SelectedService {
+  /** The branch_services row id — booking_services.branch_service_id
+   * references THIS, not the service id. Carried from selection so the
+   * review screen can create booking rows without a re-query. */
+  branchServiceId: string
   categorySlug: string
   categoryNameAr: string
   categoryNameEn: string

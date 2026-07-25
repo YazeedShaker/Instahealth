@@ -37,10 +37,11 @@ export default function AppLayout() {
       {/* Branch profile — a browsing DESTINATION: not a tab button, but the
           tab bar stays visible (DECISION-navigation-safe-areas §1). */}
       <Tabs.Screen name="branch/[id]" options={{ href: null }} />
-      {/* Booking flow — commitment funnel: tab bar HIDDEN, exit via back only. */}
+      {/* Booking flow (nested stack) — commitment funnel: tab bar HIDDEN for
+          all steps, exit via back only. */}
       <Tabs.Screen
-        name="booking/index"
-        options={{ href: null, tabBarStyle: { display: 'none' } }}
+        name="booking"
+        options={{ href: null, tabBarStyle: { display: 'none' }, popToTopOnBlur: true }}
       />
     </Tabs>
   )
