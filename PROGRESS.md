@@ -21,7 +21,7 @@ Keep **Current status** and **Next up** accurate at all times.
 
 ## Current status
 
-**Phase:** Mobile auth done (F01) → Discovery (F02 next)
+**Phase:** Home & Discovery done (F02) → Branch Profile (F04 next, then F03 Search)
 **Milestone target:** Labs + Scans booking working end-to-end at Town Hospital & Saridar Labs
 **Environment:** Supabase `instahealth-dev` live (Frankfurt). Design system published in Claude Design.
 Core patient screens approved. Monorepo scaffolded — both app shells boot with tokens/fonts/RTL.
@@ -52,7 +52,8 @@ visual contract. Then specs → Claude Code.
 - [x] **CORE-01** — ✅ DONE. Core package: DB types, Zod schemas, Supabase client, business logic,
       constants (see Shipped)
 - [x] **F01** — ✅ DONE. Mobile: patient auth (phone OTP via Vonage) — see Shipped
-- [ ] **F02–F04** — Mobile: home, map/list discovery, search, branch profile
+- [x] **F02** — ✅ DONE. Mobile: Home & Discovery + launch-partner seed + users-row trigger (see Shipped)
+- [ ] **F03–F04** — Mobile: search + branch profile (F04 first — F03 rides after it)
 - [ ] **F05–F06** — Mobile: booking flow (select → slot/hold → details → Paymob) + confirmation
 - [ ] **P01–P06** — Web: provider dashboard (build alongside F05–F06 to close the loop)
 - [ ] **F07–F09** — Mobile: bookings history, cancel, reviews, profile
@@ -65,6 +66,48 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 ---
 
 ## Shipped
+
+### 2026-07-25 · F02 — Home & Discovery + launch-partner seed + users-row trigger
+
+Three deliverables, applied to the LIVE dev project:
+
+**A · Seed** (`supabase/seeds/002_launch_partners.sql`, idempotent — verified by double-run):
+Town Hospital (New Cairo, 24/7, labs + 6 new scan services) + **23 Saridar branches** (every
+template branch with resolved coordinates that's on the website and not "use only after
+confirmation" — the spec's ~22; excluded: Maadi, Giza, Faisal 3, El-Mahla, Benha, Zagazig,
+Mansoura). 486 branch_services rows, 5,260 slots backfilled for 7 days. **Scans category
+activated** (the Decision-2 launch switch — labs+scans now live). Slot backfill is SET-BASED
+in the seed — the per-row `generate_branch_slots()` loop exceeds the platform statement
+timeout at 24 branches (nightly Edge Function still fine branch-by-branch).
+
+**B · Migration** `20260725165604_user_profile_trigger.sql`: `handle_new_user()` on auth.users
+INSERT creates the patient row (E.164-normalized phone); backfilled 2 existing users; verified
+the static-test-number user got its row with no client insert. `database.ts` regenerated —
+byte-identical (trigger functions don't surface in generated types). `ensureProfile()` remains
+as fallback.
+
+**C · Home screen**: built to the approved mockup — greeting + location chip + bell, search bar
+(→ Search tab placeholder), category grid (تحاليل/أشعة active filters; أطباء dimmed "قريباً"
+non-tappable), coming-soon chips, nearby list with real DB cards (type badge, distance,
+open/closed chip, first-slot line, skeletons/empty/no-slots states), pull-to-refresh, soft-ask
+location flow (deny → Cairo center + name sort; NULL-coord branches at end, no NaN). Tabs are
+now the real 4-tab bar; logout moved to حسابي.
+
+**Core additions** (all unit-tested; core now 131 tests, 100% line coverage):
+`computeDistanceKm`/`formatDistanceAr` (Haversine + Arabic formatting), `parseBranchHours`/
+`isBranchOpenNow`/`getOpenStatus` (24/7, Friday-different, midnight-crossing, Cairo-pinned),
+`getFirstAvailableSlotLabel` (اليوم/غداً/weekday), `toArabicDigits`/`formatTimeShortAr`.
+
+**Decisions / notes:**
+
+- **Type badge is DERIVED**: branch serves scans → "مستشفى", labs-only → "معمل تحاليل". There is
+  no provider-type column — architect may want one when a scans-only chain onboards.
+- Slots query is one batched fetch (date+time ascending, 3-day window, limit 1000) — each
+  branch's first appearance in that ordering IS its earliest slot; no N+1.
+- F03/F04 hand-off: `useHomeBranches()` / `useFirstAvailableSlots()` in
+  `features/home/queries.ts` are the query shapes to extend; `ProviderCard` takes
+  `{ branch: HomeBranchWithDistance, firstSlot, now }` and should navigate to the F04 branch
+  profile route when it exists (احجز button is currently a stub).
 
 ### 2026-07-23 · F01 — Patient phone-OTP authentication (mobile)
 
@@ -256,6 +299,14 @@ _Next entry after SETUP-02._
 ---
 
 ## Known risks / open items
+
+- **⚠ All seeded prices are PLACEHOLDERS** (labs 150/250/400, scans 300–2500 EGP rounds) —
+  replace with real Saridar/Town prices via the provider dashboard before real patients.
+- **Saridar per-branch hours unconfirmed:** all 23 seeded branches use the standard schedule
+  (Sat–Thu 08:00–22:00, Fri 09:00–17:00). Google shows different hours at Dokki/Manial/Faisal 2 —
+  awaiting Saridar's answer to the template's question 4; update `operating_hours` per branch then.
+- **7 Saridar branches not yet seeded** (Maadi, Giza, Faisal 3, El-Mahla, Benha, Zagazig,
+  Mansoura) — pending confirmation/maps links; add via a data-only follow-up to seed 002.
 
 - **Trademark:** "InstaHealth" name proximity to existing "InstaClinic" (home-visit app) and
   "Instapharm". Check trademark availability in Egypt before public launch / printing.

@@ -31,6 +31,24 @@ const TIME_FORMATTERS: Record<SupportedLocale, Intl.DateTimeFormat> = {
   }),
 }
 
+const ARABIC_INDIC_DIGITS = '٠١٢٣٤٥٦٧٨٩'
+
+/** Renders Western digits as Arabic-Indic for display (timers, distances, counters). */
+export function toArabicDigits(value: string): string {
+  return value.replace(/[0-9]/g, (digit) => ARABIC_INDIC_DIGITS[Number(digit)] as string)
+}
+
+/** "22:00" → "١٠م", "09:30" → "٩:٣٠ص" — the compact Arabic time label from the designs. */
+export function formatTimeShortAr(time: string): string {
+  const [hourStr = '0', minuteStr = '00'] = time.split(':')
+  const hour = Number(hourStr) % 24
+  const minute = Number(minuteStr)
+  const suffix = hour < 12 ? 'ص' : 'م'
+  const hour12 = hour % 12 === 0 ? 12 : hour % 12
+  const base = minute === 0 ? String(hour12) : `${hour12}:${String(minute).padStart(2, '0')}`
+  return `${toArabicDigits(base)}${suffix}`
+}
+
 /** EGP currency string. The UI applies fonts (Latin refs render in Atkinson) — core just returns the string. */
 export function formatEGP(amount: number, locale: SupportedLocale): string {
   return CURRENCY_FORMATTERS[locale].format(amount)

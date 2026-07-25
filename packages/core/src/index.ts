@@ -15,6 +15,8 @@ export * from './business/slots'
 export * from './business/pricing'
 export * from './business/phone'
 export * from './business/format'
+export * from './business/geo'
+export * from './business/hours'
 
 // Schemas
 export * from './schemas/messages'
