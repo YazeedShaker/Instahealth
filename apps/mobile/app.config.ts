@@ -24,7 +24,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
   },
   web: {
-    output: 'static',
+    // SPA mode — no static/server rendering. The patient web experience is
+    // Next.js's job later (CLAUDE.md §3); Expo's web target only needs to not
+    // crash. 'static' pre-renders in Node where `window` doesn't exist.
+    output: 'single',
     favicon: './assets/images/favicon.png',
   },
   plugins: [
