@@ -1,4 +1,4 @@
-import { calculateBookingTotal } from '@instahealth/core'
+import { calculateBookingTotal, formatEgyptianPhoneDisplay } from '@instahealth/core'
 import { Redirect, useRouter } from 'expo-router'
 import { useState } from 'react'
 import { ScrollView, Text, TextInput, View } from 'react-native'
@@ -76,7 +76,10 @@ export default function ReviewScreen() {
 
   return (
     <View className="flex-1 bg-ih-neutral-50">
-      <ScrollView contentContainerStyle={{ padding: 20, gap: 18 }}>
+      <ScrollView
+        contentContainerStyle={{ padding: 20, gap: 18 }}
+        keyboardShouldPersistTaps="handled"
+      >
         <Text className="font-arabic-bold text-xl text-ih-neutral-800">مراجعة الحجز</Text>
 
         <OrderSummaryCard
@@ -114,8 +117,8 @@ export default function ReviewScreen() {
         <View className="gap-2">
           <Text className="font-arabic-semibold text-[13px] text-ih-neutral-600">رقم الهاتف</Text>
           <View className="min-h-[52px] flex-row items-center gap-2.5 rounded-ih-sm border-[1.5px] border-ih-neutral-200 bg-ih-neutral-50 px-4">
-            <Text className="flex-1 font-arabic-semibold text-base text-ih-neutral-700">
-              {profile?.phone ?? '—'}
+            <Text className="flex-1 font-english text-base font-semibold text-ih-neutral-700">
+              {profile?.phone != null ? formatEgyptianPhoneDisplay(profile.phone) : '—'}
             </Text>
             <Text className="rounded-ih-full bg-ih-primary-50 px-2.5 py-0.5 font-arabic-bold text-[11px] text-ih-primary-600">
               ✓ مؤكد

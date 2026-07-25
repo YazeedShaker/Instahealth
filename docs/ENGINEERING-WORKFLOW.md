@@ -109,6 +109,18 @@ pnpm audit --audit-level=high
   remaining scope; keep flows correct regardless).
 - App code never hardcodes hex — `colors.*` from `@instahealth/design-tokens`
   or NativeWind theme classes only.
+- **LTR literals inside Arabic text get bidi-mangled** (found on device in the
+  OTP screen): "+20 10 1234 5678" in an RTL sentence renders with its digit
+  groups REVERSED. Any phone/code/latin ref rendered inside Arabic copy must
+  go through core's `isolateLtr()` / `formatEgyptianPhoneDisplay()` (Unicode
+  LRI…PDI isolates). Forcing `direction:'ltr'` on the container only works
+  for standalone inputs, not inline text.
+- **iOS does NOT push content above the keyboard** (found on device in the
+  review screen): every screen with a text input needs the
+  `KeyboardAvoidingView` pattern — `behavior={Platform.OS === 'ios' ?
+'padding' : undefined}` wrapping the screen/flow content (Android's
+  adjustResize handles itself; see `(auth)/otp.tsx` and `booking/_layout.tsx`).
+  ScrollViews holding inputs also want `keyboardShouldPersistTaps="handled"`.
 
 ## 7 · Core package discipline (quick reference)
 

@@ -1,4 +1,4 @@
-import { OTP_LENGTH } from '@instahealth/core'
+import { formatEgyptianPhoneDisplay, OTP_LENGTH } from '@instahealth/core'
 import { Redirect, useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
 import { KeyboardAvoidingView, Platform, Pressable, Text, View } from 'react-native'
@@ -14,7 +14,6 @@ import {
   recordFailedAttempt,
   resetLockout,
 } from '../../features/auth/lockout'
-import { formatPhoneDigits } from '../../components/auth/PhoneInput'
 import { ensureProfile } from '../../features/auth/profile'
 import { getResendState } from '../../features/auth/resend'
 import { getAuthDestination } from '../../features/auth/routing'
@@ -57,7 +56,9 @@ export default function Otp() {
   const resend = getResendState(lastOtpRequestedAt, now)
   const locked = isLockedOut(lockout, now)
   const lockSecondsRemaining = getRemainingLockSeconds(lockout, now)
-  const displayPhone = `+20 ${formatPhoneDigits(pendingPhone.slice(3))}`
+  // Bidi-isolated via core — inside the Arabic sentence, RTL would otherwise
+  // reorder the digit groups ("5678 1234 10 20+").
+  const displayPhone = formatEgyptianPhoneDisplay(pendingPhone)
 
   const handleVerify = async () => {
     setIsVerifying(true)

@@ -2,7 +2,7 @@ import { getRemainingHoldSeconds } from '@instahealth/core'
 import { useQueryClient } from '@tanstack/react-query'
 import { Redirect, Stack, useNavigation, useRouter, useSegments } from 'expo-router'
 import { useEffect, useState } from 'react'
-import { Pressable, Text, View } from 'react-native'
+import { KeyboardAvoidingView, Platform, Pressable, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { BookingStepsHeader } from '../../../components/booking/BookingStepsHeader'
@@ -105,32 +105,40 @@ export default function BookingFlowLayout() {
 
   return (
     <SafeAreaView className="flex-1 bg-ih-neutral-50" edges={['top']}>
-      <View className="gap-3 border-b border-ih-neutral-200 bg-ih-neutral-0 px-4 pb-3.5 pt-3">
-        <View className="flex-row items-center gap-2">
-          <Pressable
-            testID="booking-flow-back"
-            accessibilityRole="button"
-            accessibilityLabel="رجوع"
-            onPress={() => (router.canGoBack() ? router.back() : router.replace('/(app)/home'))}
-            className="h-9 w-9 items-center justify-center rounded-ih-full border border-ih-neutral-200 bg-ih-neutral-50"
-          >
-            <Text className="text-base text-ih-neutral-700">→</Text>
-          </Pressable>
-          <View className="flex-1">
-            <BookingStepsHeader currentStep={currentStep} />
-          </View>
-        </View>
-        {hold !== null && remainingSeconds !== null && remainingSeconds > 0 ? (
-          <HoldChip remainingSeconds={remainingSeconds} />
-        ) : null}
-      </View>
-      <Stack
-        screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}
+      {/* iOS doesn't push content above the keyboard on its own — without this
+          the review screen's notes field disappears behind it (Android's
+          adjustResize handles it natively, hence iOS-only behavior). */}
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <Stack.Screen name="slot" />
-        <Stack.Screen name="review" />
-        <Stack.Screen name="payment" />
-      </Stack>
+        <View className="gap-3 border-b border-ih-neutral-200 bg-ih-neutral-0 px-4 pb-3.5 pt-3">
+          <View className="flex-row items-center gap-2">
+            <Pressable
+              testID="booking-flow-back"
+              accessibilityRole="button"
+              accessibilityLabel="رجوع"
+              onPress={() => (router.canGoBack() ? router.back() : router.replace('/(app)/home'))}
+              className="h-9 w-9 items-center justify-center rounded-ih-full border border-ih-neutral-200 bg-ih-neutral-50"
+            >
+              <Text className="text-base text-ih-neutral-700">→</Text>
+            </Pressable>
+            <View className="flex-1">
+              <BookingStepsHeader currentStep={currentStep} />
+            </View>
+          </View>
+          {hold !== null && remainingSeconds !== null && remainingSeconds > 0 ? (
+            <HoldChip remainingSeconds={remainingSeconds} />
+          ) : null}
+        </View>
+        <Stack
+          screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}
+        >
+          <Stack.Screen name="slot" />
+          <Stack.Screen name="review" />
+          <Stack.Screen name="payment" />
+        </Stack>
+      </KeyboardAvoidingView>
       <HoldExpiredModal visible={isExpiredModalVisible} onPickAgain={handlePickAgain} />
     </SafeAreaView>
   )
