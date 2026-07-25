@@ -21,7 +21,7 @@ Keep **Current status** and **Next up** accurate at all times.
 
 ## Current status
 
-**Phase:** Branch Profile done (F04) → Search (F03) next, then Booking (F05–F06)
+**Phase:** Slot Hold & Review done (F05) → Payment & Confirmation (F06) next (+ P01–P06 in parallel to close the loop); F03 Search still open
 **Milestone target:** Labs + Scans booking working end-to-end at Town Hospital & Saridar Labs
 **Environment:** Supabase `instahealth-dev` live (Frankfurt). Design system published in Claude Design.
 Core patient screens approved. Monorepo scaffolded — both app shells boot with tokens/fonts/RTL.
@@ -55,7 +55,8 @@ visual contract. Then specs → Claude Code.
 - [x] **F02** — ✅ DONE. Mobile: Home & Discovery + launch-partner seed + users-row trigger (see Shipped)
 - [x] **F04** — ✅ DONE. Mobile: branch profile & service selection (see Shipped)
 - [ ] **F03** — Mobile: search (rides on F04's branch route)
-- [ ] **F05–F06** — Mobile: booking flow (select → slot/hold → details → Paymob) + confirmation
+- [x] **F05** — ✅ DONE. Mobile: slot picker + 10-min hold + review + pending booking (see Shipped)
+- [ ] **F06** — Mobile: Paymob payment + confirmation screen + SMS (replaces the payment stub)
 - [ ] **P01–P06** — Web: provider dashboard (build alongside F05–F06 to close the loop)
 - [ ] **F07–F09** — Mobile: bookings history, cancel, reviews, profile
 - [ ] **A01–A06** — Web: admin panel
@@ -67,6 +68,69 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 ---
 
 ## Shipped
+
+### 2026-07-26 · F05 — Slot selection, hold & booking review (mobile)
+
+Steps 2–3 of the booking flow, built to the approved booking-flow mockup. Routes under
+`app/(app)/booking/`: `_layout` (step-progress header الخدمات✓→الموعد→المراجعة→الدفع, the
+**persistent hold-timer chip**, expiry modal, flow-exit teardown, no-selection guard),
+`slot` (date strip + month-view picker + period-grouped time grid صباحاً/ظهراً/مساءً),
+`review` (order summary card + prep strip + بياناتك read-only name/phone + notes), and
+`payment` (styled stub "الدفع — قريباً" + recap — **F06 replaces it**). F04's stub
+`booking/index.tsx` deleted; its CTA now targets `/booking/slot`.
+
+**The hold:** tapping an available slot calls the `create_slot_hold` RPC (never a direct
+insert); rejection shows "تم حجز هذا الموعد للتو — اختر موعداً آخر" + refetch, never an
+optimistic proceed. The chip counts down from the SERVER's `expires_at` (calm → amber under
+2 min via core `getHoldChipState`), lives in the flow layout so it survives screen
+transitions. Expiry anywhere in the flow → modal → back to a refreshed picker. Leaving the
+flow releases the hold + cancels any pending booking (best-effort; cron is the safety net).
+
+**Two-session race test (spec-required): ✅ verified at the DB level** — capacity-1 slot,
+`create_slot_hold` called for two different users: user A `success:true` + hold row, user B
+`{success:false, error:"slot_full"}`. Exactly one winner. (Temp slot cleaned up after.
+On-device two-phone repeat stays on the founder checklist.)
+
+**Pending booking (the confirm_booking contract):** متابعة للدفع inserts a
+`status='pending_payment'` bookings row (+ `booking_services` with `price_at_booking`)
+— exactly what `confirm_booking()` requires to exist. Patients have NO UPDATE policy on
+bookings, so a slot re-pick cancels the stale row (`cancel_booking` RPC) and creates a
+fresh one; same-slot re-entry reuses the row.
+
+**Core additions** (core now 172 tests, 100% lines): `buildSlotDaySections()`
+(`slot-sections.ts` — Cairo-pinned day/period grouping, past-slot pruning, window cap,
+disabled-day flags), `getHoldChipState()` + `formatHoldCountdown()` in slots.ts.
+`BranchServiceItem` gained **`branchServiceId`** (the branch_services row id —
+`booking_services.branch_service_id` references it; F04's query now selects it).
+Design tokens gained `warningBorder`/`warningText` (the amber chip pairings, AA contrast).
+
+**For F06 (hand-off):**
+
+- Store (`features/booking/store.ts`): `{ ...F04 selection, hold: {holdId, slotId,
+slotDate, slotTime, expiresAt}, pendingBooking: {id, bookingRef, slotId}, notes }`.
+  Payment reads everything from here; `confirm_booking(p_booking_id=pendingBooking.id,
+p_payment_method, …)` is the confirmation call — it flips status/payment, inserts the
+  payments row, increments the slot, deletes the hold, all atomically.
+- After a successful confirm, F06 must clear `hold`/`pendingBooking` BEFORE navigating out
+  so the layout's exit-teardown (blur listener) doesn't cancel the confirmed booking.
+- `payment.tsx` is the file to replace; the flow layout (timer, steps) needs no changes.
+- Mutations live in `features/booking/api.ts` (`acquireSlotHold`, `releaseHold`,
+  `createPendingBooking`, `cancelPendingBooking`).
+
+**Decisions / notes:**
+
+- Hold on slot-TAP (not on التالي) — matches PRODUCT.md §7 and the design's live timer on
+  the picker; التالي just navigates once a hold exists.
+- Switching slots releases the old hold client-side first — the RPC only auto-replaces a
+  hold on the SAME slot; without this the old hold leaks and blocks its slot ~10 min.
+- Availability display can't see other patients' holds (RLS: SELECT own only) — chips show
+  capacity/booked only; the RPC rejection is the real gate (per spec, documented).
+- Flow exit detection is the parent Tabs screen's **blur** event (Tabs keep the navigator
+  mounted, unmount alone never fires) + `popToTopOnBlur` so re-entry starts fresh at slot.
+- Review = design step-3 fields (name/phone/notes) merged with the order summary; name is
+  READ-ONLY per spec (design showed it editable — spec wins, profile editing out of scope).
+- `commission_amount` left NULL on pending rows (column default rate 0.12 applies; no
+  provider-level rate column exists yet) — compute at payout/reporting time (A-specs).
 
 ### 2026-07-25 · F04 — Branch profile & service selection (mobile)
 
@@ -354,6 +418,13 @@ _Next entry after SETUP-02._
 
 ## Known risks / open items
 
+- **⚠ Slot window is NOT being extended:** live DB has slots only through 2026-08-01 (the
+  seed's 7-day backfill). The nightly `generate-slots` cron that should keep a 30-day
+  window is not running/wired — verify the Edge Function schedule before launch, or the
+  picker goes empty in August. (Observed during F05's DB verification.)
+- **⚠ `create_slot_hold(p_slot_id, p_user_id)` doesn't verify `p_user_id = auth.uid()`**
+  (SECURITY DEFINER, callable by any authenticated user) — a malicious client could hold
+  slots as another user. Harden with an auth.uid() check in a follow-up migration.
 - **⚠ All seeded prices are PLACEHOLDERS** (labs 150/250/400, scans 300–2500 EGP rounds) —
   replace with real Saridar/Town prices via the provider dashboard before real patients.
 - **Saridar per-branch hours unconfirmed:** all 23 seeded branches use the standard schedule

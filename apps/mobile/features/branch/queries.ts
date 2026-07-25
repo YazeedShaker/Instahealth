@@ -39,7 +39,7 @@ export function useBranchProfile(branchId: string | undefined) {
             `id, name_ar, address_ar, district, phone, lat, lng, operating_hours,
              rating, review_count, photos, is_active,
              provider:providers!inner(name_ar, is_active),
-             branch_services(price, is_available,
+             branch_services(id, price, is_available,
                service:services!inner(id, name_ar, name_en, category_id, is_active,
                  preparation_notes_ar, preparation_notes_en, sort_order))`,
           )
@@ -77,6 +77,7 @@ export function useBranchProfile(branchId: string | undefined) {
           if (!category) throw new Error('unreachable: category filtered above')
           return {
             id: branchService.service.id,
+            branchServiceId: branchService.id,
             nameAr: branchService.service.name_ar,
             nameEn: branchService.service.name_en,
             priceEgp: branchService.price,

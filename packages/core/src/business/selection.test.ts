@@ -11,6 +11,7 @@ import {
 function makeService(overrides: Partial<BranchServiceItem> = {}): BranchServiceItem {
   return {
     id: 'svc-1',
+    branchServiceId: 'bs-1',
     nameAr: 'صورة دم كاملة',
     nameEn: 'CBC',
     priceEgp: 150,

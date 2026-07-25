@@ -45,6 +45,10 @@ export const colors = {
     successBg: '#E5F7F4',
     warning: '#D97706',
     warningBg: '#FEF3C7',
+    // Amber pairings from the DESIGN-01 hold-timer chip: border + AA-contrast
+    // text (#92600A on #FEF3C7 ≈ 6.3:1) for small text on the warning bg.
+    warningBorder: '#F0C787',
+    warningText: '#92600A',
     error: '#DC2626',
     errorBg: '#FEE2E2',
     info: '#028090',
