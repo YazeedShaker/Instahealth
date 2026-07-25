@@ -1,8 +1,4 @@
-import {
-  computeDistanceKm,
-  groupServicesByCategory,
-  summarizeSelection,
-} from '@instahealth/core'
+import { computeDistanceKm, groupServicesByCategory, summarizeSelection } from '@instahealth/core'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useEffect, useMemo, useState } from 'react'
 import { ScrollView, Text, View } from 'react-native'
@@ -44,10 +40,7 @@ export default function BranchProfileScreen() {
     if (branch) openBranch(branch.id, branch.nameAr)
   }, [branch, openBranch])
 
-  const groups = useMemo(
-    () => (branch ? groupServicesByCategory(branch.services) : []),
-    [branch],
-  )
+  const groups = useMemo(() => (branch ? groupServicesByCategory(branch.services) : []), [branch])
   const selectedServiceIds = useMemo(
     () => new Set(selectedServices.map((service) => service.id)),
     [selectedServices],
@@ -89,11 +82,7 @@ export default function BranchProfileScreen() {
         />
         <BranchInfoHeader branch={branch} distanceKm={distanceKm} now={now} />
         <View className="gap-4 px-5 pb-6 pt-4">
-          <SlotsPreviewStrip
-            slots={slotsQuery.data}
-            isLoading={slotsQuery.isPending}
-            now={now}
-          />
+          <SlotsPreviewStrip slots={slotsQuery.data} isLoading={slotsQuery.isPending} now={now} />
           {prepStrip !== null ? <PreparationStrip prep={prepStrip} /> : null}
           <ServicesSection
             groups={groups}

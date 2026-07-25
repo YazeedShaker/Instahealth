@@ -39,7 +39,10 @@ export default function BookingStub() {
         </View>
 
         {selectedServices.length > 0 ? (
-          <View testID="booking-recap" className="gap-3 rounded-ih-md border border-ih-neutral-200 bg-ih-neutral-0 p-4">
+          <View
+            testID="booking-recap"
+            className="gap-3 rounded-ih-md border border-ih-neutral-200 bg-ih-neutral-0 p-4"
+          >
             {branchNameAr !== null ? (
               <Text className="font-arabic-bold text-base text-ih-neutral-800">{branchNameAr}</Text>
             ) : null}
@@ -59,7 +62,10 @@ export default function BookingStub() {
             ))}
             <View className="flex-row items-center justify-between">
               <Text className="font-arabic-semibold text-sm text-ih-neutral-600">الإجمالي</Text>
-              <Text testID="booking-recap-total" className="font-arabic-bold text-base text-ih-primary-700">
+              <Text
+                testID="booking-recap-total"
+                className="font-arabic-bold text-base text-ih-primary-700"
+              >
                 {summary.label}
               </Text>
             </View>

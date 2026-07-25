@@ -67,9 +67,7 @@ export function formatServiceCountAr(count: number): string {
  * amounts without decimals, fractional totals with two and the Arabic mark.
  * UIs append their own currency suffix (ج.م / EGP) per the design. */
 export function formatEgpDigitsAr(amount: number): string {
-  const digits = Number.isInteger(amount)
-    ? String(amount)
-    : amount.toFixed(2).replace('.', '٫')
+  const digits = Number.isInteger(amount) ? String(amount) : amount.toFixed(2).replace('.', '٫')
   return toArabicDigits(digits)
 }
 
@@ -86,6 +84,7 @@ export function summarizeSelection(selected: SelectedService[]): SelectionSummar
   const count = selected.length
   const totalEgp = calculateBookingTotal(selected)
   const countLabelAr = formatServiceCountAr(count)
-  const label = count === 0 ? EMPTY_SELECTION_LABEL_AR : `${countLabelAr} · ${formatEgpAmountAr(totalEgp)}`
+  const label =
+    count === 0 ? EMPTY_SELECTION_LABEL_AR : `${countLabelAr} · ${formatEgpAmountAr(totalEgp)}`
   return { count, totalEgp, countLabelAr, label }
 }

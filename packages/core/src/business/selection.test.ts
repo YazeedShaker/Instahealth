@@ -156,9 +156,7 @@ describe('summarizeSelection', () => {
   })
 
   it('uses the singular form for one service', () => {
-    expect(summarizeSelection([makeService({ priceEgp: 400 })]).label).toBe(
-      'خدمة واحدة · ٤٠٠ ج.م',
-    )
+    expect(summarizeSelection([makeService({ priceEgp: 400 })]).label).toBe('خدمة واحدة · ٤٠٠ ج.م')
   })
 
   it('uses the 3–10 plural form', () => {

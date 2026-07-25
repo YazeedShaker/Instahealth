@@ -92,7 +92,7 @@ mockup. Home's `ProviderCard` (card + احجز) now navigates here. Booking stub
 **For F05 (hand-off):**
 
 - **Booking store** (`features/booking/store.ts`, Zustand): `{ branchId, branchNameAr,
-  selectedServices, openBranch, toggleService, clearSelection, reset }`. `openBranch()`
+selectedServices, openBranch, toggleService, clearSelection, reset }`. `openBranch()`
   keeps the selection for the same branch, resets on a different one. The branch screen
   calls it on load — F05 reads the store, never re-selects.
 - **Queries** (`features/branch/queries.ts`): `useBranchProfile(id)` (cache key

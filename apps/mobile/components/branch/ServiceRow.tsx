@@ -28,7 +28,9 @@ export function ServiceRow({ service, isSelected, isLast, onToggle }: ServiceRow
     >
       <View
         className={`h-6 w-6 items-center justify-center rounded-ih-xs border-[1.5px] ${
-          isSelected ? 'border-ih-primary-400 bg-ih-primary-400' : 'border-ih-neutral-300 bg-ih-neutral-0'
+          isSelected
+            ? 'border-ih-primary-400 bg-ih-primary-400'
+            : 'border-ih-neutral-300 bg-ih-neutral-0'
         }`}
       >
         {isSelected ? <Text className="text-sm text-white">✓</Text> : null}

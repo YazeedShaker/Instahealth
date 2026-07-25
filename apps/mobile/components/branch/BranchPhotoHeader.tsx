@@ -79,8 +79,7 @@ export function BranchPhotoHeader({ photos, isHospital }: BranchPhotoHeaderProps
                 className="h-2 rounded-ih-full"
                 style={{
                   width: index === activeIndex ? 20 : 8,
-                  backgroundColor:
-                    index === activeIndex ? '#FFFFFF' : 'rgba(255,255,255,0.55)',
+                  backgroundColor: index === activeIndex ? '#FFFFFF' : 'rgba(255,255,255,0.55)',
                 }}
               />
             ))}

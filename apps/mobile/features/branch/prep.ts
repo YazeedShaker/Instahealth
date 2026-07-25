@@ -1,4 +1,8 @@
-import { computePreparationNotes, type PreparationResult, type SelectedService } from '@instahealth/core'
+import {
+  computePreparationNotes,
+  type PreparationResult,
+  type SelectedService,
+} from '@instahealth/core'
 
 // Presence logic for the preparation summary strip: it renders ONLY when the
 // current selection actually produced a summary (DECISION-provider-data-model

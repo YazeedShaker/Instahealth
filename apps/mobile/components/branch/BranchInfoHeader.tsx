@@ -162,7 +162,9 @@ export function BranchInfoHeader({ branch, distanceKm, now }: BranchInfoHeaderPr
             testID="branch-directions"
             accessibilityRole="button"
             accessibilityLabel={`الاتجاهات إلى ${branch.nameAr}`}
-            onPress={() => openDirections(branch.lat as number, branch.lng as number, branch.nameAr)}
+            onPress={() =>
+              openDirections(branch.lat as number, branch.lng as number, branch.nameAr)
+            }
             className="h-11 flex-1 flex-row items-center justify-center gap-2 rounded-ih-sm border-[1.5px] border-ih-primary-600 bg-ih-neutral-0"
           >
             <Text className="text-sm">🗺️</Text>
