@@ -1,0 +1,79 @@
+# Maestro E2E — F04 Branch Profile & Service Selection
+# (static test number +201000000001 / 123456; runs against a dev build when
+# SETUP-02's Maestro CI job lands.)
+appId: com.instahealth.app
+---
+# Login with the static test number (returning-user path)
+- clearState
+- launchApp
+- tapOn:
+    id: 'welcome-start'
+- tapOn:
+    id: 'phone-input'
+- inputText: '01000000001'
+- tapOn:
+    id: 'phone-next'
+- tapOn:
+    id: 'otp-box-0'
+- inputText: '123456'
+- tapOn:
+    id: 'otp-confirm'
+- tapOn:
+    id: 'location-later'
+    optional: true
+
+# Home → tap the Town Hospital card → profile renders header + grouped services
+- assertVisible: 'أقرب المراكز إليك'
+- tapOn:
+    id: 'provider-card-bbbb0000-0000-4000-8000-000000000001'
+- assertVisible: 'مستشفى تاون.*'
+- assertVisible: 'مستشفى'
+- assertVisible: 'أقرب المواعيد'
+- assertVisible: 'تحاليل'
+- assertVisible: 'أشعة'
+
+# CTA disabled state before any selection
+- assertVisible: 'لم تختر بعد'
+
+# Select one fasting lab + one non-fasting service
+- tapOn: 'سكر صائم'
+- tapOn: 'صورة دم كاملة (CBC)'
+
+# Prep strip appears and mentions fasting ONCE (consolidated summary)
+- assertVisible:
+    id: 'prep-strip'
+- assertVisible: 'بعض الخدمات المختارة تتطلب صياماً — اضغط لعرض التفاصيل'
+
+# Expanding reveals the per-service detail
+- tapOn:
+    id: 'prep-strip-toggle'
+- assertVisible: 'صيام من ٨ إلى ١٢ ساعة.*'
+
+# Count + total correct, CTA enabled → tap through to the booking stub
+- assertVisible: 'خدمتان'
+- tapOn:
+    id: 'book-now'
+
+# Booking stub shows the SAME selection
+- assertVisible: 'إتمام الحجز'
+- assertVisible: 'قريباً'
+- assertVisible:
+    id: 'booking-recap'
+- assertVisible: 'سكر صائم'
+- assertVisible: 'صورة دم كاملة (CBC)'
+- assertVisible: 'خدمتان.*'
+
+# Back to the profile, back to Home
+- tapOn:
+    id: 'booking-back'
+- assertVisible: 'أقرب المواعيد'
+- tapOn:
+    id: 'branch-back'
+- assertVisible: 'أقرب المراكز إليك'
+
+# Open a DIFFERENT branch (Saridar Dokki) → previous selection is gone
+- tapOn:
+    id: 'provider-card-bbbb0000-0000-4000-8000-000000000101'
+- assertVisible: 'ساريدار — الدقي'
+- assertVisible: 'معمل تحاليل'
+- assertVisible: 'لم تختر بعد'

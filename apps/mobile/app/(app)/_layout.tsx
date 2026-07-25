@@ -34,6 +34,14 @@ export default function AppLayout() {
       <Tabs.Screen name="search" options={{ title: 'البحث', tabBarIcon: tabIcon('🔍') }} />
       <Tabs.Screen name="bookings" options={{ title: 'حجوزاتي', tabBarIcon: tabIcon('📅') }} />
       <Tabs.Screen name="profile" options={{ title: 'حسابي', tabBarIcon: tabIcon('👤') }} />
+      {/* Branch profile — a browsing DESTINATION: not a tab button, but the
+          tab bar stays visible (DECISION-navigation-safe-areas §1). */}
+      <Tabs.Screen name="branch/[id]" options={{ href: null }} />
+      {/* Booking flow — commitment funnel: tab bar HIDDEN, exit via back only. */}
+      <Tabs.Screen
+        name="booking/index"
+        options={{ href: null, tabBarStyle: { display: 'none' } }}
+      />
     </Tabs>
   )
 }

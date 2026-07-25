@@ -11,6 +11,7 @@ export * from './client/createServiceClient'
 
 // Business logic
 export * from './business/preparation'
+export * from './business/selection'
 export * from './business/slots'
 export * from './business/pricing'
 export * from './business/phone'

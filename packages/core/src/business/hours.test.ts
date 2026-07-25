@@ -1,6 +1,15 @@
 import { describe, expect, test } from 'vitest'
 
-import { getOpenStatus, isBranchOpenNow, parseBranchHours, type BranchHours } from './hours'
+import {
+  DAY_LABELS_AR,
+  formatDayHoursAr,
+  getCairoDayKey,
+  getOpenStatus,
+  isBranchOpenNow,
+  parseBranchHours,
+  WEEK_DAY_ORDER,
+  type BranchHours,
+} from './hours'
 
 // January dates keep Cairo at a stable UTC+2 (no DST ambiguity in assertions).
 // 2026-01-16 is a Friday; 2026-01-17 a Saturday.
@@ -107,5 +116,46 @@ describe('parseBranchHours', () => {
   test('non-object input → null', () => {
     expect(parseBranchHours(null)).toBeNull()
     expect(parseBranchHours('24/7')).toBeNull()
+  })
+})
+
+describe('getCairoDayKey', () => {
+  test('maps Egypt wall-clock weekdays (Friday and Saturday)', () => {
+    expect(getCairoDayKey(cairo('2026-01-16T12:00:00'))).toBe('fri')
+    expect(getCairoDayKey(cairo('2026-01-17T12:00:00'))).toBe('sat')
+  })
+
+  test('uses the Cairo date, not the viewer timezone (23:30 UTC Friday is Saturday in Cairo)', () => {
+    expect(getCairoDayKey(new Date('2026-01-16T23:30:00Z'))).toBe('sat')
+  })
+})
+
+describe('formatDayHoursAr', () => {
+  test('closed day → مغلق', () => {
+    expect(formatDayHoursAr({ open: null, close: null, closed: true })).toBe('مغلق')
+  })
+
+  test('24/7 day → مفتوح ٢٤ ساعة', () => {
+    expect(formatDayHoursAr({ open: '00:00', close: '24:00', closed: false })).toBe('مفتوح ٢٤ ساعة')
+  })
+
+  test('normal range renders compact Arabic times', () => {
+    expect(formatDayHoursAr({ open: '08:00', close: '22:00', closed: false })).toBe('٨ص – ١٠م')
+    expect(formatDayHoursAr({ open: '09:30', close: '17:00', closed: false })).toBe('٩:٣٠ص – ٥م')
+  })
+})
+
+describe('week schedule constants', () => {
+  test('week order starts Saturday and covers all seven days', () => {
+    expect(WEEK_DAY_ORDER).toEqual(['sat', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri'])
+    expect(WEEK_DAY_ORDER.map((day) => DAY_LABELS_AR[day])).toEqual([
+      'السبت',
+      'الأحد',
+      'الاثنين',
+      'الثلاثاء',
+      'الأربعاء',
+      'الخميس',
+      'الجمعة',
+    ])
   })
 })
