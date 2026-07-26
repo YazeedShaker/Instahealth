@@ -155,5 +155,6 @@ export function useBranchSlotsPreview(branchId: string | undefined) {
         .map((slot) => ({ slotDate: slot.slot_date, slotTime: slot.slot_time }))
     },
     staleTime: 60 * 1000,
+    refetchOnMount: 'always',
   })
 }

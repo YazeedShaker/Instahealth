@@ -37,6 +37,11 @@ export function useBookingSlots(branchId: string | null) {
         activeHoldCount: slot.active_hold_count,
       }))
     },
-    staleTime: 30 * 1000,
+    // Multi-device liveness: another patient releasing/expiring a hold must
+    // show up while THIS phone sits on the picker — RN has no window-focus
+    // refetch, so poll while the screen is mounted.
+    staleTime: 10 * 1000,
+    refetchOnMount: 'always',
+    refetchInterval: 15 * 1000,
   })
 }
