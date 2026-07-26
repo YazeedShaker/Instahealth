@@ -37,11 +37,11 @@ export function useBookingSlots(branchId: string | null) {
         activeHoldCount: slot.active_hold_count,
       }))
     },
-    // Multi-device liveness: another patient releasing/expiring a hold must
-    // show up while THIS phone sits on the picker — RN has no window-focus
-    // refetch, so poll while the screen is mounted.
+    // Liveness is PUSHED via useBranchHoldsRealtime (hold broadcasts). The
+    // slow poll below is only the fallback for silent time-expiry between
+    // cron sweeps and for dropped realtime sockets.
     staleTime: 10 * 1000,
     refetchOnMount: 'always',
-    refetchInterval: 15 * 1000,
+    refetchInterval: 60 * 1000,
   })
 }
