@@ -9,7 +9,8 @@ import { BookingStepsHeader } from '../../../components/booking/BookingStepsHead
 import { HoldChip } from '../../../components/booking/HoldChip'
 import { HoldExpiredModal } from '../../../components/booking/HoldExpiredModal'
 import { useAuthStore } from '../../../features/auth/store'
-import { cancelPendingBooking, releaseHold } from '../../../features/booking/api'
+import { cancelPendingBooking } from '../../../features/booking/api'
+import { cleanupFlow } from '../../../features/booking/cleanup'
 import { useBookingStore } from '../../../features/booking/store'
 
 const STEP_BY_SEGMENT: Record<string, number> = { slot: 1, review: 2, payment: 3 }
@@ -18,18 +19,6 @@ const TICK_MS = 1000
 // The flow always starts at the slot picker (alphabetical order would pick
 // "payment" as the stack's initial route otherwise).
 export const unstable_settings = { initialRouteName: 'slot' }
-
-/** Best-effort teardown when the patient leaves the flow: release the hold,
- * cancel an abandoned pending booking, keep the F04 selection. Idempotent —
- * safe to run from both the blur listener and the unmount backstop. Failures
- * are fine: server-side expiry + the cleanup cron are the safety net. */
-function cleanupFlow(userId: string | null) {
-  const { hold, pendingBooking, clearFlowState } = useBookingStore.getState()
-  if (hold === null && pendingBooking === null) return
-  if (hold !== null && userId !== null) void releaseHold(hold, userId)
-  if (pendingBooking !== null) void cancelPendingBooking(pendingBooking.id, 'left_booking_flow')
-  clearFlowState()
-}
 
 // The booking-flow chrome (F05): step progress + the persistent hold timer.
 // Tab bar is hidden for the whole flow (DECISION-navigation-safe-areas §1 —
@@ -76,10 +65,10 @@ export default function BookingFlowLayout() {
     setIsExpiredModalVisible(true)
   }, [remainingSeconds])
 
-  // Leaving the flow: Tabs keep this navigator MOUNTED, so unmount alone
-  // never fires on back-out — the parent screen's `blur` is the real exit
-  // signal (unmount stays as a backstop). App kill needs nothing: server-side
-  // expiry + the cleanup cron handle it.
+  // Flow-exit teardown BACKSTOPS only — the authoritative release is the
+  // segments watcher in (app)/_layout (this navigator's blur event proved
+  // unreliable on device; holds leaked their full 10 minutes). App kill needs
+  // nothing: server-side expiry handles it.
   const navigation = useNavigation()
   useEffect(() => {
     const unsubscribe = navigation.addListener('blur', () => cleanupFlow(userId))

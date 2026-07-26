@@ -1,8 +1,11 @@
 import { colors } from '@instahealth/design-tokens'
-import { Redirect, Tabs } from 'expo-router'
+import { Redirect, Tabs, useSegments } from 'expo-router'
+import { useEffect } from 'react'
 import { Text } from 'react-native'
 
 import { useAuthStore } from '../../features/auth/store'
+import { cleanupFlow } from '../../features/booking/cleanup'
+import { useBookingStore } from '../../features/booking/store'
 
 // App group — the four destination tabs (DECISION-navigation-safe-areas §1:
 // tab bar visible on destinations, hidden in auth/booking flows). Search,
@@ -10,6 +13,21 @@ import { useAuthStore } from '../../features/auth/store'
 // Route protection lives here: no session → back to welcome.
 export default function AppLayout() {
   const status = useAuthStore((state) => state.status)
+  const userId = useAuthStore((state) => state.session?.user.id ?? null)
+
+  // AUTHORITATIVE flow-exit release. This layout is always mounted while
+  // signed in, and segments are pure route state — the moment the route is
+  // no longer inside /booking while a hold or pending booking lingers, tear
+  // it down. (The booking layout's own blur listener never fired on a real
+  // device — holds leaked for their full 10 minutes after backing out.)
+  const segments = useSegments()
+  const isInBookingFlow = segments.includes('booking')
+  const hasFlowState = useBookingStore(
+    (state) => state.hold !== null || state.pendingBooking !== null,
+  )
+  useEffect(() => {
+    if (!isInBookingFlow && hasFlowState) cleanupFlow(userId)
+  }, [isInBookingFlow, hasFlowState, userId])
 
   if (status === 'loading') return null
   if (status === 'signedOut') {

@@ -1,6 +1,6 @@
 import { convertArabicDigits, OTP_LENGTH } from '@instahealth/core'
-import { useRef } from 'react'
-import { TextInput, View } from 'react-native'
+import { useRef, useState } from 'react'
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 
 import { colors } from '@instahealth/design-tokens'
 
@@ -11,75 +11,84 @@ interface OtpInputProps {
   disabled?: boolean
 }
 
-// 6 boxes, auto-advance, backspace-to-previous, paste support (a multi-digit
-// change is distributed across boxes). Arabic-Indic digits normalized on input.
-// The row is LTR — codes read left-to-right even in an RTL app.
+// ONE invisible TextInput over six rendered digit boxes — the standard OTP
+// pattern. Per-box TextInputs misrendered on iOS devices (default padding +
+// forced-RTL shifted digits off center); a <Text> centered inside a <View>
+// cannot. Bonus: single input means native paste + iOS SMS autofill
+// (textContentType oneTimeCode) just work, and backspace needs no key
+// juggling. Arabic-Indic digits normalized on input; the row is LTR.
 export function OtpInput({ code, onChangeCode, hasError, disabled }: OtpInputProps) {
-  const inputRefs = useRef<(TextInput | null)[]>([])
+  const inputRef = useRef<TextInput | null>(null)
+  const [isFocused, setIsFocused] = useState(false)
 
-  const handleChange = (index: number, rawText: string) => {
-    const digits = convertArabicDigits(rawText).replace(/\D/g, '')
-    if (digits.length === 0) {
-      onChangeCode(code.slice(0, index))
-      return
-    }
-    const nextCode = (code.slice(0, index) + digits).slice(0, OTP_LENGTH)
-    onChangeCode(nextCode)
-    const nextIndex = Math.min(nextCode.length, OTP_LENGTH - 1)
-    inputRefs.current[nextIndex]?.focus()
-  }
+  const activeIndex = Math.min(code.length, OTP_LENGTH - 1)
 
-  const handleKeyPress = (index: number, key: string) => {
-    if (key === 'Backspace' && code.length <= index && index > 0) {
-      inputRefs.current[index - 1]?.focus()
-      onChangeCode(code.slice(0, index - 1))
-    }
+  const handleChangeText = (rawText: string) => {
+    onChangeCode(convertArabicDigits(rawText).replace(/\D/g, '').slice(0, OTP_LENGTH))
   }
 
   return (
-    <View className="flex-row justify-center gap-2.5" style={{ direction: 'ltr' }}>
-      {Array.from({ length: OTP_LENGTH }, (_, index) => {
-        const digit = code[index] ?? ''
-        const isFilled = digit.length > 0
-        const borderColor = hasError
-          ? colors.semantic.error
-          : isFilled
-            ? colors.primary[500]
-            : colors.neutral[200]
-        const backgroundColor = hasError
-          ? colors.semantic.errorBg
-          : isFilled
-            ? colors.primary[50]
-            : colors.neutral[0]
-        return (
-          <TextInput
-            key={index}
-            ref={(ref) => {
-              inputRefs.current[index] = ref
-            }}
-            testID={`otp-box-${index}`}
-            inputMode="numeric"
-            keyboardType="number-pad"
-            editable={disabled !== true}
-            value={digit}
-            onChangeText={(text) => handleChange(index, text)}
-            onKeyPress={({ nativeEvent }) => handleKeyPress(index, nativeEvent.key)}
-            className="h-14 w-[46px] rounded-ih-sm font-arabic-bold text-2xl text-ih-neutral-800"
-            style={{
-              borderWidth: 1.5,
-              borderColor,
-              backgroundColor,
-              // iOS device rendering (fine on web): the default inner padding
-              // plus the forced-RTL writing direction shift the digit off
-              // center in a 46px box. Zero the padding and pin the alignment
-              // + writing direction explicitly at the native style level.
-              padding: 0,
-              textAlign: 'center',
-              writingDirection: 'ltr',
-            }}
-          />
-        )
-      })}
-    </View>
+    <Pressable
+      testID="otp-field"
+      accessibilityLabel="رمز التحقق"
+      onPress={() => inputRef.current?.focus()}
+    >
+      <View className="flex-row justify-center gap-2.5" style={{ direction: 'ltr' }}>
+        {Array.from({ length: OTP_LENGTH }, (_, index) => {
+          const digit = code[index] ?? ''
+          const isFilled = digit.length > 0
+          const isActive = isFocused && index === activeIndex && disabled !== true
+          const borderColor = hasError
+            ? colors.semantic.error
+            : isActive
+              ? colors.primary[400]
+              : isFilled
+                ? colors.primary[500]
+                : colors.neutral[200]
+          const backgroundColor = hasError
+            ? colors.semantic.errorBg
+            : isFilled
+              ? colors.primary[50]
+              : colors.neutral[0]
+          return (
+            <View
+              key={index}
+              testID={`otp-box-${index}`}
+              className="h-14 w-[46px] items-center justify-center rounded-ih-sm"
+              style={{ borderWidth: isActive ? 2 : 1.5, borderColor, backgroundColor }}
+            >
+              {isFilled ? (
+                <Text className="font-arabic-bold text-2xl text-ih-neutral-800">{digit}</Text>
+              ) : isActive ? (
+                <View
+                  className="h-7 w-0.5 rounded-ih-full"
+                  style={{ backgroundColor: colors.primary[400] }}
+                />
+              ) : null}
+            </View>
+          )
+        })}
+      </View>
+      {/* The real input: covers the row, fully transparent (color transparent
+          + hidden caret) but NOT opacity-0, so Maestro and screen readers can
+          still target it. */}
+      <TextInput
+        ref={inputRef}
+        testID="otp-input"
+        accessibilityLabel="أدخل رمز التحقق"
+        inputMode="numeric"
+        keyboardType="number-pad"
+        textContentType="oneTimeCode"
+        autoComplete="sms-otp"
+        editable={disabled !== true}
+        caretHidden
+        value={code}
+        maxLength={OTP_LENGTH}
+        onChangeText={handleChangeText}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        style={[StyleSheet.absoluteFillObject, { color: 'transparent', fontSize: 1 }]}
+      />
+    </Pressable>
   )
 }

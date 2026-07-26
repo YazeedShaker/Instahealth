@@ -83,9 +83,15 @@ documented as THE shared availability definition (same predicate as the RPC + tr
 `booked_count + active holds < capacity`). Regression tests: fully-held slot renders full;
 all-held day disables in the strip.
 
-**2 · Sign-out releases holds** — `releaseAllHolds(userId)` runs BEFORE `signOut()` (the
-RLS delete-own path needs the live session); the booking store also resets so no selection
-leaks across users. Same-user semantics fixed + documented in the same migration:
+**2 · Flow-exit + sign-out hold release actually works now** — device testing proved the
+F05 blur-listener release NEVER fired (holds leaked their full 10 minutes after backing
+out; a live leaked hold was found in the dev DB). The authoritative release is now a
+**segments watcher in `(app)/_layout`** (always mounted; pure route state — the moment the
+route leaves `/booking` with a lingering hold/pending booking, `cleanupFlow` runs). The
+booking layout's blur/unmount hooks remain as backstops; shared logic in
+`features/booking/cleanup.ts`. Sign-out additionally calls `releaseAllHolds(userId)`
+BEFORE `signOut()` (the RLS delete-own path needs the live session); the booking store
+also resets so no selection leaks across users. Same-user semantics fixed + documented in the same migration:
 **re-holding a slot you already hold now REFRESHES the hold** (the old count included your
 own hold, so capacity-1 refreshes returned `slot_full`). SQL-verified: A hold → A re-hold =
 success with new hold_id, ONE row; B still `slot_full`. The F05 "known quirk" note is void.
@@ -97,9 +103,12 @@ no strip at all; mixed selections surface only the real prep. The per-row chip u
 SAME core predicate. (The old core test that locked the merge of "لا يشترط" notes was
 updated — it had locked the wrong behavior.)
 
-**4 · OTP digit centering on iOS device** — zeroed the TextInput's default inner padding
-and pinned `textAlign`/`writingDirection` at the native style level (the forced-RTL context
-shifted digits in the 46px boxes; web was unaffected). Founder device check pending.
+**4 · OTP input rewritten to the hidden-input pattern** — per-box TextInputs kept
+misrendering digit centering on iOS devices (default padding + forced RTL), so OtpInput is
+now ONE invisible input (transparent text, hidden caret, `textContentType="oneTimeCode"`
+→ iOS SMS autofill works) over six rendered `<Text>` boxes — a Text centered in a View
+cannot misrender. Paste and backspace simplify to plain `onChangeText`. `otp-box-*`
+testIDs kept on the boxes, so all Maestro flows work unchanged. Founder device check pending.
 
 `database.ts` updated (get_branch_slots surfaces in Functions). ENGINEERING-WORKFLOW
 gained bootstrap rule #4: "display state derives from the same predicate the DB enforces."
