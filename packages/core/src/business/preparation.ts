@@ -17,6 +17,19 @@ export const PREPARATION_SUMMARY_PREP_EN =
 
 const NO_FASTING_MARKERS = ['لا يشترط', 'no fasting']
 
+/** Notes that BEGIN with a "no requirement" reassurance ("لا يشترط صيام…",
+ * "No fasting required…") are information, not preparation. They must never
+ * summon the preparation strip — a selection of only such services shows
+ * nothing at all (SPEC-F04 / DECISION-provider-data-model §3). */
+const REASSURANCE_PREFIXES = ['لا يشترط', 'no fasting required']
+
+export function isReassurancePrepNote(note: string | null): boolean {
+  if (note === null) return false
+  const normalized = normalizeNoteText(note).toLowerCase()
+  if (normalized.length === 0) return false
+  return REASSURANCE_PREFIXES.some((prefix) => normalized.startsWith(prefix))
+}
+
 /**
  * Parses the fasting requirement out of a service's preparation note — done ONCE
  * when mapping the service row to a SelectedService, never re-parsed in UI.
@@ -55,7 +68,8 @@ export function computePreparationNotes(selectedServices: SelectedService[]): Pr
   const withNotes = selectedServices.filter(
     (service) =>
       service.preparationNotesAr !== null &&
-      normalizeNoteText(service.preparationNotesAr).length > 0,
+      normalizeNoteText(service.preparationNotesAr).length > 0 &&
+      !isReassurancePrepNote(service.preparationNotesAr),
   )
 
   if (withNotes.length === 0) {

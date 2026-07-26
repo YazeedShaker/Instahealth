@@ -819,6 +819,18 @@ export type Database = {
         }
         Returns: number
       }
+      get_branch_slots: {
+        Args: { p_branch_id: string; p_from?: string; p_to?: string }
+        Returns: {
+          active_hold_count: number
+          booked_count: number
+          capacity: number
+          id: string
+          is_blocked: boolean
+          slot_date: string
+          slot_time: string
+        }[]
+      }
       get_provider_branch_ids: { Args: never; Returns: string[] }
       get_user_role: { Args: never; Returns: string }
     }

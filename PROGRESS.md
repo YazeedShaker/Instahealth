@@ -69,6 +69,50 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 
 ## Shipped
 
+### 2026-07-26 · FIX — Race-test findings: hold-aware availability, sign-out release, prep strip, OTP centering
+
+Four fixes from the founder's post-capacity-model race testing:
+
+**1 · Displayed availability now counts active holds** (the picker showed a slot as
+available while `create_slot_hold` correctly rejected it — an abandoned hold was invisible
+under RLS SELECT-own). New migration `20260726170254_slot_availability_and_hold_refresh`:
+`get_branch_slots(branch, from, to)` RPC (SECURITY DEFINER, STABLE) returns slots WITH
+DB-computed active unexpired hold counts — counts only, no user data. Both the slot picker
+and the F04 preview strip now feed those counts into core `getSlotStatus`, which is
+documented as THE shared availability definition (same predicate as the RPC + trigger:
+`booked_count + active holds < capacity`). Regression tests: fully-held slot renders full;
+all-held day disables in the strip.
+
+**2 · Flow-exit + sign-out hold release actually works now** — device testing proved the
+F05 blur-listener release NEVER fired (holds leaked their full 10 minutes after backing
+out; a live leaked hold was found in the dev DB). The authoritative release is now a
+**segments watcher in `(app)/_layout`** (always mounted; pure route state — the moment the
+route leaves `/booking` with a lingering hold/pending booking, `cleanupFlow` runs). The
+booking layout's blur/unmount hooks remain as backstops; shared logic in
+`features/booking/cleanup.ts`. Sign-out additionally calls `releaseAllHolds(userId)`
+BEFORE `signOut()` (the RLS delete-own path needs the live session); the booking store
+also resets so no selection leaks across users. Same-user semantics fixed + documented in the same migration:
+**re-holding a slot you already hold now REFRESHES the hold** (the old count included your
+own hold, so capacity-1 refreshes returned `slot_full`). SQL-verified: A hold → A re-hold =
+success with new hold_id, ONE row; B still `slot_full`. The F05 "known quirk" note is void.
+
+**3 · Prep strip renders NOTHING when there's nothing** — core `computePreparationNotes`
+now filters reassurance-only notes (`isReassurancePrepNote`: notes starting "لا يشترط" /
+"No fasting required" are information, not preparation). Selecting only such services shows
+no strip at all; mixed selections surface only the real prep. The per-row chip uses the
+SAME core predicate. (The old core test that locked the merge of "لا يشترط" notes was
+updated — it had locked the wrong behavior.)
+
+**4 · OTP input rewritten to the hidden-input pattern** — per-box TextInputs kept
+misrendering digit centering on iOS devices (default padding + forced RTL), so OtpInput is
+now ONE invisible input (transparent text, hidden caret, `textContentType="oneTimeCode"`
+→ iOS SMS autofill works) over six rendered `<Text>` boxes — a Text centered in a View
+cannot misrender. Paste and backspace simplify to plain `onChangeText`. `otp-box-*`
+testIDs kept on the boxes, so all Maestro flows work unchanged. Founder device check pending.
+
+`database.ts` updated (get_branch_slots surfaces in Functions). ENGINEERING-WORKFLOW
+gained bootstrap rule #4: "display state derives from the same predicate the DB enforces."
+
 ### 2026-07-26 · FIX — Slot capacity model: allocation = bookings per branch per DAY
 
 F05 sign-off blocker: the founder's two-phone race test produced TWO simultaneous holds.

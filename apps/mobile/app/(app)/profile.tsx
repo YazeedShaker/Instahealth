@@ -3,6 +3,8 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { logAuthErrorDev } from '../../features/auth/errors'
 import { useAuthStore } from '../../features/auth/store'
+import { releaseAllHolds } from '../../features/booking/api'
+import { useBookingStore } from '../../features/booking/store'
 import { supabase } from '../../lib/supabase'
 
 // Styled placeholder profile tab — carries the logout action (moved here from
@@ -14,6 +16,14 @@ export default function Profile() {
 
   const handleLogout = async () => {
     markManualSignOut()
+    // Release any active slot holds BEFORE the session clears — after signOut
+    // the RLS delete-own path is gone and the hold would block its slot for
+    // up to 10 minutes. Best-effort: server-side expiry is the safety net.
+    const userId = useAuthStore.getState().session?.user.id
+    if (userId !== undefined) {
+      await releaseAllHolds(userId)
+    }
+    useBookingStore.getState().reset()
     try {
       await supabase.auth.signOut()
     } catch (error) {

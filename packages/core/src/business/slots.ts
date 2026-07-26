@@ -21,7 +21,12 @@ export interface SlotAvailability {
   isBlocked: boolean
 }
 
-/** 'full' when blocked, or when booked + active holds have consumed capacity. */
+/** 'full' when blocked, or when booked + active holds have consumed capacity.
+ * THE shared availability definition: the same predicate `create_slot_hold`
+ * and the `trg_slot_holds_capacity` trigger enforce server-side
+ * (booked_count + active unexpired holds < capacity). Display must always be
+ * fed real hold counts (get_branch_slots RPC) so UI state and DB enforcement
+ * can never disagree. */
 export function getSlotStatus(slot: SlotAvailability): SlotStatus {
   if (slot.isBlocked) return 'full'
   if (slot.bookedCount + slot.activeHoldCount >= slot.capacity) return 'full'

@@ -7,6 +7,7 @@ import {
   PREPARATION_SUMMARY_PREP_AR,
   PREPARATION_SUMMARY_PREP_EN,
   computePreparationNotes,
+  isReassurancePrepNote,
   parseFastingHours,
 } from './preparation'
 
@@ -147,19 +148,58 @@ describe('computePreparationNotes', () => {
     const result = computePreparationNotes([
       makeService({
         id: 'a',
-        nameAr: 'فيتامين د',
-        preparationNotesAr: '  لا يشترط  صيام. ',
-        fastingHours: null,
+        nameAr: 'سكر صائم',
+        preparationNotesAr: '  صيام ٨  ساعات. ',
+        fastingHours: 8,
       }),
       makeService({
         id: 'b',
-        nameAr: 'فيتامين ب ١٢',
-        preparationNotesAr: 'لا يشترط صيام.',
-        fastingHours: null,
+        nameAr: 'حمض اليوريك',
+        preparationNotesAr: 'صيام ٨ ساعات.',
+        fastingHours: 8,
       }),
     ])
     expect(result.details).toHaveLength(1)
-    expect(result.details[0]?.serviceNamesAr).toEqual(['فيتامين د', 'فيتامين ب ١٢'])
+    expect(result.details[0]?.serviceNamesAr).toEqual(['سكر صائم', 'حمض اليوريك'])
+  })
+
+  test('reassurance-only notes ("لا يشترط صيام") are NOT preparation — empty result', () => {
+    const result = computePreparationNotes([
+      makeService({ id: 'a', nameAr: 'فيتامين د', preparationNotesAr: 'لا يشترط صيام.' }),
+      makeService({
+        id: 'b',
+        nameAr: 'هرمونات الغدة',
+        preparationNotesAr: 'لا يشترط صيام. يُفضَّل أخذ العينة صباحاً قبل الأدوية.',
+      }),
+    ])
+    expect(result.summaryAr).toBeNull()
+    expect(result.summaryEn).toBeNull()
+    expect(result.details).toEqual([])
+    expect(result.requiresFasting).toBe(false)
+  })
+
+  test('reassurance services mixed with real prep → only the real prep surfaces', () => {
+    const result = computePreparationNotes([
+      makeService({ id: 'a', nameAr: 'فيتامين د', preparationNotesAr: 'لا يشترط صيام.' }),
+      makeService({
+        id: 'b',
+        nameAr: 'دهون ثلاثية',
+        preparationNotesAr: FASTING_NOTE_12_AR,
+        fastingHours: 12,
+      }),
+    ])
+    expect(result.summaryAr).toBe(PREPARATION_SUMMARY_FASTING_AR)
+    expect(result.details).toHaveLength(1)
+    expect(result.details[0]?.serviceNamesAr).toEqual(['دهون ثلاثية'])
+  })
+
+  test('isReassurancePrepNote: prefix match, Arabic and English, null-safe', () => {
+    expect(isReassurancePrepNote('لا يشترط صيام.')).toBe(true)
+    expect(isReassurancePrepNote('  لا يشترط  صيام. يُفضَّل صباحاً.')).toBe(true)
+    expect(isReassurancePrepNote('No fasting required.')).toBe(true)
+    expect(isReassurancePrepNote('صيام ١٢ ساعة كامل.')).toBe(false)
+    expect(isReassurancePrepNote(null)).toBe(false)
+    expect(isReassurancePrepNote('')).toBe(false)
   })
 
   test('arabic strings are preserved exactly (no encoding mangling)', () => {
