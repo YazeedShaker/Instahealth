@@ -69,6 +69,46 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 
 ## Shipped
 
+### 2026-07-26 · FIX — Slot capacity model: allocation = bookings per branch per DAY
+
+F05 sign-off blocker: the founder's two-phone race test produced TWO simultaneous holds.
+Root cause — both `generate_branch_slots()` and the F02 seed backfill generated a slot every
+30 min across the FULL opening window, each with `capacity = instahealth_slot_allocation`
+(5). Town (24/7): 48 slots/day × 5 = **240 bookings/day** instead of 5, and any slot
+legitimately admitted 5 holds. `create_slot_hold`'s locking was NOT at fault (it does
+`SELECT … FOR UPDATE` + counts unexpired holds correctly) — the capacity DATA was wrong.
+
+**Migration `20260726151039_slot_capacity_per_day_model`** (applied to dev + saved):
+
+- `generate_branch_slots()` rewritten (same signature — the generate-slots Edge Function
+  is untouched): exactly `allocation` **capacity-1** slots per day, evenly spread on a
+  30-min grid within opening hours; 24/7 branches use a 09:00–21:00 daytime window.
+  Verified spreads — Town: ٩/١١/١٣/١٥/١٧؛ Saridar Sat–Thu: 8:00/10:30/13:00/15:30/18:00؛
+  Friday: 9:00/10:30/12:00/13:30/15:00.
+- **Safety trigger** `trg_slot_holds_capacity` (BEFORE INSERT on slot_holds, slot row
+  locked): active unexpired holds + booked_count can never exceed capacity — closes every
+  write path the RPC's own check doesn't cover.
+- **Dropped the `slot_holds` RLS INSERT policy** — it let clients insert holds directly,
+  bypassing the RPC's capacity check entirely. Holds now ONLY via the SECURITY DEFINER RPC.
+- Seed 002's backfill now delegates to `generate_branch_slots()` (volume is tiny under the
+  new model, so the per-branch loop is timeout-safe) — one source of truth for the grid.
+
+**Dev cleanup + verification (all via live SQL, recorded):** old holds + 4.5k
+wrongly-generated future slots deleted; founder's 9 test bookings (8 cancelled, 1 abandoned
+pending) purged with their legacy slots; 30-day window regenerated → **3,720 slots, every
+branch-day exactly 5, all capacity 1, nothing outside 08:00–21:00, window now to +30 days**.
+Race re-test on a real slot: user A success, user B `slot_full` — one winner. Direct-insert
+bypass attempt against a held slot: **blocked by the trigger** (first attempt "passed"
+because the prior hold had genuinely expired between test steps — timing artifact, not a
+hole). `confirm_booking()` and `cleanup-holds` need no changes (capacity-1 agrees: confirm
+increments booked_count under lock → slot full; CHECK constraint intact). `database.ts`
+regenerated — byte-identical (functions/trigger changes don't surface in types).
+
+**Notes:** re-calling `create_slot_hold` for a slot you ALREADY hold returns `slot_full`
+on capacity-1 slots (own hold counts before the delete-and-replace) — the app never does
+this (same-slot re-tap is a no-op), F06 should keep that guard. The auth.uid() hardening
+remains a separate spawned task.
+
 ### 2026-07-26 · F05 — Slot selection, hold & booking review (mobile)
 
 Steps 2–3 of the booking flow, built to the approved booking-flow mockup. Routes under
@@ -418,10 +458,9 @@ _Next entry after SETUP-02._
 
 ## Known risks / open items
 
-- **⚠ Slot window is NOT being extended:** live DB has slots only through 2026-08-01 (the
-  seed's 7-day backfill). The nightly `generate-slots` cron that should keep a 30-day
-  window is not running/wired — verify the Edge Function schedule before launch, or the
-  picker goes empty in August. (Observed during F05's DB verification.)
+- **⚠ `generate-slots` nightly cron still not scheduled:** the capacity-model fix
+  regenerated a full 30-day window (now through +30 days), but nothing extends it nightly —
+  wire the Edge Function schedule before launch or the window shrinks day by day.
 - **⚠ `create_slot_hold(p_slot_id, p_user_id)` doesn't verify `p_user_id = auth.uid()`**
   (SECURITY DEFINER, callable by any authenticated user) — a malicious client could hold
   slots as another user. Harden with an auth.uid() check in a follow-up migration.

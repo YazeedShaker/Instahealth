@@ -88,6 +88,15 @@ pnpm audit --audit-level=high
   `generate_branch_slots()` loop exceeds the platform statement timeout at
   ~24 branches. One `INSERT … SELECT … generate_series` does 5k+ rows fine.
 - Verify every applied change with a count/spot-check query before moving on.
+- **`instahealth_slot_allocation` = bookings per branch per DAY, not per
+  slot.** Slots are generated as exactly `allocation` capacity-1 rows/day,
+  evenly spread in opening hours (24/7 branches use a 09:00–21:00 daytime
+  window). Enforced by `generate_branch_slots()` + the `slot_holds` capacity
+  trigger (migration 20260726151039). Getting this backwards produced 240
+  bookings/day at Town and let 5 patients hold the same slot.
+- **Holds are created ONLY via the `create_slot_hold` RPC** — there is
+  deliberately NO RLS INSERT policy on `slot_holds` (dropped in the same
+  migration; the SECURITY DEFINER function bypasses RLS). Don't re-add one.
 
 ## 6 · Mobile (Expo) specifics
 
