@@ -75,7 +75,13 @@ export default function BranchProfileScreen() {
 
   return (
     <View className="flex-1 bg-ih-neutral-50">
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 24 }}>
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingBottom: 24 }}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        automaticallyAdjustKeyboardInsets
+      >
         <BranchPhotoHeader
           photos={branch.photos}
           isHospital={branch.categorySlugs.includes('scans')}

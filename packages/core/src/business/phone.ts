@@ -51,3 +51,29 @@ export function normalizeEgyptianPhone(input: string): string | null {
 export function isValidEgyptianPhone(input: string): boolean {
   return normalizeEgyptianPhone(input) !== null
 }
+
+const BIDI_LTR_ISOLATE_START = '⁦' // LRI
+const BIDI_ISOLATE_END = '⁩' // PDI
+
+/**
+ * Wraps a left-to-right literal (phone number, code, latin ref) in Unicode
+ * bidi isolates so RTL Arabic context cannot reorder it. Without this,
+ * "+20 10 1234 5678" inside an Arabic sentence renders with its digit groups
+ * reversed ("5678 1234 10 20+").
+ */
+export function isolateLtr(text: string): string {
+  return `${BIDI_LTR_ISOLATE_START}${text}${BIDI_ISOLATE_END}`
+}
+
+/**
+ * E.164 `+201012345678` → bidi-safe display string "+20 10 1234 5678"
+ * (grouped like the designs, isolated so RTL screens render it intact).
+ * Non-Egyptian/unparseable input falls back to the isolated raw string.
+ */
+export function formatEgyptianPhoneDisplay(e164Phone: string): string {
+  const normalized = normalizeEgyptianPhone(e164Phone)
+  if (normalized === null) return isolateLtr(e164Phone)
+  const local = normalized.slice(3) // 10 digits after +20
+  const grouped = [local.slice(0, 2), local.slice(2, 6), local.slice(6, 10)].join(' ')
+  return isolateLtr(`+20 ${grouped}`)
+}
