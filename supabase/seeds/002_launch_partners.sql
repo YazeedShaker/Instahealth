@@ -132,29 +132,21 @@ WHERE s.category_id = (SELECT id FROM service_categories WHERE slug = 'scans')
 ON CONFLICT (branch_id, service_id) DO UPDATE SET price = EXCLUDED.price, is_available = TRUE;
 
 -- ── Slot backfill: next 7 days so Home has data immediately ──
--- Set-based (NOT the per-row generate_branch_slots loop — that exceeds the
--- platform statement timeout at 24 branches). Mirrors the same time grid;
--- idempotent via ON CONFLICT DO NOTHING. The nightly generate-slots Edge
--- Function keeps the 30-day window after this.
-INSERT INTO slots (branch_id, slot_date, slot_time, capacity)
-SELECT b.id, d.day, t::time, COALESCE(b.instahealth_slot_allocation, 5)
-FROM branches b
-CROSS JOIN LATERAL (
-  SELECT gs::date AS day FROM generate_series(CURRENT_DATE, CURRENT_DATE + 7, interval '1 day') gs
-) d
-CROSS JOIN LATERAL (
-  SELECT b.operating_hours -> (CASE EXTRACT(DOW FROM d.day)::int
-    WHEN 0 THEN 'sun' WHEN 1 THEN 'mon' WHEN 2 THEN 'tue' WHEN 3 THEN 'wed'
-    WHEN 4 THEN 'thu' WHEN 5 THEN 'fri' ELSE 'sat' END) AS h
-) hours
-CROSS JOIN LATERAL generate_series(
-  d.day + (hours.h ->> 'open')::time,
-  d.day + (hours.h ->> 'close')::time - make_interval(mins => COALESCE(b.slot_duration_minutes, 30)),
-  make_interval(mins => COALESCE(b.slot_duration_minutes, 30))
-) t
-WHERE b.provider_id IN ('aaaa0000-0000-4000-8000-000000000001', 'aaaa0000-0000-4000-8000-000000000002')
-  AND b.is_active = TRUE
-  AND COALESCE((hours.h ->> 'closed')::boolean, TRUE) = FALSE
-  AND (hours.h ->> 'open') IS NOT NULL
-  AND (hours.h ->> 'close') IS NOT NULL
-ON CONFLICT (branch_id, slot_date, slot_time) DO NOTHING;
+-- Delegates to generate_branch_slots() (migration 20260726151039:
+-- `instahealth_slot_allocation` = bookings per branch per DAY → exactly that
+-- many capacity-1 slots/day, evenly spread in opening hours; 24/7 branches
+-- use a 09:00–21:00 daytime window). One source of truth for the time grid.
+-- Volume is small under this model (~5/branch/day), so the per-branch loop
+-- is safely inside the statement timeout that the OLD 30-min-grid model hit.
+-- Idempotent: the function upserts with ON CONFLICT DO NOTHING.
+DO $$
+DECLARE b RECORD;
+BEGIN
+  FOR b IN
+    SELECT id FROM branches
+    WHERE provider_id IN ('aaaa0000-0000-4000-8000-000000000001', 'aaaa0000-0000-4000-8000-000000000002')
+      AND is_active = TRUE
+  LOOP
+    PERFORM generate_branch_slots(b.id, CURRENT_DATE, CURRENT_DATE + 7);
+  END LOOP;
+END $$;
