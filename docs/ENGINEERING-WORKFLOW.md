@@ -20,6 +20,13 @@
    (specs have been wrong twice: a "users-row trigger" that didn't exist, a
    `full_name` column that was really `name_ar`). Query via the Supabase MCP;
    document any deviation in the PR **and** PROGRESS.
+4. **Display state derives from the same predicate the DB enforces.** If the
+   server rejects an action by some rule (capacity, expiry, status), the UI
+   that showed it as possible must evaluate the SAME rule on the SAME data —
+   expose what the client can't read (e.g. hold counts under RLS) via a
+   SECURITY DEFINER read function rather than letting display drift.
+   (Learned in F05: the picker showed "available" for a slot whose active
+   holds only the DB could see.)
 
 ## 2 · Branch, commit, PR discipline
 

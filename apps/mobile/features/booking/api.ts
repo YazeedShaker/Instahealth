@@ -69,6 +69,17 @@ export async function releaseHold(hold: ActiveHold, userId: string): Promise<voi
   }
 }
 
+/** Best-effort release of ALL the user's holds — called on sign-out, BEFORE
+ * the session clears (the RLS delete-own path needs the authed session).
+ * Failures are fine: server-side expiry is the safety net. */
+export async function releaseAllHolds(userId: string): Promise<void> {
+  try {
+    await supabase.from('slot_holds').delete().eq('user_id', userId)
+  } catch {
+    // The cleanup cron / server-side expiry is the safety net.
+  }
+}
+
 /** Creates the pending_payment booking + its booking_services rows.
  * Throws on failure (after best-effort cleanup of a half-created row). */
 export async function createPendingBooking(input: {

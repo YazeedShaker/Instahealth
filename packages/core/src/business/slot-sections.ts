@@ -33,7 +33,9 @@ const PERIOD_LABELS_AR: Record<SlotPeriodKey, string> = {
   evening: 'مساءً',
 }
 
-/** The raw availability row as queried — snake_case mapped by the app. */
+/** The raw availability row as returned by the get_branch_slots RPC —
+ * snake_case mapped by the app. `activeHoldCount` is the DB-computed count of
+ * unexpired holds, so display evaluates the SAME predicate the DB enforces. */
 export interface SlotSectionInput {
   id: string
   slotDate: string // YYYY-MM-DD
@@ -41,6 +43,7 @@ export interface SlotSectionInput {
   capacity: number | null
   bookedCount: number | null
   isBlocked: boolean | null
+  activeHoldCount: number | null
 }
 
 export interface SlotPickerSlot {
@@ -85,8 +88,9 @@ function getDayLabelAr(date: string, today: string, tomorrow: string): string {
  * - Past slots (today, time already gone in Cairo) are dropped.
  * - Days beyond SLOT_WINDOW_DAYS are dropped (the generation ceiling).
  * - Sections exist only for days that actually have slot rows — data-driven.
- * - Slot status comes from getSlotStatus with holds=0: other patients' holds
- *   are invisible under RLS, so the RPC rejection is the real availability gate.
+ * - Slot status evaluates the SAME predicate create_slot_hold enforces:
+ *   booked_count + active unexpired holds < capacity (hold counts come from
+ *   the get_branch_slots RPC). A fully-held slot renders as full.
  */
 export function buildSlotDaySections(slots: SlotSectionInput[], now: Date): SlotDaySection[] {
   const today = CAIRO_DATE.format(now)
@@ -112,7 +116,7 @@ export function buildSlotDaySections(slots: SlotSectionInput[], now: Date): Slot
     const status = getSlotStatus({
       capacity: slot.capacity ?? Number.MAX_SAFE_INTEGER,
       bookedCount: slot.bookedCount ?? 0,
-      activeHoldCount: 0,
+      activeHoldCount: slot.activeHoldCount ?? 0,
       isBlocked: slot.isBlocked ?? false,
     })
     const pickerSlot: SlotPickerSlot = {

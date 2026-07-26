@@ -18,7 +18,6 @@ const CAIRO_TIME = new Intl.DateTimeFormat('en-GB', {
 })
 const DAY_MS = 24 * 60 * 60 * 1000
 const PREVIEW_WINDOW_DAYS = 3
-const PREVIEW_QUERY_LIMIT = 200
 const PREVIEW_CHIP_COUNT = 6
 
 /**
@@ -117,9 +116,10 @@ export function useBranchProfile(branchId: string | undefined) {
 }
 
 /**
- * "أقرب المواعيد" preview strip — the next few available slots for THIS branch,
- * same query shape as F02's batched first-slot fetch (date+time ascending,
- * 3-day window). Read-only; real slot picking is F05.
+ * "أقرب المواعيد" preview strip — the next few available slots for THIS branch
+ * via the get_branch_slots RPC (3-day window). Availability evaluates the SAME
+ * predicate the DB enforces — booked + active unexpired holds < capacity — so
+ * the preview never advertises a slot the hold RPC would reject.
  */
 export function useBranchSlotsPreview(branchId: string | undefined) {
   return useQuery({
@@ -130,16 +130,11 @@ export function useBranchSlotsPreview(branchId: string | undefined) {
       const today = CAIRO_DATE.format(now)
       const windowEnd = CAIRO_DATE.format(new Date(now.getTime() + PREVIEW_WINDOW_DAYS * DAY_MS))
 
-      const { data, error } = await supabase
-        .from('slots')
-        .select('slot_date, slot_time, capacity, booked_count, is_blocked')
-        .eq('branch_id', branchId as string)
-        .gte('slot_date', today)
-        .lte('slot_date', windowEnd)
-        .eq('is_blocked', false)
-        .order('slot_date', { ascending: true })
-        .order('slot_time', { ascending: true })
-        .limit(PREVIEW_QUERY_LIMIT)
+      const { data, error } = await supabase.rpc('get_branch_slots', {
+        p_branch_id: branchId as string,
+        p_from: today,
+        p_to: windowEnd,
+      })
       if (error) throw error
 
       const cairoNowTime = CAIRO_TIME.format(now)
@@ -147,13 +142,11 @@ export function useBranchSlotsPreview(branchId: string | undefined) {
         .filter((slot) => {
           const isPastToday = slot.slot_date === today && slot.slot_time.slice(0, 5) <= cairoNowTime
           if (isPastToday) return false
-          // Hold counts are F05's concern — the preview only excludes slots
-          // already full by confirmed bookings.
           return (
             getSlotStatus({
               capacity: slot.capacity ?? Number.MAX_SAFE_INTEGER,
               bookedCount: slot.booked_count ?? 0,
-              activeHoldCount: 0,
+              activeHoldCount: slot.active_hold_count ?? 0,
               isBlocked: slot.is_blocked ?? false,
             }) === 'available'
           )

@@ -18,6 +18,7 @@ function makeSlot(overrides: Partial<SlotSectionInput> = {}): SlotSectionInput {
     capacity: 5,
     bookedCount: 0,
     isBlocked: false,
+    activeHoldCount: 0,
     ...overrides,
   }
 }
@@ -123,6 +124,37 @@ describe('buildSlotDaySections', () => {
       cairo('2026-01-17T08:00:00'),
     )
     expect(sections.map((section) => section.date)).toEqual(['2026-01-20'])
+  })
+
+  test('REGRESSION: a fully-HELD slot renders unavailable — display uses the same predicate the DB enforces', () => {
+    const sections = buildSlotDaySections(
+      [
+        // capacity-1 slot, no bookings, but another patient's active hold
+        makeSlot({ slotTime: '09:00', capacity: 1, bookedCount: 0, activeHoldCount: 1 }),
+        makeSlot({ slotTime: '11:00', capacity: 1, bookedCount: 0, activeHoldCount: 0 }),
+      ],
+      cairo('2026-01-17T06:00:00'),
+    )
+    const [held, free] = sections[0]?.periods[0]?.slots ?? []
+    expect(held?.status).toBe('full')
+    expect(free?.status).toBe('available')
+    expect(sections[0]?.hasAvailability).toBe(true)
+  })
+
+  test('REGRESSION: a day where every slot is held has no availability (strip disables it)', () => {
+    const sections = buildSlotDaySections(
+      [makeSlot({ slotDate: '2026-01-18', capacity: 1, activeHoldCount: 1 })],
+      cairo('2026-01-17T06:00:00'),
+    )
+    expect(sections[0]?.hasAvailability).toBe(false)
+  })
+
+  test('null activeHoldCount is treated as zero holds', () => {
+    const sections = buildSlotDaySections(
+      [makeSlot({ capacity: 1, activeHoldCount: null })],
+      cairo('2026-01-17T06:00:00'),
+    )
+    expect(sections[0]?.periods[0]?.slots[0]?.status).toBe('available')
   })
 
   test('null capacity is treated as unbounded (available)', () => {

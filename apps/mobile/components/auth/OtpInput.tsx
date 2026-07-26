@@ -64,8 +64,19 @@ export function OtpInput({ code, onChangeCode, hasError, disabled }: OtpInputPro
             value={digit}
             onChangeText={(text) => handleChange(index, text)}
             onKeyPress={({ nativeEvent }) => handleKeyPress(index, nativeEvent.key)}
-            className="h-14 w-[46px] rounded-ih-sm text-center font-arabic-bold text-2xl text-ih-neutral-800"
-            style={{ borderWidth: 1.5, borderColor, backgroundColor }}
+            className="h-14 w-[46px] rounded-ih-sm font-arabic-bold text-2xl text-ih-neutral-800"
+            style={{
+              borderWidth: 1.5,
+              borderColor,
+              backgroundColor,
+              // iOS device rendering (fine on web): the default inner padding
+              // plus the forced-RTL writing direction shift the digit off
+              // center in a 46px box. Zero the padding and pin the alignment
+              // + writing direction explicitly at the native style level.
+              padding: 0,
+              textAlign: 'center',
+              writingDirection: 'ltr',
+            }}
           />
         )
       })}

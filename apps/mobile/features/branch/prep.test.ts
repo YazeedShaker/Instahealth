@@ -29,6 +29,19 @@ describe('getPreparationStrip', () => {
     expect(getPreparationStrip([makeService(), makeService({ id: 'svc-2' })])).toBeNull()
   })
 
+  it('REGRESSION: selection of prep-less services (reassurance-only notes) shows NO strip', () => {
+    expect(
+      getPreparationStrip([
+        makeService({ id: 'cbc', preparationNotesAr: 'لا يشترط صيام' }),
+        makeService({ id: 'vitd', preparationNotesAr: 'لا يشترط صيام.' }),
+        makeService({
+          id: 'tsh',
+          preparationNotesAr: 'لا يشترط صيام. يُفضَّل أخذ العينة صباحاً قبل الأدوية.',
+        }),
+      ]),
+    ).toBeNull()
+  })
+
   it('shows the fasting summary when a selected service requires fasting', () => {
     const strip = getPreparationStrip([
       makeService(),
