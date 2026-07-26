@@ -76,9 +76,17 @@ export default function ReviewScreen() {
 
   return (
     <View className="flex-1 bg-ih-neutral-50">
+      {/* Native keyboard behavior (Expo keyboard-handling guide, Expo-Go-safe
+          tier): the keyboard slides OVER the app — no layout squeeze — and
+          automaticallyAdjustKeyboardInsets (iOS) grows the scroll inset so the
+          focused notes field scrolls into view above it. Android's
+          adjustResize handles itself. The full react-native-keyboard-controller
+          setup needs a dev build — adopt it when EAS dev builds unblock. */}
       <ScrollView
         contentContainerStyle={{ padding: 20, gap: 18 }}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        automaticallyAdjustKeyboardInsets
       >
         <Text className="font-arabic-bold text-xl text-ih-neutral-800">مراجعة الحجز</Text>
 

@@ -115,12 +115,18 @@ pnpm audit --audit-level=high
   go through core's `isolateLtr()` / `formatEgyptianPhoneDisplay()` (Unicode
   LRI…PDI isolates). Forcing `direction:'ltr'` on the container only works
   for standalone inputs, not inline text.
-- **iOS does NOT push content above the keyboard** (found on device in the
-  review screen): every screen with a text input needs the
-  `KeyboardAvoidingView` pattern — `behavior={Platform.OS === 'ios' ?
-'padding' : undefined}` wrapping the screen/flow content (Android's
-  adjustResize handles itself; see `(auth)/otp.tsx` and `booking/_layout.tsx`).
-  ScrollViews holding inputs also want `keyboardShouldPersistTaps="handled"`.
+- **Keyboard handling** (per the Expo keyboard-handling guide, learned across
+  two on-device rounds): the founder-approved behavior is the NATIVE one —
+  keyboard slides OVER the app, no layout squeeze. For scrollable screens with
+  inputs use `automaticallyAdjustKeyboardInsets` +
+  `keyboardDismissMode="interactive"` + `keyboardShouldPersistTaps="handled"`
+  on the ScrollView (see `booking/review.tsx`); a whole-screen
+  `KeyboardAvoidingView` "pushes the button up" and was rejected. KAV remains
+  OK only for small non-scroll screens where the CTA must stay visible while
+  typing (`(auth)/otp.tsx`). The guide's full recommendation
+  (`react-native-keyboard-controller` + KeyboardAwareScrollView) needs a DEV
+  BUILD — it does NOT run in Expo Go, which is the founder's only device path
+  until the Apple account lands. Adopt it together with the SDK re-upgrade.
 
 ## 7 · Core package discipline (quick reference)
 
