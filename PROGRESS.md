@@ -69,6 +69,26 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 
 ## Shipped
 
+### 2026-07-27 · FEAT — Realtime slot availability (push replaces fast polling)
+
+Founder-requested upgrade from the 15s poll: hold changes now PUSH to viewers.
+
+- **Migration `20260726205901_realtime_hold_broadcasts`**: AFTER INSERT/DELETE trigger on
+  `slot_holds` calls `realtime.send()` to private topic `branch-holds:{branch_id}` with a
+  minimal `{slot_id, op}` payload — never user data (that's also why postgres_changes was
+  a non-starter: RLS SELECT-own would deliver nothing useful, and opening it would leak
+  user ids). Receive auth = SELECT policy on `realtime.messages` for the topic prefix;
+  no INSERT policy, so only the DB trigger can broadcast.
+- **`useBranchHoldsRealtime(branchId)`** (features/booking/realtime.ts): the slot picker
+  subscribes and invalidates the slots + preview queries on any event. Poll relaxed to a
+  60s FALLBACK (covers silent time-expiry between cron sweeps + dropped sockets) — push is
+  the fast path, correctness still never depends on the client.
+- **Verified end-to-end from Node with both test users**: B subscribed on the private
+  channel received `INSERT` and `DELETE` broadcasts the moment A held/released. Bonus:
+  confirm_booking deletes the hold → confirmations will propagate live too (F06).
+- Gotcha recorded: first-ever realtime use returned `MissingPartition` (service creates
+  its message partitions lazily; schema is service-owned — wait/retry, don't fix by hand).
+
 ### 2026-07-26 · FIX — Hold self-healing: one hold per patient + real crons + picker liveness
 
 Ended the hold-release loop with an end-to-end Node reproduction using both static test

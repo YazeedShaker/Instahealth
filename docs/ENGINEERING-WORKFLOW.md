@@ -104,6 +104,14 @@ pnpm audit --audit-level=high
 - **Holds are created ONLY via the `create_slot_hold` RPC** — there is
   deliberately NO RLS INSERT policy on `slot_holds` (dropped in the same
   migration; the SECURITY DEFINER function bypasses RLS). Don't re-add one.
+- **Realtime = DB-trigger broadcasts on private topics** (migration
+  20260726205901): triggers call `realtime.send()` with MINIMAL payloads
+  (ids only — postgres_changes would leak RLS-hidden rows or deliver
+  nothing). Receive-side auth = SELECT policy on `realtime.messages` per
+  topic prefix; no INSERT policy so clients can't spoof broadcasts. Gotcha:
+  the FIRST realtime use on a project can fail with `MissingPartition` —
+  the service creates its message partitions lazily (you CANNOT create them;
+  schema is service-owned). Retry after a minute; it self-heals.
 
 ## 6 · Mobile (Expo) specifics
 
