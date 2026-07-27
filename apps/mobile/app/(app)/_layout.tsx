@@ -61,6 +61,11 @@ export default function AppLayout() {
         name="booking"
         options={{ href: null, tabBarStyle: { display: 'none' }, popToTopOnBlur: true }}
       />
+      {/* Booking confirmation (F06) — deliberately OUTSIDE the booking group:
+          the approved design has no step header and no hold timer, and the
+          flow layout renders both. Tab bar stays hidden so the two stacked
+          CTAs own the bottom of the screen, as designed. */}
+      <Tabs.Screen name="confirmation" options={{ href: null, tabBarStyle: { display: 'none' } }} />
     </Tabs>
   )
 }

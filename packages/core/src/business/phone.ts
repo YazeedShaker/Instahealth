@@ -3,6 +3,8 @@
 // server SMS agree (the Edge Function returns bare digits `201…`; core returns
 // E.164 `+201…` — same digits, one canonical presentation for app code).
 
+import { STATIC_TEST_PHONES } from '../constants'
+
 const ARABIC_INDIC_ZERO = 0x0660 // ٠
 const EXTENDED_ARABIC_INDIC_ZERO = 0x06f0 // ۰
 
@@ -50,6 +52,18 @@ export function normalizeEgyptianPhone(input: string): string | null {
 /** True when the input normalizes to a valid Egyptian mobile (010/011/012/015). */
 export function isValidEgyptianPhone(input: string): boolean {
   return normalizeEgyptianPhone(input) !== null
+}
+
+/**
+ * True for the Supabase Auth static test numbers. Any code path that would
+ * send a real SMS MUST check this first — CI and dev must never text a number
+ * that isn't a real phone (CLAUDE.md §9, ENGINEERING-WORKFLOW §6).
+ * Normalizes first, so `01000000001` and `+20 100 000 0001` both match.
+ */
+export function isStaticTestPhone(input: string): boolean {
+  const normalized = normalizeEgyptianPhone(input)
+  if (normalized === null) return false
+  return (STATIC_TEST_PHONES as readonly string[]).includes(normalized)
 }
 
 const BIDI_LTR_ISOLATE_START = '⁦' // LRI

@@ -54,6 +54,8 @@
   --ih-warning-text: #92600a;
   --ih-error: #dc2626;
   --ih-error-bg: #fee2e2;
+  /* AA-contrast text on --ih-error-bg (~7:1); --ih-error itself is only ~4.3:1 */
+  --ih-error-text: #991b1b;
   --ih-info: #028090;
   --ih-info-bg: #e0f2f4;
 

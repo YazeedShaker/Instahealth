@@ -133,7 +133,11 @@ The booking flow is the heart of the product. It must feel effortless.
 4. **Pick slot** — calendar (14–30 days), available times. Selecting starts a **10-minute hold**
    with a visible countdown. This urgency is honest, not manufactured — the slot really is held.
 5. **Details** — name pre-filled, phone confirmed, optional notes.
-6. **Pay** — Paymob inline (card), Fawry (reference code), or cash-at-branch. Order summary before paying.
+6. **Pay** — card, Fawry (reference code), or cash-at-branch. Order summary before paying.
+   Payments run through **PayTabs** (decision changed from Paymob). Until the merchant account
+   exists, a mock provider settles the booking through the real server-side path and every
+   payment screen carries a visible "وضع تجريبي" badge — the patient must never believe money
+   moved when it did not.
 7. **Confirmation** — booking ref (`IH-2026-XXXXX`), all details, preparation reminder, SMS sent,
    add-to-calendar. This screen must feel like relief and certainty.
 

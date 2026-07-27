@@ -33,6 +33,11 @@ interface BookingStore {
   hold: ActiveHold | null
   pendingBooking: PendingBooking | null
   notes: string
+  /** Set when the hold is gone — by the flow timer reaching zero OR by the
+   * server refusing settlement with `hold_expired`. The flow layout renders
+   * the expiry modal off this ONE flag, so both routes end the same way
+   * (display state derives from the same predicate the server enforces). */
+  holdExpired: boolean
   /** Called when the branch profile mounts — keeps the selection for the same
    * branch, wipes everything (incl. flow state) when a different one opened. */
   openBranch: (branchId: string, branchNameAr: string) => void
@@ -43,6 +48,7 @@ interface BookingStore {
   setPendingBooking: (booking: PendingBooking) => void
   clearPendingBooking: () => void
   setNotes: (notes: string) => void
+  setHoldExpired: (holdExpired: boolean) => void
   /** Leaving the booking flow: drop hold + pending booking + notes but KEEP
    * the selection — back on the branch profile it must still be there. */
   clearFlowState: () => void
@@ -53,6 +59,7 @@ const INITIAL_FLOW_STATE = {
   hold: null as ActiveHold | null,
   pendingBooking: null as PendingBooking | null,
   notes: '',
+  holdExpired: false,
 }
 
 const INITIAL_STATE = {
@@ -82,6 +89,7 @@ export const useBookingStore = create<BookingStore>((set) => ({
   setPendingBooking: (pendingBooking) => set({ pendingBooking }),
   clearPendingBooking: () => set({ pendingBooking: null }),
   setNotes: (notes) => set({ notes }),
+  setHoldExpired: (holdExpired) => set({ holdExpired }),
   clearFlowState: () => set({ ...INITIAL_FLOW_STATE }),
   reset: () => set({ ...INITIAL_STATE }),
 }))

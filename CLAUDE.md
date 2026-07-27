@@ -38,28 +38,28 @@ integration. The allocation grows as we prove we can fill it.
 product. The web app is the provider dashboard + admin panel (desktop tools) plus, later, a public
 patient PWA for SEO/discovery. Build order reflects this — see §11.
 
-| Layer                     | Choice                                                                  | Notes                                                               |
-| ------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| **Patient app**           | **React Native + Expo (SDK 52+)**                                       | THE main product. Expo Router, EAS Build                            |
-| **Web (dashboard/admin)** | **Next.js 15** (App Router)                                             | Provider dashboard, admin panel, later patient PWA                  |
-| Language                  | **TypeScript** (strict mode)                                            | No `any`. Ever.                                                     |
-| Monorepo                  | **Turborepo + pnpm workspaces**                                         | Shared core between mobile and web                                  |
-| Database                  | **Supabase** (PostgreSQL 15)                                            | Already provisioned — see §6                                        |
-| Auth                      | **Supabase Auth**                                                       | Patients: phone OTP. Providers: email/password. Admin: email + TOTP |
-| Styling (mobile)          | **NativeWind v4** (Tailwind for RN) + design tokens                     | RTL via `I18nManager`. Same tokens as web                           |
-| Styling (web)             | **Tailwind CSS v4** + design tokens                                     | RTL-first. Tokens from `packages/design-tokens`                     |
-| State (server)            | **TanStack Query v5**                                                   | All server data — works in both RN and web                          |
-| State (client)            | **Zustand**                                                             | Booking flow, UI state only — works in both                         |
-| Forms                     | **React Hook Form + Zod**                                               | Zod schemas live in shared core                                     |
-| Payments                  | **Paymob**                                                              | Card, Fawry, Vodafone Cash. RN: Paymob SDK / web checkout           |
-| SMS                       | **Vonage**                                                              | Arabic Unicode, via Supabase Edge Function                          |
-| Maps                      | **react-native-maps** (mobile) / **Google Maps JS** (web)               | Branch discovery                                                    |
-| Push (mobile)             | **Expo Notifications**                                                  | Booking updates, reminders (complements SMS)                        |
-| Hosting (web)             | **Vercel**                                                              | Dashboard/admin + preview deploys                                   |
-| Distribution (mobile)     | **EAS Build + App Store + Play Store**                                  | Apple $99/yr, Google $25 one-time                                   |
-| Analytics                 | **PostHog**                                                             | RN + web SDKs. Product analytics, funnels                           |
-| Testing                   | **Vitest** (unit) · **Playwright** (web E2E) · **Maestro** (mobile E2E) | See §9                                                              |
-| CI/CD                     | **GitHub Actions → Vercel + EAS**                                       | Blocking gates — see §9                                             |
+| Layer                     | Choice                                                                  | Notes                                                                |
+| ------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| **Patient app**           | **React Native + Expo (SDK 52+)**                                       | THE main product. Expo Router, EAS Build                             |
+| **Web (dashboard/admin)** | **Next.js 15** (App Router)                                             | Provider dashboard, admin panel, later patient PWA                   |
+| Language                  | **TypeScript** (strict mode)                                            | No `any`. Ever.                                                      |
+| Monorepo                  | **Turborepo + pnpm workspaces**                                         | Shared core between mobile and web                                   |
+| Database                  | **Supabase** (PostgreSQL 15)                                            | Already provisioned — see §6                                         |
+| Auth                      | **Supabase Auth**                                                       | Patients: phone OTP. Providers: email/password. Admin: email + TOTP  |
+| Styling (mobile)          | **NativeWind v4** (Tailwind for RN) + design tokens                     | RTL via `I18nManager`. Same tokens as web                            |
+| Styling (web)             | **Tailwind CSS v4** + design tokens                                     | RTL-first. Tokens from `packages/design-tokens`                      |
+| State (server)            | **TanStack Query v5**                                                   | All server data — works in both RN and web                           |
+| State (client)            | **Zustand**                                                             | Booking flow, UI state only — works in both                          |
+| Forms                     | **React Hook Form + Zod**                                               | Zod schemas live in shared core                                      |
+| Payments                  | **PayTabs**                                                             | Hosted payment page + IPN. NOT INTEGRATED — mock provider ships (§8) |
+| SMS                       | **Vonage**                                                              | Arabic Unicode, via Supabase Edge Function                           |
+| Maps                      | **react-native-maps** (mobile) / **Google Maps JS** (web)               | Branch discovery                                                     |
+| Push (mobile)             | **Expo Notifications**                                                  | Booking updates, reminders (complements SMS)                         |
+| Hosting (web)             | **Vercel**                                                              | Dashboard/admin + preview deploys                                    |
+| Distribution (mobile)     | **EAS Build + App Store + Play Store**                                  | Apple $99/yr, Google $25 one-time                                    |
+| Analytics                 | **PostHog**                                                             | RN + web SDKs. Product analytics, funnels                            |
+| Testing                   | **Vitest** (unit) · **Playwright** (web E2E) · **Maestro** (mobile E2E) | See §9                                                               |
+| CI/CD                     | **GitHub Actions → Vercel + EAS**                                       | Blocking gates — see §9                                              |
 
 ---
 
@@ -255,7 +255,19 @@ This is an Arabic-first product. Get this wrong and the whole app feels broken t
   server actions, Edge Functions). If it appears in a client component, CI fails.
 - **All input validated with Zod** at the boundary — API routes and server actions parse with a
   schema before touching the DB. Never trust client input.
-- **Paymob webhooks** must verify the HMAC signature before acting. No exceptions.
+- **PayTabs IPN callbacks** must verify the signature before acting. No exceptions.
+  (Provider decision CHANGED from Paymob to PayTabs. **No PayTabs account or
+  credentials exist yet** — the legal entity is pending — so payments are
+  currently SIMULATED by `MockPaymentProvider`. The real integration plugs into
+  `packages/core/src/business/payment-paytabs.ts`, which documents exactly what
+  is needed. PayTabs Egypt's method lineup differs from the approved design's:
+  it has no Fawry and no Vodafone Cash — final lineup is an open product
+  decision.) The **PayTabs Server Key is server-only** — it lives in Supabase
+  Edge Function secrets and must never reach the Expo bundle.
+- **Booking confirmation is server-only.** `confirm_booking()` is executable by
+  `service_role` alone (migration 20260727111326); the ONLY caller is the
+  `settle-payment` Edge Function. Clients have no grant on it and no INSERT
+  policy on `payments` — a booking cannot be confirmed from the app.
 - **RLS is the security backbone** — every table has policies. Test them. A patient must never be
   able to read another patient's bookings.
 - **Rate limit** OTP requests (3/phone/hour) and booking creation.
@@ -325,7 +337,7 @@ system directly.
    Built and unit-tested first because both apps depend on it.
 3. **Mobile: Auth (F01)** — phone OTP onboarding in the Expo app (everything depends on identity).
 4. **Mobile: Discovery (F02–F04)** — home, map/list, search, branch profile.
-5. **Mobile: Booking (F05–F06)** — service select, slot picker + 10-min hold, Paymob, confirmation.
+5. **Mobile: Booking (F05–F06)** — service select, slot picker + 10-min hold, payment, confirmation.
    This is the money path and the core milestone: a real patient booking a real slot at Town/Saridar.
 6. **Web: Provider dashboard (P01–P06)** — MUST land around the same time as mobile booking, because a
    patient booking is useless until a Town/Saridar receptionist can see and confirm it. Build the

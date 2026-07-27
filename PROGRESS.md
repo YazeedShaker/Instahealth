@@ -21,7 +21,7 @@ Keep **Current status** and **Next up** accurate at all times.
 
 ## Current status
 
-**Phase:** Slot Hold & Review done (F05) → Payment & Confirmation (F06) next (+ P01–P06 in parallel to close the loop); F03 Search still open
+**Phase:** Booking loop COMPLETE on mobile (F01→F06: discover → select → hold → review → pay → confirmed). Next: P01–P06 provider dashboard (closes the loop) + F07 bookings list; F03 Search still open
 **Milestone target:** Labs + Scans booking working end-to-end at Town Hospital & Saridar Labs
 **Environment:** Supabase `instahealth-dev` live (Frankfurt). Design system published in Claude Design.
 Core patient screens approved. Monorepo scaffolded — both app shells boot with tokens/fonts/RTL.
@@ -56,8 +56,8 @@ visual contract. Then specs → Claude Code.
 - [x] **F04** — ✅ DONE. Mobile: branch profile & service selection (see Shipped)
 - [ ] **F03** — Mobile: search (rides on F04's branch route)
 - [x] **F05** — ✅ DONE. Mobile: slot picker + 10-min hold + review + pending booking (see Shipped)
-- [ ] **F06** — Mobile: Paymob payment + confirmation screen + SMS (replaces the payment stub)
-- [ ] **P01–P06** — Web: provider dashboard (build alongside F05–F06 to close the loop)
+- [x] **F06** — ✅ DONE. Mobile: payment (mock provider) + settle-payment + confirmation + SMS (see Shipped)
+- [ ] **P01–P06** — Web: provider dashboard. **UNBLOCKED AND NOW THE CRITICAL PATH** — real confirmed bookings with payment rows exist in dev; a receptionist has nothing to see them on.
 - [ ] **F07–F09** — Mobile: bookings history, cancel, reviews, profile
 - [ ] **A01–A06** — Web: admin panel
 - [ ] **006_practitioners.sql + doctor booking** — after labs/scans proven
@@ -68,6 +68,139 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 ---
 
 ## Shipped
+
+### 2026-07-27 · F06 — Payment (mock provider), settlement, confirmation & SMS (mobile)
+
+Step 4 closes the booking loop. A patient can now go discover → select → hold →
+review → pay → **confirmed booking with a payments row and a confirmation SMS**.
+
+**The architecture (what makes PayTabs a drop-in later):** the client asks a
+`PaymentProvider` for an outcome, then posts that outcome to the new
+`settle-payment` Edge Function — which is the ONLY caller of
+`confirm_booking()`. Swapping the mock for PayTabs changes the provider module
+and adds an IPN handler that posts the SAME shape; the settlement path does not
+move. Core gained `business/payment.ts` (the `PaymentProvider` interface,
+`createMockPaymentProvider`, the method catalogue + Arabic labels, the
+confirmation DTO), `business/payment-paytabs.ts` (a stub that REJECTS rather
+than silently succeeding, documenting credentials, hosted-page flow, IPN
+signature verification and the method-lineup mismatch), `business/sms.ts`, and
+`schemas/payment.schema.ts`.
+
+**⚠ SECURITY HOLE FOUND AND CLOSED.** `confirm_booking()` is SECURITY DEFINER
+and Postgres grants EXECUTE to PUBLIC by default — so since the schema was
+written, **any authenticated patient could confirm their own pending booking
+straight from the client, skipping payment entirely**. Migration
+`20260727111326_settlement_boundary_and_notification_skipped` revokes it from
+PUBLIC/anon/authenticated and grants service_role only. Verified from Node with
+a real patient session: `permission denied for function confirm_booking`.
+(`cancel_booking` deliberately keeps its client grant — the app needs it and it
+moves no money.) The same migration adds `'skipped'` to `notifications.status`
+so suppressed test-number SMS is audited honestly instead of as `'failed'`.
+
+**`settle-payment` (Edge Function, verify_jwt + in-function ownership check):**
+validates the request, refuses another patient's booking, **re-checks the hold
+is still live** (confirm_booking does NOT check holds — without this an expired
+hold could still consume capacity), calls `confirm_booking()`, builds the
+confirmation DTO, and fires the SMS. **Idempotent**: a second settle returns the
+confirmed state with `alreadyConfirmed: true`, no second payments row, no second
+increment, no second SMS — PayTabs retries IPNs, so this was built and tested
+now, not later.
+
+**Screens:** `booking/payment.tsx` replaces the F05 stub — recap, the design's
+three method rows (بطاقة / فوري / نقداً) with a visible **"وضع تجريبي"** badge, a
+DEV-only failure toggle, and the design's full payment-failure state (red row,
+Arabic alert, "حاول مرة أخرى", "موعدك ما زال محجوزاً"). New
+`app/(app)/confirmation.tsx` per the newly approved confirmation design: success
+moment, DB-issued `IH-2026-XXXXX` ref, branch/slot/services recap, "الإجمالي
+المدفوع" with the method line, the consolidated preparation notes,
+add-to-calendar (`expo-calendar`), and عرض حجوزاتي.
+
+**The F05→F06 landmine, handled:** payment.tsx calls `useBookingStore.reset()`
+BEFORE `router.replace('/(app)/confirmation')`. Otherwise the segments watcher
+in `(app)/_layout` sees lingering flow state the moment the route leaves
+`/booking` and `cancel_booking`s the booking that was just confirmed. There is
+now a unit test asserting `reset()` leaves nothing behind, and the Maestro flow
+asserts back-navigation cannot re-enter the flow.
+
+**Hold expiry is now ONE path.** Added `holdExpired` to the booking store and
+`features/booking/expiry.ts`: both the flow timer hitting zero AND the server
+answering `hold_expired` run the same teardown and raise the same modal —
+display state derives from the predicate the server enforces.
+
+**Verified against the LIVE dev DB from Node (both static test users, 60 checks,
+all passing):** hold → pending booking → settle for **card, fawry and cash**;
+booked_count incremented exactly once; payments row with the right
+amount/status/gateway_txn_id; hold deleted; **user B sees the slot as full
+immediately via `get_branch_slots` and is refused `slot_full`**; double-settle
+idempotent; failed payment leaves the booking payable with its hold intact, and
+a cash retry then succeeds; settlement without a live hold rejected
+(`hold_expired`) with the slot NOT consumed; B refused on A's booking; the
+client denied `confirm_booking` outright; bad input rejected. All test rows
+purged afterwards.
+
+**Core: 214 tests, 100% lines** (was 172). Mobile: 81 unit tests.
+
+**Decisions / deviations (all deliberate):**
+
+- **Payment provider is PayTabs, not Paymob** — CLAUDE.md §2/§8, PRODUCT.md §7,
+  `.env.example` and `.gitleaks.toml` updated. **We have NO PayTabs account and
+  no credentials (not even test ones) — the legal entity is pending — so the
+  mock ships** and every payment screen carries the test-mode badge.
+- **Method lineup follows the DESIGN, not the spec prose.** The spec said
+  بطاقة / فوري / محفظة فودافون; the approved design renders بطاقة / فوري /
+  **الدفع نقداً عند الوصول**. Design wins (it is the visual contract and cash is
+  a real Egyptian need). Noted in code: PayTabs Egypt has neither Fawry nor
+  Vodafone Cash — its methods are aman/meezaqr/valu/creditcard — so the final
+  lineup is an OPEN PRODUCT DECISION needing a design revision and a migration.
+- **The confirmation "Lottie moment" is RN `Animated`, not Lottie.** The design
+  bundle shipped no Lottie file — its own artifact is the CSS ring animation,
+  reproduced exactly (incl. reduced-motion). `lottie-react-native` is a native
+  module and Expo Go is the founder's only device path; adding one would risk
+  the only way this gets tested for zero visual gain. `ConfirmationSuccessMoment`
+  is the seam to swap when dev builds unblock.
+- **The confirmation screen lives OUTSIDE `app/(app)/booking/`** — the design
+  has no step header and no hold timer, and the flow layout renders both.
+- **The confirmation renders a SERVER-built DTO, never a re-query.** The `slots`
+  SELECT policy hides a slot once `booked_count = capacity`, so a patient
+  cannot read back the slot they just booked.
+- **A failed payment writes NOTHING.** No `payments` row on decline (the table
+  is UNIQUE on booking_id and confirm_booking upserts it; a stale failed row
+  would carry the wrong method/amount forward). No receipts/refunds in MVP.
+- **SMS carries the CONSOLIDATED prep rule, not the service note.** Measured
+  against real seed data the full note never fit in 140 chars and was silently
+  dropped — the single most important line in the message. Now
+  "تجهيز: صيام ١٢ ساعة قبل الموعد" (longest fast wins), app holds the detail.
+- `bookings.paymob_order_id` is now a dead column (we use
+  `payments.gateway_order_id`). Left in place — renaming needs a migration + type
+  regen for zero functional gain; fold it into the PayTabs integration PR.
+
+**For F07 (Bookings list) — hand-off:**
+
+- Confirmed bookings with `payments` rows and `notifications` audit rows exist in
+  dev now. `bookings` has no patient UPDATE policy; cancellation goes through the
+  `cancel_booking` RPC (still client-callable) which decrements `booked_count`
+  for confirmed rows.
+- `confirmation.tsx`'s recap card is the shape the booking-detail screen wants;
+  `BookingSummary` in core `domain.types` is the type to grow.
+- **Reading a booking's slot needs care**: joining `bookings → slots` as the
+  patient returns nothing for a fully-booked slot (RLS). Either denormalise via a
+  SECURITY DEFINER read function (like `get_branch_slots`) or return slot fields
+  from a server function — do NOT assume the join works.
+- `useConfirmationStore` is in-memory only; a cold start lands on `/(app)/bookings`.
+
+**For P01–P06 (provider dashboard) — hand-off, this is now the critical path:**
+
+- **There are real bookings to display and nobody to display them to.** The
+  closed loop in CLAUDE.md §11 is one step away.
+- Provider staff read via `provider_users.branch_ids` + `get_provider_branch_ids()`;
+  the `bookings`/`slots`/`branches` policies already grant provider access by
+  branch. **No provider_users rows exist yet** — onboarding Town/Saridar staff
+  accounts is a prerequisite (A02) or a manual seed.
+- A booking the dashboard sees as `confirmed` has `payment_status` `paid`
+  (prepaid) or `cash` (collect at branch) — the receptionist MUST see that
+  distinction, and `payments.status` is `pending` for cash.
+- Payments are SIMULATED. The dashboard must not imply money was received; show
+  the test-mode state until PayTabs is live.
 
 ### 2026-07-27 · FIX — Realtime actually shipped + subscription hardening
 
@@ -558,6 +691,14 @@ _Next entry after SETUP-02._
 - **2026-07 · Safe areas:** Every sticky/bottom element (CTAs, tab bar, countdown banner) must sit
   inside the safe-area inset — nothing under the iOS home indicator / Android gesture bar. Global rule,
   verified on real devices. (Caught in the step-1 review mockup where the CTA sat flush to the edge.)
+- **2026-07 · Payments: PayTabs, not Paymob** (changed at F06). Hosted payment page + IPN
+  signature verification; Server Key is server-only. No account or credentials exist yet (legal
+  entity pending), so payments are SIMULATED by a mock provider behind the real settlement path —
+  when credentials land, only the provider module and an IPN handler change.
+- **2026-07 · Settlement is server-only.** `confirm_booking()` is executable by `service_role`
+  alone; the single caller is the `settle-payment` Edge Function, which also validates the hold and
+  is idempotent. Clients have no grant on it and no INSERT policy on `payments`. (Closed a real
+  hole: default PUBLIC EXECUTE had made it client-callable since the schema was written.)
 - **2026-07 · Auth:** Patients phone OTP (Vonage). Providers email/password. Admin email + TOTP.
 - **2026-07 · Booking integrity:** Atomic `confirm_booking()` Postgres function. 10-min slot holds,
   cron cleanup every 5 min.
@@ -568,6 +709,20 @@ _Next entry after SETUP-02._
 ---
 
 ## Known risks / open items
+
+- **⚠ PAYMENTS ARE SIMULATED — PayTabs integration pending the legal entity.**
+  No merchant account, no credentials (not even test). `MockPaymentProvider`
+  settles bookings through the real server-side path; no money moves. **Launch
+  blocker.** Plug-in point + full TODO list:
+  `packages/core/src/business/payment-paytabs.ts`.
+- **⚠ Final payment-method lineup is an OPEN PRODUCT DECISION.** The approved
+  design shows بطاقة / فوري / نقداً, but PayTabs Egypt supports neither Fawry nor
+  Vodafone Cash (its methods are creditcard/aman/meezaqr/valu). Resolving this
+  needs a design revision AND a migration to `bookings_payment_method_check`.
+- **⚠ The confirmation SMS has never been delivered to a real handset.** Every
+  dev/CI run uses the static test numbers, which are deliberately skipped. The
+  founder's real-number check is the only proof the Arabic Unicode message
+  actually arrives.
 
 - **⚠ `generate-slots` nightly cron still not scheduled:** the capacity-model fix
   regenerated a full 30-day window (now through +30 days), but nothing extends it nightly —

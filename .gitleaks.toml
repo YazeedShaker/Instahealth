@@ -1,7 +1,7 @@
 # Gitleaks config — extends the default ruleset.
 # .env.example documents variable NAMES only (no real values) and is required
 # by SETUP-01 to be committed; the generic-api-key rule false-positives on
-# lines like `PAYMOB_HMAC_SECRET=`.
+# lines like `PAYTABS_SERVER_KEY=`.
 [extend]
 useDefault = true
 

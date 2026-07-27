@@ -1,6 +1,10 @@
-# Maestro E2E — F05 Slot Selection, Hold & Review
+# Maestro E2E — F05 Slot Selection + Hold + Review, F06 Payment + Confirmation
 # (static test number +201000000001 / 123456; Town Hospital is 24/7 so slots
 # always exist. Runs against a dev build when SETUP-02's Maestro job lands.)
+#
+# NOTE: this flow CONFIRMS real bookings in the dev project and consumes real
+# capacity-1 slots. No SMS is sent — settle-payment skips the static test
+# numbers. Purge the bookings it creates when running it repeatedly.
 appId: com.instahealth.app
 ---
 # Login with the static test number
@@ -58,34 +62,78 @@ appId: com.instahealth.app
 - assertVisible:
     id: 'hold-chip'
 
-# متابعة للدفع → payment stub shows the recap + pending ref
+# ══ F06 · Step 4 — payment ══
+# متابعة للدفع → the real payment screen: recap, methods, test-mode badge.
+# The hold timer keeps running here (the booking is not committed yet).
 - tapOn:
     id: 'review-continue'
-- assertVisible: 'الدفع — قريباً'
+- assertVisible: 'مراجعة الطلب والدفع'
 - assertVisible:
     id: 'order-summary'
 - assertVisible:
-    id: 'payment-booking-ref'
+    id: 'payment-test-mode-badge'
+- assertVisible:
+    id: 'payment-method-card'
+- assertVisible:
+    id: 'payment-method-fawry'
+- assertVisible:
+    id: 'payment-method-cash'
+- assertVisible:
+    id: 'hold-chip'
 
-# Back out of the whole flow to Home
+# ── Failure path first: DEV toggle ON → pay → the design's failure state ──
 - tapOn:
-    id: 'booking-flow-back'
-- assertVisible: 'مراجعة الحجز'
+    id: 'payment-simulate-failure'
 - tapOn:
-    id: 'booking-flow-back'
-- assertVisible: 'اختر الموعد المناسب'
-- tapOn:
-    id: 'booking-flow-back'
-- assertVisible: 'أقرب المواعيد'
-- tapOn:
-    id: 'branch-back'
-- assertVisible: 'أقرب المراكز إليك'
+    id: 'payment-pay'
+- assertVisible:
+    id: 'payment-error'
+- assertVisible: 'موعدك ما زال محجوزاً — لن تفقد مكانك'
+# The hold survived the decline — the patient has not lost their slot.
+- assertVisible:
+    id: 'hold-chip'
+- assertVisible: 'حاول مرة أخرى'
 
-# Re-enter the flow → the old hold is NOT reused (fresh picker, no timer)
+# ── Retry with the toggle OFF → confirmation ──
 - tapOn:
-    id: 'provider-card-bbbb0000-0000-4000-8000-000000000001'
+    id: 'payment-simulate-failure'
 - tapOn:
-    id: 'book-now'
-- assertVisible: 'اختر الموعد المناسب'
+    id: 'payment-pay'
+
+# Confirmation: the approved screen, with the DB-issued ref and the prep notes
+- assertVisible:
+    id: 'confirmation-title'
+- assertVisible: 'تم تأكيد حجزك بنجاح'
+- assertVisible:
+    id: 'confirmation-booking-ref'
+- assertVisible: 'IH-2026-'
+- assertVisible:
+    id: 'confirmation-slot'
+- assertVisible:
+    id: 'confirmation-total'
+- assertVisible: 'الإجمالي المدفوع'
+# Fasting selection → the prep strip MUST appear here of all places
+- assertVisible:
+    id: 'prep-strip'
+- assertVisible:
+    id: 'confirmation-add-to-calendar'
+# The booking is done: no step header, no hold timer.
 - assertNotVisible:
     id: 'hold-chip'
+- assertNotVisible:
+    id: 'booking-flow-back'
+
+# عرض حجوزاتي → the bookings tab (F07 fills it in)
+- tapOn:
+    id: 'confirmation-my-bookings'
+- assertVisible: 'حجوزاتي'
+
+# ── Back must NOT re-enter the booking flow ──
+# The store was reset on confirm, so the flow layout's no-selection guard
+# bounces any re-entry to Home. This is the guard against the F05→F06 landmine:
+# a re-entered flow would carry state the exit watcher then "cleans up",
+# cancelling the booking that was just confirmed.
+- back
+- assertNotVisible: 'مراجعة الطلب والدفع'
+- assertNotVisible: 'اختر الموعد المناسب'
+- assertNotVisible: 'تم تأكيد حجزك بنجاح'

@@ -9,6 +9,7 @@ import {
 } from './booking.schema'
 import { coordinatesSchema, paginationSchema, uuidSchema } from './common.schema'
 import { errorMessages, getErrorMessage } from './messages'
+import { settlePaymentRequestSchema } from './payment.schema'
 import { phoneSchema } from './phone.schema'
 import { reviewSchema } from './review.schema'
 
@@ -167,5 +168,59 @@ describe('bilingual messages', () => {
 
   test('unknown keys fall back to the key itself', () => {
     expect(getErrorMessage('nope.missing', 'en')).toBe('nope.missing')
+  })
+})
+
+describe('settlePaymentRequestSchema', () => {
+  const valid = {
+    bookingId: BRANCH_ID,
+    method: 'card',
+    providerRef: 'MOCK-3F8B1C2D-1',
+    outcome: 'success',
+  }
+
+  test('accepts a well-formed settlement request and defaults the payload to null', () => {
+    const parsed = settlePaymentRequestSchema.parse(valid)
+    expect(parsed).toEqual({ ...valid, providerPayload: null })
+  })
+
+  test('keeps a provider payload when one is supplied', () => {
+    const parsed = settlePaymentRequestSchema.parse({
+      ...valid,
+      providerPayload: { tran_ref: 'TST123', response_status: 'A' },
+    })
+    expect(parsed.providerPayload).toEqual({ tran_ref: 'TST123', response_status: 'A' })
+  })
+
+  test('rejects a non-uuid booking id', () => {
+    expect(firstMessage(settlePaymentRequestSchema.safeParse({ ...valid, bookingId: 'abc' }))).toBe(
+      'payment.bookingIdInvalid',
+    )
+  })
+
+  test('rejects a method the DB constraint would refuse', () => {
+    expect(
+      firstMessage(settlePaymentRequestSchema.safeParse({ ...valid, method: 'bitcoin' })),
+    ).toBe('booking.paymentMethod.invalid')
+  })
+
+  test('rejects an unknown outcome', () => {
+    expect(firstMessage(settlePaymentRequestSchema.safeParse({ ...valid, outcome: 'maybe' }))).toBe(
+      'payment.outcomeInvalid',
+    )
+  })
+
+  test('requires a provider reference', () => {
+    expect(firstMessage(settlePaymentRequestSchema.safeParse({ ...valid, providerRef: '' }))).toBe(
+      'payment.providerRefRequired',
+    )
+  })
+
+  test('rejects an over-long provider reference', () => {
+    expect(
+      firstMessage(
+        settlePaymentRequestSchema.safeParse({ ...valid, providerRef: 'x'.repeat(256) }),
+      ),
+    ).toBe('payment.providerRefTooLong')
   })
 })
