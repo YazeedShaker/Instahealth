@@ -10,7 +10,7 @@ import {
 import { colors } from '@instahealth/design-tokens'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Redirect, useRouter } from 'expo-router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -20,6 +20,7 @@ import { FlowCtaBar } from '../../components/booking/FlowCtaBar'
 import { PrimaryButton } from '../../components/ui/PrimaryButton'
 import { addBookingToCalendar, type AddToCalendarResult } from '../../features/booking/calendar'
 import { useConfirmationStore } from '../../features/booking/confirmationStore'
+import { useBookingStore } from '../../features/booking/store'
 
 const CALENDAR_MESSAGE_AR: Record<AddToCalendarResult, string> = {
   added: '✓ تمت الإضافة إلى التقويم',
@@ -44,6 +45,13 @@ export default function ConfirmationScreen() {
   const confirmation = useConfirmationStore((state) => state.confirmation)
   const [isAddingToCalendar, setIsAddingToCalendar] = useState(false)
   const [calendarResult, setCalendarResult] = useState<AddToCalendarResult | null>(null)
+
+  // The hand-off is over the moment this screen exists — lowering the flag here
+  // rather than in payment.tsx keeps it up for exactly the commit that needs it,
+  // so the flow guards resume normal duty for the NEXT booking.
+  useEffect(() => {
+    useBookingStore.getState().clearConfirmedHandoff()
+  }, [])
 
   // Direct entry / a reloaded bundle with no confirmation in memory: F07's
   // bookings list is the real home for a past booking, so send them there.

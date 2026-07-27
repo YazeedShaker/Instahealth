@@ -202,6 +202,51 @@ purged afterwards.
 - Payments are SIMULATED. The dashboard must not imply money was received; show
   the test-mode state until PayTabs is live.
 
+**Device-test round (same PR #15 — six symptoms reported, four root causes):**
+
+- **`settle-payment` had no CORS.** Expo's WEB target runs the same client code
+  in a browser, so every call is preflighted; the `method !== 'POST'` guard
+  answered `OPTIONS` with a bare 405 and the browser reported
+  `TypeError: Failed to fetch`. Edge-function logs showed it exactly:
+  `OPTIONS | 405` ×11 next to `POST | 200` from the phone. Added an OPTIONS
+  short-circuit + CORS headers on every response. `*` is safe here because auth
+  is an explicit bearer token, never an ambient cookie. The other four functions
+  are cron/server-to-server and stay CORS-free deliberately.
+- **The confirm → confirmation hand-off wedged the navigator.** `reset()` before
+  `router.replace` also emptied `selectedServices`, so the flow layout wanted
+  `/home` (empty selection) and the payment screen wanted `/slot` (null hold)
+  in the same commit as the replace to `/confirmation`. Three navigation intents,
+  navigator loses — the NEXT booking opened blank and unclickable. Fixed with
+  `completeBooking()`, which clears the store and raises `confirmedHandoff` in
+  ONE update; both guards stand down while it is up, and `confirmation.tsx`
+  lowers it on mount. The landmine protection is unchanged — clearing still
+  happens before navigating.
+- **`expo-calendar` was never added to `app.config.ts` `plugins`.** Expo Go
+  carries its own permission strings so this hid in dev, but a dev/store build
+  would ship no `NSCalendars*UsageDescription` and no Android calendar
+  permissions. Added with an Arabic `calendarPermission`.
+- **OTP to the founder's real number: NOT our code.** Auth logs show three
+  clean `/otp` 200s, then `429 over_sms_send_rate_limit` (limit was 3/hour,
+  since raised to 10), then another clean 200. A 200 means GoTrue handed the
+  message to the provider without error — so delivery died at Vonage/the
+  carrier, not in the app. Supabase Auth's phone provider is configured in the
+  dashboard and is entirely separate from our `send-sms` function. Likely
+  Vonage trial whitelisting, balance, or an unregistered Egyptian sender ID
+  (NTRA drops unregistered alphanumeric senders). **Founder action, not a code
+  fix.**
+- **No confirmation SMS was ever sent — by design.** Both confirmed dev
+  bookings were made as `+201000000001`; `notifications` rows read
+  `status='skipped'`, `"static test number — no real SMS in dev/CI"`. The real
+  SMS path stays untested until the OTP issue above is resolved, because the
+  founder cannot sign in as a real number to receive one.
+- **Still open — calendar on iPhone.** With permission granted and a writable
+  calendar found, `createEventAsync` threw and the single `catch` collapsed it
+  to a generic message. `calendar.ts` now scopes error handling per stage and
+  logs the real native error in `__DEV__`, and the iOS path asks EventKit for
+  the DEFAULT calendar first (it resolves under permission shapes where
+  enumerating all calendars does not — iOS 17 split full vs write-only access).
+  Next device run should name the actual EventKit error.
+
 ### 2026-07-27 · FIX — Realtime actually shipped + subscription hardening
 
 "Still 15s" had TWO compounding causes, both proven:

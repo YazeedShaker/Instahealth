@@ -197,6 +197,40 @@ pnpm audit --audit-level=high
   CSS ring animation, so there was no Lottie file and no visual gain).
   `expo-calendar` WAS added — it ships inside Expo Go, so the founder can
   actually test it. Check that list before reaching for a native dep.
+- **"Works on the phone, `Failed to fetch` on web" = a missing CORS preflight.**
+  Expo's web target runs the SAME client code in a browser, so any Edge Function
+  the app calls becomes cross-origin and gets an `OPTIONS` preflight first.
+  `settle-payment` answered it with the `method !== 'POST'` guard — a bare 405
+  with no `Access-Control-Allow-Origin` — and the browser surfaced
+  `TypeError: Failed to fetch` from inside supabase-js, which looks like a
+  network fault and reads nothing like CORS. Any function a CLIENT invokes needs
+  an `OPTIONS` short-circuit + CORS headers on **every** response including
+  errors. Cron/server-to-server functions (`send-sms`, `cleanup-holds`,
+  `generate-slots`, `booking-reminder`) deliberately do NOT get them. Check the
+  edge-function logs for `OPTIONS | 405` — it names the bug instantly.
+- **Never clear a store that route guards read while navigating away from it.**
+  On a confirmed booking, `reset()` cleared `selectedServices` too, so the flow
+  layout rendered `<Redirect href="/home">` (empty selection) and the payment
+  screen `<Redirect href="/slot">` (null hold) in the same commit as
+  `router.replace('/confirmation')`. Three competing navigation intents wedged
+  the navigator: the NEXT booking opened blank and unclickable, with no error to
+  show for it. The fix is an explicit stand-down flag (`confirmedHandoff`) set in
+  the SAME atomic update as the clear, lowered by the destination screen on
+  mount. Do not rely on React's batching to win the race — make the guards
+  suspend deliberately.
+- **A native dep in `package.json` is only half-installed.** `expo-calendar` was
+  added and used but never listed in `app.config.ts` `plugins`, so no
+  `NSCalendars*UsageDescription` and no Android `READ/WRITE_CALENDAR` reached any
+  real build. Expo Go hides this completely — it ships its own permission set, so
+  the feature appears to work in the only environment we can currently test in.
+  Adding a native module means: install it, add its config plugin WITH the Arabic
+  permission copy, and note that Expo Go cannot verify the plugin.
+- **A single `try/catch` around a multi-stage native call destroys the
+  diagnosis.** `addBookingToCalendar` wrapped permission + calendar lookup +
+  event creation in one `catch → 'error'`, so a device report of "تعذّرت
+  الإضافة" was indistinguishable between three unrelated causes and cost a whole
+  round-trip. Scope the handling per stage and log the real native error under
+  `__DEV__` (same pattern as `settle.ts`).
 - **A slot the patient just booked becomes invisible to them.** The `slots`
   SELECT policy is `booked_count < capacity`, so the moment `confirm_booking`
   increments a capacity-1 slot, its own booker can no longer read the row. Any
@@ -239,4 +273,4 @@ If you debug a toolchain/CI/platform trap that cost you more than one
 attempt, append it to the relevant section here in the same PR. This file is
 how sessions inherit each other's scars.
 
-_Last updated: 2026-07-27 · Covers everything learned SETUP-01 → F06._
+_Last updated: 2026-07-27 · Covers everything learned SETUP-01 → F06 (incl. the F06 device-test round)._

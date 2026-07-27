@@ -32,6 +32,7 @@ export default function BookingFlowLayout() {
   // ONE source of truth for "the hold is gone" — set by this layout's timer OR
   // by the payment screen when `settle-payment` refuses with `hold_expired`.
   const holdExpired = useBookingStore((state) => state.holdExpired)
+  const confirmedHandoff = useBookingStore((state) => state.confirmedHandoff)
 
   const [nowMs, setNowMs] = useState(() => Date.now())
 
@@ -60,7 +61,10 @@ export default function BookingFlowLayout() {
   // patient + server expiry + the 5-min cron self-heal.)
 
   // Guard: no selection → nothing to book (deep entry, session restore…).
-  if (selectionCount === 0) {
+  // Suspended during the confirmation hand-off: the selection is empty because
+  // the booking just SUCCEEDED, and redirecting here would race the payment
+  // screen's replace to /confirmation (see store.confirmedHandoff).
+  if (selectionCount === 0 && !confirmedHandoff) {
     return <Redirect href="/(app)/home" />
   }
 

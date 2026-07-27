@@ -47,6 +47,17 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         locationWhenInUsePermission: 'نستخدم موقعك لعرض أقرب المراكز الطبية إليك.',
       },
     ],
+    // Expo Go carries its own permission strings, so "أضف إلى التقويم" appears
+    // to work there without this entry — but WITHOUT it a dev build or a store
+    // build ships no NSCalendars*UsageDescription and no Android
+    // READ/WRITE_CALENDAR, and the feature dies on first use. The plugin sets
+    // both the legacy and the iOS 17+ full-access keys.
+    [
+      'expo-calendar',
+      {
+        calendarPermission: 'نضيف موعد حجزك إلى تقويمك حتى لا تفوته.',
+      },
+    ],
   ],
   experiments: {
     typedRoutes: false,

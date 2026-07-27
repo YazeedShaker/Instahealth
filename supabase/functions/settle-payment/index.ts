@@ -27,7 +27,24 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const SEND_SMS_URL = `${SUPABASE_URL}/functions/v1/send-sms`
 
-const JSON_HEADERS = { 'Content-Type': 'application/json' }
+// CORS. Expo's WEB target runs the SAME client code in a browser, so this
+// function is cross-origin there and every call is preceded by a preflight.
+// Without this block the preflight hit the `method !== 'POST'` guard below,
+// got a bare 405, and the browser reported `TypeError: Failed to fetch` —
+// with no CORS header the real response is never even readable (found on
+// device-vs-web: identical code settled fine natively, failed on web).
+//
+// `*` is safe HERE and only here: auth is a bearer token the caller must set
+// explicitly, never a cookie, so no credentials ride along ambiently and a
+// hostile origin gains nothing it could not do with curl.
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
+}
+
+const JSON_HEADERS = { ...CORS_HEADERS, 'Content-Type': 'application/json' }
 
 // ── Mirrored from packages/core (Edge Functions are standalone Deno modules
 // and cannot import the workspace package — same reason send-sms re-implements
@@ -300,7 +317,8 @@ async function sendConfirmationSms(built: BuiltConfirmation): Promise<SmsStatus>
     if (!skip) {
       const response = await fetch(SEND_SMS_URL, {
         method: 'POST',
-        headers: { ...JSON_HEADERS, Authorization: `Bearer ${SERVICE_KEY}` },
+        // OUTBOUND request — plain content-type, never the CORS response headers.
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SERVICE_KEY}` },
         body: JSON.stringify({ to: user.phone, message, type: 'booking_confirmation' }),
       })
       const result = await response.json().catch(() => ({ success: false }))
@@ -327,6 +345,8 @@ async function sendConfirmationSms(built: BuiltConfirmation): Promise<SmsStatus>
 // ── Handler ────────────────────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
+  // Preflight — must answer BEFORE the method guard and before any auth work.
+  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS })
   if (req.method !== 'POST') return fail('invalid_request', 405)
 
   // Caller identity comes from the patient's own JWT — never from the body.

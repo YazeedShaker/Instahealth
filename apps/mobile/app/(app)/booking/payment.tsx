@@ -39,6 +39,7 @@ export default function PaymentScreen() {
   const selectedServices = useBookingStore((state) => state.selectedServices)
   const hold = useBookingStore((state) => state.hold)
   const pendingBooking = useBookingStore((state) => state.pendingBooking)
+  const confirmedHandoff = useBookingStore((state) => state.confirmedHandoff)
   const setConfirmation = useConfirmationStore((state) => state.setConfirmation)
 
   const [method, setMethod] = useState<PaymentMethod>('card')
@@ -51,8 +52,11 @@ export default function PaymentScreen() {
   const attemptRef = useRef(1)
 
   // No live hold or no pending booking → nothing to pay for. Same guard the
-  // F05 stub had (deep entry, expiry modal, session restore).
+  // F05 stub had (deep entry, expiry modal, session restore) — EXCEPT during
+  // the confirmation hand-off, where the store is empty precisely BECAUSE the
+  // booking succeeded and this screen is one commit from unmounting.
   if (hold === null || pendingBooking === null) {
+    if (confirmedHandoff) return null
     return <Redirect href="/(app)/booking/slot" />
   }
 
@@ -107,7 +111,13 @@ export default function PaymentScreen() {
         // hold or pending booking, cancels the booking we just confirmed.
         // Zustand updates synchronously, so by the time the route changes
         // there is nothing left for it to clean up.
-        useBookingStore.getState().reset()
+        //
+        // `completeBooking` (not `reset`) also raises `confirmedHandoff`, which
+        // stands the flow guards down for this one commit — clearing the store
+        // otherwise makes this screen redirect to /slot and the flow layout
+        // redirect to /home while the replace below is still in flight, and the
+        // navigator loses: the NEXT booking opens blank and unclickable.
+        useBookingStore.getState().completeBooking()
         router.replace('/(app)/confirmation')
         return
       }
