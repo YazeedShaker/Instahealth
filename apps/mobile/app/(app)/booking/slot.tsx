@@ -11,6 +11,7 @@ import { PrimaryButton } from '../../../components/ui/PrimaryButton'
 import { useAuthStore } from '../../../features/auth/store'
 import { acquireSlotHold } from '../../../features/booking/api'
 import { useBookingSlots } from '../../../features/booking/queries'
+import { useBranchHoldsRealtime } from '../../../features/booking/realtime'
 import { useBookingStore } from '../../../features/booking/store'
 
 // Step 2 — slot picker (F05). Tapping an available slot takes the 10-minute
@@ -24,6 +25,7 @@ export default function SlotPickerScreen() {
   const hold = useBookingStore((state) => state.hold)
 
   const slotsQuery = useBookingSlots(branchId)
+  useBranchHoldsRealtime(branchId) // push: other patients' holds/releases appear live
   const now = new Date()
   const sections = useMemo(
     () => buildSlotDaySections(slotsQuery.data ?? [], now),

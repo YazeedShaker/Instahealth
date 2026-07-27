@@ -1,0 +1,1466 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <link
+          rel="stylesheet"
+          href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/fonts.css"
+        />
+        <link
+          rel="stylesheet"
+          href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/colors.css"
+        />
+        <link
+          rel="stylesheet"
+          href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/typography.css"
+        />
+        <link
+          rel="stylesheet"
+          href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/spacing.css"
+        />
+        <link
+          rel="stylesheet"
+          href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/effects.css"
+        />
+        <link
+          rel="stylesheet"
+          href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/themes.css"
+        />
+        <link
+          rel="stylesheet"
+          href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/base.css"
+        />
+        <link
+          rel="stylesheet"
+          href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/styles.css"
+        />
+        <script src="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/_ds_bundle.js"></script>
+        <style>
+          body {
+            margin: 0;
+            background: var(--ih-neutral-100);
+            font-family: 'Cairo', 'Atkinson Hyperlegible', sans-serif;
+          }
+          a {
+            color: var(--ih-primary-600);
+          }
+          a:hover {
+            color: var(--ih-primary-700);
+          }
+          input:focus,
+          textarea:focus {
+            outline: none;
+            border-color: var(--ih-primary-400) !important;
+          }
+          .ih-datestrip::-webkit-scrollbar {
+            display: none;
+          }
+        </style>
+      </helmet>
+      <div
+        style="
+          display: flex;
+          gap: 48px;
+          justify-content: center;
+          align-items: flex-start;
+          padding: 48px 32px;
+          flex-wrap: wrap;
+        "
+      >
+        <!-- ═══ Step 1 — اختيار التحاليل ═══ -->
+        <div data-screen-label="١ · اختيار التحاليل">
+          <x-import
+            component-from-global-scope="IOSDevice"
+            from="./ios-frame.jsx"
+            hint-size="390px,844px"
+          >
+            <div
+              dir="rtl"
+              style="
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                background: var(--ih-neutral-50);
+                padding-top: 62px;
+                box-sizing: border-box;
+              "
+            >
+              <div
+                style="
+                  background: var(--ih-neutral-0);
+                  border-bottom: 1px solid var(--ih-neutral-200);
+                  padding: 12px 16px 14px;
+                "
+              >
+                <x-import
+                  component-from-global-scope="InstaHealthDesignSystem_0ffa7c.BookingSteps"
+                  steps="{{ stepLabels }}"
+                  current="{{ 0 }}"
+                  hint-size="100%,66px"
+                ></x-import>
+              </div>
+              <div
+                style="
+                  flex: 1;
+                  overflow-y: auto;
+                  min-height: 0;
+                  padding: 20px;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 14px;
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    align-items: flex-start;
+                    justify-content: space-between;
+                    gap: 10px;
+                  "
+                >
+                  <div style="display: flex; flex-direction: column; gap: 4px">
+                    <h1
+                      style="
+                        margin: 0;
+                        font-family: 'Cairo', sans-serif;
+                        font-size: 20px;
+                        font-weight: 700;
+                        color: var(--ih-neutral-800);
+                      "
+                    >
+                      مراجعة التحاليل المختارة
+                    </h1>
+                    <div style="font-size: 13px; color: var(--ih-neutral-500)">
+                      معامل سريدار · التجمع الخامس
+                    </div>
+                  </div>
+                  <a
+                    href="#"
+                    onClick="{{ noNav }}"
+                    style="
+                      font-size: 14px;
+                      font-weight: 700;
+                      text-decoration: none;
+                      border-bottom: 1px solid currentColor;
+                      padding-bottom: 1px;
+                      white-space: nowrap;
+                      margin-top: 4px;
+                    "
+                    >تعديل</a
+                  >
+                </div>
+                <div
+                  style="
+                    background: var(--ih-neutral-0);
+                    border: 1px solid var(--ih-neutral-200);
+                    border-radius: 12px;
+                    box-shadow: var(--ih-shadow-sm);
+                    overflow: hidden;
+                    flex-shrink: 0;
+                  "
+                >
+                  <sc-for list="{{ chosenServices }}" as="svc" hint-placeholder-count="2">
+                    <div
+                      style="
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        padding: 14px 16px;
+                        min-height: 44px;
+                        border-bottom: 1px solid var(--ih-neutral-100);
+                      "
+                    >
+                      <div
+                        style="
+                          width: 24px;
+                          height: 24px;
+                          border-radius: 50%;
+                          background: var(--ih-primary-50);
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                          color: var(--ih-primary-600);
+                          font-size: 13px;
+                          font-weight: 700;
+                          flex-shrink: 0;
+                        "
+                      >
+                        ✓
+                      </div>
+                      <div
+                        style="
+                          flex: 1;
+                          font-size: 15px;
+                          font-weight: 600;
+                          color: var(--ih-neutral-800);
+                        "
+                      >
+                        {{ svc.name }}
+                      </div>
+                      <div
+                        dir="ltr"
+                        style="
+                          font-size: 14px;
+                          font-weight: 700;
+                          color: var(--ih-neutral-800);
+                          white-space: nowrap;
+                        "
+                      >
+                        {{ svc.price }}
+                        <span
+                          style="font-size: 11px; font-weight: 600; color: var(--ih-neutral-500)"
+                          >EGP</span
+                        >
+                      </div>
+                    </div>
+                  </sc-for>
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      justify-content: space-between;
+                      gap: 10px;
+                      padding: 14px 16px;
+                      background: var(--ih-neutral-50);
+                    "
+                  >
+                    <span style="font-size: 14px; font-weight: 700; color: var(--ih-neutral-800)"
+                      >الإجمالي</span
+                    >
+                    <span
+                      dir="ltr"
+                      style="
+                        font-family: 'Cairo', sans-serif;
+                        font-size: 17px;
+                        font-weight: 800;
+                        color: var(--ih-primary-700);
+                        white-space: nowrap;
+                      "
+                      >{{ total }}
+                      <span style="font-size: 12px; font-weight: 700; color: var(--ih-neutral-500)"
+                        >EGP</span
+                      ></span
+                    >
+                  </div>
+                </div>
+                <sc-if value="{{ prepVisible }}" hint-placeholder-val="{{ true }}">
+                  <div
+                    style="
+                      background: var(--ih-accent-200);
+                      border: 1px solid var(--ih-accent-400);
+                      border-radius: 8px;
+                      overflow: hidden;
+                    "
+                  >
+                    <div
+                      onClick="{{ onPrepToggle }}"
+                      role="button"
+                      aria-expanded="{{ prepOpen }}"
+                      style="
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        padding: 14px 16px;
+                        min-height: 44px;
+                        box-sizing: border-box;
+                        cursor: pointer;
+                      "
+                    >
+                      <span style="font-size: 15px; flex-shrink: 0" aria-hidden="true">⚠</span>
+                      <div
+                        style="
+                          flex: 1;
+                          font-size: 13.5px;
+                          font-weight: 600;
+                          color: var(--ih-primary-800);
+                          line-height: 1.5;
+                        "
+                      >
+                        بعض التحاليل المختارة تتطلب صياماً — اضغط لعرض التفاصيل
+                      </div>
+                      <span
+                        style="font-size: 12px; color: var(--ih-primary-700); flex-shrink: 0; transform: {{ prepChevron }}; transition: transform 180ms;"
+                        aria-hidden="true"
+                        >▼</span
+                      >
+                    </div>
+                    <sc-if value="{{ prepOpen }}" hint-placeholder-val="{{ false }}">
+                      <div
+                        style="
+                          padding: 2px 16px 14px 16px;
+                          display: flex;
+                          flex-direction: column;
+                          gap: 8px;
+                          border-top: 1px solid var(--ih-accent-400);
+                        "
+                      >
+                        <sc-for list="{{ prepItems }}" as="pi" hint-placeholder-count="2">
+                          <div
+                            style="
+                              display: flex;
+                              gap: 8px;
+                              padding-top: 10px;
+                              font-size: 13.5px;
+                              line-height: 1.6;
+                              color: var(--ih-primary-800);
+                            "
+                          >
+                            <span
+                              style="color: var(--ih-primary-700); flex-shrink: 0"
+                              aria-hidden="true"
+                              >•</span
+                            >
+                            <div>
+                              <span style="font-weight: 700">{{ pi.name }}:</span> {{ pi.text }}
+                            </div>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+                  </div>
+                </sc-if>
+              </div>
+              <div
+                style="
+                  background: var(--ih-neutral-0);
+                  border-top: 1px solid var(--ih-neutral-200);
+                  box-shadow: 0 -4px 12px rgba(5, 102, 141, 0.06);
+                  padding: 14px 20px 20px;
+                  padding-bottom: calc(20px + 34px);
+                "
+              >
+                <x-import
+                  component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button"
+                  size="lg"
+                  full-width="{{ true }}"
+                  hint-size="100%,52px"
+                  >التالي</x-import
+                >
+              </div>
+            </div>
+          </x-import>
+        </div>
+
+        <!-- ═══ Step 2 — الموعد ═══ -->
+        <div data-screen-label="٢ · الموعد">
+          <x-import
+            component-from-global-scope="IOSDevice"
+            from="./ios-frame.jsx"
+            hint-size="390px,844px"
+          >
+            <div
+              dir="rtl"
+              style="
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                background: var(--ih-neutral-50);
+                padding-top: 62px;
+                box-sizing: border-box;
+              "
+            >
+              <div
+                style="
+                  background: var(--ih-neutral-0);
+                  border-bottom: 1px solid var(--ih-neutral-200);
+                  padding: 12px 16px 14px;
+                "
+              >
+                <x-import
+                  component-from-global-scope="InstaHealthDesignSystem_0ffa7c.BookingSteps"
+                  steps="{{ stepLabels }}"
+                  current="{{ 1 }}"
+                  hint-size="100%,66px"
+                ></x-import>
+              </div>
+              <div
+                style="
+                  flex: 1;
+                  overflow-y: auto;
+                  min-height: 0;
+                  padding: 20px 0;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 18px;
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    gap: 10px;
+                    padding: 0 20px;
+                  "
+                >
+                  <h1
+                    style="
+                      margin: 0;
+                      font-family: 'Cairo', sans-serif;
+                      font-size: 20px;
+                      font-weight: 700;
+                      color: var(--ih-neutral-800);
+                    "
+                  >
+                    اختر الموعد المناسب
+                  </h1>
+                  <div
+                    onClick="{{ onOpenMonth }}"
+                    role="button"
+                    aria-label="عرض الشهر كاملاً"
+                    style="
+                      flex-shrink: 0;
+                      display: flex;
+                      align-items: center;
+                      gap: 6px;
+                      min-height: 44px;
+                      padding: 0 14px;
+                      border-radius: 999px;
+                      background: var(--ih-neutral-0);
+                      border: 1px solid var(--ih-neutral-200);
+                      cursor: pointer;
+                    "
+                  >
+                    <span style="font-size: 16px" aria-hidden="true">📅</span>
+                    <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-600)"
+                      >الشهر</span
+                    >
+                  </div>
+                </div>
+                <div style="padding: 0 20px">
+                  <div
+                    class="ih-datestrip"
+                    style="
+                      display: flex;
+                      gap: 8px;
+                      overflow-x: auto;
+                      padding: 2px 0 6px;
+                      scrollbar-width: none;
+                    "
+                  >
+                    <sc-for list="{{ dates }}" as="d" hint-placeholder-count="7">
+                      <div
+                        data-idx="{{ $index }}"
+                        onClick="{{ onSelectDate }}"
+                        aria-disabled="{{ d.full }}"
+                        style="flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 60px; padding: 8px; border-radius: 12px; cursor: {{ d.cursor }}; background: {{ d.bg }}; border: {{ d.border }}; opacity: {{ d.opacity }}; transition: all 180ms;"
+                      >
+                        <div style="font-size: 12px; font-weight: 600; color: {{ d.dayColor }};">
+                          {{ d.day }}
+                        </div>
+                        <div style="font-size: 18px; font-weight: 800; color: {{ d.numColor }};">
+                          {{ d.num }}
+                        </div>
+                        <sc-if value="{{ d.full }}" hint-placeholder-val="{{ false }}">
+                          <div
+                            style="font-size: 9px; font-weight: 600; color: var(--ih-neutral-400)"
+                          >
+                            ممتلئ
+                          </div>
+                        </sc-if>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+                <sc-if value="{{ monthOpen }}" hint-placeholder-val="{{ false }}">
+                  <div
+                    style="
+                      margin: 0 20px;
+                      background: var(--ih-neutral-0);
+                      border: 1px solid var(--ih-neutral-200);
+                      border-radius: 16px;
+                      box-shadow: var(--ih-shadow-md, 0 8px 24px rgba(5, 102, 141, 0.12));
+                      padding: 16px;
+                      display: flex;
+                      flex-direction: column;
+                      gap: 12px;
+                    "
+                  >
+                    <div style="display: flex; align-items: center; justify-content: space-between">
+                      <div style="font-size: 15px; font-weight: 700; color: var(--ih-neutral-800)">
+                        {{ monthTitle }}
+                      </div>
+                      <div
+                        onClick="{{ onCloseMonth }}"
+                        role="button"
+                        aria-label="إغلاق"
+                        style="
+                          width: 32px;
+                          height: 32px;
+                          border-radius: 999px;
+                          background: var(--ih-neutral-50);
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                          font-size: 13px;
+                          color: var(--ih-neutral-600);
+                          cursor: pointer;
+                        "
+                      >
+                        ✕
+                      </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px">
+                      <sc-for list="{{ weekdayHeads }}" as="wd" hint-placeholder-count="7">
+                        <div
+                          style="
+                            text-align: center;
+                            font-size: 11px;
+                            font-weight: 700;
+                            color: var(--ih-neutral-500);
+                            padding: 4px 0;
+                          "
+                        >
+                          {{ wd }}
+                        </div>
+                      </sc-for>
+                      <sc-for list="{{ monthCells }}" as="mc" hint-placeholder-count="35">
+                        <div
+                          data-off="{{ mc.off }}"
+                          onClick="{{ onPickMonthDay }}"
+                          style="min-height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: {{ mc.weight }}; color: {{ mc.color }}; background: {{ mc.bg }}; cursor: {{ mc.cursor }}; opacity: {{ mc.opacity }};"
+                        >
+                          {{ mc.label }}
+                        </div>
+                      </sc-for>
+                    </div>
+                    <div
+                      style="
+                        display: flex;
+                        gap: 14px;
+                        font-size: 11px;
+                        color: var(--ih-neutral-500);
+                      "
+                    >
+                      <span style="display: inline-flex; align-items: center; gap: 5px"
+                        ><span
+                          style="
+                            width: 10px;
+                            height: 10px;
+                            border-radius: 3px;
+                            background: var(--ih-primary-400);
+                            display: inline-block;
+                          "
+                        ></span>
+                        المختار</span
+                      >
+                      <span style="display: inline-flex; align-items: center; gap: 5px"
+                        ><span
+                          style="
+                            width: 10px;
+                            height: 10px;
+                            border-radius: 3px;
+                            background: var(--ih-neutral-100);
+                            border: 1px solid var(--ih-neutral-200);
+                            display: inline-block;
+                          "
+                        ></span>
+                        ممتلئ</span
+                      >
+                    </div>
+                  </div>
+                </sc-if>
+                <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 10px">
+                  <div style="font-size: 14px; font-weight: 700; color: var(--ih-neutral-700)">
+                    المواعيد المتاحة
+                  </div>
+                  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px">
+                    <sc-for list="{{ slots }}" as="slot" hint-placeholder-count="9">
+                      <div
+                        data-idx="{{ $index }}"
+                        onClick="{{ onSelectSlot }}"
+                        style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-height: 48px; border-radius: 8px; cursor: {{ slot.cursor }}; background: {{ slot.bg }}; border: {{ slot.border }}; opacity: {{ slot.opacity }}; transition: all 180ms;"
+                      >
+                        <div
+                          style="font-size: 14px; font-weight: {{ slot.weight }}; color: {{ slot.color }};"
+                        >
+                          {{ slot.label }}
+                        </div>
+                        <sc-if value="{{ slot.full }}" hint-placeholder-val="{{ false }}">
+                          <div
+                            style="font-size: 10px; font-weight: 600; color: var(--ih-neutral-400)"
+                          >
+                            ممتلئ
+                          </div>
+                        </sc-if>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+                <div style="padding: 0 20px">
+                  <div
+                    style="display: flex; align-items: center; gap: 10px; border-radius: 12px; padding: 12px 16px; background: {{ holdBg }}; border: 1px solid {{ holdBorder }}; transition: all 350ms;"
+                  >
+                    <span style="font-size: 16px" aria-hidden="true">🕐</span>
+                    <div
+                      style="flex: 1; font-size: 13.5px; line-height: 1.6; color: {{ holdColor }};"
+                    >
+                      <sc-if value="{{ holdLow }}" hint-placeholder-val="{{ false }}">
+                        <span style="font-weight: 700">بقي أقل من دقيقتين على انتهاء الحجز</span> —
+                        <span dir="ltr" style="font-weight: 800; unicode-bidi: isolate"
+                          >{{ holdTimer }}</span
+                        >
+                      </sc-if>
+                      <sc-if value="{{ holdOk }}" hint-placeholder-val="{{ true }}">
+                        <span
+                          >موعدك محجوز لك لمدة
+                          <span dir="ltr" style="font-weight: 800; unicode-bidi: isolate"
+                            >{{ holdTimer }}</span
+                          >
+                          دقيقة — خذ وقتك بهدوء</span
+                        >
+                      </sc-if>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                style="
+                  background: var(--ih-neutral-0);
+                  border-top: 1px solid var(--ih-neutral-200);
+                  box-shadow: 0 -4px 12px rgba(5, 102, 141, 0.06);
+                  padding: 14px 20px 20px;
+                  padding-bottom: calc(20px + 34px);
+                "
+              >
+                <x-import
+                  component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button"
+                  size="lg"
+                  full-width="{{ true }}"
+                  hint-size="100%,52px"
+                  >التالي</x-import
+                >
+              </div>
+            </div>
+          </x-import>
+        </div>
+
+        <!-- ═══ Step 3 — بياناتك ═══ -->
+        <div data-screen-label="٣ · بياناتك">
+          <x-import
+            component-from-global-scope="IOSDevice"
+            from="./ios-frame.jsx"
+            hint-size="390px,844px"
+          >
+            <div
+              dir="rtl"
+              style="
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                background: var(--ih-neutral-50);
+                padding-top: 62px;
+                box-sizing: border-box;
+              "
+            >
+              <div
+                style="
+                  background: var(--ih-neutral-0);
+                  border-bottom: 1px solid var(--ih-neutral-200);
+                  padding: 12px 16px 14px;
+                "
+              >
+                <x-import
+                  component-from-global-scope="InstaHealthDesignSystem_0ffa7c.BookingSteps"
+                  steps="{{ stepLabels }}"
+                  current="{{ 2 }}"
+                  hint-size="100%,66px"
+                ></x-import>
+              </div>
+              <div
+                style="
+                  flex: 1;
+                  overflow-y: auto;
+                  min-height: 0;
+                  padding: 20px;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 18px;
+                "
+              >
+                <div style="display: flex; flex-direction: column; gap: 4px">
+                  <h1
+                    style="
+                      margin: 0;
+                      font-family: 'Cairo', sans-serif;
+                      font-size: 20px;
+                      font-weight: 700;
+                      color: var(--ih-neutral-800);
+                    "
+                  >
+                    بياناتك
+                  </h1>
+                  <div style="font-size: 13px; color: var(--ih-neutral-500)">
+                    نحتاج فقط لاسمك — رقمك مؤكد بالفعل
+                  </div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px">
+                  <div style="font-size: 13px; font-weight: 600; color: var(--ih-neutral-600)">
+                    الاسم بالكامل
+                  </div>
+                  <input
+                    value="{{ nameValue }}"
+                    onInput="{{ onNameInput }}"
+                    style="
+                      width: 100%;
+                      box-sizing: border-box;
+                      min-height: 52px;
+                      padding: 0 16px;
+                      border: 1.5px solid var(--ih-neutral-200);
+                      border-radius: 8px;
+                      font-family: 'Cairo', sans-serif;
+                      font-size: 16px;
+                      color: var(--ih-neutral-800);
+                      background: var(--ih-neutral-0);
+                      transition: border-color 180ms;
+                    "
+                  />
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px">
+                  <div style="font-size: 13px; font-weight: 600; color: var(--ih-neutral-600)">
+                    رقم الهاتف
+                  </div>
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 10px;
+                      min-height: 52px;
+                      padding: 0 16px;
+                      border: 1.5px solid var(--ih-neutral-200);
+                      border-radius: 8px;
+                      background: var(--ih-neutral-50);
+                      box-sizing: border-box;
+                    "
+                  >
+                    <span
+                      dir="ltr"
+                      style="
+                        flex: 1;
+                        font-size: 16px;
+                        font-weight: 600;
+                        color: var(--ih-neutral-700);
+                        text-align: right;
+                      "
+                      >+20 10 1234 5678</span
+                    >
+                    <span
+                      style="
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 4px;
+                        font-size: 11px;
+                        font-weight: 700;
+                        color: var(--ih-primary-600);
+                        background: var(--ih-primary-50);
+                        border-radius: 999px;
+                        padding: 3px 10px;
+                      "
+                      >✓ مؤكد</span
+                    >
+                  </div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px">
+                  <div style="font-size: 13px; font-weight: 600; color: var(--ih-neutral-600)">
+                    ملاحظات (اختياري)
+                  </div>
+                  <textarea
+                    rows="3"
+                    placeholder="مثال: أفضّل سحب العينة في المنزل، لدي حساسية من…"
+                    style="
+                      width: 100%;
+                      box-sizing: border-box;
+                      padding: 12px 16px;
+                      border: 1.5px solid var(--ih-neutral-200);
+                      border-radius: 8px;
+                      font-family: 'Cairo', sans-serif;
+                      font-size: 15px;
+                      line-height: 1.6;
+                      color: var(--ih-neutral-800);
+                      background: var(--ih-neutral-0);
+                      resize: none;
+                      transition: border-color 180ms;
+                    "
+                  ></textarea>
+                </div>
+              </div>
+              <div
+                style="
+                  background: var(--ih-neutral-0);
+                  border-top: 1px solid var(--ih-neutral-200);
+                  box-shadow: 0 -4px 12px rgba(5, 102, 141, 0.06);
+                  padding: 14px 20px 20px;
+                  padding-bottom: calc(20px + 34px);
+                "
+              >
+                <x-import
+                  component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button"
+                  size="lg"
+                  full-width="{{ true }}"
+                  hint-size="100%,52px"
+                  >التالي</x-import
+                >
+              </div>
+            </div>
+          </x-import>
+        </div>
+
+        <!-- ═══ Step 4 — الدفع ═══ -->
+        <div data-screen-label="٤ · الدفع">
+          <x-import
+            component-from-global-scope="IOSDevice"
+            from="./ios-frame.jsx"
+            hint-size="390px,844px"
+          >
+            <div
+              dir="rtl"
+              style="
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                background: var(--ih-neutral-50);
+                padding-top: 62px;
+                box-sizing: border-box;
+              "
+            >
+              <div
+                style="
+                  background: var(--ih-neutral-0);
+                  border-bottom: 1px solid var(--ih-neutral-200);
+                  padding: 12px 16px 14px;
+                "
+              >
+                <x-import
+                  component-from-global-scope="InstaHealthDesignSystem_0ffa7c.BookingSteps"
+                  steps="{{ stepLabels }}"
+                  current="{{ 3 }}"
+                  hint-size="100%,66px"
+                ></x-import>
+              </div>
+              <div
+                style="
+                  flex: 1;
+                  overflow-y: auto;
+                  min-height: 0;
+                  padding: 20px;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 18px;
+                "
+              >
+                <h1
+                  style="
+                    margin: 0;
+                    font-family: 'Cairo', sans-serif;
+                    font-size: 20px;
+                    font-weight: 700;
+                    color: var(--ih-neutral-800);
+                  "
+                >
+                  مراجعة الطلب والدفع
+                </h1>
+                <div
+                  style="
+                    background: var(--ih-neutral-0);
+                    border: 1px solid var(--ih-neutral-200);
+                    border-radius: 12px;
+                    box-shadow: var(--ih-shadow-sm);
+                    overflow: hidden;
+                    flex-shrink: 0;
+                  "
+                >
+                  <div
+                    style="
+                      background: linear-gradient(
+                        135deg,
+                        var(--ih-primary-700),
+                        var(--ih-primary-500)
+                      );
+                      padding: 14px 16px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: space-between;
+                      gap: 10px;
+                    "
+                  >
+                    <div style="font-size: 15px; font-weight: 700; color: #fff">معامل سريدار</div>
+                    <div
+                      style="
+                        font-size: 12px;
+                        font-weight: 600;
+                        color: #fff;
+                        background: rgba(255, 255, 255, 0.18);
+                        border-radius: 999px;
+                        padding: 3px 12px;
+                      "
+                    >
+                      معمل تحاليل
+                    </div>
+                  </div>
+                  <div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 10px">
+                    <div
+                      style="
+                        display: flex;
+                        justify-content: space-between;
+                        gap: 10px;
+                        font-size: 14px;
+                      "
+                    >
+                      <span style="color: var(--ih-neutral-600)">سكر صائم</span
+                      ><span dir="ltr" style="font-weight: 700; color: var(--ih-neutral-800)"
+                        >45 EGP</span
+                      >
+                    </div>
+                    <div
+                      style="
+                        display: flex;
+                        justify-content: space-between;
+                        gap: 10px;
+                        font-size: 14px;
+                      "
+                    >
+                      <span style="color: var(--ih-neutral-600)">دهون ثلاثية وكوليسترول</span
+                      ><span dir="ltr" style="font-weight: 700; color: var(--ih-neutral-800)"
+                        >200 EGP</span
+                      >
+                    </div>
+                    <div
+                      style="
+                        display: flex;
+                        justify-content: space-between;
+                        gap: 10px;
+                        font-size: 14px;
+                        border-top: 1px solid var(--ih-neutral-100);
+                        padding-top: 10px;
+                      "
+                    >
+                      <span style="color: var(--ih-neutral-600)"
+                        >📅 الأربعاء ٢٢ يوليو ·
+                        <span style="unicode-bidi: isolate; white-space: nowrap">٩:٣٠ص</span></span
+                      >
+                    </div>
+                    <div
+                      style="
+                        display: flex;
+                        justify-content: space-between;
+                        gap: 10px;
+                        align-items: center;
+                        border-top: 1px solid var(--ih-neutral-100);
+                        padding-top: 10px;
+                      "
+                    >
+                      <span style="font-size: 14px; font-weight: 700; color: var(--ih-neutral-800)"
+                        >الإجمالي</span
+                      >
+                      <span
+                        dir="ltr"
+                        style="
+                          font-family: 'Cairo', sans-serif;
+                          font-size: 18px;
+                          font-weight: 800;
+                          color: var(--ih-primary-700);
+                        "
+                        >245 EGP</span
+                      >
+                    </div>
+                  </div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px">
+                  <div style="font-size: 14px; font-weight: 700; color: var(--ih-neutral-700)">
+                    طريقة الدفع
+                  </div>
+                  <sc-for list="{{ payMethods }}" as="pm" hint-placeholder-count="3">
+                    <div
+                      data-idx="{{ $index }}"
+                      onClick="{{ onSelectPay }}"
+                      style="display: flex; align-items: center; gap: 12px; padding: 14px 16px; min-height: 44px; border-radius: 12px; cursor: pointer; background: {{ pm.bg }}; border: {{ pm.border }}; box-shadow: var(--ih-shadow-sm); transition: all 180ms;"
+                    >
+                      <div
+                        style="width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid {{ pm.dotBorder }}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"
+                      >
+                        <div
+                          style="width: 12px; height: 12px; border-radius: 50%; background: {{ pm.dotFill }}; transition: all 180ms;"
+                        ></div>
+                      </div>
+                      <span style="font-size: 20px; flex-shrink: 0" aria-hidden="true"
+                        >{{ pm.icon }}</span
+                      >
+                      <div style="flex: 1; display: flex; flex-direction: column; gap: 1px">
+                        <div
+                          style="font-size: 15px; font-weight: 700; color: var(--ih-neutral-800)"
+                        >
+                          {{ pm.label }}
+                        </div>
+                        <div style="font-size: 12px; color: var(--ih-neutral-500)">
+                          {{ pm.hint }}
+                        </div>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <div
+                style="
+                  background: var(--ih-neutral-0);
+                  border-top: 1px solid var(--ih-neutral-200);
+                  box-shadow: 0 -4px 12px rgba(5, 102, 141, 0.06);
+                  padding: 14px 20px 20px;
+                  padding-bottom: calc(20px + 34px);
+                  display: flex;
+                  flex-direction: column;
+                  gap: 8px;
+                "
+              >
+                <x-import
+                  component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button"
+                  size="lg"
+                  full-width="{{ true }}"
+                  style="white-space: nowrap"
+                  hint-size="100%,52px"
+                  >{{ payLabel }}</x-import
+                >
+                <div style="font-size: 12px; color: var(--ih-neutral-500); text-align: center">
+                  دفع آمن عبر Paymob · يمكنك الإلغاء مجاناً قبل الموعد بـ ٤ ساعات
+                </div>
+              </div>
+            </div>
+          </x-import>
+        </div>
+
+        <!-- ═══ Step 4 — فشل الدفع ═══ -->
+        <div data-screen-label="٤ · الدفع — فشل الدفع">
+          <x-import
+            component-from-global-scope="IOSDevice"
+            from="./ios-frame.jsx"
+            hint-size="390px,844px"
+          >
+            <div
+              dir="rtl"
+              style="
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                background: var(--ih-neutral-50);
+                padding-top: 62px;
+                box-sizing: border-box;
+              "
+            >
+              <div
+                style="
+                  background: var(--ih-neutral-0);
+                  border-bottom: 1px solid var(--ih-neutral-200);
+                  padding: 12px 16px 14px;
+                "
+              >
+                <x-import
+                  component-from-global-scope="InstaHealthDesignSystem_0ffa7c.BookingSteps"
+                  steps="{{ stepLabels }}"
+                  current="{{ 3 }}"
+                  hint-size="100%,66px"
+                ></x-import>
+              </div>
+              <div
+                style="
+                  flex: 1;
+                  overflow-y: auto;
+                  min-height: 0;
+                  padding: 20px;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 18px;
+                "
+              >
+                <h1
+                  style="
+                    margin: 0;
+                    font-family: 'Cairo', sans-serif;
+                    font-size: 20px;
+                    font-weight: 700;
+                    color: var(--ih-neutral-800);
+                  "
+                >
+                  مراجعة الطلب والدفع
+                </h1>
+                <x-import
+                  component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Alert"
+                  type="error"
+                  hint-size="100%,68px"
+                  >لم نتمكن من إتمام الدفع. حاول مرة أخرى أو اختر الدفع نقداً عند الوصول — حجزك ما
+                  زال محفوظاً لك.</x-import
+                >
+                <div
+                  style="
+                    background: var(--ih-neutral-0);
+                    border: 1px solid var(--ih-neutral-200);
+                    border-radius: 12px;
+                    box-shadow: var(--ih-shadow-sm);
+                    overflow: hidden;
+                    flex-shrink: 0;
+                  "
+                >
+                  <div
+                    style="
+                      background: linear-gradient(
+                        135deg,
+                        var(--ih-primary-700),
+                        var(--ih-primary-500)
+                      );
+                      padding: 14px 16px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: space-between;
+                      gap: 10px;
+                    "
+                  >
+                    <div style="font-size: 15px; font-weight: 700; color: #fff">معامل سريدار</div>
+                    <div
+                      style="
+                        font-size: 12px;
+                        font-weight: 600;
+                        color: #fff;
+                        background: rgba(255, 255, 255, 0.18);
+                        border-radius: 999px;
+                        padding: 3px 12px;
+                      "
+                    >
+                      معمل تحاليل
+                    </div>
+                  </div>
+                  <div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 10px">
+                    <div
+                      style="
+                        display: flex;
+                        justify-content: space-between;
+                        gap: 10px;
+                        font-size: 14px;
+                      "
+                    >
+                      <span style="color: var(--ih-neutral-600)"
+                        >📅 الأربعاء ٢٢ يوليو ·
+                        <span style="unicode-bidi: isolate; white-space: nowrap">٩:٣٠ص</span></span
+                      >
+                    </div>
+                    <div
+                      style="
+                        display: flex;
+                        justify-content: space-between;
+                        gap: 10px;
+                        align-items: center;
+                        border-top: 1px solid var(--ih-neutral-100);
+                        padding-top: 10px;
+                      "
+                    >
+                      <span style="font-size: 14px; font-weight: 700; color: var(--ih-neutral-800)"
+                        >الإجمالي</span
+                      >
+                      <span
+                        dir="ltr"
+                        style="
+                          font-family: 'Cairo', sans-serif;
+                          font-size: 18px;
+                          font-weight: 800;
+                          color: var(--ih-primary-700);
+                        "
+                        >245 EGP</span
+                      >
+                    </div>
+                  </div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px">
+                  <div style="font-size: 14px; font-weight: 700; color: var(--ih-neutral-700)">
+                    طريقة الدفع
+                  </div>
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 12px;
+                      padding: 14px 16px;
+                      min-height: 44px;
+                      border-radius: 12px;
+                      background: var(--ih-error-bg);
+                      border: 1.5px solid var(--ih-error);
+                      box-shadow: var(--ih-shadow-sm);
+                    "
+                  >
+                    <div
+                      style="
+                        width: 22px;
+                        height: 22px;
+                        border-radius: 50%;
+                        border: 1.5px solid var(--ih-error);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        flex-shrink: 0;
+                      "
+                    >
+                      <div
+                        style="
+                          width: 12px;
+                          height: 12px;
+                          border-radius: 50%;
+                          background: var(--ih-error);
+                        "
+                      ></div>
+                    </div>
+                    <span style="font-size: 20px; flex-shrink: 0" aria-hidden="true">💳</span>
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 1px">
+                      <div style="font-size: 15px; font-weight: 700; color: var(--ih-neutral-800)">
+                        بطاقة
+                      </div>
+                      <div style="font-size: 12px; color: #991b1b">
+                        ✕ لم يكتمل الدفع — يمكنك المحاولة مرة أخرى
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 12px;
+                      padding: 14px 16px;
+                      min-height: 44px;
+                      border-radius: 12px;
+                      background: var(--ih-neutral-0);
+                      border: 1px solid var(--ih-neutral-200);
+                      box-shadow: var(--ih-shadow-sm);
+                      cursor: pointer;
+                    "
+                  >
+                    <div
+                      style="
+                        width: 22px;
+                        height: 22px;
+                        border-radius: 50%;
+                        border: 1.5px solid var(--ih-neutral-300);
+                        flex-shrink: 0;
+                      "
+                    ></div>
+                    <span style="font-size: 20px; flex-shrink: 0" aria-hidden="true">🧾</span>
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 1px">
+                      <div style="font-size: 15px; font-weight: 700; color: var(--ih-neutral-800)">
+                        فوري
+                      </div>
+                      <div style="font-size: 12px; color: var(--ih-neutral-500)">
+                        ادفع بكود فوري من أقرب منفذ
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 12px;
+                      padding: 14px 16px;
+                      min-height: 44px;
+                      border-radius: 12px;
+                      background: var(--ih-neutral-0);
+                      border: 1px solid var(--ih-neutral-200);
+                      box-shadow: var(--ih-shadow-sm);
+                      cursor: pointer;
+                    "
+                  >
+                    <div
+                      style="
+                        width: 22px;
+                        height: 22px;
+                        border-radius: 50%;
+                        border: 1.5px solid var(--ih-neutral-300);
+                        flex-shrink: 0;
+                      "
+                    ></div>
+                    <span style="font-size: 20px; flex-shrink: 0" aria-hidden="true">💵</span>
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 1px">
+                      <div style="font-size: 15px; font-weight: 700; color: var(--ih-neutral-800)">
+                        الدفع نقداً عند الوصول
+                      </div>
+                      <div style="font-size: 12px; color: var(--ih-neutral-500)">
+                        ادفع في المعمل مباشرة
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                style="
+                  background: var(--ih-neutral-0);
+                  border-top: 1px solid var(--ih-neutral-200);
+                  box-shadow: 0 -4px 12px rgba(5, 102, 141, 0.06);
+                  padding: 14px 20px 20px;
+                  padding-bottom: calc(20px + 34px);
+                  display: flex;
+                  flex-direction: column;
+                  gap: 10px;
+                "
+              >
+                <x-import
+                  component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button"
+                  size="lg"
+                  full-width="{{ true }}"
+                  style="white-space: nowrap"
+                  hint-size="100%,52px"
+                  >حاول مرة أخرى</x-import
+                >
+                <x-import
+                  component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button"
+                  size="lg"
+                  variant="outline"
+                  full-width="{{ true }}"
+                  style="white-space: nowrap"
+                  hint-size="100%,52px"
+                  >الدفع نقداً عند الوصول</x-import
+                >
+                <div style="font-size: 12px; color: var(--ih-neutral-500); text-align: center">
+                  موعدك ما زال محجوزاً — لن تفقد مكانك
+                </div>
+              </div>
+            </div>
+          </x-import>
+        </div>
+      </div>
+    </x-dc>
+    <script
+      type="text/x-dc"
+      data-dc-script
+      data-props='{"$preview": {"width": 1900, "height": 980}, "holdMinutes": {"editor": "range", "default": 2, "min": 2, "max": 15, "step": 1, "unit": "min", "tsType": "number", "section": "Slot hold"}}'
+    >
+      class Component extends DCLogic {
+        state = { dateOff: 0, slotIdx: 2, payIdx: 2, holdSecs: 572, name: "أحمد محمود", prepOpen: false, monthOpen: false };
+        FULL_DAYS = [3, 6, 11, 17, 24]; // day offsets from today that are fully booked
+        CHOSEN = [
+          { name: "سكر صائم", price: 45, prepText: "صيام ٨ ساعات على الأقل" },
+          { name: "دهون ثلاثية وكوليسترول", price: 200, prepText: "صيام ١٢ ساعة كامل، الماء فقط مسموح" },
+        ];
+        DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+        SLOTS = [
+          { label: "٩:٠٠ص" }, { label: "٩:٣٠ص" }, { label: "١٠:٠٠ص" },
+          { label: "١٠:٣٠ص", full: true }, { label: "١١:٠٠ص" }, { label: "١١:٣٠ص", full: true },
+          { label: "١٢:٠٠م" }, { label: "١٢:٣٠م" }, { label: "١:٠٠م", full: true },
+          { label: "١:٣٠م" }, { label: "٢:٠٠م" }, { label: "٢:٣٠م" },
+        ];
+        PAY = [
+          { icon: "💳", label: "بطاقة", hint: "فيزا أو ماستركارد — عبر Paymob" },
+          { icon: "🧾", label: "فوري", hint: "ادفع بكود فوري من أقرب منفذ" },
+          { icon: "💵", label: "الدفع نقداً عند الوصول", hint: "ادفع في المعمل مباشرة" },
+        ];
+        componentDidMount() {
+          this.setState({ holdSecs: Math.max(0, (this.props.holdMinutes ?? 10) * 60 - 28) });
+          this.timer = setInterval(() => this.setState(s => ({ holdSecs: s.holdSecs > 0 ? s.holdSecs - 1 : 0 })), 1000);
+        }
+        componentWillUnmount() { clearInterval(this.timer); }
+        toAr(str) { const d = "٠١٢٣٤٥٦٧٨٩"; return String(str).replace(/[0-9]/g, c => d[+c]); }
+        renderVals() {
+          const { dateOff, slotIdx, payIdx, holdSecs, monthOpen } = this.state;
+          const total = this.CHOSEN.reduce((sum, s) => sum + s.price, 0);
+          const count = this.CHOSEN.length;
+          const today = new Date();
+          const dates = Array.from({ length: 10 }, (_, i) => {
+            const d = new Date(today.getTime() + i * 86400000);
+            const sel = i === dateOff;
+            const full = this.FULL_DAYS.includes(i);
+            return {
+              day: i === 0 ? "اليوم" : i === 1 ? "غداً" : this.DAYS[d.getDay()],
+              num: this.toAr(d.getDate()), full,
+              bg: sel ? "var(--ih-primary-400)" : full ? "var(--ih-neutral-100)" : "var(--ih-neutral-0)",
+              border: sel ? "1px solid var(--ih-primary-400)" : "1px solid var(--ih-neutral-200)",
+              dayColor: sel ? "rgba(255,255,255,0.85)" : "var(--ih-neutral-500)",
+              numColor: sel ? "#fff" : full ? "var(--ih-neutral-400)" : "var(--ih-neutral-800)",
+              opacity: full ? 0.6 : 1,
+              cursor: full ? "not-allowed" : "pointer",
+            };
+          });
+          // month picker cells — current month of the selected date's calendar
+          const MONTHS = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+          const first = new Date(today.getFullYear(), today.getMonth(), 1);
+          const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+          const lead = first.getDay(); // 0=Sunday; grid starts السبت? keep أحد-first to match DAYS
+          const monthCells = [];
+          for (let i = 0; i < lead; i++) monthCells.push({ label: "", off: -999, bg: "transparent", color: "transparent", weight: 400, cursor: "default", opacity: 1 });
+          for (let day = 1; day <= daysInMonth; day++) {
+            const off = day - today.getDate();
+            const past = off < 0, tooFar = off > 29;
+            const full = this.FULL_DAYS.includes(off);
+            const disabled = past || tooFar || full;
+            const sel = off === dateOff;
+            monthCells.push({
+              label: this.toAr(day), off,
+              bg: sel ? "var(--ih-primary-400)" : full && !past ? "var(--ih-neutral-100)" : "transparent",
+              color: sel ? "#fff" : disabled ? "var(--ih-neutral-300)" : "var(--ih-neutral-800)",
+              weight: sel ? 800 : 600,
+              cursor: disabled ? "not-allowed" : "pointer",
+              opacity: past ? 0.45 : 1,
+            });
+          }
+          const slotSeed = (dateOff * 7) % 12;
+          const slots = this.SLOTS.map((s, i) => {
+            const full = !!s.full || i === slotSeed;
+            const sel = i === slotIdx && !full;
+            return {
+              label: s.label, full,
+              bg: sel ? "var(--ih-primary-400)" : full ? "var(--ih-neutral-100)" : "var(--ih-neutral-0)",
+              border: sel ? "1px solid var(--ih-primary-400)" : "1px solid var(--ih-neutral-200)",
+              color: sel ? "#fff" : full ? "var(--ih-neutral-400)" : "var(--ih-neutral-800)",
+              weight: sel ? 800 : 600,
+              opacity: full ? 0.65 : 1,
+              cursor: full ? "not-allowed" : "pointer",
+            };
+          });
+          this._slotFull = slots.map(s => s.full);
+          const low = holdSecs < 120;
+          const mm = String(Math.floor(holdSecs / 60)).padStart(2, "0"), ss = String(holdSecs % 60).padStart(2, "0");
+          return {
+            stepLabels: ["اختيار التحاليل", "الموعد", "بياناتك", "الدفع"],
+            chosenServices: this.CHOSEN.map(s => ({ name: s.name, price: s.price })),
+            prepItems: this.CHOSEN.filter(s => s.prepText).map(s => ({ name: s.name, text: s.prepText })),
+            prepVisible: this.CHOSEN.some(s => s.prepText),
+            prepOpen: this.state.prepOpen,
+            prepChevron: this.state.prepOpen ? "rotate(180deg)" : "rotate(0deg)",
+            onPrepToggle: () => this.setState(s => ({ prepOpen: !s.prepOpen })),
+            noNav: (e) => e.preventDefault(),
+            total: this.toAr(total),
+            countLabel: this.toAr(count) + " تحاليل",
+            dates, slots, monthOpen,
+            monthTitle: MONTHS[today.getMonth()] + " " + this.toAr(today.getFullYear()),
+            weekdayHeads: ["أحد", "اثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة", "سبت"],
+            monthCells,
+            onSelectDate: (e) => { const i = +e.currentTarget.dataset.idx; if (!this.FULL_DAYS.includes(i)) this.setState({ dateOff: i, slotIdx: null }); },
+            onOpenMonth: () => this.setState({ monthOpen: true }),
+            onCloseMonth: () => this.setState({ monthOpen: false }),
+            onPickMonthDay: (e) => {
+              const off = +e.currentTarget.dataset.off;
+              if (off < 0 || off > 29 || this.FULL_DAYS.includes(off)) return;
+              this.setState({ dateOff: off, slotIdx: null, monthOpen: false });
+            },
+            onSelectSlot: (e) => { const i = +e.currentTarget.dataset.idx; if (!this._slotFull[i]) this.setState({ slotIdx: i }); },
+            holdTimer: this.toAr(mm + ":" + ss),
+            holdLow: low, holdOk: !low,
+            holdBg: low ? "var(--ih-warning-bg)" : "var(--ih-primary-50)",
+            holdBorder: low ? "#F0C787" : "var(--ih-primary-100)",
+            holdColor: low ? "#92600A" : "var(--ih-primary-800)",
+            nameValue: this.state.name,
+            onNameInput: (e) => this.setState({ name: e.target.value }),
+            payMethods: this.PAY.map((p, i) => {
+              const sel = i === payIdx;
+              return {
+                ...p,
+                bg: sel ? "var(--ih-primary-50)" : "var(--ih-neutral-0)",
+                border: sel ? "1.5px solid var(--ih-primary-400)" : "1px solid var(--ih-neutral-200)",
+                dotBorder: sel ? "var(--ih-primary-400)" : "var(--ih-neutral-300)",
+                dotFill: sel ? "var(--ih-primary-400)" : "transparent",
+              };
+            }),
+            onSelectPay: (e) => this.setState({ payIdx: +e.currentTarget.dataset.idx }),
+            payLabel: "ادفع 245 EGP",
+          };
+        }
+      }
+    </script>
+  </body>
+</html>

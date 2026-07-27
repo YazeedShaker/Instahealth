@@ -43,6 +43,13 @@
   spec deviations called out explicitly, manual founder steps listed.
 - Merge only when ALL checks are green. Squash-merge. Update PROGRESS.md in
   the same PR (Shipped entry + risks + hand-off notes for the next feature).
+- **Stacked PRs bite on merge**: a PR whose base is another feature branch
+  only retargets to main if that base branch is DELETED when its PR merges.
+  Otherwise "merging" the stacked PR merges it into the DEAD branch and the
+  code silently never reaches main (happened with the realtime PR #13 —
+  "merged" but absent from main). After merging a stack, verify with
+  `git log origin/main` that every PR's changes actually landed. Prefer:
+  merge base PR → delete its branch → confirm retarget → merge the stacked PR.
 
 ## 3 · Pre-push gate sequence (run ALL of it locally — never discover red in CI)
 
@@ -104,6 +111,14 @@ pnpm audit --audit-level=high
 - **Holds are created ONLY via the `create_slot_hold` RPC** — there is
   deliberately NO RLS INSERT policy on `slot_holds` (dropped in the same
   migration; the SECURITY DEFINER function bypasses RLS). Don't re-add one.
+- **Realtime = DB-trigger broadcasts on private topics** (migration
+  20260726205901): triggers call `realtime.send()` with MINIMAL payloads
+  (ids only — postgres_changes would leak RLS-hidden rows or deliver
+  nothing). Receive-side auth = SELECT policy on `realtime.messages` per
+  topic prefix; no INSERT policy so clients can't spoof broadcasts. Gotcha:
+  the FIRST realtime use on a project can fail with `MissingPartition` —
+  the service creates its message partitions lazily (you CANNOT create them;
+  schema is service-owned). Retry after a minute; it self-heals.
 
 ## 6 · Mobile (Expo) specifics
 
