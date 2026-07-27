@@ -43,6 +43,13 @@
   spec deviations called out explicitly, manual founder steps listed.
 - Merge only when ALL checks are green. Squash-merge. Update PROGRESS.md in
   the same PR (Shipped entry + risks + hand-off notes for the next feature).
+- **Stacked PRs bite on merge**: a PR whose base is another feature branch
+  only retargets to main if that base branch is DELETED when its PR merges.
+  Otherwise "merging" the stacked PR merges it into the DEAD branch and the
+  code silently never reaches main (happened with the realtime PR #13 —
+  "merged" but absent from main). After merging a stack, verify with
+  `git log origin/main` that every PR's changes actually landed. Prefer:
+  merge base PR → delete its branch → confirm retarget → merge the stacked PR.
 
 ## 3 · Pre-push gate sequence (run ALL of it locally — never discover red in CI)
 

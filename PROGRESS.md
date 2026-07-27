@@ -69,6 +69,24 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 
 ## Shipped
 
+### 2026-07-27 · FIX — Realtime actually shipped + subscription hardening
+
+"Still 15s" had TWO compounding causes, both proven:
+
+1. **PR #13 never reached main.** It was stacked (base = PR #12's branch) and its base
+   branch wasn't deleted when #12 merged — so GitHub merged #13 into the DEAD feature
+   branch. `git log origin/main` showed no realtime commit; the device was honestly
+   running #12's 15s poll. Cherry-picked onto main properly. Trap recorded in
+   ENGINEERING-WORKFLOW §2 (verify stacked merges against origin/main).
+2. **The hook had a real silent-failure mode** (would have bitten after the merge fix):
+   `setAuth()` fired without awaiting before the private-channel join — Node-verified
+   that an anon-token join returns `CHANNEL_ERROR Unauthorized`, and the old
+   `.subscribe()` had no status callback, so it failed invisibly leaving only the poll.
+   Hook hardened: getSession → `setAuth(token)` → join, deterministically; every channel
+   status logged in dev (`[realtime] …` in Metro console); failed joins retry every 5s;
+   each successful (re)join fires one catch-up refetch. Verified: anon join rejected,
+   JWT join SUBSCRIBED, push delivered.
+
 ### 2026-07-27 · FEAT — Realtime slot availability (push replaces fast polling)
 
 Founder-requested upgrade from the 15s poll: hold changes now PUSH to viewers.
