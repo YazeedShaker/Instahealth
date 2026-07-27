@@ -1,6 +1,6 @@
 import { getRemainingHoldSeconds } from '@instahealth/core'
 import { useQueryClient } from '@tanstack/react-query'
-import { Redirect, Stack, useNavigation, useRouter, useSegments } from 'expo-router'
+import { Redirect, Stack, useRouter, useSegments } from 'expo-router'
 import { useEffect, useState } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -8,9 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { BookingStepsHeader } from '../../../components/booking/BookingStepsHeader'
 import { HoldChip } from '../../../components/booking/HoldChip'
 import { HoldExpiredModal } from '../../../components/booking/HoldExpiredModal'
-import { useAuthStore } from '../../../features/auth/store'
 import { cancelPendingBooking } from '../../../features/booking/api'
-import { cleanupFlow } from '../../../features/booking/cleanup'
 import { useBookingStore } from '../../../features/booking/store'
 
 const STEP_BY_SEGMENT: Record<string, number> = { slot: 1, review: 2, payment: 3 }
@@ -29,7 +27,6 @@ export default function BookingFlowLayout() {
   const segments = useSegments()
   const queryClient = useQueryClient()
 
-  const userId = useAuthStore((state) => state.session?.user.id ?? null)
   const selectionCount = useBookingStore((state) => state.selectedServices.length)
   const hold = useBookingStore((state) => state.hold)
 
@@ -65,18 +62,11 @@ export default function BookingFlowLayout() {
     setIsExpiredModalVisible(true)
   }, [remainingSeconds])
 
-  // Flow-exit teardown BACKSTOPS only — the authoritative release is the
-  // segments watcher in (app)/_layout (this navigator's blur event proved
-  // unreliable on device; holds leaked their full 10 minutes). App kill needs
-  // nothing: server-side expiry handles it.
-  const navigation = useNavigation()
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('blur', () => cleanupFlow(userId))
-    return () => {
-      unsubscribe()
-      cleanupFlow(userId)
-    }
-  }, [navigation, userId])
+  // Flow-exit teardown lives in (app)/_layout's segments watcher — pure
+  // route state, always mounted. (This navigator's blur event proved
+  // unreliable on device, and Tabs keep it mounted so unmount never fires;
+  // both former backstops removed. App kill needs nothing: one-hold-per-
+  // patient + server expiry + the 5-min cron self-heal.)
 
   // Guard: no selection → nothing to book (deep entry, session restore…).
   if (selectionCount === 0) {

@@ -131,6 +131,19 @@ pnpm audit --audit-level=high
   go through core's `isolateLtr()` / `formatEgyptianPhoneDisplay()` (Unicode
   LRI…PDI isolates). Forcing `direction:'ltr'` on the container only works
   for standalone inputs, not inline text.
+- **Device re-tests need: git pull + Metro restart + app reload.** A fix
+  "still failing" 45 seconds after merge means the phone ran the OLD bundle
+  (happened twice with the hold-release fixes — the merged code was fine).
+  Before concluding a fix failed on device, confirm the test build actually
+  contains it. And when a device symptom involves the DB, REPRODUCE THE EXACT
+  CLIENT CALLS from Node with a real authenticated session (static test users
+  - anon key) before touching more code — one script pinpointed in minutes
+    what three blind iterations couldn't.
+- **Client-side cleanup is an optimization, never a correctness requirement.**
+  Anything that MUST happen (releasing holds, freeing resources) needs a
+  server-side guarantee: one-hold-per-patient in `create_slot_hold`, row
+  expiry, pg_cron sweeps. Navigation lifecycle events (`blur`, unmount) are
+  unreliable on device — never hang correctness on them.
 - **Keyboard handling** (per the Expo keyboard-handling guide, learned across
   two on-device rounds): the founder-approved behavior is the NATIVE one —
   keyboard slides OVER the app, no layout squeeze. For scrollable screens with

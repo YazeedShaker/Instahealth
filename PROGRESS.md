@@ -69,6 +69,35 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 
 ## Shipped
 
+### 2026-07-26 · FIX — Hold self-healing: one hold per patient + real crons + picker liveness
+
+Ended the hold-release loop with an end-to-end Node reproduction using both static test
+users (+201000000001/2, real authenticated sessions against the live DB). Finding: **every
+server + client-library layer worked perfectly** — the leaked holds came from the device
+running a pre-merge bundle (holds created 45s after PR #11 merged) and, before that, the
+unreliable navigation-blur release. Lesson codified in ENGINEERING-WORKFLOW: client-side
+cleanup is an optimization; correctness must be server-side.
+
+**Migration `20260726193258_one_hold_per_patient_and_cron`:**
+
+- **One active hold per patient**: `create_slot_hold` now releases ALL the caller's other
+  holds on success (the app books one slot at a time). A leaked hold — killed app, stale
+  bundle, dead battery — self-heals the moment its owner holds anything again. Verified
+  live: A holds s1 → abandons → holds s2 → B immediately gets s1. On REJECTION the
+  caller's previous hold is kept (slot.tsx no longer clears it — your old slot stays
+  yours while you shop).
+- **pg_cron scheduled for real** (neither cron had ever run): `cleanup-expired-holds`
+  every 5 min; `generate-slot-window` nightly 00:10 UTC keeps the 30-day window rolling
+  (both standing risks CLOSED).
+
+**Client**: picker polls (`refetchInterval` 15s + `refetchOnMount: 'always'`) so phone B
+sees releases/expiries while sitting on the screen — RN has no window-focus refetch;
+preview strip refetches on mount. Release helpers now LOG failures in dev instead of
+swallowing. **Cruft removed**: booking layout's dead blur/unmount backstops,
+`acquireSlotHold`'s client-side pre-release (server owns exclusivity now), unused imports.
+The segments watcher in `(app)/_layout` + logout `releaseAllHolds` remain the two client
+paths.
+
 ### 2026-07-26 · FIX — Race-test findings: hold-aware availability, sign-out release, prep strip, OTP centering
 
 Four fixes from the founder's post-capacity-model race testing:

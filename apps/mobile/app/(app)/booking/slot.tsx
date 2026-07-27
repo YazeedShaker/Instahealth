@@ -54,7 +54,6 @@ export default function SlotPickerScreen() {
       const { hold: newHold, failure } = await acquireSlotHold(
         { id: slot.id, slotDate: slot.slotDate, slotTime: slot.slotTime },
         userId,
-        hold,
       )
       const store = useBookingStore.getState()
       if (newHold !== null) {
@@ -63,8 +62,8 @@ export default function SlotPickerScreen() {
         store.setHold(newHold)
         return
       }
-      // Whatever the reason, the old hold is gone (released before the RPC).
-      store.clearHold()
+      // Rejection: the server only releases our previous hold on SUCCESS, so
+      // any earlier hold (and its timer) is still ours — keep it selected.
       setRejectionMessage(
         failure === 'slot_taken'
           ? 'تم حجز هذا الموعد للتو — اختر موعداً آخر'
