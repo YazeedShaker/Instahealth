@@ -48,6 +48,8 @@
   /* Semantic */
   --ih-success: #02c39a;
   --ih-success-bg: #e5f7f4;
+  /* AA-contrast text on --ih-success-bg (~5.5:1); --ih-success is only ~1.9:1 */
+  --ih-success-text: #01705a;
   --ih-warning: #d97706;
   --ih-warning-bg: #fef3c7;
   --ih-warning-border: #f0c787;

@@ -1,0 +1,110 @@
+# Maestro E2E — F07 My Bookings (list, tabs, detail, cancel)
+# (static test number +201000000001 / 123456; runs against a dev build when
+# SETUP-02's Maestro CI job lands.)
+#
+# This flow assumes the account already HAS at least one confirmed upcoming
+# booking — booking-flow.test.yaml creates one and ends on the bookings tab, so
+# run that first, or seed one. The empty-state path is asserted separately at
+# the bottom via a fresh account.
+appId: com.instahealth.app
+---
+- clearState
+- launchApp
+- tapOn:
+    id: 'welcome-start'
+- tapOn:
+    id: 'phone-input'
+- inputText: '01000000001'
+- tapOn:
+    id: 'phone-next'
+- tapOn:
+    id: 'otp-box-0'
+- inputText: '123456'
+- tapOn:
+    id: 'otp-confirm'
+- tapOn:
+    id: 'location-later'
+    optional: true
+
+# ── The list ────────────────────────────────────────────────────────────────
+- tapOn: 'حجوزاتي'
+- assertVisible: 'حجوزاتي'
+- assertVisible:
+    id: 'bookings-tab-upcoming'
+- assertVisible:
+    id: 'bookings-tab-past'
+
+# Both tabs are reachable and each renders SOMETHING — either rows or its own
+# empty copy. Never a blank pane.
+- tapOn:
+    id: 'bookings-tab-past'
+- assertVisible: 'السابقة'
+- tapOn:
+    id: 'bookings-tab-upcoming'
+- assertVisible: 'القادمة'
+
+# ── Detail ──────────────────────────────────────────────────────────────────
+# Open the first booking card. The ref is generated per run, so match the
+# testID prefix rather than a fixed id.
+- tapOn:
+    id: 'booking-card-.*'
+- assertVisible: 'تفاصيل الحجز'
+- assertVisible:
+    id: 'booking-detail-status'
+- assertVisible:
+    id: 'booking-detail-slot'
+- assertVisible:
+    id: 'booking-detail-ref'
+- assertVisible: 'IH-2026-'
+- assertVisible:
+    id: 'booking-detail-total'
+# The F06 payment distinction must be legible here AND on the card.
+- assertVisible:
+    id: 'booking-detail-payment'
+# F04's actions, reused rather than rebuilt.
+- assertVisible:
+    id: 'booking-detail-calendar'
+- assertVisible:
+    id: 'booking-detail-directions'
+
+# ── Cancel: the sheet must be escapable without cancelling ──────────────────
+# (PRODUCT.md §6: destructive confirmations ALWAYS have a clear way out, and
+# the safe choice is the primary button.)
+- assertVisible:
+    id: 'booking-detail-cancel'
+- tapOn:
+    id: 'booking-detail-cancel'
+- assertVisible:
+    id: 'cancel-booking-sheet'
+- assertVisible: 'هل أنت متأكد من إلغاء الحجز؟'
+# RATIFIED copy (SPEC-F07) — NOT the design bundle's outdated "٤ ساعات" line.
+- assertVisible: 'يمكنك إلغاء الحجز مجاناً في أي وقت قبل الموعد'
+- assertNotVisible: 'قبل الموعد بـ ٤ ساعات'
+- tapOn:
+    id: 'cancel-booking-keep'
+- assertNotVisible:
+    id: 'cancel-booking-sheet'
+# Backing out changed nothing — still on the detail screen, still cancellable.
+- assertVisible: 'تفاصيل الحجز'
+- assertVisible:
+    id: 'booking-detail-cancel'
+
+# ── Cancel for real ─────────────────────────────────────────────────────────
+- tapOn:
+    id: 'booking-detail-cancel'
+- tapOn:
+    id: 'cancel-booking-confirm'
+# The booking is now cancelled: the badge flips and the cancel CTA is gone
+# (isBookingCancellable refuses a cancelled booking — the same predicate the
+# server enforces).
+- assertVisible: 'ملغي'
+- assertNotVisible:
+    id: 'booking-detail-cancel'
+
+# Back to the list — a cancelled booking belongs under السابقة, never القادمة.
+- tapOn:
+    id: 'booking-detail-back'
+- assertVisible: 'حجوزاتي'
+- tapOn:
+    id: 'bookings-tab-past'
+- assertVisible: 'ملغي'

@@ -34,4 +34,19 @@ describe('design tokens', () => {
     expect(colors.semantic.errorBg).toBe('#FEE2E2')
     expect(colors.semantic.errorText).toBe('#991B1B')
   })
+
+  test('semantic success pairing meets AA for small text on the success background', () => {
+    // F07's "مؤكد" status badge is 11.5px on --ih-success-bg. The mint
+    // colors.semantic.success on its own tint is ~1.9:1 — successText is the
+    // pairing, same as warningText/errorText.
+    expect(colors.semantic.successBg).toBe('#E5F7F4')
+    expect(colors.semantic.successText).toBe('#01705A')
+  })
+
+  test('every semantic tint has an AA text pairing (none rely on the base hue)', () => {
+    for (const tone of ['success', 'warning', 'error'] as const) {
+      expect(colors.semantic[`${tone}Bg`]).toBeTruthy()
+      expect(colors.semantic[`${tone}Text`]).toBeTruthy()
+    }
+  })
 })

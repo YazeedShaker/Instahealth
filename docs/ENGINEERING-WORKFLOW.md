@@ -28,6 +28,14 @@
    (Learned in F05: the picker showed "available" for a slot whose active
    holds only the DB could see.)
 
+5. **`git status` for UNTRACKED spec/design files before you plan.** SPEC-F07
+   was sitting untracked in the working tree and half of F07 got built from the
+   design bundle alone — which turned out to carry OUTDATED cancellation copy
+   the spec explicitly supersedes. §1.2 already says to check; the failure mode
+   is that a design bundle looks authoritative on its own. **When a spec and a
+   design bundle disagree, the spec wins and the bundle gets flagged for
+   revision** — say so in the PR rather than silently picking one.
+
 ## 2 · Branch, commit, PR discipline
 
 - One spec = one branch = one PR. Branch names: `feat/fNN-slug`,
@@ -131,6 +139,24 @@ pnpm audit --audit-level=high
 - **Holds are created ONLY via the `create_slot_hold` RPC** — there is
   deliberately NO RLS INSERT policy on `slot_holds` (dropped in the same
   migration; the SECURITY DEFINER function bypasses RLS). Don't re-add one.
+- **Every SECURITY DEFINER function needs its OWN authorization check — audit
+  the ones that already exist.** `confirm_booking` was the first (F06);
+  `cancel_booking` was the second and worse, because it stayed reachable: it
+  matched on booking id ALONE, so any signed-in patient could cancel any other
+  patient's booking by guessing a UUID. Proven from Node before fixing it
+  (patient B cancelled patient A's confirmed booking and got
+  `{"success": true}`), closed in 20260728120808. RLS does not protect these
+  functions — the function body IS the boundary. When you touch a feature,
+  re-read every SECURITY DEFINER function it calls and ask "what stops someone
+  else's id being passed here?"
+- **A read function must take NO user id — filter on `auth.uid()` inside.**
+  `get_patient_bookings()` deliberately has zero parameters. A `p_user_id`
+  argument on a SECURITY DEFINER reader is the cancel_booking hole again, just
+  for reads.
+- **`x = ANY(get_provider_branch_ids())` is NULL-unsafe.** That function returns
+  NULL (not `{}`) for a non-provider, `x = ANY(NULL)` is NULL, and an OR/NOT
+  chain containing it evaluates to NULL — which an `IF NOT (...)` treats as
+  false and FALLS THROUGH TO ALLOW. Always `COALESCE(..., FALSE)` around it.
 - **Realtime = DB-trigger broadcasts on private topics** (migration
   20260726205901): triggers call `realtime.send()` with MINIMAL payloads
   (ids only — postgres_changes would leak RLS-hidden rows or deliver
@@ -261,6 +287,16 @@ pnpm audit --audit-level=high
   "Cannot manually set color scheme, as dark mode is type 'media'" at boot when
   its DOM observer tries to apply a scheme. Set it in `tailwind.config.ts` even
   for a light-only app.
+- **An effect keyed on a TanStack `data` object never re-runs.** The branch
+  screen registered the open branch via
+  `useEffect(..., [branch, openBranch])`, where `branch` is `query.data`. That
+  object is referentially STABLE from cache and the screen stays mounted under
+  Tabs, so returning to the same branch never re-registered it — after a
+  confirmed booking cleared the store, the slot picker got `branchId === null`,
+  its query sat `enabled: false`, and step 1 showed its skeleton forever. It
+  "worked" only after visiting a different branch, which is what made the
+  report so odd. **Compare against the STORE and re-sync on drift**, don't wait
+  for a reference to change that never will.
 - **A slot the patient just booked becomes invisible to them.** The `slots`
   SELECT policy is `booked_count < capacity`, so the moment `confirm_booking`
   increments a capacity-1 slot, its own booker can no longer read the row. Any
