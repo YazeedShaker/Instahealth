@@ -1,4 +1,4 @@
-import type { BookingConfirmation } from '@instahealth/core'
+import { cairoWallClockToInstant, type BookingConfirmation } from '@instahealth/core'
 import * as Calendar from 'expo-calendar'
 import { Platform } from 'react-native'
 
@@ -7,25 +7,14 @@ import { Platform } from 'react-native'
 // Slot times are Egypt WALL-CLOCK values (`slot_date` + `slot_time`, no zone).
 // The device may sit in any timezone, so the event must be pinned to
 // Africa/Cairo — otherwise a patient whose phone is on GMT gets a reminder two
-// hours off. Cairo has been UTC+2 year-round since Egypt's DST changes, but we
-// derive the offset rather than assume it.
+// hours off. The wall-clock → instant conversion lives in core
+// (`cairoWallClockToInstant`), where it is unit-tested; this module previously
+// had its own copy that worked in Node and returned Invalid Date on Hermes.
 
 const CAIRO_TIME_ZONE = 'Africa/Cairo'
 const DEFAULT_DURATION_MINUTES = 30
 
 export type AddToCalendarResult = 'added' | 'permissionDenied' | 'noCalendar' | 'error'
-
-/** Converts an Egypt wall-clock date+time into a real instant, whatever the
- * device timezone is. Finds the UTC instant whose Cairo rendering matches. */
-function cairoWallClockToDate(slotDate: string, slotTime: string): Date {
-  const [hour = '0', minute = '0'] = slotTime.split(':')
-  const naiveUtc = new Date(`${slotDate}T${hour.padStart(2, '0')}:${minute.padStart(2, '0')}:00Z`)
-  // How far Cairo is from UTC at that moment, in ms.
-  const cairoRendering = new Date(naiveUtc.toLocaleString('en-US', { timeZone: CAIRO_TIME_ZONE }))
-  const utcRendering = new Date(naiveUtc.toLocaleString('en-US', { timeZone: 'UTC' }))
-  const offsetMs = cairoRendering.getTime() - utcRendering.getTime()
-  return new Date(naiveUtc.getTime() - offsetMs)
-}
 
 /** Never swallow the native reason. A bare `catch → 'error'` turned three very
  * different iOS/Android failures into one dead-end message, and the founder's
@@ -83,8 +72,18 @@ export async function addBookingToCalendar(
   const calendarId = await findWritableCalendarId()
   if (calendarId === null) return 'noCalendar'
 
-  const startDate = cairoWallClockToDate(confirmation.slotDate, confirmation.slotTime)
-  const endDate = new Date(startDate.getTime() + DEFAULT_DURATION_MINUTES * 60_000)
+  let startDate: Date
+  let endDate: Date
+  try {
+    startDate = cairoWallClockToInstant(confirmation.slotDate, confirmation.slotTime)
+    endDate = new Date(startDate.getTime() + DEFAULT_DURATION_MINUTES * 60_000)
+  } catch (error) {
+    // Malformed slot values are a bug, not something the patient can act on —
+    // but an unhandled throw here would escape into the screen's press handler.
+    logDevError('cairoWallClockToInstant', error)
+    return 'error'
+  }
+
   const serviceNames = confirmation.services.map((service) => service.nameAr).join('، ')
 
   try {

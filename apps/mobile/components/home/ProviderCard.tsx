@@ -103,17 +103,19 @@ export function ProviderCard({ branch, firstSlot, now }: ProviderCardProps) {
             لا توجد مواعيد متاحة
           </Text>
         )}
-        <Pressable
+        {/* Visual affordance only — NOT a Pressable. It opened the same branch
+            profile as the card that contains it, so making it pressable bought
+            nothing and nested one accessibility button inside another: on web
+            that renders <button> inside <button> (invalid HTML, React hydration
+            error) and to a screen reader it reads as two overlapping controls.
+            The card owns the press; this just shows where it leads. */}
+        <View
           testID={`provider-book-${branch.id}`}
-          accessibilityRole="button"
-          accessibilityLabel={`احجز في ${branch.nameAr}`}
-          disabled={slotLabel === null}
-          onPress={openProfile}
           className="h-9 min-w-[72px] items-center justify-center rounded-ih-sm bg-ih-primary-400 px-4"
           style={slotLabel === null ? { opacity: 0.45 } : undefined}
         >
           <Text className="font-arabic-semibold text-sm text-white">احجز</Text>
-        </Pressable>
+        </View>
       </View>
     </Pressable>
   )

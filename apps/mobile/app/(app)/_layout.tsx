@@ -56,11 +56,15 @@ export default function AppLayout() {
           tab bar stays visible (DECISION-navigation-safe-areas §1). */}
       <Tabs.Screen name="branch/[id]" options={{ href: null }} />
       {/* Booking flow (nested stack) — commitment funnel: tab bar HIDDEN for
-          all steps, exit via back only. */}
-      <Tabs.Screen
-        name="booking"
-        options={{ href: null, tabBarStyle: { display: 'none' }, popToTopOnBlur: true }}
-      />
+          all steps, exit via back only.
+          NO `popToTopOnBlur`: bottom-tabs dispatches POP_TO_TOP when the blur
+          ANIMATION finishes, which on a confirmed booking is after the replace
+          to /confirmation has already torn the flow stack down — nothing is
+          left to handle the action and it logged
+          "The action 'POP_TO_TOP' was not handled by any navigator" on every
+          successful payment. It was belt-and-braces anyway: re-entry is blocked
+          by the flow layout's own selection guard, which redirects to Home. */}
+      <Tabs.Screen name="booking" options={{ href: null, tabBarStyle: { display: 'none' } }} />
       {/* Booking confirmation (F06) — deliberately OUTSIDE the booking group:
           the approved design has no step header and no hold timer, and the
           flow layout renders both. Tab bar stays hidden so the two stacked

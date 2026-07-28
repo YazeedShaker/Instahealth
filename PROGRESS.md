@@ -239,13 +239,37 @@ purged afterwards.
   `status='skipped'`, `"static test number — no real SMS in dev/CI"`. The real
   SMS path stays untested until the OTP issue above is resolved, because the
   founder cannot sign in as a real number to receive one.
-- **Still open — calendar on iPhone.** With permission granted and a writable
-  calendar found, `createEventAsync` threw and the single `catch` collapsed it
-  to a generic message. `calendar.ts` now scopes error handling per stage and
-  logs the real native error in `__DEV__`, and the iOS path asks EventKit for
-  the DEFAULT calendar first (it resolves under permission shapes where
-  enumerating all calendars does not — iOS 17 split full vs write-only access).
-  Next device run should name the actual EventKit error.
+- **Calendar on iPhone — RESOLVED by the instrumentation above.** The very next
+  device run logged `[calendar] createEventAsync failed: RangeError: Date value
+out of bounds`, which named it: `cairoWallClockToDate` derived Cairo's offset
+  via `new Date(d.toLocaleString('en-US', { timeZone }))`. That round-trip is
+  **V8-only** — Hermes parses essentially only ISO 8601, so on device the parse
+  failed, the offset became `NaN`, and expo-calendar got an Invalid Date whose
+  `toISOString()` threw. It passed every unit test and Node script because those
+  run on V8. Replaced with `cairoWallClockToInstant` in core, which reads the
+  zoned wall clock via `Intl.DateTimeFormat.formatToParts` and rebuilds with
+  `Date.UTC` — no string parsing anywhere. Six new core tests, one asserting the
+  result is a VALID date rather than only checking its value.
+
+**Second device round (same PR):**
+
+- **`POP_TO_TOP was not handled by any navigator` on every successful payment.**
+  `popToTopOnBlur: true` on the booking tab dispatches when the blur ANIMATION
+  completes — by which point the replace to `/confirmation` has already torn the
+  flow stack down. Removed; the flow layout's selection guard was always the
+  real protection against re-entry.
+- **Expo web threw at boot:** "Cannot manually set color scheme, as dark mode is
+  type 'media'". NativeWind/react-native-css-interop needs
+  `darkMode: 'class'` in `tailwind.config.ts` on web. The app is light-only with
+  zero `dark:` variants, so this only quiets the runtime.
+- **`<button>` nested inside `<button>` on the home list.** `ProviderCard`'s
+  احجز button was a `Pressable` inside the card `Pressable`, both calling the
+  same `openProfile`. Invalid HTML (React hydration error on web) and two
+  overlapping controls for a screen reader on native. The inner one is now a
+  plain `View` — the card owns the press. Audited every other multi-`Pressable`
+  component; this was the only nesting.
+- The `A listener indicated an asynchronous response…` console error is a Chrome
+  extension, not our code.
 
 ### 2026-07-27 · FIX — Realtime actually shipped + subscription hardening
 

@@ -76,9 +76,10 @@ export default function ConfirmationScreen() {
   }
 
   const goToBookings = () => {
-    // The booking flow's stack was reset by `popToTopOnBlur`, and the store no
-    // longer has a selection — so the flow layout's own guard redirects any
-    // back-navigation into /booking straight to Home. There is no way back in.
+    // The store no longer has a selection, so the flow layout's own guard
+    // redirects any back-navigation into /booking straight to Home. That guard
+    // is the whole protection — `popToTopOnBlur` used to back it up but was
+    // removed: it fired POP_TO_TOP at a stack that no longer existed.
     useConfirmationStore.getState().clearConfirmation()
     router.replace('/(app)/bookings')
   }

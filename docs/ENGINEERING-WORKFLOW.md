@@ -231,6 +231,36 @@ pnpm audit --audit-level=high
   الإضافة" was indistinguishable between three unrelated causes and cost a whole
   round-trip. Scope the handling per stage and log the real native error under
   `__DEV__` (same pattern as `settle.ts`).
+- **`new Date(someDate.toLocaleString(...))` is a V8-only trick — it returns
+  Invalid Date on Hermes.** The old `cairoWallClockToDate` derived Cairo's UTC
+  offset by formatting to `"7/28/2026, 3:00:00 PM"` and parsing it back.
+  **Hermes' `Date` parser accepts essentially only ISO 8601**, so on a real
+  phone the parse failed, the offset became `NaN`, and the Date arrived at
+  expo-calendar as Invalid — surfacing much later as
+  `RangeError: Date value out of bounds` from `toISOString()` (Hermes' wording;
+  V8 says "Invalid time value"). Every Node script and every unit test passed
+  because they run on V8. **Read zoned wall clocks with
+  `Intl.DateTimeFormat.formatToParts` and rebuild with `Date.UTC` — never format
+  to a string and re-parse.** The conversion now lives in core as
+  `cairoWallClockToInstant`, with a test asserting the result is a VALID date.
+  Anything that must behave identically on device and in Node belongs in core
+  with a test that asserts validity, not just the value.
+- **`popToTopOnBlur` fires after the blur ANIMATION, not on blur.** On a
+  confirmed booking the flow stack is already torn down by then, so bottom-tabs
+  dispatched POP_TO_TOP at nothing and logged "The action 'POP_TO_TOP' was not
+  handled by any navigator" on every successful payment. If a screen navigates
+  away from a tab that owns a nested stack, don't also ask that stack to reset
+  itself on blur — let the route guard handle re-entry.
+- **Nested `Pressable`s are invalid HTML on web.** A card `Pressable` wrapping a
+  button `Pressable` renders `<button>` inside `<button>`, which React reports
+  as a hydration error on Expo web and which reads as two overlapping controls
+  to a screen reader on native. If the inner control triggers the SAME action as
+  the card, make it a plain `View` — the card already owns the press.
+- **NativeWind on web needs `darkMode: 'class'`.** With Tailwind's `'media'`
+  default, react-native-css-interop throws
+  "Cannot manually set color scheme, as dark mode is type 'media'" at boot when
+  its DOM observer tries to apply a scheme. Set it in `tailwind.config.ts` even
+  for a light-only app.
 - **A slot the patient just booked becomes invisible to them.** The `slots`
   SELECT policy is `booked_count < capacity`, so the moment `confirm_booking`
   increments a capacity-1 slot, its own booker can no longer read the row. Any
