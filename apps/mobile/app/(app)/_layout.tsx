@@ -50,6 +50,9 @@ export default function AppLayout() {
     >
       <Tabs.Screen name="home" options={{ title: 'الرئيسية', tabBarIcon: tabIcon('🏠') }} />
       <Tabs.Screen name="search" options={{ title: 'البحث', tabBarIcon: tabIcon('🔍') }} />
+      {/* Nested stack: list + detail. Tab bar stays visible on BOTH
+          (DECISION-navigation-safe-areas §1 names "My Bookings (list + detail)"
+          as a destination) — nesting gives that for free. */}
       <Tabs.Screen name="bookings" options={{ title: 'حجوزاتي', tabBarIcon: tabIcon('📅') }} />
       <Tabs.Screen name="profile" options={{ title: 'حسابي', tabBarIcon: tabIcon('👤') }} />
       {/* Branch profile — a browsing DESTINATION: not a tab button, but the

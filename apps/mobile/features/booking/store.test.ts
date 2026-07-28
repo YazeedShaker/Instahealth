@@ -195,10 +195,35 @@ describe('confirmation hand-off (F06)', () => {
     useBookingStore.getState().completeBooking()
 
     const state = useBookingStore.getState()
-    // Both guards' inputs are empty — only the flag keeps them from navigating.
+    // The selection is empty — only the flag keeps the guards from navigating.
     expect(state.selectedServices).toEqual([])
-    expect(state.branchId).toBeNull()
     expect(state.confirmedHandoff).toBe(true)
+  })
+
+  // The branch is WHERE THE PATIENT IS, not part of the booking. Nulling it
+  // stranded the slot picker on a second booking at the same provider: the
+  // branch screen only re-registers when the query object's reference changes,
+  // which never happens on return, so branchId stayed null and the picker's
+  // query sat disabled behind its skeleton. Reachable only via another branch.
+  it('completeBooking KEEPS the branch so a second booking there still works', () => {
+    useBookingStore.getState().completeBooking()
+
+    const state = useBookingStore.getState()
+    expect(state.branchId).toBe('branch-1')
+    expect(state.branchNameAr).toBe('ساريدار — الدقي')
+  })
+
+  it('re-opening the same branch after a booking starts a FRESH selection', () => {
+    useBookingStore.getState().completeBooking()
+    useBookingStore.getState().clearConfirmedHandoff()
+    // Same-branch path: keeps branchId, must not resurrect the booked services.
+    useBookingStore.getState().openBranch('branch-1', 'ساريدار — الدقي')
+
+    const state = useBookingStore.getState()
+    expect(state.branchId).toBe('branch-1')
+    expect(state.selectedServices).toEqual([])
+    expect(state.hold).toBeNull()
+    expect(state.pendingBooking).toBeNull()
   })
 
   it('the flag is lowered once the confirmation screen has mounted', () => {

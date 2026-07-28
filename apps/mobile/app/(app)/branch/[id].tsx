@@ -31,14 +31,24 @@ export default function BranchProfileScreen() {
 
   const branch = branchQuery.data ?? null
   const openBranch = useBookingStore((state) => state.openBranch)
+  const registeredBranchId = useBookingStore((state) => state.branchId)
   const selectedServices = useBookingStore((state) => state.selectedServices)
   const toggleService = useBookingStore((state) => state.toggleService)
 
   // Register the branch in the booking store — resets any selection carried
   // over from a DIFFERENT branch (spec: keep only within the same branch).
+  //
+  // The condition compares against the STORE, not just the query object. This
+  // effect used to depend on `branch` alone, but TanStack hands back the same
+  // cached object every time and this screen stays mounted under Tabs — so
+  // returning to a branch never re-ran it. Whenever the store drifts from the
+  // branch on screen (finishing a booking used to null it), re-register instead
+  // of waiting for a reference to change that never will.
   useEffect(() => {
-    if (branch) openBranch(branch.id, branch.nameAr)
-  }, [branch, openBranch])
+    if (branch !== null && registeredBranchId !== branch.id) {
+      openBranch(branch.id, branch.nameAr)
+    }
+  }, [branch, registeredBranchId, openBranch])
 
   const groups = useMemo(() => (branch ? groupServicesByCategory(branch.services) : []), [branch])
   const selectedServiceIds = useMemo(

@@ -43,6 +43,10 @@ export const colors = {
   semantic: {
     success: '#02C39A',
     successBg: '#E5F7F4',
+    // Same pairing pattern as warningText/errorText below: the mint #02C39A on
+    // its own tint is ~1.9:1 and unreadable at badge sizes. #01705A on #E5F7F4
+    // is ~5.5:1. Added for F07's "مؤكد" status badge.
+    successText: '#01705A',
     warning: '#D97706',
     warningBg: '#FEF3C7',
     // Amber pairings from the DESIGN-01 hold-timer chip: border + AA-contrast

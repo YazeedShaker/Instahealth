@@ -21,7 +21,7 @@ Keep **Current status** and **Next up** accurate at all times.
 
 ## Current status
 
-**Phase:** Booking loop COMPLETE on mobile (F01→F06: discover → select → hold → review → pay → confirmed). Next: P01–P06 provider dashboard (closes the loop) + F07 bookings list; F03 Search still open
+**Phase:** Booking loop COMPLETE on mobile (F01→F07: discover → select → hold → review → pay → confirmed → manage/cancel). Next: P01–P06 provider dashboard (closes the loop); F03 Search and F08–F09 still open
 **Milestone target:** Labs + Scans booking working end-to-end at Town Hospital & Saridar Labs
 **Environment:** Supabase `instahealth-dev` live (Frankfurt). Design system published in Claude Design.
 Core patient screens approved. Monorepo scaffolded — both app shells boot with tokens/fonts/RTL.
@@ -58,7 +58,8 @@ visual contract. Then specs → Claude Code.
 - [x] **F05** — ✅ DONE. Mobile: slot picker + 10-min hold + review + pending booking (see Shipped)
 - [x] **F06** — ✅ DONE. Mobile: payment (mock provider) + settle-payment + confirmation + SMS (see Shipped)
 - [ ] **P01–P06** — Web: provider dashboard. **UNBLOCKED AND NOW THE CRITICAL PATH** — real confirmed bookings with payment rows exist in dev; a receptionist has nothing to see them on.
-- [ ] **F07–F09** — Mobile: bookings history, cancel, reviews, profile
+- [x] **F07** — ✅ DONE. Mobile: My Bookings list, detail & cancel (see Shipped)
+- [ ] **F08–F09** — Mobile: reviews, profile
 - [ ] **A01–A06** — Web: admin panel
 - [ ] **006_practitioners.sql + doctor booking** — after labs/scans proven
 
@@ -68,6 +69,167 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 ---
 
 ## Shipped
+
+### 2026-07-28 · F07 — My Bookings: list, detail & cancel (mobile)
+
+حجوزاتي is real. A patient can see every booking they have made, split into
+القادمة / السابقة, open one, and cancel it — which gives the slot back to the
+branch immediately.
+
+**⚠ SECOND SECURITY HOLE FOUND AND CLOSED — worse than F06's.**
+`cancel_booking()` is SECURITY DEFINER, granted to `authenticated`, and matched
+on booking id ALONE. SECURITY DEFINER bypasses RLS, so **any signed-in patient
+could cancel any other patient's booking by guessing a UUID** — and unlike the
+F06 hole this one was reachable from shipped code. Proven from Node against dev
+BEFORE fixing: patient B called it with patient A's booking id and got
+`{"success": true}`; A's confirmed booking was cancelled and the slot
+decremented. Migration `20260728120808` adds the authorization the function
+never had (owner · branch staff · admin · service_role) and re-verified: B now
+gets `booking_not_found`, deliberately indistinguishable from a missing row so
+the function never confirms a stranger's booking id exists. **Lesson recorded in
+ENGINEERING-WORKFLOW §5: audit every EXISTING SECURITY DEFINER function when you
+touch a feature — the function body is the boundary, not RLS.**
+
+**The read path had to be a function too.** The `slots` SELECT policy is
+`booked_count < capacity`, so a patient cannot read the slot of their own
+fully-booked booking — `bookings → slots` returns NULL for exactly the rows this
+screen exists to show (verified against dev; it was flagged in F06's hand-off
+and turned out to be true). New SECURITY DEFINER `get_patient_bookings()`
+returns each booking denormalised with `slot_date`/`slot_time`, branch fields,
+the derived `is_hospital` badge and services as JSONB. It takes **no user id** —
+the filter is `auth.uid()` inside — because a `p_user_id` parameter would be the
+cancel_booking hole again for reads. It also drops `pending_payment` rows, which
+are flow debris and never a "booking" to the patient.
+
+**The cancellation policy is the spec's, NOT the design's.** SPEC-F07 ratifies:
+cancellable **any time before the slot starts, free, no fees, every payment
+method**. The design bundle's "الإلغاء مجاني قبل الموعد بـ ٤ ساعات" is OUTDATED
+copy — the app now says «يمكنك إلغاء الحجز مجاناً في أي وقت قبل الموعد» and there
+is deliberately **no cancellation-fee logic anywhere in the stack**. Migration
+`20260728125850` adds the slot-start boundary to `cancel_booking` so display and
+enforcement are the same predicate: the button hides at slot start and the
+server returns `slot_started` there. The boundary applies to the PATIENT only —
+provider staff, admins and service_role keep cancelling past bookings, because
+reception must be able to close out a no-show and the abandoned-booking cleanup
+path calls the same function. 🎨 **The design bundle needs a copy revision on
+that one line** (dialog layout unchanged).
+
+**Core** gained `business/bookings.ts` with the three functions the spec names:
+`partitionBookings` (a booking is upcoming only while it is BOTH live and yet to
+happen, so a cancelled future appointment sits under السابقة exactly as the
+design draws it), `getBookingStatusChip` for all six `bookings.status` values
+with a tone that always travels with its label, and `isCancellable` — plus
+`getBookingPaymentLabelAr`, the single source for the F06 cash-vs-paid line that
+now renders on BOTH the card and the detail screen. Upcoming sorts soonest-first
+and past most-recent-first — different on purpose, and both match the mockup.
+29 new tests; core is at **249 tests, 100% lines**.
+
+**Screens:** `(app)/bookings/` became a nested stack — `index.tsx` (the list)
+and `[id].tsx` (detail), per the spec's route. Nesting is also what keeps the
+tab bar visible on both, which `DECISION-navigation-safe-areas` §1 requires for
+"My Bookings (list + detail)". The list has the title, two tabs, cards
+(icon/provider/services/status/date/payment line/ref), pull-to-refresh,
+**refetch-on-focus**, and TWO empty states — the warm first-run moment for a
+patient with nothing, and a quieter per-tab empty that does not nag. Detail
+renders the provider gradient card, services + total, preparation strip, payment
+card, patient notes, and **F04's اتصال / الاتجاهات actions plus add-to-calendar
+reused, not rebuilt**; an unknown or foreign id gets a friendly "لم نجد هذا
+الحجز" with a way back rather than a silent redirect. The cancel bottom sheet
+(`CancelBookingSheet`) makes the SAFE action the primary button.
+
+**Refetch-on-focus, not just on mount.** Both screens stay MOUNTED under Tabs,
+so `refetchOnMount` alone would leave a stale status sitting there for as long
+as the app is open — a booking confirmed or cancelled elsewhere must never still
+read "مؤكد". Both use `useFocusEffect`.
+
+**Verified against the LIVE dev DB from Node (three scripts, 33 checks, all
+passing):** cross-patient cancel refused · owner cancel succeeds and
+`booked_count` is decremented · double-cancel refused with `cannot_cancel` ·
+**a patient cancelling after the slot start refused with `slot_started`, and
+core's `isCancellable` agrees on the same row (display ≡ enforcement)** ·
+`get_patient_bookings` returns slot data the direct read still cannot see ·
+patient B's list never contains patient A's booking · every row survives the
+core helpers with a valid instant · `branch_phone` reaches the اتصال action ·
+the cash payment line resolves · a cancelled booking moves tabs and stops
+offering cancel. All probe rows cleaned up afterwards; dev holds only the
+founder's own device-test bookings.
+
+**Decisions / deviations:**
+
+- **Tab bar stays VISIBLE on the booking detail screen.**
+  `DECISION-navigation-safe-areas` §1 explicitly names "My Bookings (list +
+  detail)" as a destination; the approved mock draws no bottom nav there. The
+  decision doc is the normative global rule and wins, so the sticky cancel bar
+  sits above the tab bar. **Flagged for founder review** — if the mock was the
+  intent, this is a one-line change.
+- **Cancelling does NOT emit a realtime broadcast — verified, not assumed.** The
+  only broadcast trigger is `trg_slot_holds_broadcast` on `slot_holds`
+  INSERT/DELETE (migration 20260726205901). Cancelling touches `bookings` and
+  `slots`; the hold was already deleted at confirm time, so nothing fires. Other
+  patients get the freed slot on their next refetch — focus, or the picker's
+  60-second poll — not instantly. **Per the spec this is acceptable and is
+  recorded here rather than papered over.** Making cancels live would mean a
+  broadcast trigger on `slots`, which is a separate change.
+- **`booking-reminder` already excludes cancelled bookings — proved, not
+  assumed.** It filters `.eq('status', 'confirmed')`
+  (`supabase/functions/booking-reminder/index.ts:41`), and a cancelled row can
+  never match. No change needed.
+- **`successText` added to design tokens** (`#01705A` on `#E5F7F4`, ~5.5:1). The
+  mint `success` on its own tint is ~1.9:1 and unreadable at the badge's 11.5px
+  — the same pairing warningText/errorText already had.
+- **The detail screen reads from the LIST's cache, not its own query.** The row
+  already carries everything it renders, so there is one source of truth and
+  cancelling invalidates exactly one key.
+- The empty-state illustration slot ships as the design's cream disc with an
+  emoji — no artwork was in the handoff bundle, and blocking on an asset was not
+  worth it.
+
+**Also fixed here (device report):** starting a SECOND booking at the same
+provider left step 1 blank and stuck. The branch screen registered the branch in
+`useEffect(..., [branch, openBranch])` where `branch` is TanStack's `data` — a
+referentially stable cached object — and the screen stays mounted under Tabs, so
+returning never re-ran it. `completeBooking()` had nulled `branchId`, so the slot
+query sat `enabled: false` behind its skeleton. Two-sided fix: `completeBooking`
+now KEEPS the branch (it is where the patient is, not part of the booking), and
+the branch screen re-registers whenever the store drifts from the branch on
+screen instead of waiting for a reference change that never comes.
+
+**⚠ TWO OPEN BUSINESS DECISIONS FOR THE FOUNDERS (raised by SPEC-F07, needed
+before P-series reporting is designed):**
+
+1. **Who marks a booking's outcome, and when?** Nothing in the system ever sets
+   `completed` or `no_show` today — so the السابقة tab currently fills only with
+   `cancelled` rows and past-dated `confirmed` ones, and F09 reviews (which hang
+   off a completed booking) have nothing to attach to. **The status enum already
+   supports both** (`bookings_status_check` allows `pending`, `pending_payment`,
+   `confirmed`, `completed`, `cancelled`, `no_show`) — **no migration needed**,
+   only a decision about who writes it: a receptionist action in the P-series, a
+   cron that completes past confirmed bookings, or both.
+2. **When does commission attach?** At payment for prepaid, at completion for
+   cash is the **recommended** split (you only bill a partner for a visit that
+   happened), but it is unratified. This shapes P-series reporting and partner
+   invoicing, and `bookings.commission_amount` / `commission_rate` are still
+   unwritten either way.
+
+**For F08–F09 / P01–P06 — hand-off:**
+
+- `get_patient_bookings()` is the pattern for any patient-facing read that
+  touches `slots`. Add columns to it rather than joining from the client.
+- **Statuses and payment semantics the dashboard MUST mirror:** a `confirmed`
+  booking is either `payment_status = 'paid'` (prepaid, money simulated) or
+  `'cash'`/`'pending'` with `payment_method = 'cash'` — the receptionist has to
+  see that difference, because a cash patient still owes money at the counter.
+  `cancelled` rows keep `cancelled_by` (`patient` / `provider` / `admin`) and
+  `cancelled_at`, so the dashboard can tell a patient cancellation from its own.
+  The patient app renders that distinction through core's
+  `getBookingPaymentLabelAr` and `getBookingStatusChip` — reuse them rather than
+  re-deriving, or the two surfaces will drift.
+- `cancel_booking` now refuses a caller it does not recognise. When the provider
+  dashboard cancels on a patient's behalf, the staff account must be in
+  `provider_users` with the branch in `branch_ids`, or it will look like a bug.
+  Provider/admin callers are deliberately exempt from the slot-start boundary.
+- `cancelled_at` is populated on every cancellation, so late-cancel patterns are
+  measurable whenever v2 wants them. No user-facing consequence in MVP.
 
 ### 2026-07-27 · F06 — Payment (mock provider), settlement, confirmation & SMS (mobile)
 

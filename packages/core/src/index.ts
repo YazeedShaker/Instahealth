@@ -21,6 +21,7 @@ export * from './business/geo'
 export * from './business/hours'
 export * from './business/payment'
 export * from './business/payment-paytabs'
+export * from './business/bookings'
 export * from './business/sms'
 
 // Schemas

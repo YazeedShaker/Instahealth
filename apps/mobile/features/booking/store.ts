@@ -60,10 +60,18 @@ interface BookingStore {
   /** Leaving the booking flow: drop hold + pending booking + notes but KEEP
    * the selection — back on the branch profile it must still be there. */
   clearFlowState: () => void
-  /** Successful settle: wipe everything AND raise the hand-off flag, in ONE
-   * atomic set. Must be called before navigating to the confirmation screen —
-   * clearing hold + pendingBooking first is what stops the segments watcher in
-   * (app)/_layout from "cleaning up" (cancelling) the booking just confirmed. */
+  /** Successful settle: clear the BOOKING (selection + flow state) and raise
+   * the hand-off flag, in ONE atomic set. Must be called before navigating to
+   * the confirmation screen — clearing hold + pendingBooking first is what
+   * stops the segments watcher in (app)/_layout from "cleaning up"
+   * (cancelling) the booking just confirmed.
+   *
+   * Deliberately KEEPS `branchId`/`branchNameAr`: the branch is where the
+   * patient is browsing, not part of the booking. Nulling it stranded the slot
+   * picker — the branch screen only re-registers the branch when the query
+   * object's REFERENCE changes, which never happens on returning to the same
+   * branch, so `branchId` stayed null and the picker's query sat disabled
+   * behind its skeleton forever. */
   completeBooking: () => void
   /** Confirmation screen has mounted — the hand-off is over. */
   clearConfirmedHandoff: () => void
@@ -107,7 +115,8 @@ export const useBookingStore = create<BookingStore>((set) => ({
   setNotes: (notes) => set({ notes }),
   setHoldExpired: (holdExpired) => set({ holdExpired }),
   clearFlowState: () => set({ ...INITIAL_FLOW_STATE }),
-  completeBooking: () => set({ ...INITIAL_STATE, confirmedHandoff: true }),
+  completeBooking: () =>
+    set({ selectedServices: [], ...INITIAL_FLOW_STATE, confirmedHandoff: true }),
   clearConfirmedHandoff: () => set({ confirmedHandoff: false }),
   reset: () => set({ ...INITIAL_STATE }),
 }))

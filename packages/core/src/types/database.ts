@@ -831,6 +831,30 @@ export type Database = {
           slot_time: string
         }[]
       }
+      get_patient_bookings: {
+        Args: never
+        Returns: {
+          booking_ref: string
+          branch_address_ar: string
+          branch_id: string
+          branch_lat: number
+          branch_lng: number
+          branch_name_ar: string
+          branch_phone: string
+          cancelled_at: string
+          created_at: string
+          id: string
+          is_hospital: boolean
+          patient_notes: string
+          payment_method: string
+          payment_status: string
+          services: Json
+          slot_date: string
+          slot_time: string
+          status: string
+          total_amount: number
+        }[]
+      }
       get_provider_branch_ids: { Args: never; Returns: string[] }
       get_user_role: { Args: never; Returns: string }
     }
