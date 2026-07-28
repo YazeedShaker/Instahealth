@@ -1,0 +1,9 @@
+:root{
+--ih-primary-50:#E5F7F4;--ih-primary-100:#BFEDEA;--ih-primary-200:#80DBDB;--ih-primary-300:#3DCEC4;
+--ih-primary-400:#02C39A;--ih-primary-500:#00A896;--ih-primary-600:#028090;--ih-primary-700:#05668D;
+--ih-primary-800:#044F6E;--ih-primary-900:#023449;--ih-primary-950:#011D29;
+--ih-accent-100:#FAFBEA;--ih-accent-200:#F5F8D2;--ih-accent-300:#F0F3BD;--ih-accent-400:#E2E89A;--ih-accent-500:#C8CF6A;
+--ih-neutral-0:#FFFFFF;--ih-neutral-50:#F6F8F9;--ih-neutral-100:#EEF1F3;--ih-neutral-200:#E0E5E8;--ih-neutral-300:#CDD4D8;--ih-neutral-400:#B0BBC2;--ih-neutral-500:#8597A1;--ih-neutral-600:#5E737C;--ih-neutral-700:#3D5059;--ih-neutral-800:#22333A;--ih-neutral-900:#111C21;--ih-neutral-950:#070E12;
+--ih-success:#02C39A;--ih-success-bg:#E5F7F4;--ih-warning:#D97706;--ih-warning-bg:#FEF3C7;--ih-error:#DC2626;--ih-error-bg:#FEE2E2;--ih-info:#028090;--ih-info-bg:#E0F2F4;
+--ih-status-confirmed:#02C39A;--ih-status-pending:#D97706;--ih-status-completed:#5E737C;--ih-status-cancelled:#DC2626;--ih-status-no-show:#9CA3AF;
+}

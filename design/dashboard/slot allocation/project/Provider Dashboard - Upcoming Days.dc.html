@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/effects.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/themes.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/base.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/styles.css">
+  <script src="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/_ds_bundle.js"></script>
+  <style>
+    body { margin: 0; background: var(--ih-neutral-100); font-family: 'Cairo', 'Atkinson Hyperlegible', sans-serif; }
+    a { color: var(--ih-primary-600); } a:hover { color: var(--ih-primary-700); }
+    .ih-daystrip::-webkit-scrollbar { display: none; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 40px; align-items: center; padding: 40px 32px;">
+
+  <!-- ═══ Upcoming days ═══ -->
+  <div data-screen-label="لوحة الشريك — الأيام القادمة">
+    <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 768 }}" url="partners.instahealth.eg/upcoming" hint-size="1366px,768px">
+      <div dir="rtl" style="display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden;">
+        <div style="flex-shrink: 0; display: flex; align-self: stretch; background: var(--ih-surface-sidebar);">
+          <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.SidebarNav" brand="بوابة الشركاء" items="{{ navItems }}" active="{{ 1 }}" style="{{ sidebarStyle }}" hint-size="220px,100%"></x-import>
+        </div>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+          <!-- header -->
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); box-shadow: var(--ih-shadow-sm); padding: 12px 24px; display: flex; align-items: center; gap: 20px; min-height: 56px; box-sizing: border-box;">
+            <div style="display: flex; flex-direction: column; gap: 1px;">
+              <div style="font-size: 16px; font-weight: 800; color: var(--ih-neutral-800);">الأيام القادمة</div>
+              <div style="font-size: 12.5px; color: var(--ih-neutral-500);">معامل سريدار — فرع التجمع الخامس</div>
+            </div>
+            <div style="flex: 1;"></div>
+            <span style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ih-neutral-600); background: var(--ih-neutral-50); border: 1px solid var(--ih-neutral-200); border-radius: 999px; padding: 6px 12px; white-space: nowrap;">👁 للعرض فقط — التعديل من إدارة الفرع</span>
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding-right: 16px; border-right: 1px solid var(--ih-neutral-200); white-space: nowrap;">
+              <div style="width: 32px; height: 32px; border-radius: 999px; background: var(--ih-primary-50); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--ih-primary-700);">م</div>
+              <div style="display: flex; flex-direction: column;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-700);">مكتب الاستقبال</span>
+                <span style="font-size: 11px; color: var(--ih-neutral-500); cursor: pointer; text-decoration: underline;">تسجيل خروج</span>
+              </div>
+            </div>
+          </div>
+          <!-- date switcher -->
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); padding: 12px 24px;">
+            <div class="ih-daystrip" style="display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;">
+              <sc-for list="{{ days }}" as="d" hint-placeholder-count="10">
+                <div data-idx="{{ $index }}" onClick="{{ onSelectDay }}" style="flex-shrink: 0; min-width: 92px; padding: 9px 12px; border-radius: 10px; cursor: pointer; background: {{ d.bg }}; border: 1px solid {{ d.border }}; display: flex; flex-direction: column; gap: 5px; transition: all 180ms;">
+                  <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 6px;">
+                    <span style="font-size: 12px; font-weight: 600; color: {{ d.dayColor }};">{{ d.day }}</span>
+                    <span style="font-size: 16px; font-weight: 800; color: {{ d.numColor }};">{{ d.num }}</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 5px;">
+                    <div style="flex: 1; height: 4px; border-radius: 999px; background: {{ d.trackBg }}; overflow: hidden;"><div style="width: {{ d.fillPct }}; height: 100%; background: {{ d.fillColor }};"></div></div>
+                    <span style="font-size: 10.5px; font-weight: 700; color: {{ d.countColor }}; unicode-bidi: isolate;">{{ d.count }}</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <!-- day summary + list -->
+          <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 16px 24px 24px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 16px; flex-shrink: 0;">
+              <div style="font-size: 15px; font-weight: 700; color: var(--ih-neutral-800);">{{ selectedLabel }}</div>
+              <div style="width: 1px; height: 20px; background: var(--ih-neutral-200);"></div>
+              <div style="font-size: 12.5px; color: var(--ih-neutral-600);"><span style="font-weight: 700; color: var(--ih-neutral-800);">{{ selectedFill }}</span> محجوز</div>
+              <div style="font-size: 12.5px; color: var(--ih-neutral-600);">متوقع تحصيله نقداً <span dir="ltr" style="font-weight: 700; color: var(--ih-primary-700); unicode-bidi: isolate;">{{ selectedCash }} EGP</span></div>
+            </div>
+            <sc-if value="{{ hasRows }}" hint-placeholder-val="{{ true }}">
+              <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); overflow: hidden; flex-shrink: 0;">
+                <div style="display: grid; grid-template-columns: 90px 200px 1fr 150px 118px 44px; align-items: center; gap: 12px; padding: 10px 16px; background: var(--ih-neutral-50); border-bottom: 1px solid var(--ih-neutral-200); font-size: 11.5px; font-weight: 700; color: var(--ih-neutral-500);">
+                  <div>الموعد</div><div>المريض</div><div>الخدمات</div><div>الدفع</div><div>الحالة</div><div></div>
+                </div>
+                <sc-for list="{{ rows }}" as="r" hint-placeholder-count="5">
+                  <div style="display: grid; grid-template-columns: 90px 200px 1fr 150px 118px 44px; align-items: center; gap: 12px; padding: 0 16px; min-height: 64px; border-bottom: 1px solid var(--ih-neutral-100); cursor: pointer; background: var(--ih-neutral-0);" style-hover="background: var(--ih-primary-50)">
+                    <div style="font-size: 17px; font-weight: 800; color: var(--ih-neutral-800); unicode-bidi: isolate;">{{ r.time }}</div>
+                    <div style="display: flex; flex-direction: column; gap: 1px; min-width: 0;">
+                      <div style="font-size: 14px; font-weight: 600; color: var(--ih-neutral-800); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ r.patient }}</div>
+                      <a href="{{ r.tel }}" onClick="{{ stop }}" dir="ltr" style="font-size: 12.5px; font-weight: 600; text-decoration: none; text-align: right;">{{ r.phone }}</a>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                      <span style="font-size: 13.5px; color: var(--ih-neutral-700); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ r.services }}</span>
+                      <sc-if value="{{ r.prep }}" hint-placeholder-val="{{ false }}">
+                        <span style="flex-shrink: 0; font-size: 11px; font-weight: 700; color: var(--ih-primary-800); background: var(--ih-accent-200); border: 1px solid var(--ih-accent-400); border-radius: 999px; padding: 2px 8px; white-space: nowrap;">⚠ صيام</span>
+                      </sc-if>
+                    </div>
+                    <div>
+                      <sc-if value="{{ r.cash }}" hint-placeholder-val="{{ true }}">
+                        <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 800; color: var(--ih-primary-800); background: var(--ih-accent-200); border: 1px solid var(--ih-accent-400); border-radius: 8px; padding: 5px 10px; white-space: nowrap;">💵 يدفع هنا <span dir="ltr" style="unicode-bidi: isolate;">{{ r.amount }}</span></span>
+                      </sc-if>
+                      <sc-if value="{{ r.paid }}" hint-placeholder-val="{{ false }}">
+                        <span style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-500); white-space: nowrap;">✓ تم الدفع <span dir="ltr" style="unicode-bidi: isolate;">{{ r.amount }}</span></span>
+                      </sc-if>
+                    </div>
+                    <div><span style="display: inline-flex; align-items: center; border-radius: 9999px; padding: 0.25rem 0.75rem; font-size: 0.75rem; font-weight: 600; white-space: nowrap; background: {{ r.chipBg }}; color: {{ r.chipColor }};">{{ r.chipLabel }}</span></div>
+                    <div style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 15px; color: var(--ih-neutral-400);" aria-label="التفاصيل">‹</div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+              <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); padding: 56px 24px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; flex-shrink: 0;">
+                <div style="width: 64px; height: 64px; border-radius: 999px; background: var(--ih-primary-50); display: flex; align-items: center; justify-content: center; font-size: 26px;" aria-hidden="true">📅</div>
+                <div style="font-size: 16px; font-weight: 700; color: var(--ih-neutral-800);">لا توجد حجوزات في هذا اليوم بعد</div>
+                <p style="margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--ih-neutral-600); max-width: 400px;">كل المواعيد متاحة للحجز — ستظهر هنا بمجرد أن يحجز المرضى.</p>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </div>
+    </x-import>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1460, &quot;height&quot;: 860}}">
+class Component extends DCLogic {
+  state = { day: 0 };
+  CHIPS = {
+    pending_payment: { label: "بانتظار الدفع", bg: "var(--ih-warning-bg)", color: "#92600A" },
+    confirmed: { label: "مؤكد", bg: "var(--ih-success-bg)", color: "#028090" },
+    arrived: { label: "وصل", bg: "var(--ih-primary-50)", color: "var(--ih-primary-700)" },
+    completed: { label: "مكتمل", bg: "var(--ih-neutral-100)", color: "var(--ih-neutral-700)" },
+    no_show: { label: "لم يحضر", bg: "var(--ih-neutral-100)", color: "#991B1B" },
+    cancelled: { label: "ملغي", bg: "var(--ih-error-bg)", color: "var(--ih-error)" },
+  };
+  DAY_NAMES = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+  MONTHS = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+  CAPACITY = 8;
+  BOOKINGS = {
+    0: [
+      { time: "٩:٣٠ص", patient: "ياسمين طارق", phone: "+20 10 4455 6677", services: "صورة دم كاملة · فيتامين د", amount: "470 EGP", paid: true, status: "confirmed" },
+      { time: "١٠:٣٠ص", patient: "عمر الشريف", phone: "+20 12 1122 3344", services: "سكر صائم", prep: true, amount: "45 EGP", cash: true, status: "confirmed" },
+      { time: "١٢:٠٠م", patient: "دعاء مصطفى", phone: "+20 11 8899 0011", services: "وظائف كبد", amount: "180 EGP", cash: true, status: "pending_payment" },
+      { time: "٢:٣٠م", patient: "محمود عادل", phone: "+20 15 3344 7788", services: "دهون ثلاثية وكوليسترول", prep: true, amount: "200 EGP", paid: true, status: "confirmed" },
+      { time: "٤:٠٠م", patient: "أمينة حسن", phone: "+20 10 9911 2233", services: "وظائف كلى · صورة دم كاملة", amount: "280 EGP", cash: true, status: "confirmed" },
+    ],
+    1: [
+      { time: "١٠:٠٠ص", patient: "كريم فؤاد", phone: "+20 12 5566 7799", services: "فيتامين د", amount: "350 EGP", paid: true, status: "confirmed" },
+      { time: "١١:٣٠ص", patient: "هالة سمير", phone: "+20 10 3311 5522", services: "وظائف كلى", amount: "160 EGP", cash: true, status: "confirmed" },
+      { time: "١:٣٠م", patient: "سلمى ناصر", phone: "+20 11 2233 4455", services: "سكر صائم · وظائف كبد", prep: true, amount: "225 EGP", cash: true, status: "confirmed" },
+      { time: "٣:٠٠م", patient: "إسلام بدر", phone: "+20 15 7744 2200", services: "صورة دم كاملة", amount: "120 EGP", paid: true, status: "confirmed" },
+    ],
+    2: [
+      { time: "٩:٣٠ص", patient: "منال عوض", phone: "+20 12 6600 8844", services: "دهون ثلاثية وكوليسترول", prep: true, amount: "200 EGP", cash: true, status: "confirmed" },
+      { time: "١٢:٣٠م", patient: "شريف لطفي", phone: "+20 11 4400 9933", services: "فيتامين د · صورة دم كاملة", amount: "470 EGP", paid: true, status: "confirmed" },
+    ],
+    3: [
+      { time: "١١:٠٠ص", patient: "طارق زكي", phone: "+20 10 6677 8899", services: "صورة دم كاملة", amount: "120 EGP", cash: true, status: "confirmed" },
+      { time: "٢:٠٠م", patient: "رنا عصام", phone: "+20 12 8822 1177", services: "سكر صائم", prep: true, amount: "45 EGP", cash: true, status: "pending_payment" },
+      { time: "٣:٣٠م", patient: "حسام الدين", phone: "+20 15 5511 6644", services: "وظائف كبد · وظائف كلى", amount: "340 EGP", paid: true, status: "confirmed" },
+    ],
+    4: [],
+    5: [
+      { time: "١٠:٣٠ص", patient: "ندى جمال", phone: "+20 10 2200 4477", services: "فيتامين د", amount: "350 EGP", cash: true, status: "confirmed" },
+      { time: "١:٠٠م", patient: "وليد قاسم", phone: "+20 11 9933 5511", services: "صورة دم كاملة · سكر صائم", prep: true, amount: "165 EGP", paid: true, status: "confirmed" },
+    ],
+    6: [
+      { time: "١٢:٠٠م", patient: "فاطمة سعيد", phone: "+20 12 7711 3399", services: "وظائف كلى", amount: "160 EGP", cash: true, status: "confirmed" },
+    ],
+  };
+  toAr(s) { return String(s).replace(/[0-9]/g, c => "٠١٢٣٤٥٦٧٨٩"[+c]); }
+  renderVals() {
+    const sel = this.state.day;
+    const today = new Date();
+    const list = this.BOOKINGS[sel] || [];
+    const cash = list.filter(r => r.cash).reduce((sum, r) => sum + parseInt(r.amount, 10), 0);
+    const days = Array.from({ length: 10 }, (_, i) => {
+      const d = new Date(today.getTime() + (i + 1) * 86400000);
+      const count = (this.BOOKINGS[i] || []).length;
+      const on = i === sel;
+      const pct = Math.round((count / this.CAPACITY) * 100);
+      return {
+        day: i === 0 ? "غداً" : this.DAY_NAMES[d.getDay()],
+        num: this.toAr(d.getDate()),
+        count: this.toAr(count) + "/" + this.toAr(this.CAPACITY),
+        bg: on ? "var(--ih-primary-50)" : "var(--ih-neutral-0)",
+        border: on ? "var(--ih-primary-400)" : "var(--ih-neutral-200)",
+        dayColor: on ? "var(--ih-primary-700)" : "var(--ih-neutral-500)",
+        numColor: on ? "var(--ih-primary-800)" : "var(--ih-neutral-800)",
+        countColor: on ? "var(--ih-primary-700)" : "var(--ih-neutral-500)",
+        trackBg: on ? "rgba(2,128,144,0.18)" : "var(--ih-neutral-100)",
+        fillColor: on ? "var(--ih-primary-500)" : "var(--ih-primary-400)",
+        fillPct: pct + "%",
+      };
+    });
+    const selDate = new Date(today.getTime() + (sel + 1) * 86400000);
+    return {
+      navItems: [
+        { icon: "📋", label: "اليوم" },
+        { icon: "📅", label: "الأيام القادمة" },
+        { icon: "💰", label: "الخدمات والأسعار" },
+        { icon: "🕐", label: "المواعيد المتاحة" },
+        { icon: "🏥", label: "بيانات الفرع" },
+      ],
+      sidebarStyle: { height: "100%", alignSelf: "stretch", flexShrink: 0, boxSizing: "border-box" },
+      days,
+      onSelectDay: (e) => this.setState({ day: +e.currentTarget.dataset.idx }),
+      selectedLabel: this.DAY_NAMES[selDate.getDay()] + " " + this.toAr(selDate.getDate()) + " " + this.MONTHS[selDate.getMonth()] + " " + this.toAr(selDate.getFullYear()),
+      selectedFill: this.toAr(list.length) + "/" + this.toAr(this.CAPACITY),
+      selectedCash: this.toAr(cash),
+      hasRows: list.length > 0,
+      isEmpty: list.length === 0,
+      stop: (e) => { e.preventDefault(); e.stopPropagation(); },
+      rows: list.map(r => {
+        const chip = this.CHIPS[r.status];
+        return { ...r, tel: "tel:" + r.phone.replace(/[^\d+]/g, ""), chipLabel: chip.label, chipBg: chip.bg, chipColor: chip.color };
+      }),
+    };
+  }
+}
+</script>
+</body>
+</html>

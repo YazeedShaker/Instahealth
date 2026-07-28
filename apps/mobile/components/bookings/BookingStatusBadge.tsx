@@ -15,6 +15,9 @@ const TONE_COLORS: Record<BookingStatusTone, { bg: string; fg: string }> = {
   warning: { bg: colors.semantic.warningBg, fg: colors.semantic.warningText },
   error: { bg: colors.semantic.errorBg, fg: colors.semantic.errorText },
   neutral: { bg: colors.neutral[100], fg: colors.neutral[600] },
+  // `وصل` — the patient is at the desk. Written only by the provider dashboard
+  // (P01), but a patient checking حجوزاتي while standing at reception sees it.
+  info: { bg: colors.primary[50], fg: colors.primary[700] },
 }
 
 export function BookingStatusBadge({

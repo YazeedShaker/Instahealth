@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/effects.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/themes.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/base.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/styles.css">
+  <script src="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/_ds_bundle.js"></script>
+  <style>
+    body { margin: 0; background: var(--ih-neutral-100); font-family: 'Cairo', 'Atkinson Hyperlegible', sans-serif; }
+    a { color: var(--ih-primary-600); } a:hover { color: var(--ih-primary-700); }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 40px; align-items: center; padding: 40px 32px;">
+
+  <!-- ═══ Receptionist — read-only ═══ -->
+  <div data-screen-label="المواعيد المتاحة — عرض الاستقبال">
+    <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 768 }}" url="partners.instahealth.eg/slots" hint-size="1366px,768px">
+      <div dir="rtl" style="display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden;">
+        <div style="flex-shrink: 0; display: flex; align-self: stretch; background: var(--ih-surface-sidebar);">
+          <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.SidebarNav" brand="بوابة الشركاء" items="{{ navItems }}" active="{{ 3 }}" style="{{ sidebarStyle }}" hint-size="220px,100%"></x-import>
+        </div>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); box-shadow: var(--ih-shadow-sm); padding: 12px 24px; display: flex; align-items: center; gap: 20px; min-height: 56px; box-sizing: border-box;">
+            <div style="display: flex; flex-direction: column; gap: 1px;">
+              <div style="font-size: 16px; font-weight: 800; color: var(--ih-neutral-800);">المواعيد المتاحة</div>
+              <div style="font-size: 12.5px; color: var(--ih-neutral-500);">معامل سريدار — فرع التجمع الخامس · الثلاثاء ٢٨ يوليو</div>
+            </div>
+            <div style="flex: 1;"></div>
+            <span style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ih-neutral-600); background: var(--ih-neutral-50); border: 1px solid var(--ih-neutral-200); border-radius: 999px; padding: 6px 12px; white-space: nowrap;">🔒 للعرض فقط — التعديل من إدارة الفرع</span>
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding-right: 16px; border-right: 1px solid var(--ih-neutral-200); white-space: nowrap;">
+              <div style="width: 32px; height: 32px; border-radius: 999px; background: var(--ih-primary-50); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--ih-primary-700);">م</div>
+              <div style="display: flex; flex-direction: column;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-700);">مكتب الاستقبال</span>
+                <span style="font-size: 11px; color: var(--ih-neutral-500); cursor: pointer; text-decoration: underline;">تسجيل خروج</span>
+              </div>
+            </div>
+          </div>
+          <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 16px 24px 24px; display: flex; gap: 16px; align-items: flex-start;">
+            <!-- slots -->
+            <div style="flex: 1; min-width: 0; background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); padding: 18px; display: flex; flex-direction: column; gap: 14px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                <div style="font-size: 15px; font-weight: 700; color: var(--ih-neutral-800);">مواعيد اليوم</div>
+                <div style="display: flex; gap: 16px; font-size: 11.5px; color: var(--ih-neutral-500);">
+                  <span style="display: inline-flex; align-items: center; gap: 6px;"><span style="width: 10px; height: 10px; border-radius: 3px; background: var(--ih-primary-400); display: inline-block;"></span> محجوز</span>
+                  <span style="display: inline-flex; align-items: center; gap: 6px;"><span style="width: 10px; height: 10px; border-radius: 3px; background: var(--ih-neutral-0); border: 1.5px solid var(--ih-neutral-200); display: inline-block;"></span> متاح</span>
+                  <span style="display: inline-flex; align-items: center; gap: 6px;"><span style="width: 10px; height: 10px; border-radius: 3px; background: var(--ih-neutral-100); display: inline-block;"></span> مضى</span>
+                </div>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px;">
+                <sc-for list="{{ slots }}" as="s" hint-placeholder-count="16">
+                  <div style="border-radius: 10px; border: 1.5px solid {{ s.border }}; background: {{ s.bg }}; padding: 10px; min-height: 68px; box-sizing: border-box; display: flex; flex-direction: column; gap: 3px; opacity: {{ s.opacity }};">
+                    <div style="font-size: 14px; font-weight: 800; color: {{ s.timeColor }}; unicode-bidi: isolate;">{{ s.time }}</div>
+                    <div style="font-size: 11.5px; font-weight: 600; color: {{ s.subColor }}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ s.sub }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <!-- allocation panel — gated -->
+            <div style="width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 12px;">
+              <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); border-top: 3px solid var(--ih-primary-400); padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                <div style="font-size: 12px; font-weight: 700; color: var(--ih-neutral-500);">ملخص اليوم</div>
+                <div style="display: flex; align-items: baseline; gap: 8px;">
+                  <span style="font-family: 'Cairo', sans-serif; font-size: 30px; font-weight: 800; color: var(--ih-primary-700); unicode-bidi: isolate;">{{ fillLabel }}</span>
+                  <span style="font-size: 12.5px; color: var(--ih-neutral-600);">موعد محجوز</span>
+                </div>
+                <div style="height: 8px; border-radius: 999px; background: var(--ih-neutral-100); overflow: hidden;"><div style="width: {{ fillPct }}; height: 100%; background: var(--ih-primary-400);"></div></div>
+                <div style="font-size: 12px; color: var(--ih-neutral-600); line-height: 1.6;">مدة الموعد ٣٠ دقيقة · من <span style="unicode-bidi: isolate;">{{ windowStartLabel }}</span> إلى <span style="unicode-bidi: isolate;">{{ windowEndLabel }}</span></div>
+              </div>
+              <div style="position: relative; background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); padding: 16px; display: flex; flex-direction: column; gap: 14px; overflow: hidden;">
+                <div style="display: flex; flex-direction: column; gap: 14px; opacity: 0.45;">
+                  <div style="font-size: 13px; font-weight: 700; color: var(--ih-neutral-700);">إعداد المواعيد</div>
+                  <div style="display: flex, flex-direction: column; gap: 6px;">
+                    <div style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-600); margin-bottom: 6px;">عدد المواعيد في اليوم</div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <div style="width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--ih-neutral-200); display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--ih-neutral-400);">−</div>
+                      <div style="flex: 1; min-height: 36px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: var(--ih-neutral-700); unicode-bidi: isolate;">{{ capacityLabel }}</div>
+                      <div style="width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--ih-neutral-200); display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--ih-neutral-400);">+</div>
+                    </div>
+                  </div>
+                  <div>
+                    <div style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-600); margin-bottom: 6px;">نافذة العمل</div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <div style="flex: 1; min-height: 36px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--ih-neutral-700); unicode-bidi: isolate;">{{ windowStartLabel }}</div>
+                      <span style="font-size: 12px; color: var(--ih-neutral-400);">إلى</span>
+                      <div style="flex: 1; min-height: 36px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--ih-neutral-700); unicode-bidi: isolate;">{{ windowEndLabel }}</div>
+                    </div>
+                  </div>
+                </div>
+                <div style="position: absolute; inset: 0; background: rgba(246,248,249,0.55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 16px; box-sizing: border-box; text-align: center;">
+                  <div style="width: 36px; height: 36px; border-radius: 999px; background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); display: flex; align-items: center; justify-content: center; font-size: 15px;" aria-hidden="true">🔒</div>
+                  <div style="font-size: 12.5px; font-weight: 700; color: var(--ih-neutral-700);">متاح لإدارة الفرع</div>
+                  <div style="font-size: 11.5px; color: var(--ih-neutral-500); line-height: 1.6;">تعديل عدد المواعيد ونافذة العمل يتم من حساب الإدارة.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </x-import>
+  </div>
+
+  <!-- ═══ Owner — edit enabled ═══ -->
+  <div data-screen-label="المواعيد المتاحة — إدارة الفرع">
+    <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 768 }}" url="partners.instahealth.eg/slots?role=owner" hint-size="1366px,768px">
+      <div dir="rtl" style="display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden;">
+        <div style="flex-shrink: 0; display: flex; align-self: stretch; background: var(--ih-surface-sidebar);">
+          <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.SidebarNav" brand="بوابة الشركاء" items="{{ navItems }}" active="{{ 3 }}" style="{{ sidebarStyle }}" hint-size="220px,100%"></x-import>
+        </div>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); box-shadow: var(--ih-shadow-sm); padding: 12px 24px; display: flex; align-items: center; gap: 20px; min-height: 56px; box-sizing: border-box;">
+            <div style="display: flex; flex-direction: column; gap: 1px;">
+              <div style="font-size: 16px; font-weight: 800; color: var(--ih-neutral-800);">المواعيد المتاحة</div>
+              <div style="font-size: 12.5px; color: var(--ih-neutral-500);">معامل سريدار — فرع التجمع الخامس · الثلاثاء ٢٨ يوليو</div>
+            </div>
+            <div style="flex: 1;"></div>
+            <span style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--ih-primary-700); background: var(--ih-primary-50); border: 1px solid var(--ih-primary-400); border-radius: 999px; padding: 6px 12px; white-space: nowrap;">✎ صلاحية التعديل مفعّلة</span>
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding-right: 16px; border-right: 1px solid var(--ih-neutral-200); white-space: nowrap;">
+              <div style="width: 32px; height: 32px; border-radius: 999px; background: var(--ih-primary-50); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--ih-primary-700);">إ</div>
+              <div style="display: flex; flex-direction: column;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-700);">إدارة الفرع</span>
+                <span style="font-size: 11px; color: var(--ih-neutral-500); cursor: pointer; text-decoration: underline;">تسجيل خروج</span>
+              </div>
+            </div>
+          </div>
+          <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 16px 24px 24px; display: flex; gap: 16px; align-items: flex-start;">
+            <div style="flex: 1; min-width: 0; background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); padding: 18px; display: flex; flex-direction: column; gap: 14px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                <div style="font-size: 15px; font-weight: 700; color: var(--ih-neutral-800);">معاينة المواعيد بعد التعديل</div>
+                <span style="font-size: 11.5px; font-weight: 600; color: var(--ih-primary-700);">{{ previewCount }} موعد · كل {{ durationLabel }} دقيقة</span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px;">
+                <sc-for list="{{ preview }}" as="p" hint-placeholder-count="12">
+                  <div style="border-radius: 10px; border: 1.5px solid {{ p.border }}; background: {{ p.bg }}; padding: 10px; min-height: 68px; box-sizing: border-box; display: flex; flex-direction: column; gap: 3px;">
+                    <div style="font-size: 14px; font-weight: 800; color: {{ p.timeColor }}; unicode-bidi: isolate;">{{ p.time }}</div>
+                    <div style="font-size: 11.5px; font-weight: 600; color: {{ p.subColor }};">{{ p.sub }}</div>
+                  </div>
+                </sc-for>
+              </div>
+              <sc-if value="{{ showImpact }}" hint-placeholder-val="{{ false }}">
+                <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Alert" type="warning" hint-size="100%,60px">{{ impactMsg }}</x-import>
+              </sc-if>
+            </div>
+            <div style="width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 12px;">
+              <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); padding: 16px; display: flex; flex-direction: column; gap: 16px;">
+                <div style="font-size: 13px; font-weight: 700; color: var(--ih-neutral-800);">إعداد المواعيد</div>
+                <div>
+                  <div style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-600); margin-bottom: 7px;">عدد المواعيد في اليوم</div>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <div onClick="{{ onDec }}" role="button" aria-label="تقليل" style="width: 40px; height: 40px; border-radius: 8px; border: 1.5px solid var(--ih-neutral-200); background: var(--ih-neutral-0); display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--ih-neutral-700); cursor: pointer;">−</div>
+                    <div style="flex: 1; min-height: 40px; border: 1.5px solid var(--ih-primary-400); border-radius: 8px; background: var(--ih-primary-50); display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 800; color: var(--ih-primary-800); unicode-bidi: isolate;">{{ countLabel }}</div>
+                    <div onClick="{{ onInc }}" role="button" aria-label="زيادة" style="width: 40px; height: 40px; border-radius: 8px; border: 1.5px solid var(--ih-neutral-200); background: var(--ih-neutral-0); display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--ih-neutral-700); cursor: pointer;">+</div>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-600); margin-bottom: 7px;">نافذة العمل</div>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="flex: 1; min-height: 40px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; background: var(--ih-neutral-0); display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13.5px; font-weight: 700; color: var(--ih-neutral-800); cursor: pointer;"><span style="unicode-bidi: isolate;">{{ windowStartLabel }}</span> <span style="font-size: 9px; color: var(--ih-neutral-400);">▾</span></div>
+                    <span style="font-size: 12px; color: var(--ih-neutral-500);">إلى</span>
+                    <div style="flex: 1; min-height: 40px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; background: var(--ih-neutral-0); display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13.5px; font-weight: 700; color: var(--ih-neutral-800); cursor: pointer;"><span style="unicode-bidi: isolate;">{{ windowEndLabel }}</span> <span style="font-size: 9px; color: var(--ih-neutral-400);">▾</span></div>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-600); margin-bottom: 7px;">مدة الموعد</div>
+                  <div style="display: flex; gap: 6px;">
+                    <sc-for list="{{ durations }}" as="d" hint-placeholder-count="3">
+                      <div data-val="{{ d.value }}" onClick="{{ onDuration }}" style="flex: 1; min-height: 40px; border-radius: 8px; border: 1.5px solid {{ d.border }}; background: {{ d.bg }}; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: {{ d.color }}; cursor: pointer; white-space: nowrap;">{{ d.label }}</div>
+                    </sc-for>
+                  </div>
+                </div>
+                <div style="border-top: 1px solid var(--ih-neutral-100); padding-top: 14px; display: flex; flex-direction: column; gap: 8px;">
+                  <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="lg" full-width="{{ true }}" disabled="{{ saveDisabled }}" hint-size="100%,48px"><span style="white-space: nowrap;">حفظ الإعداد</span></x-import>
+                  <div style="font-size: 11.5px; color: var(--ih-neutral-500); line-height: 1.6;">يُطبَّق من الغد · الحجوزات القائمة لا تتأثر.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </x-import>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1460, &quot;height&quot;: 1620}}">
+class Component extends DCLogic {
+  state = { count: 8, duration: 30 };
+  BOOKED = { "١٢:٣٠م": "منى إبراهيم", "١:٠٠م": "خالد سيد", "٢:٠٠م": "أحمد محمود", "٢:٣٠م": "نورهان فتحي", "٣:٠٠م": "سارة عبد الله", "٤:٠٠م": "مصطفى رجب" };
+  PAST = ["١٢:٣٠م", "١:٠٠م"];
+  WIN_START = 12 * 60 + 30;
+  WIN_END = 16 * 60 + 30;
+  CAPACITY = 8;
+  toAr(s) { return String(s).replace(/[0-9]/g, c => "٠١٢٣٤٥٦٧٨٩"[+c]); }
+  timeLabel(mins) {
+    const h24 = Math.floor(mins / 60), m = mins % 60;
+    const pm = h24 >= 12;
+    const h = h24 % 12 === 0 ? 12 : h24 % 12;
+    return this.toAr(h) + ":" + this.toAr(String(m).padStart(2, "0")) + (pm ? "م" : "ص");
+  }
+  renderVals() {
+    const { count, duration } = this.state;
+    const start = this.WIN_START;
+    const windowMins = this.WIN_END - this.WIN_START;
+    const dayTimes = Array.from({ length: this.CAPACITY }, (_, i) => this.timeLabel(start + i * 30));
+    const previewTimes = Array.from({ length: count }, (_, i) => this.timeLabel(start + i * duration));
+    const orphans = Object.keys(this.BOOKED).filter(t => !previewTimes.includes(t));
+    const overflow = count * duration > windowMins;
+    const bookedCount = Object.keys(this.BOOKED).length;
+    return {
+      navItems: [
+        { icon: "📋", label: "اليوم" },
+        { icon: "📅", label: "الأيام القادمة" },
+        { icon: "💰", label: "الخدمات والأسعار" },
+        { icon: "🕐", label: "المواعيد المتاحة" },
+        { icon: "🏥", label: "بيانات الفرع" },
+      ],
+      sidebarStyle: { height: "100%", alignSelf: "stretch", flexShrink: 0, boxSizing: "border-box" },
+      slots: dayTimes.map(t => {
+        const patient = this.BOOKED[t];
+        const past = this.PAST.includes(t);
+        return {
+          time: t,
+          sub: patient || (past ? "لم يُحجز" : "متاح"),
+          bg: patient ? "var(--ih-primary-400)" : past ? "var(--ih-neutral-100)" : "var(--ih-neutral-0)",
+          border: patient ? "var(--ih-primary-400)" : past ? "var(--ih-neutral-100)" : "var(--ih-neutral-200)",
+          timeColor: patient ? "#fff" : past ? "var(--ih-neutral-400)" : "var(--ih-neutral-800)",
+          subColor: patient ? "rgba(255,255,255,0.85)" : past ? "var(--ih-neutral-400)" : "var(--ih-primary-600)",
+          opacity: past && !patient ? 0.7 : 1,
+        };
+      }),
+      countLabel: this.toAr(count),
+      durationLabel: this.toAr(duration),
+      previewCount: this.toAr(count),
+      onInc: () => this.setState(s => ({ count: Math.min(24, s.count + 1) })),
+      onDec: () => this.setState(s => ({ count: Math.max(1, s.count - 1) })),
+      durations: [15, 30, 45].map(v => ({
+        value: v, label: this.toAr(v) + " دقيقة",
+        bg: v === duration ? "var(--ih-primary-50)" : "var(--ih-neutral-0)",
+        border: v === duration ? "var(--ih-primary-400)" : "var(--ih-neutral-200)",
+        color: v === duration ? "var(--ih-primary-700)" : "var(--ih-neutral-600)",
+      })),
+      onDuration: (e) => this.setState({ duration: +e.currentTarget.dataset.val }),
+      windowStartLabel: this.timeLabel(this.WIN_START),
+      windowEndLabel: this.timeLabel(this.WIN_END),
+      capacityLabel: this.toAr(this.CAPACITY),
+      fillLabel: this.toAr(bookedCount) + "/" + this.toAr(this.CAPACITY),
+      fillPct: Math.round((bookedCount / this.CAPACITY) * 100) + "%",
+      preview: previewTimes.map(t => {
+        const patient = this.BOOKED[t];
+        return {
+          time: t,
+          sub: patient ? patient : "متاح",
+          bg: patient ? "var(--ih-primary-400)" : "var(--ih-neutral-0)",
+          border: patient ? "var(--ih-primary-400)" : "var(--ih-neutral-200)",
+          timeColor: patient ? "#fff" : "var(--ih-neutral-800)",
+          subColor: patient ? "rgba(255,255,255,0.85)" : "var(--ih-primary-600)",
+        };
+      }),
+      showImpact: orphans.length > 0 || overflow,
+      saveDisabled: orphans.length > 0 || overflow,
+      impactMsg: overflow
+        ? "هذا الإعداد يتجاوز نافذة العمل (" + this.timeLabel(this.WIN_START) + " إلى " + this.timeLabel(this.WIN_END) + "). قلّل عدد المواعيد أو مدة الموعد."
+        : "هذا الإعداد يترك " + this.toAr(orphans.length) + " حجزاً مؤكداً خارج المواعيد الجديدة (" + orphans.join("، ") + "). عدّل الإعداد أو تواصل مع المرضى أولاً.",
+    };
+  }
+}
+</script>
+</body>
+</html>

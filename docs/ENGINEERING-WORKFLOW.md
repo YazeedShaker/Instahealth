@@ -94,6 +94,15 @@ pnpm audit --audit-level=high
 - Gitleaks: `.env.example` is allowlisted via `.gitleaks.toml` (placeholder
   names only). Never commit a real key anywhere — `.env.local` files are
   gitignored at root, `apps/web/`, and `apps/mobile/`.
+- **"It's only a dev password" is not an exemption.** P01 committed a shared dev
+  provider password into a seed header, a Playwright spec and PROGRESS because
+  the spec said "document the dev credentials in the seed file header".
+  **GitGuardian failed the PR, correctly** — gitleaks and Secret Scan both
+  passed, so one green scanner proves nothing. Credentials belong in the
+  environment: seeds take them as a psql `-v` variable, E2E reads
+  `process.env`, and the suite SKIPS (never fails) when the vars are unset so a
+  missing secret does not masquerade as a broken feature. Documenting an
+  ACCOUNT is fine; documenting its password is not.
 - CodeQL auto-skips while the repo is private (needs GHAS) — not a failure.
 - New upstream advisories WILL land mid-PR and fail Dependency Audit (has
   happened three times: vitest/vite, postcss, brace-expansion). Fix order:
@@ -305,6 +314,34 @@ pnpm audit --audit-level=high
   `settle-payment` returns the whole confirmation DTO), never from a re-query.
   `get_branch_slots` is SECURITY DEFINER and still sees it — that is why the
   picker keeps working for everyone else.
+
+## 6a · Web (Next.js) specifics
+
+- **`getUser()`, never `getSession()`, on the server.** `getSession` trusts the
+  cookie as-is; `getUser` revalidates the JWT with the auth server. A forged
+  cookie is otherwise a provider session.
+- **Nothing may sit between `createServerClient` and `getUser()` in middleware.**
+  A stray `await` there is the documented cause of random logouts — the cookie
+  refresh has to be the first thing that touches the response.
+- **Middleware answers "signed in?", the layout answers "allowed in?"** Role
+  gating needs a `provider_users` lookup, which is too expensive to run on every
+  request (middleware matches nearly everything) and is needed in the layout
+  anyway. Splitting them keeps one DB round-trip per page, not per asset.
+- **A valid login is not an authorized one.** Patient credentials work fine
+  against a staff portal — the auth server has no idea it is one. The login
+  action checks membership and signs a non-provider back OUT, rather than
+  leaving a half-authenticated session on a shared front desk.
+- **Never derive scope from the URL.** The branch id comes from
+  `provider_users`, server-side. The RPCs re-check membership regardless, but
+  the UI should never even form the wrong request.
+- **Anon key only in `apps/web`.** The service-role key bypasses RLS and every
+  SECURITY DEFINER membership check the provider features rely on; it belongs in
+  Edge Function secrets, not in a Next.js app (CLAUDE.md §8).
+- **A shared exhaustive `Record` is a free cross-app safety net.** Adding
+  `arrived` to core's `BOOKING_STATUSES` made `tsc` fail the MOBILE status badge
+  until it was handled — the patient app would otherwise have rendered a blank
+  chip for a state only the dashboard writes. Prefer exhaustive Records over
+  `switch` with a default for exactly this.
 
 ## 7 · Core package discipline (quick reference)
 
