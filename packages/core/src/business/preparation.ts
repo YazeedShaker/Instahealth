@@ -1,5 +1,5 @@
 // computePreparationNotes() — implements the locked preparation-notes decision
-// (docs/DECISION-provider-data-model.md): per-service, computed from the CURRENT
+// (docs/decisions/DECISION-provider-data-model.md): per-service, computed from the CURRENT
 // selection, longest fast wins, duplicates merged, shown only when relevant.
 // One source of truth for the selection screen, confirmation screen, and reminder SMS.
 

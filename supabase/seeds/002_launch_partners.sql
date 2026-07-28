@@ -1,6 +1,6 @@
 -- ============================================================
 -- Seed 002: Launch partners — Town Hospital + Saridar Labs
--- Source: docs/saridar-branches-template.md (2026-07-25 resolution pass)
+-- Source: docs/data/saridar-branches-template.md (2026-07-25 resolution pass)
 -- IDEMPOTENT: fixed UUIDs + upserts on natural keys; safe to re-run.
 --
 -- Seeded: Town Hospital (New Cairo) + 23 Saridar branches — every branch

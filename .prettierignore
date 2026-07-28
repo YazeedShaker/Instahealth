@@ -13,8 +13,11 @@ apps/mobile/android
 Pre-docs
 Implementation Docs
 UI screens
-# Claude Design handoff bundles — exported prototypes, not our code style
-design/*/project
+# Claude Design handoff bundles — exported prototypes, not our code style.
+# Bundles now sit one level deeper (design/<surface>/<handoff>/project), so this
+# glob gained a segment — without it Prettier would reformat every bundle and
+# the format gate would fail on files we deliberately keep verbatim.
+design/*/*/project
 supabase/migrations
 supabase/functions
 packages/core/src/types/database.ts
