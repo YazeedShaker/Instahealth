@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/effects.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/themes.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/base.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/styles.css">
+  <script src="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/_ds_bundle.js"></script>
+  <style>
+    body { margin: 0; background: var(--ih-neutral-100); font-family: 'Cairo', 'Atkinson Hyperlegible', sans-serif; }
+    a { color: var(--ih-primary-600); } a:hover { color: var(--ih-primary-700); }
+    @keyframes ih-arrive { 0% { background: var(--ih-accent-200); } 100% { background: var(--ih-neutral-0); } }
+    @media (prefers-reduced-motion: reduce) { .ih-new-row { animation: none !important; } }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 40px; align-items: center; padding: 40px 32px;">
+
+  <!-- ═══ Today view — populated ═══ -->
+  <div data-screen-label="لوحة الشريك — اليوم">
+    <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 768 }}" url="partners.instahealth.eg/today" hint-size="1366px,768px">
+      <div dir="rtl" style="display: flex; height: 100%; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden;">
+        <!-- sidebar -->
+        <div style="flex-shrink: 0; display: flex; align-self: stretch; background: var(--ih-surface-sidebar);">
+          <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.SidebarNav" brand="بوابة الشركاء" items="{{ navItems }}" active="{{ 0 }}" style="{{ sidebarStyle }}" hint-size="220px,100%"></x-import>
+        </div>
+        <!-- main -->
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+          <!-- sticky header -->
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); box-shadow: var(--ih-shadow-sm); padding: 12px 24px; display: flex; align-items: center; gap: 20px; min-height: 56px; box-sizing: border-box;">
+            <div style="display: flex; flex-direction: column; gap: 1px;">
+              <div style="font-size: 16px; font-weight: 800; color: var(--ih-neutral-800);">معامل سريدار — فرع التجمع الخامس</div>
+              <div style="font-size: 12.5px; color: var(--ih-neutral-500);">الثلاثاء ٢٨ يوليو ٢٠٢٦</div>
+            </div>
+            <div style="width: 1px; height: 32px; background: var(--ih-neutral-200);"></div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="display: flex; gap: 3px;">
+                <sc-for list="{{ fillPips }}" as="p" hint-placeholder-count="5">
+                  <div style="width: 14px; height: 8px; border-radius: 2px; background: {{ p.bg }};"></div>
+                </sc-for>
+              </div>
+              <div style="font-size: 12.5px; color: var(--ih-neutral-600);"><span style="font-weight: 700; color: var(--ih-neutral-800);">{{ fillLabel }}</span> محجوز اليوم</div>
+            </div>
+            <div style="flex: 1;"></div>
+            <div onClick="{{ onToggleSound }}" role="button" aria-pressed="{{ soundOn }}" style="flex-shrink: 0; display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 12px; border-radius: 8px; border: 1px solid {{ soundBorder }}; background: {{ soundBg }}; cursor: pointer; white-space: nowrap;">
+              <span style="font-size: 14px;" aria-hidden="true">{{ soundIcon }}</span>
+              <span style="font-size: 12.5px; font-weight: 600; color: {{ soundColor }}; white-space: nowrap;">تنبيه صوتي</span>
+            </div>
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--ih-neutral-200); background: var(--ih-neutral-0); cursor: pointer; white-space: nowrap;">
+              <span style="font-size: 14px;" aria-hidden="true">🖨</span>
+              <span style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-600); white-space: nowrap;">طباعة القائمة</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; padding-right: 4px; border-right: 1px solid var(--ih-neutral-200); padding-right: 16px;">
+              <div style="width: 32px; height: 32px; border-radius: 999px; background: var(--ih-primary-50); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--ih-primary-700);">م</div>
+              <div style="display: flex; flex-direction: column;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-700);">مكتب الاستقبال</span>
+                <span style="font-size: 11px; color: var(--ih-neutral-500); cursor: pointer; text-decoration: underline;">تسجيل خروج</span>
+              </div>
+            </div>
+          </div>
+          <!-- new-arrival banner -->
+          <sc-if value="{{ hasNew }}" hint-placeholder-val="{{ true }}">
+            <div style="flex-shrink: 0; background: var(--ih-accent-200); border-bottom: 1px solid var(--ih-accent-400); padding: 8px 24px; display: flex; align-items: center; gap: 10px;">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: var(--ih-primary-400); display: inline-block;"></span>
+              <span style="font-size: 13px; font-weight: 600; color: var(--ih-primary-800);">وصل حجز جديد الآن — سارة عبد الله، ٣:٠٠م</span>
+              <span onClick="{{ onDismissNew }}" style="font-size: 12px; font-weight: 700; color: var(--ih-primary-700); cursor: pointer; text-decoration: underline;">تم</span>
+            </div>
+          </sc-if>
+          <!-- list -->
+          <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 16px 24px 24px;">
+            <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); overflow: hidden;">
+              <!-- column heads -->
+              <div style="display: grid; grid-template-columns: 90px 200px 1fr 150px 118px 180px 44px; align-items: center; gap: 12px; padding: 10px 16px; background: var(--ih-neutral-50); border-bottom: 1px solid var(--ih-neutral-200); font-size: 11.5px; font-weight: 700; color: var(--ih-neutral-500);">
+                <div>الموعد</div><div>المريض</div><div>الخدمات</div><div>الدفع</div><div>الحالة</div><div>الإجراء</div><div></div>
+              </div>
+              <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+                <div class="{{ r.cls }}" style="display: grid; grid-template-columns: 90px 200px 1fr 150px 118px 180px 44px; align-items: center; gap: 12px; padding: 0 16px; min-height: 64px; border-bottom: 1px solid var(--ih-neutral-100); cursor: pointer; background: {{ r.rowBg }}; border-right: 3px solid {{ r.edge }}; opacity: {{ r.opacity }}; animation: {{ r.anim }};" style-hover="background: var(--ih-primary-50)">
+                  <div style="font-family: 'Cairo', sans-serif; font-size: 17px; font-weight: 800; color: {{ r.timeColor }}; unicode-bidi: isolate;">{{ r.time }}</div>
+                  <div style="display: flex; flex-direction: column; gap: 1px; min-width: 0;">
+                    <div style="font-size: 14px; font-weight: 600; color: var(--ih-neutral-800); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ r.patient }}</div>
+                    <a href="{{ r.tel }}" onClick="{{ stop }}" dir="ltr" style="font-size: 12.5px; font-weight: 600; text-decoration: none; text-align: right;">{{ r.phone }}</a>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                    <span style="font-size: 13.5px; color: var(--ih-neutral-700); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ r.services }}</span>
+                    <sc-if value="{{ r.prep }}" hint-placeholder-val="{{ false }}">
+                      <span style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; color: var(--ih-primary-800); background: var(--ih-accent-200); border: 1px solid var(--ih-accent-400); border-radius: 999px; padding: 2px 8px; white-space: nowrap;">⚠ صيام</span>
+                    </sc-if>
+                  </div>
+                  <div>
+                    <sc-if value="{{ r.cash }}" hint-placeholder-val="{{ true }}">
+                      <span dir="rtl" style="display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 800; color: var(--ih-primary-800); background: var(--ih-accent-200); border: 1px solid var(--ih-accent-400); border-radius: 8px; padding: 5px 10px; white-space: nowrap;">💵 يدفع هنا <span dir="ltr" style="unicode-bidi: isolate;">{{ r.amount }}</span></span>
+                    </sc-if>
+                    <sc-if value="{{ r.paid }}" hint-placeholder-val="{{ false }}">
+                      <span style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-500); white-space: nowrap;">✓ تم الدفع <span dir="ltr" style="unicode-bidi: isolate;">{{ r.amount }}</span></span>
+                    </sc-if>
+                  </div>
+                  <div><span style="display: inline-flex; align-items: center; gap: 4px; border-radius: 9999px; padding: 0.25rem 0.75rem; font-size: 0.75rem; font-weight: 600; white-space: nowrap; background: {{ r.chipBg }}; color: {{ r.chipColor }};">{{ r.chipLabel }}</span></div>
+                  <div style="display: flex; gap: 6px;">
+                    <sc-if value="{{ r.hasAction }}" hint-placeholder-val="{{ true }}">
+                      <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="{{ r.actionVariant }}" hint-size="86px,36px"><span style="white-space: nowrap;">{{ r.actionLabel }}</span></x-import>
+                    </sc-if>
+                    <sc-if value="{{ r.hasNoShow }}" hint-placeholder-val="{{ false }}">
+                      <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="ghost" hint-size="60px,36px"><span style="color: var(--ih-neutral-600); white-space: nowrap;">لم يحضر</span></x-import>
+                    </sc-if>
+                    <sc-if value="{{ r.actionDone }}" hint-placeholder-val="{{ false }}">
+                      <span style="font-size: 12.5px; color: var(--ih-neutral-400);">—</span>
+                    </sc-if>
+                  </div>
+                  <div style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 16px; color: var(--ih-neutral-400); cursor: pointer;" style-hover="background: var(--ih-neutral-100)" aria-label="خيارات أخرى">⋯</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display: flex; gap: 20px; padding: 12px 4px 0; font-size: 11.5px; color: var(--ih-neutral-500);">
+              <span style="display: inline-flex; align-items: center; gap: 6px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: var(--ih-accent-200); border: 1px solid var(--ih-accent-400); display: inline-block;"></span> يحتاج تحصيل نقدي</span>
+              <span style="display: inline-flex; align-items: center; gap: 6px;"><span style="width: 3px; height: 12px; background: var(--ih-primary-400); display: inline-block;"></span> حجز جديد لم تُراجعه بعد</span>
+              <span style="display: inline-flex; align-items: center; gap: 6px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: var(--ih-neutral-100); border: 1px solid var(--ih-neutral-200); display: inline-block;"></span> مضى موعده</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </x-import>
+  </div>
+
+  <!-- ═══ Today view — empty ═══ -->
+  <div data-screen-label="لوحة الشريك — لا حجوزات اليوم">
+    <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 560 }}" url="partners.instahealth.eg/today" hint-size="1366px,560px">
+      <div dir="rtl" style="display: flex; height: 100%; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden;">
+        <div style="flex-shrink: 0; display: flex; align-self: stretch; background: var(--ih-surface-sidebar);">
+          <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.SidebarNav" brand="بوابة الشركاء" items="{{ navItems }}" active="{{ 0 }}" style="{{ sidebarStyle }}" hint-size="220px,100%"></x-import>
+        </div>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); box-shadow: var(--ih-shadow-sm); padding: 12px 24px; display: flex; align-items: center; gap: 20px; min-height: 56px; box-sizing: border-box;">
+            <div style="display: flex; flex-direction: column; gap: 1px;">
+              <div style="font-size: 16px; font-weight: 800; color: var(--ih-neutral-800);">معامل سريدار — فرع التجمع الخامس</div>
+              <div style="font-size: 12.5px; color: var(--ih-neutral-500);">الثلاثاء ٢٨ يوليو ٢٠٢٦</div>
+            </div>
+            <div style="width: 1px; height: 32px; background: var(--ih-neutral-200);"></div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="display: flex; gap: 3px;">
+                <div style="width: 14px; height: 8px; border-radius: 2px; background: var(--ih-neutral-200);"></div>
+                <div style="width: 14px; height: 8px; border-radius: 2px; background: var(--ih-neutral-200);"></div>
+                <div style="width: 14px; height: 8px; border-radius: 2px; background: var(--ih-neutral-200);"></div>
+                <div style="width: 14px; height: 8px; border-radius: 2px; background: var(--ih-neutral-200);"></div>
+                <div style="width: 14px; height: 8px; border-radius: 2px; background: var(--ih-neutral-200);"></div>
+              </div>
+              <div style="font-size: 12.5px; color: var(--ih-neutral-600);"><span style="font-weight: 700; color: var(--ih-neutral-800);">٠/٥</span> محجوز اليوم</div>
+            </div>
+            <div style="flex: 1;"></div>
+            <div style="display: flex; align-items: center; gap: 8px; padding-right: 16px; border-right: 1px solid var(--ih-neutral-200);">
+              <div style="width: 32px; height: 32px; border-radius: 999px; background: var(--ih-primary-50); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--ih-primary-700);">م</div>
+              <div style="display: flex; flex-direction: column;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-700);">مكتب الاستقبال</span>
+                <span style="font-size: 11px; color: var(--ih-neutral-500); cursor: pointer; text-decoration: underline;">تسجيل خروج</span>
+              </div>
+            </div>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; padding: 40px;">
+            <div style="width: 72px; height: 72px; border-radius: 999px; background: var(--ih-primary-50); display: flex; align-items: center; justify-content: center; font-size: 30px;" aria-hidden="true">📋</div>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <div style="font-size: 17px; font-weight: 700; color: var(--ih-neutral-800);">لا توجد حجوزات اليوم</div>
+              <p style="margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--ih-neutral-600); max-width: 420px;">ستظهر الحجوزات الجديدة هنا تلقائياً بمجرد وصولها — لا حاجة لتحديث الصفحة.</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ih-neutral-500); background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 999px; padding: 6px 14px;">
+              <span style="width: 7px; height: 7px; border-radius: 50%; background: var(--ih-success); display: inline-block;"></span> متصل — التحديث فوري
+            </div>
+          </div>
+        </div>
+      </div>
+    </x-import>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1460, &quot;height&quot;: 1420}, &quot;soundAlerts&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: false, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Realtime&quot;}}">
+class Component extends DCLogic {
+  state = { soundOn: false, dismissedNew: false, marked: {} };
+  ROWS = [
+    { time: "١٢:٣٠م", patient: "منى إبراهيم", phone: "+20 10 2244 8890", services: "فيتامين د", amount: "350 EGP", paid: true, status: "completed", state: "past" },
+    { time: "١:٠٠م", patient: "خالد سيد", phone: "+20 12 8871 4402", services: "وظائف كبد · وظائف كلى", amount: "340 EGP", cash: true, status: "arrived", state: "past" },
+    { time: "٢:٠٠م", patient: "أحمد محمود", phone: "+20 10 1234 5678", services: "صورة دم كاملة · سكر صائم", prep: true, amount: "165 EGP", cash: true, status: "confirmed" },
+    { time: "٢:٣٠م", patient: "نورهان فتحي", phone: "+20 11 5566 7788", services: "دهون ثلاثية وكوليسترول ‏+٢ أخرى", prep: true, amount: "620 EGP", paid: true, status: "confirmed" },
+    { time: "٣:٠٠م", patient: "سارة عبد الله", phone: "+20 12 3344 5566", services: "صورة دم كاملة", amount: "120 EGP", paid: true, status: "confirmed", isNew: true },
+    { time: "٤:٠٠م", patient: "مصطفى رجب", phone: "+20 15 9900 1122", services: "سكر صائم", prep: true, amount: "45 EGP", cash: true, status: "pending_payment" },
+    { time: "٤:٣٠م", patient: "هدى كمال", phone: "+20 10 7788 9900", services: "وظائف كلى", amount: "160 EGP", cash: true, status: "cancelled", state: "past" },
+  ];
+  CHIPS = {
+    pending_payment: { label: "بانتظار الدفع", bg: "var(--ih-warning-bg)", color: "#92600A" },
+    confirmed: { label: "مؤكد", bg: "var(--ih-success-bg)", color: "#028090" },
+    arrived: { label: "وصل", bg: "var(--ih-primary-50)", color: "var(--ih-primary-700)" },
+    completed: { label: "مكتمل", bg: "var(--ih-neutral-100)", color: "var(--ih-neutral-700)" },
+    no_show: { label: "لم يحضر", bg: "var(--ih-neutral-100)", color: "#991B1B" },
+    cancelled: { label: "ملغي", bg: "var(--ih-error-bg)", color: "var(--ih-error)" },
+  };
+  renderVals() {
+    const soundOn = this.state.soundOn;
+    const booked = this.ROWS.filter(r => r.status !== "cancelled").length;
+    const capacity = 8;
+    const toAr = s => String(s).replace(/[0-9]/g, c => "٠١٢٣٤٥٦٧٨٩"[+c]);
+    return {
+      navItems: [
+        { icon: "📋", label: "اليوم" },
+        { icon: "📅", label: "الأيام القادمة" },
+        { icon: "💰", label: "الخدمات والأسعار" },
+        { icon: "🕐", label: "المواعيد المتاحة" },
+        { icon: "🏥", label: "بيانات الفرع" },
+      ],
+      sidebarStyle: { height: "100%", alignSelf: "stretch", flexShrink: 0, boxSizing: "border-box" },
+      fillPips: Array.from({ length: capacity }, (_, i) => ({
+        bg: i < booked ? "var(--ih-primary-400)" : "var(--ih-neutral-200)",
+      })),
+      fillLabel: toAr(booked) + "/" + toAr(capacity),
+      soundOn,
+      soundIcon: soundOn ? "🔔" : "🔕",
+      soundBg: soundOn ? "var(--ih-primary-50)" : "var(--ih-neutral-0)",
+      soundBorder: soundOn ? "var(--ih-primary-400)" : "var(--ih-neutral-200)",
+      soundColor: soundOn ? "var(--ih-primary-700)" : "var(--ih-neutral-600)",
+      onToggleSound: () => this.setState(s => ({ soundOn: !s.soundOn })),
+      hasNew: !this.state.dismissedNew,
+      onDismissNew: () => this.setState({ dismissedNew: true }),
+      stop: (e) => { e.preventDefault(); e.stopPropagation(); },
+      rows: this.ROWS.map(r => {
+        const st = this.state.marked[r.patient] || r.status;
+        const past = r.state === "past";
+        const isNew = r.isNew && !this.state.dismissedNew;
+        const action =
+          st === "confirmed" || st === "pending_payment" ? { label: "وصل", variant: "primary" } :
+          st === "arrived" ? { label: "تمت الخدمة", variant: "primary" } : null;
+        const chip = this.CHIPS[st] || this.CHIPS.confirmed;
+        return {
+          ...r, status: st,
+          chipLabel: chip.label, chipBg: chip.bg, chipColor: chip.color,
+          tel: "tel:" + r.phone.replace(/[^\d+]/g, ""),
+          cls: isNew ? "ih-new-row" : "",
+          anim: isNew ? "ih-arrive 900ms cubic-bezier(0.22,1,0.36,1) 2" : "none",
+          rowBg: past && st !== "arrived" ? "var(--ih-neutral-50)" : "var(--ih-neutral-0)",
+          edge: isNew ? "var(--ih-primary-400)" : "transparent",
+          opacity: st === "cancelled" ? 0.6 : 1,
+          timeColor: past ? "var(--ih-neutral-400)" : "var(--ih-neutral-800)",
+          hasAction: !!action,
+          actionLabel: action ? action.label : "",
+          actionVariant: action ? action.variant : "primary",
+          hasNoShow: past && (st === "confirmed" || st === "pending_payment" || st === "arrived"),
+          actionDone: !action,
+        };
+      }),
+    };
+  }
+}
+</script>
+</body>
+</html>

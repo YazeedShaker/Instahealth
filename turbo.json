@@ -4,7 +4,9 @@
     "NEXT_PUBLIC_SUPABASE_URL",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY",
     "EXPO_PUBLIC_SUPABASE_URL",
-    "EXPO_PUBLIC_SUPABASE_ANON_KEY"
+    "EXPO_PUBLIC_SUPABASE_ANON_KEY",
+    "PROVIDER_TEST_EMAIL",
+    "PROVIDER_TEST_PASSWORD"
   ],
   "tasks": {
     "build": {
@@ -12,9 +14,18 @@
       "outputs": [".next/**", "!.next/cache/**", "dist/**", ".expo/**"]
     },
     "lint": {},
-    "typecheck": { "dependsOn": ["^build"] },
-    "test:unit": { "dependsOn": ["^build"] },
-    "test:e2e": { "dependsOn": ["build"] },
-    "dev": { "cache": false, "persistent": true }
+    "typecheck": {
+      "dependsOn": ["^build"]
+    },
+    "test:unit": {
+      "dependsOn": ["^build"]
+    },
+    "test:e2e": {
+      "dependsOn": ["build"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
   }
 }

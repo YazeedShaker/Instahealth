@@ -4,11 +4,14 @@
 import { cairoWallClockToInstant } from './format'
 import type { ConfirmedBookingService, PaymentMethod } from './payment'
 
-/** Exactly the `bookings.status` CHECK constraint. */
+/** Exactly the `bookings.status` CHECK constraint. `arrived` was added in
+ * migration 20260728141703 (P01): the patient is at the desk but the service
+ * has not been delivered yet. */
 export const BOOKING_STATUSES = [
   'pending',
   'pending_payment',
   'confirmed',
+  'arrived',
   'completed',
   'cancelled',
   'no_show',
@@ -54,7 +57,7 @@ export type BookingTab = 'upcoming' | 'past'
 
 /** Colour is never the only signal (PRODUCT.md §3) — a tone ALWAYS travels with
  * its Arabic label so a colourblind patient reads the same state. */
-export type BookingStatusTone = 'success' | 'warning' | 'neutral' | 'error'
+export type BookingStatusTone = 'success' | 'warning' | 'neutral' | 'error' | 'info'
 
 export interface BookingStatusChip {
   labelAr: string
@@ -64,6 +67,10 @@ export interface BookingStatusChip {
 const STATUS_CHIPS: Record<BookingStatus, BookingStatusChip> = {
   confirmed: { labelAr: 'مؤكد', tone: 'success' },
   pending: { labelAr: 'قيد التأكيد', tone: 'warning' },
+  // The patient is at the desk. Only the provider dashboard writes this, but
+  // the patient app must render it too — a patient checking حجوزاتي while
+  // standing at reception should not see a blank chip.
+  arrived: { labelAr: 'وصل', tone: 'info' },
   // Flow debris — `get_patient_bookings` filters it out, but the mapping is
   // exhaustive so a leaked row renders honestly instead of blank.
   pending_payment: { labelAr: 'بانتظار الدفع', tone: 'warning' },
@@ -79,7 +86,10 @@ const STATUS_CHIPS: Record<BookingStatus, BookingStatusChip> = {
  * payment line (`getBookingPaymentLabelAr`), because collapsing it into the
  * status chip would make an unpaid-but-confirmed booking look unconfirmed.
  */
-export function getBookingStatusChip(booking: PatientBooking): BookingStatusChip {
+// Takes the STATUS-bearing shape rather than a whole PatientBooking so the
+// provider dashboard's BranchBooking uses the identical chip without a cast —
+// one source, two surfaces, no drift.
+export function getBookingStatusChip(booking: { status: BookingStatus }): BookingStatusChip {
   return STATUS_CHIPS[booking.status]
 }
 
@@ -88,15 +98,24 @@ export function getBookingStatusChip(booking: PatientBooking): BookingStatusChip
  * renders: prepaid bookings say so, cash bookings tell the patient they still
  * owe money at the branch.
  */
-export function getBookingPaymentLabelAr(booking: PatientBooking): string {
+export function getBookingPaymentLabelAr(booking: {
+  paymentStatus: BookingPaymentStatus
+  method: PaymentMethod | string | null
+}): string {
   if (booking.paymentStatus === 'paid') return 'تم الدفع'
   if (booking.paymentStatus === 'refunded') return 'تم رد المبلغ'
   if (booking.method === 'cash' || booking.paymentStatus === 'cash') return 'الدفع عند الوصول'
   return 'لم يتم الدفع بعد'
 }
 
-/** Statuses that are still "live" — the appointment may yet happen. */
-const LIVE_STATUSES: readonly BookingStatus[] = ['pending', 'pending_payment', 'confirmed']
+/** Statuses that are still "live" — the appointment may yet happen. `arrived`
+ * counts: the patient is there and the service is still to come. */
+const LIVE_STATUSES: readonly BookingStatus[] = [
+  'pending',
+  'pending_payment',
+  'confirmed',
+  'arrived',
+]
 
 /** The moment the appointment starts, as a real instant. */
 export function getBookingStartsAt(booking: PatientBooking): Date {

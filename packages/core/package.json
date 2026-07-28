@@ -14,7 +14,7 @@
     "test:unit": "vitest run --coverage"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.49.0",
+    "@supabase/supabase-js": "^2.111.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {

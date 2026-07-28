@@ -21,7 +21,7 @@ Keep **Current status** and **Next up** accurate at all times.
 
 ## Current status
 
-**Phase:** Booking loop COMPLETE on mobile (F01→F07: discover → select → hold → review → pay → confirmed → manage/cancel). Next: P01–P06 provider dashboard (closes the loop); F03 Search and F08–F09 still open
+**Phase:** 🎉 **MILESTONE ONE — the loop is closed.** Patient books on mobile (F01→F07) → the branch desk sees it and records the outcome (P01). Next: P02–P06 dashboard; F03 Search and F08–F09 still open
 **Milestone target:** Labs + Scans booking working end-to-end at Town Hospital & Saridar Labs
 **Environment:** Supabase `instahealth-dev` live (Frankfurt). Design system published in Claude Design.
 Core patient screens approved. Monorepo scaffolded — both app shells boot with tokens/fonts/RTL.
@@ -57,7 +57,8 @@ visual contract. Then specs → Claude Code.
 - [ ] **F03** — Mobile: search (rides on F04's branch route)
 - [x] **F05** — ✅ DONE. Mobile: slot picker + 10-min hold + review + pending booking (see Shipped)
 - [x] **F06** — ✅ DONE. Mobile: payment (mock provider) + settle-payment + confirmation + SMS (see Shipped)
-- [ ] **P01–P06** — Web: provider dashboard. **UNBLOCKED AND NOW THE CRITICAL PATH** — real confirmed bookings with payment rows exist in dev; a receptionist has nothing to see them on.
+- [x] **P01** — ✅ DONE. Web: provider auth, shell & Today view — **MILESTONE ONE, loop closed** (see Shipped)
+- [ ] **P02–P06** — Web: booking detail drawer + cancel-on-behalf, upcoming days, prices editor, slot allocation
 - [x] **F07** — ✅ DONE. Mobile: My Bookings list, detail & cancel (see Shipped)
 - [ ] **F08–F09** — Mobile: reviews, profile
 - [ ] **A01–A06** — Web: admin panel
@@ -69,6 +70,141 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 ---
 
 ## Shipped
+
+### 2026-07-28 · P01 — Provider Dashboard: auth, shell & Today view (web) — 🎉 MILESTONE ONE
+
+**The loop is closed.** A patient books on a phone → the branch's desk sees it →
+the desk records what happened. `apps/web` is a real product for the first time.
+
+**⚠ THIRD SECURITY-SHAPED DECISION, made BEFORE writing the function this time.**
+F06 and F07 each shipped a SECURITY DEFINER function that trusted an id
+(`confirm_booking`, then `cancel_booking`). P01 adds two more —
+`mark_booking_outcome` and `get_branch_bookings_for_date` — and both open with
+the branch-membership check, return `booking_not_found` to non-staff (never
+confirming an id exists), and were granted explicitly to `authenticated` +
+`service_role` only. The NULL-safety trap is handled too: `get_provider_branch_ids()`
+returns NULL for a non-provider, so every membership test is wrapped in
+`COALESCE(..., FALSE)` — without it the OR-chain evaluates to NULL and an
+`IF NOT (...)` falls through to ALLOW.
+
+**The Today view cannot be built from table queries — and that shaped the whole
+feature.** `users` has no provider SELECT policy (only `id = auth.uid()` or
+admin), so a receptionist cannot read the patient name and phone the desk exists
+to use. Widening a PII table's RLS for every provider would have been a far
+worse trade than one scoped function, so reads go through
+`get_branch_bookings_for_date` — same shape as F07's `get_patient_bookings`.
+This is the pattern for every provider-facing read: add columns to the function,
+don't join from the client.
+
+**The outcome workflow** (answering F07's open decision #1 — _who marks the
+outcome_): `arrived` was added to the status constraint, plus `arrived_at` and
+`no_show_at` timestamps. `mark_booking_outcome` enforces
+`confirmed|pending_payment → arrived|no_show` and `arrived → completed|no_show`
+and nothing else; completed/cancelled are terminal. Re-marking a state a booking
+is already in is an idempotent no-op success, so a double-clicked وصل cannot
+raise a second error toast.
+
+**Cash completion IS the payment event — the DB-contract interpretation, made
+explicit.** `confirm_booking` writes a cash booking as
+`bookings.payment_status='cash'` + `payments.status='pending'` (read from
+20260616164733, not assumed). Marking it completed flips both to `paid` /
+`completed`. Prepaid bookings are already settled and are left untouched; a
+no-show never becomes paid.
+
+**Realtime is the BROADCAST pattern, NOT postgres_changes — a deliberate
+deviation from the spec.** SPEC-P01 §C asks for a postgres_changes subscription.
+ENGINEERING-WORKFLOW §5 records why this repo rejected exactly that
+("postgres_changes would leak RLS-hidden rows or deliver nothing"), and
+`supabase_realtime` publishes **zero tables** today — verified. So P01 follows
+migration 20260726205901: a trigger broadcasts `{booking_id, op, status}` to the
+private topic `branch-bookings:{branch_id}`, and the dashboard refetches through
+the RLS-scoped function. Receive-side auth is stricter than the hold topics:
+those are open to any patient, this one requires the topic's branch to be one
+the caller actually works at. **Founder call if you want the spec's version
+instead** — it would mean publishing `bookings` and accepting per-subscriber RLS
+filtering on every row.
+
+**Web foundation (the choices that carry):** `@supabase/ssr` with `getUser()`
+everywhere — never `getSession()`, which trusts an unverified cookie. Middleware
+answers "signed in?" and refreshes the token on every request; the dashboard
+layout answers "staff?" once, server-side, where the answer is needed anyway —
+a provider_users lookup is too expensive to run in middleware. The login action
+signs a non-provider straight back OUT rather than leaving a half-authenticated
+session on a shared front desk. Branch id is derived server-side from
+provider_users and never read from a URL. Anon key only — the service-role key
+would bypass every check the feature relies on.
+
+**Verified against the LIVE dev DB and in a REAL BROWSER:**
+
+- Node, 24 checks: provider login works (the seeded auth rows are hand-written —
+  see below) · `get_user_role` resolves to `provider` by TABLE LOOKUP, not a JWT
+  claim · a Saridar receptionist gets **zero rows** for a Town branch · a patient
+  gets zero rows and cannot mark an outcome · every legal and illegal transition
+  · double-click idempotency · cash completion flips `payment_status` AND
+  `payments.status` · terminal states refuse further transitions.
+- Realtime, 3 checks: a new booking INSERT, its confirmation, and an outcome
+  change all reach a subscribed desk.
+- Browser: signed in as the Town receptionist → Today view rendered the branch,
+  the Cairo date, `٣/٥ محجوز اليوم`, and rows with patient/phone/services/prep/
+  payment/chip/actions → clicked وصل → chip flipped and the action became
+  تمت الخدمة → clicked it → DB confirmed `completed`, `payment_status=paid`,
+  both timestamps stamped.
+
+**Dev provider accounts** (`supabase/seeds/003_provider_users.sql`):
+`reception@townhospital.eg`, `reception2@townhospital.eg`,
+`reception@saridarlabs.com`. The password is **deliberately not committed** —
+it is supplied to the seed as `:provider_password` at run time and to Playwright
+via `PROVIDER_TEST_PASSWORD`. A dev password in the repo is still a hardcoded
+credential (CLAUDE.md §8); GitGuardian caught exactly that on the first push of
+this PR and was right to.
+⚠ The `auth.users` rows are hand-written SQL because **no service-role key was
+available to the session**; the Admin API is the normal path. Both `auth.users`
+AND `auth.identities` rows are required (an identity-less user cannot sign in),
+and login was PROVEN from Node afterwards. If these are ever regenerated, prove
+it again rather than assuming.
+
+**Decisions / deviations:**
+
+- **Realtime broadcast instead of postgres_changes** — see above. Flagged.
+- **Multi-branch is out of scope and FLAGGED**: `provider_users.branch_ids` is an
+  ARRAY, so a user can legitimately have several. P01 takes the first. A branch
+  switcher is P03+ work.
+- **Sidebar items for P02+ render DISABLED, not hidden** — the receptionist sees
+  where the product is going without hitting dead links.
+- **`arrived` reaches the PATIENT app too.** `BOOKING_STATUSES` is shared, and
+  TypeScript's exhaustive `Record` caught the missing mobile chip immediately —
+  a patient checking حجوزاتي while standing at the desk now sees «وصل» rather
+  than a blank chip. A new `info` tone was added for it.
+- **`@supabase/supabase-js` bumped to ^2.111.0 across the workspace** —
+  `@supabase/ssr` requires it. One version for all three packages beats two
+  copies. Mobile Metro export and all mobile tests pass on it, but this is the
+  one change in this PR that touches the shipped mobile app.
+- **`getBookingStatusChip` / `getBookingPaymentLabelAr` now take the
+  status/payment-bearing SHAPE**, not a whole `PatientBooking`, so the dashboard
+  reuses them without a cast. One source, two surfaces, no drift.
+
+**Known issue — not blocking, needs one look:** after marking an outcome in the
+browser the connection dot flipped from «التحديث فوري» to «غير متصل», with no
+console errors. Realtime delivery itself is PROVEN at the channel level (3/3
+Node checks) and the fallbacks (focus refetch + 60s poll) keep the list correct
+either way, so this is likely the status callback of a torn-down channel under
+React StrictMode's double-effect in dev — but it is user-visible and should be
+confirmed against a production build before P02.
+
+**For P02 (booking detail drawer + cancel-on-behalf) and P03 (upcoming days) —
+hand-off:**
+
+- `BookingRow`, `StatusChip` and core's `getPrimaryOutcomeAction` /
+  `canMarkNoShow` / `getBranchPaymentLabelAr` are the row APIs to reuse. The
+  transition table in `provider-bookings.ts` mirrors `mark_booking_outcome`
+  exactly — change one, change both, in the same PR.
+- P03 needs `get_branch_bookings_for_date` with a different date, nothing more —
+  it already takes the date as a parameter.
+- P02's cancel-on-behalf calls `cancel_booking`, which since F07 requires the
+  caller to be branch staff and **exempts provider/admin from the slot-start
+  boundary** — reception can cancel a past booking, a patient cannot.
+- Open business decision #2 (commission attachment) is now _computable_:
+  `arrived_at` / `completed_at` / `no_show_at` are populated. Still unratified.
 
 ### 2026-07-28 · F07 — My Bookings: list, detail & cancel (mobile)
 
