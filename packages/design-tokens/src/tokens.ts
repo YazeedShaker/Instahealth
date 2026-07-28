@@ -51,6 +51,10 @@ export const colors = {
     warningText: '#92600A',
     error: '#DC2626',
     errorBg: '#FEE2E2',
+    // Same pattern as the warning pairing above: #DC2626 on #FEE2E2 is only
+    // ~4.3:1, which fails AA for the 12px helper text in the payment-failure
+    // design. #991B1B on #FEE2E2 is ~7:1.
+    errorText: '#991B1B',
     info: '#028090',
     infoBg: '#E0F2F4',
   },

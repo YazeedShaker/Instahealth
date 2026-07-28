@@ -36,6 +36,22 @@ export const errorMessages = {
     ar: 'التعليق طويل جداً (الحد الأقصى ٥٠٠ حرف)',
     en: 'Comment is too long (max 500 characters)',
   },
+  'payment.outcomeInvalid': {
+    ar: 'نتيجة دفع غير صالحة',
+    en: 'Invalid payment outcome',
+  },
+  'payment.bookingIdInvalid': {
+    ar: 'معرّف الحجز غير صالح',
+    en: 'Invalid booking identifier',
+  },
+  'payment.providerRefRequired': {
+    ar: 'مرجع عملية الدفع مفقود',
+    en: 'Payment reference is missing',
+  },
+  'payment.providerRefTooLong': {
+    ar: 'مرجع عملية الدفع طويل جداً',
+    en: 'Payment reference is too long',
+  },
   'common.uuid.invalid': {
     ar: 'معرّف غير صالح',
     en: 'Invalid identifier',

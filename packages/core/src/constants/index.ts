@@ -12,3 +12,14 @@ export const CURRENCY = 'EGP'
 export const EGYPT_DIAL_CODE = '+20'
 export const OTP_LENGTH = 6
 export const OTP_RESEND_SECONDS = 60
+
+/**
+ * Supabase Auth static test numbers (fixed OTP `123456`, real sessions issued,
+ * no SMS sent by the auth provider). Used by every E2E flow and by the Node
+ * verification scripts.
+ *
+ * ⚠ NOTHING may send a real SMS to these numbers — they are not real phones.
+ * `settle-payment` skips the confirmation SMS for them; keep that guard in step
+ * with this list (the Edge Function mirrors it).
+ */
+export const STATIC_TEST_PHONES = ['+201000000001', '+201000000002'] as const

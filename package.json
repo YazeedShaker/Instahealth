@@ -16,7 +16,7 @@
     "test:e2e": "turbo test:e2e",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "gen:types": "supabase gen types typescript --project-id yesxxpkyelhyojkxgmcb > packages/core/src/types/database.ts"
+    "gen:types": "node scripts/gen-types.mjs"
   },
   "pnpm": {
     "overrides": {

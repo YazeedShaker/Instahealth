@@ -167,3 +167,60 @@ describe('booking flow state (F05)', () => {
     expect(state.notes).toBe('ملاحظة')
   })
 })
+
+// The confirm → /confirmation hand-off. Clearing the store is what defuses the
+// cleanup landmine, but it ALSO empties the two fields the flow guards read —
+// so the clear and the stand-down flag must land in ONE update, or the layout
+// redirects to /home and the payment screen to /slot while the replace to
+// /confirmation is still in flight (device symptom: the next booking opened a
+// blank, unclickable flow).
+describe('confirmation hand-off (F06)', () => {
+  beforeEach(() => {
+    useBookingStore.getState().reset()
+    useBookingStore.getState().openBranch('branch-1', 'ساريدار — الدقي')
+    useBookingStore.getState().toggleService(makeService())
+    useBookingStore.getState().setHold(HOLD)
+    useBookingStore.getState().setPendingBooking({ id: 'bk-1', bookingRef: null, slotId: 'slot-1' })
+  })
+
+  it('completeBooking clears the flow state the cleanup watcher acts on', () => {
+    useBookingStore.getState().completeBooking()
+
+    const state = useBookingStore.getState()
+    expect(state.hold).toBeNull()
+    expect(state.pendingBooking).toBeNull()
+  })
+
+  it('completeBooking clears the selection AND raises the hand-off flag together', () => {
+    useBookingStore.getState().completeBooking()
+
+    const state = useBookingStore.getState()
+    // Both guards' inputs are empty — only the flag keeps them from navigating.
+    expect(state.selectedServices).toEqual([])
+    expect(state.branchId).toBeNull()
+    expect(state.confirmedHandoff).toBe(true)
+  })
+
+  it('the flag is lowered once the confirmation screen has mounted', () => {
+    useBookingStore.getState().completeBooking()
+    useBookingStore.getState().clearConfirmedHandoff()
+    expect(useBookingStore.getState().confirmedHandoff).toBe(false)
+  })
+
+  it('reset does NOT raise the flag — only a confirmed booking does', () => {
+    useBookingStore.getState().reset()
+    expect(useBookingStore.getState().confirmedHandoff).toBe(false)
+  })
+
+  it('the next booking starts with the guards armed again', () => {
+    useBookingStore.getState().completeBooking()
+    useBookingStore.getState().clearConfirmedHandoff()
+    useBookingStore.getState().openBranch('branch-2', 'مستشفى تاون')
+    useBookingStore.getState().toggleService(makeService({ id: 'b' }))
+
+    const state = useBookingStore.getState()
+    expect(state.confirmedHandoff).toBe(false)
+    expect(state.selectedServices).toHaveLength(1)
+    expect(state.hold).toBeNull()
+  })
+})

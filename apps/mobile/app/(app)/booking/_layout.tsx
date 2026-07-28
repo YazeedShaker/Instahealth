@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { BookingStepsHeader } from '../../../components/booking/BookingStepsHeader'
 import { HoldChip } from '../../../components/booking/HoldChip'
 import { HoldExpiredModal } from '../../../components/booking/HoldExpiredModal'
-import { cancelPendingBooking } from '../../../features/booking/api'
+import { handleHoldExpired } from '../../../features/booking/expiry'
 import { useBookingStore } from '../../../features/booking/store'
 
 const STEP_BY_SEGMENT: Record<string, number> = { slot: 1, review: 2, payment: 3 }
@@ -29,9 +29,12 @@ export default function BookingFlowLayout() {
 
   const selectionCount = useBookingStore((state) => state.selectedServices.length)
   const hold = useBookingStore((state) => state.hold)
+  // ONE source of truth for "the hold is gone" — set by this layout's timer OR
+  // by the payment screen when `settle-payment` refuses with `hold_expired`.
+  const holdExpired = useBookingStore((state) => state.holdExpired)
+  const confirmedHandoff = useBookingStore((state) => state.confirmedHandoff)
 
   const [nowMs, setNowMs] = useState(() => Date.now())
-  const [isExpiredModalVisible, setIsExpiredModalVisible] = useState(false)
 
   // 1s tick while a hold is live — drives the chip and expiry detection.
   useEffect(() => {
@@ -43,23 +46,12 @@ export default function BookingFlowLayout() {
   const remainingSeconds =
     hold !== null ? getRemainingHoldSeconds(new Date(hold.expiresAt), new Date(nowMs)) : null
 
-  // Expiry while inside the flow → clear the dead hold + stale pending
-  // booking, then the modal routes back to a refreshed picker.
+  // Expiry while inside the flow → the shared teardown (clears the dead hold +
+  // stale pending booking and raises the flag this layout's modal renders off).
   useEffect(() => {
     if (remainingSeconds === null || remainingSeconds > 0) return
-    const {
-      hold: currentHold,
-      pendingBooking,
-      clearHold,
-      clearPendingBooking,
-    } = useBookingStore.getState()
-    if (currentHold === null) return
-    clearHold()
-    if (pendingBooking !== null) {
-      clearPendingBooking()
-      void cancelPendingBooking(pendingBooking.id, 'hold_expired')
-    }
-    setIsExpiredModalVisible(true)
+    if (useBookingStore.getState().hold === null) return
+    handleHoldExpired()
   }, [remainingSeconds])
 
   // Flow-exit teardown lives in (app)/_layout's segments watcher — pure
@@ -69,7 +61,10 @@ export default function BookingFlowLayout() {
   // patient + server expiry + the 5-min cron self-heal.)
 
   // Guard: no selection → nothing to book (deep entry, session restore…).
-  if (selectionCount === 0) {
+  // Suspended during the confirmation hand-off: the selection is empty because
+  // the booking just SUCCEEDED, and redirecting here would race the payment
+  // screen's replace to /confirmation (see store.confirmedHandoff).
+  if (selectionCount === 0 && !confirmedHandoff) {
     return <Redirect href="/(app)/home" />
   }
 
@@ -77,7 +72,7 @@ export default function BookingFlowLayout() {
   const currentStep = STEP_BY_SEGMENT[currentSegment] ?? 1
 
   const handlePickAgain = () => {
-    setIsExpiredModalVisible(false)
+    useBookingStore.getState().setHoldExpired(false)
     void queryClient.invalidateQueries({ queryKey: ['booking', 'slots'] })
     router.dismissTo('/(app)/booking/slot')
   }
@@ -110,7 +105,7 @@ export default function BookingFlowLayout() {
         <Stack.Screen name="review" />
         <Stack.Screen name="payment" />
       </Stack>
-      <HoldExpiredModal visible={isExpiredModalVisible} onPickAgain={handlePickAgain} />
+      <HoldExpiredModal visible={holdExpired} onPickAgain={handlePickAgain} />
     </SafeAreaView>
   )
 }

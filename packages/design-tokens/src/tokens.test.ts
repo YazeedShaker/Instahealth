@@ -27,4 +27,11 @@ describe('design tokens', () => {
     expect(nativewindTheme.colors['ih-primary'][400]).toBe(colors.primary[400])
     expect(nativewindTheme.colors['ih-accent'][300]).toBe(colors.accent[300])
   })
+
+  test('semantic error pairing meets AA for small text on the error background', () => {
+    // The payment-failure design puts 12px helper text on --ih-error-bg.
+    // colors.semantic.error would fail AA there; errorText is the pairing.
+    expect(colors.semantic.errorBg).toBe('#FEE2E2')
+    expect(colors.semantic.errorText).toBe('#991B1B')
+  })
 })

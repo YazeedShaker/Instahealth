@@ -31,6 +31,82 @@ const TIME_FORMATTERS: Record<SupportedLocale, Intl.DateTimeFormat> = {
   }),
 }
 
+// Structured parts, never a formatted string. `formatToParts` is the ONLY safe
+// way to read a zoned wall clock across engines — see cairoWallClockToInstant.
+const CAIRO_PARTS_FORMATTER = new Intl.DateTimeFormat('en-US', {
+  timeZone: EGYPT_TIME_ZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hourCycle: 'h23',
+})
+
+const MS_PER_SECOND = 1000
+
+function readPart(parts: Intl.DateTimeFormatPart[], type: Intl.DateTimeFormatPartTypes): number {
+  return Number(parts.find((part) => part.type === type)?.value)
+}
+
+/** Cairo's offset from UTC at a given instant, in ms. Derived, not assumed —
+ * Egypt has re-introduced DST before and may again. */
+function cairoOffsetMsAt(instant: Date): number {
+  const parts = CAIRO_PARTS_FORMATTER.formatToParts(instant)
+  const cairoWallClockAsUtc = Date.UTC(
+    readPart(parts, 'year'),
+    readPart(parts, 'month') - 1,
+    readPart(parts, 'day'),
+    readPart(parts, 'hour'),
+    readPart(parts, 'minute'),
+    readPart(parts, 'second'),
+  )
+  // The parts carry no milliseconds, so compare against a whole-second instant
+  // or every offset picks up a spurious sub-second remainder.
+  const instantAtSecond = Math.floor(instant.getTime() / MS_PER_SECOND) * MS_PER_SECOND
+  return cairoWallClockAsUtc - instantAtSecond
+}
+
+const SLOT_DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/
+const SLOT_TIME_RE = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/
+
+/**
+ * Turns an Egypt WALL-CLOCK `slot_date` + `slot_time` (the DB stores no zone)
+ * into the real instant, whatever timezone the device is in. A patient whose
+ * phone is on GMT must still get a reminder at the Cairo hour they booked.
+ *
+ * ⚠ Do NOT reimplement this as
+ * `new Date(d.toLocaleString('en-US', { timeZone })).getTime() - …`. That
+ * round-trip only works on V8: it formats to `"7/28/2026, 3:00:00 PM"` and
+ * relies on `Date`'s parser accepting it. **Hermes parses only ISO 8601**, so on
+ * a real device it returns Invalid Date, the offset becomes `NaN`, and the
+ * resulting Date blows up as `RangeError: Date value out of bounds` at the far
+ * end (found on an iPhone — add-to-calendar failed for every booking).
+ * `formatToParts` reads the same information structurally and never parses.
+ *
+ * @throws if either value is malformed — callers pass DB columns, so a bad
+ * shape is a bug, not a user input to tolerate.
+ */
+export function cairoWallClockToInstant(slotDate: string, slotTime: string): Date {
+  const dateMatch = SLOT_DATE_RE.exec(slotDate)
+  const timeMatch = SLOT_TIME_RE.exec(slotTime)
+  if (dateMatch === null) throw new Error(`cairoWallClockToInstant: bad slotDate "${slotDate}"`)
+  if (timeMatch === null) throw new Error(`cairoWallClockToInstant: bad slotTime "${slotTime}"`)
+
+  const naiveUtc = Date.UTC(
+    Number(dateMatch[1]),
+    Number(dateMatch[2]) - 1,
+    Number(dateMatch[3]),
+    Number(timeMatch[1]),
+    Number(timeMatch[2]),
+    Number(timeMatch[3] ?? 0),
+  )
+  // Cairo sits within a day of UTC, so the offset read at the naive instant is
+  // the offset that applies at the true one.
+  return new Date(naiveUtc - cairoOffsetMsAt(new Date(naiveUtc)))
+}
+
 const ARABIC_INDIC_DIGITS = '٠١٢٣٤٥٦٧٨٩'
 
 /** Renders Western digits as Arabic-Indic for display (timers, distances, counters). */

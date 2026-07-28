@@ -67,6 +67,12 @@ pnpm audit --audit-level=high
 - Coverage thresholds are enforced in vitest configs (core: 95/95/95/90 on
   business + schemas + constants; currently at 100% lines). New core code
   needs tests that keep the bar — don't lower thresholds.
+- **`beforeEach(() => spy.mockReset())` is a trap.** `mockReset()` RETURNS the
+  mock, and vitest treats a function returned from `beforeEach` as the test's
+  TEARDOWN — so it calls your mock after every test. With a mock that throws,
+  the test fails with the mock's error while the assertion itself passed, and
+  the reported line points at the mock setup. Always use a block body:
+  `beforeEach(() => { spy.mockReset() })`.
 
 ## 4 · CI facts (so you don't re-debug them)
 
@@ -102,6 +108,20 @@ pnpm audit --audit-level=high
   `generate_branch_slots()` loop exceeds the platform statement timeout at
   ~24 branches. One `INSERT … SELECT … generate_series` does 5k+ rows fine.
 - Verify every applied change with a count/spot-check query before moving on.
+- **Postgres grants EXECUTE on every new function to PUBLIC by default.** A
+  SECURITY DEFINER function is therefore callable by any authenticated client
+  the moment it exists — `confirm_booking()` was reachable straight from the
+  app for four features (a patient could confirm their own pending booking
+  without paying). If a function must be server-only, REVOKE it explicitly
+  from PUBLIC/anon/authenticated and GRANT to service_role (migration
+  20260727111326). Check with `pg_proc.proacl`, and assume nothing.
+- **`pnpm gen:types` used to be `supabase gen types … > database.ts`.** The
+  shell truncates the redirect target BEFORE running the command, so when the
+  CLI is missing (it is not a repo dependency) the command fails and
+  `database.ts` is left EMPTY — the whole workspace then fails to typecheck for
+  a reason that looks nothing like the cause. It now runs
+  `scripts/gen-types.mjs`, which generates to a buffer, sanity-checks it, and
+  only then writes. The MCP `generate_typescript_types` tool is the fallback.
 - **`instahealth_slot_allocation` = bookings per branch per DAY, not per
   slot.** Slots are generated as exactly `allocation` capacity-1 rows/day,
   evenly spread in opening hours (24/7 branches use a 09:00–21:00 daytime
@@ -171,6 +191,83 @@ pnpm audit --audit-level=high
   (`react-native-keyboard-controller` + KeyboardAwareScrollView) needs a DEV
   BUILD — it does NOT run in Expo Go, which is the founder's only device path
   until the Apple account lands. Adopt it together with the SDK re-upgrade.
+- **Native modules must exist in Expo Go or they can't be tested at all.**
+  F06's confirmation "Lottie moment" is built with RN `Animated` instead of
+  `lottie-react-native` for this reason (the design bundle's own artifact is a
+  CSS ring animation, so there was no Lottie file and no visual gain).
+  `expo-calendar` WAS added — it ships inside Expo Go, so the founder can
+  actually test it. Check that list before reaching for a native dep.
+- **"Works on the phone, `Failed to fetch` on web" = a missing CORS preflight.**
+  Expo's web target runs the SAME client code in a browser, so any Edge Function
+  the app calls becomes cross-origin and gets an `OPTIONS` preflight first.
+  `settle-payment` answered it with the `method !== 'POST'` guard — a bare 405
+  with no `Access-Control-Allow-Origin` — and the browser surfaced
+  `TypeError: Failed to fetch` from inside supabase-js, which looks like a
+  network fault and reads nothing like CORS. Any function a CLIENT invokes needs
+  an `OPTIONS` short-circuit + CORS headers on **every** response including
+  errors. Cron/server-to-server functions (`send-sms`, `cleanup-holds`,
+  `generate-slots`, `booking-reminder`) deliberately do NOT get them. Check the
+  edge-function logs for `OPTIONS | 405` — it names the bug instantly.
+- **Never clear a store that route guards read while navigating away from it.**
+  On a confirmed booking, `reset()` cleared `selectedServices` too, so the flow
+  layout rendered `<Redirect href="/home">` (empty selection) and the payment
+  screen `<Redirect href="/slot">` (null hold) in the same commit as
+  `router.replace('/confirmation')`. Three competing navigation intents wedged
+  the navigator: the NEXT booking opened blank and unclickable, with no error to
+  show for it. The fix is an explicit stand-down flag (`confirmedHandoff`) set in
+  the SAME atomic update as the clear, lowered by the destination screen on
+  mount. Do not rely on React's batching to win the race — make the guards
+  suspend deliberately.
+- **A native dep in `package.json` is only half-installed.** `expo-calendar` was
+  added and used but never listed in `app.config.ts` `plugins`, so no
+  `NSCalendars*UsageDescription` and no Android `READ/WRITE_CALENDAR` reached any
+  real build. Expo Go hides this completely — it ships its own permission set, so
+  the feature appears to work in the only environment we can currently test in.
+  Adding a native module means: install it, add its config plugin WITH the Arabic
+  permission copy, and note that Expo Go cannot verify the plugin.
+- **A single `try/catch` around a multi-stage native call destroys the
+  diagnosis.** `addBookingToCalendar` wrapped permission + calendar lookup +
+  event creation in one `catch → 'error'`, so a device report of "تعذّرت
+  الإضافة" was indistinguishable between three unrelated causes and cost a whole
+  round-trip. Scope the handling per stage and log the real native error under
+  `__DEV__` (same pattern as `settle.ts`).
+- **`new Date(someDate.toLocaleString(...))` is a V8-only trick — it returns
+  Invalid Date on Hermes.** The old `cairoWallClockToDate` derived Cairo's UTC
+  offset by formatting to `"7/28/2026, 3:00:00 PM"` and parsing it back.
+  **Hermes' `Date` parser accepts essentially only ISO 8601**, so on a real
+  phone the parse failed, the offset became `NaN`, and the Date arrived at
+  expo-calendar as Invalid — surfacing much later as
+  `RangeError: Date value out of bounds` from `toISOString()` (Hermes' wording;
+  V8 says "Invalid time value"). Every Node script and every unit test passed
+  because they run on V8. **Read zoned wall clocks with
+  `Intl.DateTimeFormat.formatToParts` and rebuild with `Date.UTC` — never format
+  to a string and re-parse.** The conversion now lives in core as
+  `cairoWallClockToInstant`, with a test asserting the result is a VALID date.
+  Anything that must behave identically on device and in Node belongs in core
+  with a test that asserts validity, not just the value.
+- **`popToTopOnBlur` fires after the blur ANIMATION, not on blur.** On a
+  confirmed booking the flow stack is already torn down by then, so bottom-tabs
+  dispatched POP_TO_TOP at nothing and logged "The action 'POP_TO_TOP' was not
+  handled by any navigator" on every successful payment. If a screen navigates
+  away from a tab that owns a nested stack, don't also ask that stack to reset
+  itself on blur — let the route guard handle re-entry.
+- **Nested `Pressable`s are invalid HTML on web.** A card `Pressable` wrapping a
+  button `Pressable` renders `<button>` inside `<button>`, which React reports
+  as a hydration error on Expo web and which reads as two overlapping controls
+  to a screen reader on native. If the inner control triggers the SAME action as
+  the card, make it a plain `View` — the card already owns the press.
+- **NativeWind on web needs `darkMode: 'class'`.** With Tailwind's `'media'`
+  default, react-native-css-interop throws
+  "Cannot manually set color scheme, as dark mode is type 'media'" at boot when
+  its DOM observer tries to apply a scheme. Set it in `tailwind.config.ts` even
+  for a light-only app.
+- **A slot the patient just booked becomes invisible to them.** The `slots`
+  SELECT policy is `booked_count < capacity`, so the moment `confirm_booking`
+  increments a capacity-1 slot, its own booker can no longer read the row. Any
+  post-confirmation screen must render from a SERVER-built payload (F06's
+  `settle-payment` returns the whole confirmation DTO), never from a re-query.
+  `get_branch_slots` is SECURITY DEFINER and still sees it — that is why the
+  picker keeps working for everyone else.
 
 ## 7 · Core package discipline (quick reference)
 
@@ -185,6 +282,20 @@ pnpm audit --audit-level=high
   `formatDistanceAr`) lives in core — never re-implemented in an app.
 - Type badge for providers is DERIVED from branch categories (scans →
   مستشفى, labs-only → معمل تحاليل) — there is no provider-type column yet.
+- **Edge Functions CANNOT import `packages/core`** — they are standalone Deno
+  modules deployed on their own. Anything they share with core is MIRRORED by
+  hand (`send-sms` already did this for phone rules; `settle-payment` now
+  mirrors the phone, date/time, preparation and SMS-template helpers). The
+  rules that keep this honest: mark every copy `MIRRORS core <path> <name>`,
+  keep the core original unit-tested so the copy has an authority to match,
+  and change both sides in the SAME PR. Treat a growing mirror as a smell.
+- **SMS copy must be measured against REAL data, not just the length cap.**
+  The confirmation SMS composed fine and stayed under 140 chars — by silently
+  dropping the fasting instruction, because the seeded service notes are
+  written for a screen ("صيام من ٨ إلى ١٢ ساعة قبل التحليل. يُسمح بشرب الماء
+  فقط.") and never fit. SMS now sends the CONSOLIDATED rule from
+  `formatPrepSmsNoteAr` ("صيام ١٢ ساعة قبل الموعد") and the app holds the
+  detail. Print the actual message in verification scripts and read it.
 
 ## 8 · When something isn't in this file
 
@@ -192,4 +303,4 @@ If you debug a toolchain/CI/platform trap that cost you more than one
 attempt, append it to the relevant section here in the same PR. This file is
 how sessions inherit each other's scars.
 
-_Last updated: 2026-07-26 · Covers everything learned SETUP-01 → F04._
+_Last updated: 2026-07-27 · Covers everything learned SETUP-01 → F06 (incl. the F06 device-test round)._

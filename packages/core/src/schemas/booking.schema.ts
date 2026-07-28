@@ -1,10 +1,10 @@
 import { z } from 'zod'
 
+import { PAYMENT_METHODS } from '../business/payment'
 import { uuidSchema } from './common.schema'
 
-// Payment methods accepted by the bookings CHECK constraint / confirm_booking().
-export const PAYMENT_METHODS = ['card', 'fawry', 'vodafone_cash', 'orange_cash', 'cash'] as const
-
+// The method list itself lives in business/payment.ts (it is domain data, not
+// validation) — this is the single schema that validates against it.
 export const paymentMethodSchema = z.enum(PAYMENT_METHODS, {
   message: 'booking.paymentMethod.invalid',
 })
@@ -41,7 +41,9 @@ export const createSlotHoldSchema = z.object({
   userId: uuidSchema,
 })
 
-/** Payload for the `confirm_booking` RPC. Gateway fields only exist for gateway payments. */
+/** Payload for the `confirm_booking` RPC. Gateway fields only exist for gateway
+ * payments. NOTE: since migration 20260727111326 only `settle-payment` (service
+ * role) may call that RPC — this schema describes the server-side payload. */
 export const confirmBookingSchema = z.object({
   bookingId: uuidSchema,
   paymentMethod: paymentMethodSchema,
@@ -50,7 +52,6 @@ export const confirmBookingSchema = z.object({
   gatewayResponse: z.unknown().optional(),
 })
 
-export type PaymentMethod = z.infer<typeof paymentMethodSchema>
 export type ServiceSelection = z.infer<typeof serviceSelectionSchema>
 export type SlotChoice = z.infer<typeof slotChoiceSchema>
 export type CreateSlotHoldInput = z.infer<typeof createSlotHoldSchema>

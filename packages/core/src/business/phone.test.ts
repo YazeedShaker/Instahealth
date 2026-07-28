@@ -4,6 +4,7 @@ import {
   convertArabicDigits,
   formatEgyptianPhoneDisplay,
   isolateLtr,
+  isStaticTestPhone,
   isValidEgyptianPhone,
   normalizeEgyptianPhone,
 } from './phone'
@@ -91,5 +92,28 @@ describe('formatEgyptianPhoneDisplay', () => {
 
   test('unparseable input falls back to the isolated raw string', () => {
     expect(formatEgyptianPhoneDisplay('+4915112345678')).toBe('\u2066+4915112345678\u2069')
+  })
+})
+
+describe('isStaticTestPhone', () => {
+  test('matches the Supabase Auth static test numbers', () => {
+    expect(isStaticTestPhone('+201000000001')).toBe(true)
+    expect(isStaticTestPhone('+201000000002')).toBe(true)
+  })
+
+  test('matches regardless of the input format', () => {
+    expect(isStaticTestPhone('01000000001')).toBe(true)
+    expect(isStaticTestPhone('+20 100 000 0001')).toBe(true)
+    expect(isStaticTestPhone('٠١٠٠٠٠٠٠٠٠١')).toBe(true)
+  })
+
+  test('real numbers are not test numbers — they must receive SMS', () => {
+    expect(isStaticTestPhone('+201092161218')).toBe(false)
+    expect(isStaticTestPhone('01012345678')).toBe(false)
+  })
+
+  test('unparseable input is not treated as a test number', () => {
+    expect(isStaticTestPhone('not-a-phone')).toBe(false)
+    expect(isStaticTestPhone('')).toBe(false)
   })
 })
