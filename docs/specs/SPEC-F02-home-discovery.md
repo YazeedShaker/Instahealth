@@ -1,7 +1,7 @@
 # SPEC · F02 — Home & Discovery (Mobile) + Launch-Partner Seed
 
 > Hand this to Claude Code. Read `CLAUDE.md`, `PRODUCT.md`, `PROGRESS.md` (F02 hand-off notes),
-> `DECISION-navigation-safe-areas.md`, `docs/saridar-branches-template.md`, and the Home design
+> `DECISION-navigation-safe-areas.md`, `docs/data/saridar-branches-template.md`, and the Home design
 > handoff bundle first. Requires: F01 merged. One PR.
 
 ---
@@ -21,7 +21,7 @@ Three deliverables in one PR: (A) the launch-partner seed, (B) a users-row trigg
 
 ## A · Launch-partner seed (`supabase/seeds/002_launch_partners.sql`)
 
-Generate SQL from the data in `docs/saridar-branches-template.md`:
+Generate SQL from the data in `docs/data/saridar-branches-template.md`:
 
 - **Town Hospital** — provider (type: hospital) + its New Cairo branch (coords 30.014288,
   31.4379333, hotline 15276, 24/7 hours for lab & radiology) + `branch_services` rows linking
@@ -67,7 +67,7 @@ Build to the approved Home mockup from the design handoff:
    ("أقرب موعد: اليوم ٣:٣٠ م"). States: loading skeletons, empty ("لا توجد نتائج"), and a
    card-level "no slots" state ("لا توجد مواعيد متاحة"). Branches with NULL coords (future
    data) sort to the end without a distance label — never crash, never show "NaN كم".
-5. **Tab bar** — per `DECISION-navigation-safe-areas.md`: visible here, with الرئيسية active;
+5. **Tab bar** — per `docs/decisions/DECISION-navigation-safe-areas.md`: visible here, with الرئيسية active;
    البحث / حجوزاتي / حسابي are styled placeholder screens (F03/F07/profile fill them).
 6. **Data** — TanStack Query: one query for branches+services+provider joined (RLS: public
    read on active providers), one for first-available slots (batched, not N+1 — a single

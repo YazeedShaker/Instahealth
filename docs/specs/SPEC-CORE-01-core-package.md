@@ -113,7 +113,7 @@ legitimately differs from the row shape (parsed, joined, or narrowed).
 
 ### 4.1 `computePreparationNotes(selectedServices: SelectedService[]): PreparationResult`
 
-Implements the locked Decision 3/3a (see `docs/DECISION-provider-data-model.md`):
+Implements the locked Decision 3/3a (see `docs/decisions/DECISION-provider-data-model.md`):
 
 - Considers ONLY the selected services. No branch-level blanket notes.
 - Returns `{ summaryAr, summaryEn, details, requiresFasting, fastingHours }` where

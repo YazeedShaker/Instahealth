@@ -39,7 +39,7 @@ confirm path: the mock must exercise exactly the machinery Paymob will.
    permitting; hold expiry here behaves per F05 (modal → repick).
 2. **Confirmation screen** — per the NEWLY approved confirmation design (created in Claude
    Design as an extension of the system — DESIGN-01's original set did not include it; do not
-   start this screen before its handoff bundle exists in `design/confirmation/`): Lottie moment (this is
+   start this screen before its handoff bundle exists in `design/mobile/confirmation/`): Lottie moment (this is
    one of the two sanctioned Lottie uses), booking reference (`IH-2026-XXXXX` from the DB row —
    never generated client-side), branch + slot + services recap, the consolidated preparation
    notes (same core function — a patient must see fasting instructions HERE most of all),

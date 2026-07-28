@@ -103,10 +103,11 @@ instahealth/
 │   ├── design-tokens/          # Colors, typography, spacing (CSS + TS + RN)
 │   └── config/                 # Shared tsconfig, eslint, prettier
 ├── supabase/                   # Migrations + edge functions (already built)
-├── docs/
-│   ├── CLAUDE.md               # This file
-│   ├── PRODUCT.md              # Design decisions, contrast rules, UX guidelines
-│   └── PROGRESS.md             # Living log — update after every feature
+├── docs/                       # Specs, decisions, briefs — see §3a
+├── design/                     # Claude Design handoff bundles — see §3a
+├── CLAUDE.md                   # This file — at the ROOT, not in docs/
+├── PRODUCT.md                  # Design decisions, contrast rules, UX guidelines
+├── PROGRESS.md                 # Living log — update after every feature
 └── turbo.json
 ```
 
@@ -122,6 +123,42 @@ schema, a type, or a booking calculation inside an app instead of core, you have
   The patient PWA on web comes much later as an SEO/discovery surface, not the primary experience.
 
 ---
+
+## 3a. Repository structure — `docs/` and `design/`
+
+Written artifacts are filed **by type**, and design bundles **by surface**. Numbered as `3a` on
+purpose: cross-references across the repo cite `CLAUDE.md §8`, `§11`… and renumbering would break
+every one of them.
+
+```
+docs/
+├── ENGINEERING-WORKFLOW.md   # stays at docs/ ROOT — the one file everything reads
+├── specs/                    # SPEC-SETUP-*, SPEC-CORE-*, SPEC-F*, SPEC-P*
+├── decisions/                # DECISION-*
+├── design-briefs/            # DESIGN-01, DESIGN-02
+└── data/                     # seed-source tables (saridar branches…)
+
+design/                       # Claude Design handoff bundles, one folder per handoff
+├── mobile/                   # onboarding · home · branch-profile · booking · confirmation · bookings
+├── dashboard/                # DESIGN-02 handoff; P02+ screens
+├── admin/                    # A-series (empty)
+└── brand/                    # logo set once approved (empty)
+
+CLAUDE.md · PRODUCT.md · PROGRESS.md    # repo ROOT
+```
+
+**Two rules:**
+
+1. **The three root docs never move.** `CLAUDE.md`, `PRODUCT.md` and `PROGRESS.md` live at the
+   repository root, and `docs/ENGINEERING-WORKFLOW.md` stays at the root of `docs/`. Every session
+   and every spec opens these by path; moving them breaks the bootstrap in §1 of the workflow doc.
+2. **New artifacts land in their typed folder** — a new spec goes to `docs/specs/`, a new decision
+   to `docs/decisions/`, a new design brief to `docs/design-briefs/`, seed-source data to
+   `docs/data/`. New handoff bundles go under the surface they belong to: dashboard screens to
+   `design/dashboard/`, admin to `design/admin/`. Never at the root of `docs/` or `design/`.
+
+Note for tooling: handoff bundles are Prettier-ignored via `design/*/*/project` — the glob has one
+segment per level, so it only works while bundles sit at `design/<surface>/<handoff>/project`.
 
 ## 4. The shared-core discipline (critical — two apps, one core)
 
@@ -202,7 +239,7 @@ Key tables: `users`, `providers`, `branches`, `service_categories`, `services`,
 
 **Provider services, categories & preparation notes:** How branches expose services across
 categories, how we surface only active categories, and how per-service preparation notes are computed
-from the patient's selection are all defined in **`docs/DECISION-provider-data-model.md`**. Read it
+from the patient's selection are all defined in **`docs/decisions/DECISION-provider-data-model.md`**. Read it
 before building F04, F05, P04, A02, or A03. Summary: branch profile renders services **grouped by
 category** (multi-category from day one — Town Hospital has labs + scans + doctors); only categories
 with `is_active = true` are shown/bookable (launch a category by flipping the flag); preparation notes

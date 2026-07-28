@@ -11,9 +11,10 @@
 ## 1 · Session bootstrap (before writing any code)
 
 1. Read `CLAUDE.md`, `PRODUCT.md`, `PROGRESS.md` (newest Shipped entry = where
-   things stand + hand-off notes for you), every `docs/DECISION-*.md` the spec
-   references, the spec itself, and the design handoff bundle if one exists
-   (`design/<feature>/` — read the `.dc.html` source, don't screenshot it).
+   things stand + hand-off notes for you), every `docs/decisions/DECISION-*.md` the spec
+   references, the spec itself (`docs/specs/`), and the design handoff bundle if
+   one exists (`design/<surface>/<feature>/` — read the `.dc.html` source, don't
+   screenshot it). Layout and the two filing rules: CLAUDE.md §3a.
 2. Check `git status` + `gh pr list` — know what's merged, what's open, and
    whether the working tree carries untracked files staged for you.
 3. Verify spec claims against the LIVE database before building on them
@@ -88,7 +89,7 @@ pnpm audit --audit-level=high
   in `turbo.json` `globalEnv`. Locally you won't notice (apps read
   `.env.local`) — CI will.
 - Prettier ignores live in `.prettierignore` — design handoff bundles
-  (`design/*/project`), `supabase/migrations|functions`, and the generated
+  (`design/*/*/project`), `supabase/migrations|functions`, and the generated
   `database.ts` stay verbatim, never formatted.
 - Gitleaks: `.env.example` is allowlisted via `.gitleaks.toml` (placeholder
   names only). Never commit a real key anywhere — `.env.local` files are

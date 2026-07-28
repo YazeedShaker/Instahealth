@@ -744,7 +744,7 @@ now the real 4-tab bar; logout moved to حسابي.
 
 ### 2026-07-23 · F01 — Patient phone-OTP authentication (mobile)
 
-Full onboarding flow built to the DESIGN-01 handoff bundle (`design/onboarding/`): welcome →
+Full onboarding flow built to the DESIGN-01 handoff bundle (`design/mobile/onboarding/`): welcome →
 phone → OTP → (first-time) name → Home placeholder. Route groups `(auth)` / `(app)` with
 protection in the group layouts; Supabase Auth phone flow; session survives restarts via
 AsyncStorage injected into core's `createClient()`. 21 unit tests on the pure auth modules.
@@ -779,7 +779,7 @@ job; the CI Maestro step is still the SETUP-01 stub.
 
 ### 2026-07-23 · CORE-01 — Shared core package
 
-`packages/core` filled per `docs/SPEC-CORE-01-core-package.md`. **92 tests, 100% line coverage
+`packages/core` filled per `docs/specs/SPEC-CORE-01-core-package.md`. **92 tests, 100% line coverage
 (98.8% branch)** on `business/` + `schemas/` + `constants/` — Vitest thresholds gate 95/95/95/90
 so it can't regress. Both apps compile importing the barrel; placeholders now render live core
 constants.
@@ -902,7 +902,7 @@ _Next entry after SETUP-02._
 - **2026-07 · Provider services & categories:** Branches can span multiple categories; branch profile
   renders services GROUPED BY category (Town Hospital = labs + scans + doctors on day one). Onboard the
   full menu into the DB; surface only categories with `is_active = true`; launching a category = flipping
-  the flag. Full detail in `docs/DECISION-provider-data-model.md`.
+  the flag. Full detail in `docs/decisions/DECISION-provider-data-model.md`.
 - **2026-07 · Preparation notes:** Per-service, NOT per-branch. Computed from the patient's actual
   selection via a shared `computePreparationNotes()` in `packages/core/business` — longest fast wins,
   duplicates merged, shown only when a selected service needs it, reused at selection + confirmation +
@@ -911,14 +911,14 @@ _Next entry after SETUP-02._
   provider profile mockup, then refined when the note pointed nowhere.)
 - **2026-07 · Booking flow step 1:** Read-only REVIEW (services + total + prep note + "تعديل" back-link),
   NOT a re-selection — the patient already chose on the branch profile. Selection happens once. Branch
-  profile = choose; booking flow = confirm & schedule. Detail in `docs/DECISION-booking-flow.md`.
+  profile = choose; booking flow = confirm & schedule. Detail in `docs/decisions/DECISION-booking-flow.md`.
 - **2026-07 · Date picker:** Short horizontal strip (7–14 days) + a calendar affordance for going
   further, BOTH capped at the 30-day slot window (`generate_branch_slots` ceiling). Fully-booked and
   out-of-window days are disabled in both — no dead ends. (The mockup strip "not sliding" is a static-
-  preview limitation, not a real bug.) Detail in `docs/DECISION-booking-flow.md`.
+  preview limitation, not a real bug.) Detail in `docs/decisions/DECISION-booking-flow.md`.
 - **2026-07 · Tab bar:** Persistent on destinations (home, search, bookings, profile, branch profile);
   HIDDEN during the booking flow (all 4 steps) and auth — keeps the patient in the commitment funnel
-  with the live slot hold; exit only via back/cancel. Detail in `docs/DECISION-navigation-safe-areas.md`.
+  with the live slot hold; exit only via back/cancel. Detail in `docs/decisions/DECISION-navigation-safe-areas.md`.
 - **2026-07 · Safe areas:** Every sticky/bottom element (CTAs, tab bar, countdown banner) must sit
   inside the safe-area inset — nothing under the iOS home indicator / Android gesture bar. Global rule,
   verified on real devices. (Caught in the step-1 review mockup where the CTA sat flush to the edge.)
