@@ -27,6 +27,7 @@ export function TodayHeader({
 }) {
   return (
     <header
+      data-print="hide"
       style={{
         flexShrink: 0,
         background: 'var(--ih-neutral-0)',

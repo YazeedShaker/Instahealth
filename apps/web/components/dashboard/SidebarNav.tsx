@@ -13,6 +13,7 @@ const NAV_ITEMS = [
 export function SidebarNav() {
   return (
     <nav
+      data-print="hide"
       aria-label="التنقل الرئيسي"
       className="flex w-[220px] shrink-0 flex-col gap-1 p-3"
       style={{ background: 'var(--ih-surface-sidebar)' }}

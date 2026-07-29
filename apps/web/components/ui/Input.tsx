@@ -51,7 +51,12 @@ export function Input({ label, labelAside, trailing, id, style, ...rest }: Input
             boxSizing: 'border-box',
             minHeight: INPUT_BASE.minHeight,
             paddingInline: INPUT_BASE.paddingX,
-            paddingInlineEnd: trailing ? 52 : INPUT_BASE.paddingX,
+            // PHYSICAL left, not paddingInlineEnd. These fields are dir="ltr"
+            // (email/password) inside an RTL page, so the logical properties
+            // resolve against DIFFERENT directions on the input and on its
+            // container — the reveal button landed left while the reserved
+            // space went right, and the placeholder ran under the icon.
+            ...(trailing ? { paddingLeft: 52 } : null),
             borderWidth: INPUT_BASE.borderWidth,
             borderStyle: 'solid',
             borderColor: resolveTokenCss(
@@ -67,8 +72,9 @@ export function Input({ label, labelAside, trailing, id, style, ...rest }: Input
             ...style,
           }}
         />
+        {/* Physical left too, so it always sits over the padding reserved above. */}
         {trailing ? (
-          <div style={{ position: 'absolute', insetInlineEnd: 6, display: 'flex' }}>{trailing}</div>
+          <div style={{ position: 'absolute', left: 6, display: 'flex' }}>{trailing}</div>
         ) : null}
       </div>
     </div>
