@@ -72,6 +72,30 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 
 ## Shipped
 
+### 2026-07-29 · CHORE — retire the SETUP-01 root placeholder
+
+`/` served SETUP-01's scaffold proof: an Arabic heading, a cream block and a
+line printing `CURRENCY` and a resolved token, all there to show that fonts,
+RTL, `packages/core` and the token pipeline worked on web. Every one of those
+is proven by a real screen the desk uses daily, so it was just a demo page
+greeting staff at the domain root.
+
+The root is now a server-side signpost using the SAME `getProviderContext()`
+the dashboard layout uses: staff → Today, signed-in non-staff → the portal
+rejected, signed out → the portal. Nothing else referenced the placeholder —
+`layout.tsx`'s Arabic description is real app metadata and stays; SETUP-01's
+spec mentions it historically and stays. The Playwright smoke test now asserts
+the SIGNPOST (redirect + no content of its own) instead of the heading.
+
+**⚠ Fixed a pre-existing infinite redirect loop while pointing the root at the
+rejection path.** The dashboard layout sends a non-staff session to
+`/login?rejected=1`; middleware saw a session on `/login` and sent it back to
+`/dashboard/today`; the layout rejected it again. Reachable whenever a session
+exists that is not provider staff — a provider deactivated mid-session, which
+is exactly the case the layout calls its backstop. Middleware now exempts
+`rejected=1`. The flag was also never READ: the visitor landed on a plain login
+form with no idea why, so the login page now shows a warning.
+
 ### 2026-07-29 · P02 FOLLOW-UP — founder review: strip scrolling, loading states, prep detail, server-side tables
 
 Four items from the founder's review of the merged P02.

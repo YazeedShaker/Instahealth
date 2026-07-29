@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 
+import { Alert } from '../../components/ui/Alert'
 import { Logo } from '../../components/ui/Logo'
 import { LoginForm } from './LoginForm'
 
@@ -19,9 +20,13 @@ const BULLETS = [
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>
+  searchParams: Promise<{ next?: string; rejected?: string }>
 }) {
-  const { next } = await searchParams
+  const { next, rejected } = await searchParams
+  // The dashboard (and now the root) bounce a non-staff session here with
+  // `rejected=1`. Nothing read it, so the visitor landed on a plain login form
+  // with no idea why — say it out loud instead.
+  const wasRejected = rejected === '1'
 
   return (
     <div className="flex min-h-screen bg-white">
@@ -38,6 +43,12 @@ export default async function LoginPage({
               </p>
             </div>
           </div>
+
+          {wasRejected ? (
+            <Alert type="warning" testId="login-rejected">
+              هذا الحساب لا يملك صلاحية الدخول إلى بوابة الشركاء. سجّل الدخول بحساب الفرع.
+            </Alert>
+          ) : null}
 
           <LoginForm next={next ?? ''} />
 
