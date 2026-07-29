@@ -89,7 +89,9 @@ test.describe('provider dashboard — Today view', () => {
   })
 
   test('the list is either populated or shows the empty state — never blank', async ({ page }) => {
-    const list = page.getByTestId('today-list')
+    // P02 renamed today-list → bookings-list: Today and Upcoming now render the
+    // SAME panel, so a Today-specific id would have been a lie.
+    const list = page.getByTestId('bookings-list')
     const empty = page.getByTestId('today-empty')
     await expect(list.or(empty)).toBeVisible()
   })
@@ -137,5 +139,135 @@ test.describe('provider dashboard — Today view', () => {
     await page.waitForURL('**/login')
     await page.goto('/dashboard/today')
     await expect(page).toHaveURL(/\/login/)
+  })
+})
+
+test.describe('provider dashboard — booking detail drawer (P02)', () => {
+  test.skip(!HAS_CREDS, 'PROVIDER_TEST_EMAIL / PROVIDER_TEST_PASSWORD not set')
+
+  test.beforeEach(async ({ page }) => {
+    await login(page, TOWN_RECEPTION)
+    await page.waitForURL('**/dashboard/today')
+  })
+
+  test('a row opens the drawer and the list stays LIVE behind it', async ({ page }) => {
+    const rows = page.getByTestId(/^booking-row-/)
+    test.skip((await rows.count()) === 0, 'no bookings today at Town — seed one to exercise this')
+
+    await rows.first().click()
+    const drawer = page.getByTestId('booking-drawer')
+    await expect(drawer).toBeVisible()
+    await expect(page.getByTestId('drawer-ref')).toContainText('IH-')
+
+    // The whole point of a drawer rather than a page: the list is still there,
+    // still mounted, still receiving realtime.
+    await expect(page.getByTestId('bookings-list')).toBeVisible()
+    await expect(rows.first()).toBeVisible()
+  })
+
+  test('the drawer closes on ✕ and on Escape', async ({ page }) => {
+    const rows = page.getByTestId(/^booking-row-/)
+    test.skip((await rows.count()) === 0, 'no bookings today at Town')
+
+    await rows.first().click()
+    await page.getByTestId('drawer-close').click()
+    await expect(page.getByTestId('booking-drawer')).toBeHidden()
+
+    await rows.first().click()
+    await expect(page.getByTestId('booking-drawer')).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('booking-drawer')).toBeHidden()
+  })
+
+  test('the drawer shows the services, the total and the action history', async ({ page }) => {
+    const rows = page.getByTestId(/^booking-row-/)
+    test.skip((await rows.count()) === 0, 'no bookings today at Town')
+
+    await rows.first().click()
+    await expect(page.getByTestId('drawer-history')).toBeVisible()
+    // Every booking has at least its creation entry — derived from created_at,
+    // which is never null.
+    await expect(page.getByTestId('drawer-history')).toContainText('أنشأ المريض الحجز')
+    await expect(page.getByTestId('drawer-payment')).toBeVisible()
+  })
+
+  test('cancel-on-behalf asks for confirmation before it does anything', async ({ page }) => {
+    const rows = page.getByTestId(/^booking-row-/)
+    test.skip((await rows.count()) === 0, 'no bookings today at Town')
+
+    await rows.first().click()
+    const cancelButton = page.getByTestId('drawer-cancel')
+    test.skip((await cancelButton.count()) === 0, 'the first booking is already closed')
+
+    await cancelButton.click()
+    const dialog = page.getByTestId('cancel-dialog')
+    await expect(dialog).toBeVisible()
+    await expect(dialog).toContainText('إلغاء الحجز بالنيابة عن المريض؟')
+
+    // تراجع must leave the booking completely untouched.
+    await page.getByTestId('cancel-dialog-dismiss').click()
+    await expect(dialog).toBeHidden()
+    await expect(page.getByTestId('booking-drawer')).toBeVisible()
+  })
+})
+
+test.describe('provider dashboard — upcoming days (P02)', () => {
+  test.skip(!HAS_CREDS, 'PROVIDER_TEST_EMAIL / PROVIDER_TEST_PASSWORD not set')
+
+  test.beforeEach(async ({ page }) => {
+    await login(page, TOWN_RECEPTION)
+    await page.waitForURL('**/dashboard/today')
+    await page.getByTestId('nav-upcoming').click()
+    await page.waitForURL('**/dashboard/upcoming**')
+  })
+
+  test('the date switcher renders the slot window and a selected day', async ({ page }) => {
+    await expect(page.getByTestId('day-strip')).toBeVisible()
+    const days = page.getByTestId(/^day-\d{4}-\d{2}-\d{2}$/)
+    expect(await days.count()).toBeGreaterThan(0)
+    await expect(page.getByTestId('upcoming-day-label')).toBeVisible()
+  })
+
+  test('switching day changes the URL, so a refresh keeps the desk where it was', async ({
+    page,
+  }) => {
+    const days = page.getByTestId(/^day-\d{4}-\d{2}-\d{2}$/)
+    test.skip((await days.count()) < 2, 'fewer than two days in the window')
+
+    const second = days.nth(1)
+    const isoDate = (await second.getAttribute('data-testid'))!.replace('day-', '')
+    await second.click()
+    await page.waitForURL(`**/dashboard/upcoming?date=${isoDate}`)
+    await expect(second).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  test('a FUTURE day offers no outcome actions — client side matches the RPC', async ({ page }) => {
+    const rows = page.getByTestId(/^booking-row-/)
+    test.skip((await rows.count()) === 0, 'no bookings on the selected upcoming day')
+
+    // The server returns slot_in_future for these; the UI must never offer them.
+    await expect(page.getByTestId(/^action-arrived-/)).toHaveCount(0)
+    await expect(page.getByTestId(/^action-completed-/)).toHaveCount(0)
+    await expect(page.getByTestId(/^action-no_show-/)).toHaveCount(0)
+  })
+
+  test('a future row still opens the drawer, and the drawer offers no outcome either', async ({
+    page,
+  }) => {
+    const rows = page.getByTestId(/^booking-row-/)
+    test.skip((await rows.count()) === 0, 'no bookings on the selected upcoming day')
+
+    await rows.first().click()
+    await expect(page.getByTestId('booking-drawer')).toBeVisible()
+    await expect(page.getByTestId('drawer-action-arrived')).toHaveCount(0)
+    // …but cancel-on-behalf IS available: a phone cancellation for tomorrow is
+    // exactly the case this feature exists for.
+    await expect(page.getByTestId('drawer-cancel')).toBeVisible()
+  })
+
+  test('an empty day shows its empty state, never a blank panel', async ({ page }) => {
+    const list = page.getByTestId('bookings-list')
+    const empty = page.getByTestId('upcoming-empty')
+    await expect(list.or(empty)).toBeVisible()
   })
 })

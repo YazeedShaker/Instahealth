@@ -21,7 +21,7 @@ Keep **Current status** and **Next up** accurate at all times.
 
 ## Current status
 
-**Phase:** 🎉 **MILESTONE ONE — the loop is closed.** Patient books on mobile (F01→F07) → the branch desk sees it and records the outcome (P01). Next: P02–P06 dashboard; F03 Search and F08–F09 still open
+**Phase:** 🎉 **MILESTONE ONE — the loop is closed.** Patient books on mobile (F01→F07) → the branch desk sees it, records the outcome, opens the detail drawer and can cancel on the patient's behalf (P01–P02). Next: P03–P06 dashboard; F03 Search and F08–F09 still open
 **Milestone target:** Labs + Scans booking working end-to-end at Town Hospital & Saridar Labs
 **Environment:** Supabase `instahealth-dev` live (Frankfurt). Design system published in Claude Design.
 Core patient screens approved. Monorepo scaffolded — both app shells boot with tokens/fonts/RTL.
@@ -58,7 +58,8 @@ visual contract. Then specs → Claude Code.
 - [x] **F05** — ✅ DONE. Mobile: slot picker + 10-min hold + review + pending booking (see Shipped)
 - [x] **F06** — ✅ DONE. Mobile: payment (mock provider) + settle-payment + confirmation + SMS (see Shipped)
 - [x] **P01** — ✅ DONE. Web: provider auth, shell & Today view — **MILESTONE ONE, loop closed** (see Shipped)
-- [ ] **P02–P06** — Web: booking detail drawer + cancel-on-behalf, upcoming days, prices editor, slot allocation
+- [x] **P02** — ✅ DONE. Web: booking detail drawer + cancel-on-behalf + upcoming days (see Shipped)
+- [ ] **P03–P06** — Web: prices editor, slot allocation, branch profile
 - [x] **F07** — ✅ DONE. Mobile: My Bookings list, detail & cancel (see Shipped)
 - [ ] **F08–F09** — Mobile: reviews, profile
 - [ ] **A01–A06** — Web: admin panel
@@ -70,6 +71,154 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 ---
 
 ## Shipped
+
+### 2026-07-29 · P02 — Booking detail drawer, cancel-on-behalf & upcoming days (web)
+
+The desk can now open any booking, read its whole story, cancel it on the
+patient's behalf when they phone in, and look past today.
+
+**⚠ FOURTH SECURITY HOLE — and the first one reachable WITHOUT LOGGING IN.**
+`cancel_booking` decided "is this caller privileged?" with `auth.uid() IS NULL`,
+treating _no session_ as _the server_. But an **anonymous caller holding only
+the public anon key also has `auth.uid() = NULL`** — and `cancel_booking` was
+the one provider RPC that additionally granted EXECUTE to `anon`/`PUBLIC`.
+Proven on dev BEFORE the fix, non-destructively (target: an already-cancelled
+booking, where the authorization guard and the status guard return different
+errors): a plain `fetch` with the public key came back `cannot_cancel` — the
+STATUS guard — instead of `booking_not_found`. It had passed authorization.
+**Any booking, cancellable by anyone with the anon key, no account required.**
+
+The discriminator that actually works inside a SECURITY DEFINER body is
+`auth.role()`. `current_user` there is the function OWNER, not the caller, so it
+can NEVER serve as an authorization signal — measured, not assumed:
+
+| caller               | `auth.uid()` | `auth.role()` | `current_user` |
+| -------------------- | ------------ | ------------- | -------------- |
+| anon key, no session | NULL         | `anon`        | `postgres`     |
+| pg_cron / direct SQL | NULL         | NULL          | `postgres`     |
+
+New `is_internal_caller()` keys off that. Both layers were then verified
+independently: the grant rejects anon with HTTP 401, and with the grant
+temporarily restored the **body itself** returns `booking_not_found`.
+
+**`cancelled_by` was written verbatim from the client.** Nothing checked the
+caller was entitled to the label it claimed, so a patient could record their own
+cancellation as `'provider'` — corrupting the exact discriminator the dashboard
+reads to tell a desk cancellation from a patient one, and that
+`DECISION-booking-outcome-lifecycle` requires to stay honest forever. The claim
+is now VERIFIED against the caller's real capacity rather than overridden, so a
+receptionist who is also a patient at their own branch is recorded correctly
+from either app — which a blind override would get wrong in one direction.
+
+**The future-day rule did not exist server-side.** SPEC-P02 §B asked for it to be
+verified; it wasn't there. `mark_booking_outcome` checked only the status
+transition, never the date, so nothing stopped the desk marking tomorrow's
+patient arrived. It now returns `slot_in_future`, and core's
+`getPrimaryOutcomeAction`/`canMarkNoShow` take `cairoTodayIso` as a **required**
+argument — optional would be forgotten, and forgetting it offers «وصل» on
+tomorrow's rows.
+
+**Migration `20260729021321`** carries all three plus the columns the drawer
+needs (`slot_date`, `confirmed_at`, `cancelled_by`, `cancellation_reason`,
+`closed_by` — the drawer's «أُغلق تلقائياً» was impossible without the last one),
+and revokes two maintenance functions (`cleanup_expired_holds`,
+`generate_branch_slots`) that were needlessly anon-callable.
+
+**`database.ts` was stale well beyond this migration** — `bookings` was missing
+`closed_by`/`arrived_at`/`no_show_at`, and `get_branch_bookings_for_date` and
+`mark_booking_outcome` were absent entirely. That is what the `any` escape hatch
+in `branch-bookings.ts` was working around. **P01 shipped without a type regen**
+(ENGINEERING-WORKFLOW §5 requires it in the same PR).
+
+**ONE implementation serves both screens.** The spec's consistency rule only
+holds if the realtime and mutation plumbing is shared too, not just the row — so
+`useBranchBookings` (data, realtime, mark, cancel) and `BookingsPanel` (list,
+drawer, confirm) are shared verbatim; Today and Upcoming differ in their header
+and their date, nothing else. The row renders two column layouts (Today keeps
+الإجراء; Upcoming drops it for a ‹ chevron) but behaviour is governed by the date
+predicate, not by which grid was chosen.
+
+**Realtime: refetch-on-event, debounced — founder-ratified.** The broadcast
+payload is `{booking_id, op, status}` and carries **no date**, so the spec's
+"filter client-side by the viewed date" is not possible. Instead any branch
+event refetches the VIEWED date through the RLS-scoped function and the database
+answers — display predicate = enforcement predicate by construction. Debounced at
+400ms so a burst (the nightly auto-close touching a dozen bookings) collapses
+into one query. **Upgrade path if volume ever makes this heavy: add the date to
+the broadcast payload** — a note for then, not work for now.
+
+**The duration line is real data, not decoration** — `branches.slot_duration_minutes`,
+and the line DISAPPEARS for a branch with NULL/0 rather than falling back to a
+number. ⚠ Honesty check requested by the founder, and it contradicted the
+premise: the column survived the capacity rewrite cleanly (24/24 branches, no
+NULLs, Town included) but **no longer describes the slot grid** — spacing is now
+`opening window ÷ allocation` (Saridar 150 min, Town 120 min, both declaring 30),
+and there is exactly ONE distinct value across all 24 branches. It is a fair
+statement of how long a visit TAKES, which is what the line claims, but treat it
+as a placeholder like the seeded prices until a partner confirms it.
+
+**Verified against the LIVE dev DB (19 Node checks, all passing):**
+
+- Patient session (7): a patient claiming `'provider'` or `'admin'` is refused
+  `invalid_canceller` · the owner's own `'patient'` claim still passes · a
+  patient reading a branch day gets zero rows · cannot mark an outcome · both
+  maintenance functions refused.
+- Provider session (12): the branch read exposes all five new columns and the
+  patient name/phone · `slot_in_future` for a real staff caller · cancel-on-behalf
+  succeeds and the server ECHOES `cancelled_by: 'provider'` · another branch's
+  booking refused indistinguishably from a missing row · another branch's day
+  returns zero rows.
+- Capacity release confirmed: the cancelled booking's slot went `booked_count`
+  1 → 0 and is bookable again.
+
+**Fidelity proven, not asserted** (ENGINEERING-WORKFLOW §9) —
+`docs/design-briefs/p02-fidelity/`, captured at 1366×768. **26 Playwright tests
+pass**, including 9 new P02 ones.
+
+**Decisions / deviations:**
+
+- **The design's «أُرسل تنبيه التجهيزات — رسالة نصية» history row is deliberately
+  ABSENT.** `notifications` is not exposed to the dashboard and the read function
+  does not return it, so rendering it would be decoration claiming to be a
+  record. Every timeline entry comes from a populated timestamp. 🎨 Either widen
+  the function in a later P-feature or drop the row from the design.
+- **Drawer and confirm are screen-level compositions, not DS components** — the
+  `_ds` bundle ships Button/Card/Alert/Chip/PreparationNote/StatusBadge/Input/
+  Select/Textarea and the nav patterns, but **no modal**. `PreparationNote` WAS
+  added to the shared contract, transcribed from the bundle source.
+- **Scrim and drawer are `fixed`, not `absolute`** — the design anchors them to
+  the ROOT shell so they cover the sidebar and header; the shell is `h-screen`,
+  which makes viewport-fixed exactly equivalent. A scrim confined to `<main>`
+  leaves the nav looking live when it is not (caught in the first capture).
+- **Playwright never loaded `.env.local`.** The E2E header has said "Local: set
+  PROVIDER_TEST_EMAIL / PROVIDER_TEST_PASSWORD in apps/web/.env.local" since P01,
+  but nothing loaded that file into the runner's process — so the dashboard suite
+  skipped locally while passing in CI. Fixed in `playwright.config.ts`; CI values
+  always win over a local file.
+- **The sidebar still rendered a `⚕` emoji** although `Logo` with the real mark
+  existed and the P01 follow-up reported it restored — a leftover, corrected here.
+- **`today-list` → `bookings-list`**: Today and Upcoming render the same panel
+  now, so a Today-specific test id would have been a lie.
+
+**Still true from P01:** the connection-dot issue (dot flips to «غير متصل» after
+marking an outcome) was NOT investigated here — it is untouched by P02 and still
+wants a production-build check.
+
+**For P03 (services & prices editor) — hand-off:**
+
+- `useBranchBookings` + `BookingsPanel` + `BookingRow` are the reusable set. The
+  row takes `showActions`; anything read-only passes `false`.
+- **The realtime payload carries no date — do not try to filter on it.** Refetch
+  the viewed scope and let the database answer. Enriching the payload is the
+  upgrade path if event volume grows.
+- The transition table in `provider-bookings.ts` mirrors `mark_booking_outcome`
+  INCLUDING the future-day rule — change one, change both, same PR.
+- `branch_services` is the P03 table: `price`, `is_available`, `custom_tat_hours`,
+  `home_collection`/`_fee` per branch, joined to `services` for names and
+  preparation notes. Prices are all PLACEHOLDERS today (Known risks).
+- Dev fixtures left in place on purpose: two confirmed bookings TOMORROW at Town
+  (one cash with preparation, one prepaid) so Upcoming Days has rows, plus one
+  provider-cancelled booking today showing the `cancelled_by='provider'` trail.
 
 ### 2026-07-28 · P01 FOLLOW-UP — shared design-system contract, design restructure, outcome lifecycle
 
@@ -1176,6 +1325,11 @@ _Next entry after SETUP-02._
   slots as another user. Harden with an auth.uid() check in a follow-up migration.
 - **⚠ All seeded prices are PLACEHOLDERS** (labs 150/250/400, scans 300–2500 EGP rounds) —
   replace with real Saridar/Town prices via the provider dashboard before real patients.
+- **⚠ `branches.slot_duration_minutes` is a uniform seeded 30 across ALL 24 branches** and no
+  longer describes the slot grid (spacing is `opening window ÷ allocation` since migration
+  20260726151039 — 150 min at Saridar, 120 at Town). P02's drawer renders it as "expected
+  service duration", which is a fair reading, but confirm real per-branch values with the
+  partners before launch — same class of placeholder as the prices.
 - **Saridar per-branch hours unconfirmed:** all 23 seeded branches use the standard schedule
   (Sat–Thu 08:00–22:00, Fri 09:00–17:00). Google shows different hours at Dokki/Manial/Faisal 2 —
   awaiting Saridar's answer to the template's question 4; update `operating_hours` per branch then.

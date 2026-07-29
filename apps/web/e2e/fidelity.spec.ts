@@ -47,3 +47,77 @@ test('capture: today', async ({ page }) => {
   await page.evaluate(() => document.fonts.ready)
   await page.screenshot({ path: `${SHOT_DIR}/today-build.png`, fullPage: false })
 })
+
+// ── P02 captures ───────────────────────────────────────────────────────────
+// Compare against `design/handoff/project/Provider Dashboard - Booking Detail.dc.html`
+// and `… - Upcoming Days.dc.html`.
+
+const P02_SHOT_DIR = '../../docs/design-briefs/p02-fidelity'
+
+/** Next's dev-tools button sits in the bottom-left corner in `next dev` and is
+ * NOT part of the design. It landed in the first P02 capture looking like a
+ * stray black disc over the drawer footer. */
+async function hideDevOverlay(page: import('@playwright/test').Page) {
+  await page.addStyleTag({
+    content: 'nextjs-portal, [data-nextjs-dev-tools-button] { display: none !important; }',
+  })
+}
+
+async function signIn(page: import('@playwright/test').Page) {
+  await page.goto('/login')
+  await page.getByTestId('login-email').fill(PROVIDER_EMAIL)
+  await page.getByTestId('login-password').fill(PROVIDER_PASSWORD)
+  await page.getByTestId('login-submit').click()
+  await page.waitForURL('**/dashboard/today')
+}
+
+test('capture: booking detail drawer', async ({ page }) => {
+  test.skip(!HAS_CREDS, 'PROVIDER_TEST_EMAIL / PROVIDER_TEST_PASSWORD not set')
+  await signIn(page)
+
+  const rows = page.getByTestId(/^booking-row-/)
+  test.skip((await rows.count()) === 0, 'no bookings today at Town to open')
+
+  await rows.first().click()
+  await expect(page.getByTestId('booking-drawer')).toBeVisible()
+  await hideDevOverlay(page)
+  await page.evaluate(() => document.fonts.ready)
+  await page.screenshot({ path: `${P02_SHOT_DIR}/drawer-build.png`, fullPage: false })
+})
+
+test('capture: cancel-on-behalf confirm', async ({ page }) => {
+  test.skip(!HAS_CREDS, 'PROVIDER_TEST_EMAIL / PROVIDER_TEST_PASSWORD not set')
+  await signIn(page)
+
+  const rows = page.getByTestId(/^booking-row-/)
+  test.skip((await rows.count()) === 0, 'no bookings today at Town to open')
+
+  // Open the first row that is still cancellable.
+  const count = await rows.count()
+  for (let index = 0; index < count; index += 1) {
+    await rows.nth(index).click()
+    if ((await page.getByTestId('drawer-cancel').count()) > 0) break
+    await page.getByTestId('drawer-close').click()
+  }
+  test.skip(
+    (await page.getByTestId('drawer-cancel').count()) === 0,
+    'every booking today is already closed',
+  )
+
+  await page.getByTestId('drawer-cancel').click()
+  await expect(page.getByTestId('cancel-dialog')).toBeVisible()
+  await hideDevOverlay(page)
+  await page.evaluate(() => document.fonts.ready)
+  await page.screenshot({ path: `${P02_SHOT_DIR}/cancel-confirm-build.png`, fullPage: false })
+})
+
+test('capture: upcoming days', async ({ page }) => {
+  test.skip(!HAS_CREDS, 'PROVIDER_TEST_EMAIL / PROVIDER_TEST_PASSWORD not set')
+  await signIn(page)
+  await page.getByTestId('nav-upcoming').click()
+  await page.waitForURL('**/dashboard/upcoming**')
+  await expect(page.getByTestId('day-strip')).toBeVisible()
+  await hideDevOverlay(page)
+  await page.evaluate(() => document.fonts.ready)
+  await page.screenshot({ path: `${P02_SHOT_DIR}/upcoming-build.png`, fullPage: false })
+})

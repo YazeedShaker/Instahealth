@@ -163,6 +163,37 @@ pnpm audit --audit-level=high
   `get_patient_bookings()` deliberately has zero parameters. A `p_user_id`
   argument on a SECURITY DEFINER reader is the cancel_booking hole again, just
   for reads.
+- **`auth.uid() IS NULL` does NOT mean "service_role" — it also means ANON.**
+  Four functions have now used that idiom to grant themselves a trusted
+  bypass, and `cancel_booking` was the one that ALSO carried an anon/PUBLIC
+  EXECUTE grant: an unauthenticated `fetch` with the public anon key (which
+  ships in the Expo bundle and the web app) could cancel ANY booking by id.
+  Proven on dev before the fix, non-destructively, by targeting an
+  already-cancelled booking — the authorization guard returns
+  `booking_not_found` and the status guard returns `cannot_cancel`, so the two
+  are distinguishable without writing anything. Measured inside a SECURITY
+  DEFINER body:
+
+  | caller               | `auth.uid()` | `auth.role()` | `current_user` |
+  | -------------------- | ------------ | ------------- | -------------- |
+  | anon key, no session | NULL         | `anon`        | `postgres`     |
+  | pg_cron / direct SQL | NULL         | NULL          | `postgres`     |
+
+  **`current_user` inside a DEFINER function is the function OWNER, never the
+  caller** — it can never be an authorization signal there. Use
+  `is_internal_caller()` (migration 20260729021321), which keys off
+  `auth.role()`. And check the GRANT as well as the body: the same idiom was
+  harmless in three sibling functions purely because they had no anon grant.
+
+- **A discriminator the CLIENT supplies is not a discriminator.**
+  `cancel_booking` wrote `p_cancelled_by` verbatim, so a patient could record
+  their own cancellation as `'provider'` — corrupting the field the dashboard
+  reads to tell a desk cancellation from a patient one. Either DERIVE it from
+  the caller (as `mark_booking_outcome` does for `closed_by`) or VERIFY the
+  claim against what the caller is actually entitled to. Verifying is better
+  when one person can legitimately act in two capacities: a receptionist who is
+  also a patient at their own branch is then recorded correctly from either app,
+  which a blind override gets wrong in one direction.
 - **`x = ANY(get_provider_branch_ids())` is NULL-unsafe.** That function returns
   NULL (not `{}`) for a non-provider, `x = ANY(NULL)` is NULL, and an OR/NOT
   chain containing it evaluates to NULL — which an `IF NOT (...)` treats as
@@ -397,6 +428,24 @@ Two failure modes it catches, both from that build:
   CSS is broken". Import shared CSS with `layer(base)`. When spacing looks
   uniformly wrong, probe a utility in the browser
   (`getComputedStyle`) before touching markup.
+
+Two more, both found while capturing P02's screenshots:
+
+- **Playwright does NOT load `.env.local`.** Next loads it for the app, but the
+  test runner is a separate process — so the "Local: set PROVIDER_TEST_* in
+  apps/web/.env.local" instruction in the E2E header did nothing for two
+  features, and the dashboard suite skipped locally while passing in CI. The
+  config now loads it explicitly, with CI values winning. **A suite that skips
+  looks the same as a suite that passes in a summary line** — check the count.
+- **`next dev` paints a dev-tools button in the bottom-left corner.** It landed
+  in the first fidelity capture looking like a stray black disc over the drawer
+  footer. Hide it in captures (`nextjs-portal` display:none) rather than
+  explaining it away in the PR.
+- **Read the screenshot you just captured.** The first P02 drawer capture looked
+  fine in the accessibility tree but showed the scrim confined to `<main>`, with
+  the sidebar and header undimmed — the design anchors both to the root shell.
+  §9 exists because markup review does not catch this class of thing; the
+  capture only helps if someone actually looks at it.
 
 ## 8 · When something isn't in this file
 

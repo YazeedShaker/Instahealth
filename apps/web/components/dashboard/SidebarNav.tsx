@@ -1,16 +1,32 @@
-// Sidebar per the approved design. Only اليوم is a real destination in P01 —
-// the rest are P02+ screens and are rendered DISABLED rather than hidden, so
-// the receptionist sees where the product is going without hitting dead links
-// (spec: one screen done well beats four scaffolds).
+'use client'
+
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+
+import { Logo } from '../ui/Logo'
+
+// Sidebar per the approved design. اليوم and الأيام القادمة are real
+// destinations as of P02; the rest are P03+ screens and render DISABLED rather
+// than hidden, so the receptionist sees where the product is going without
+// hitting dead links.
 const NAV_ITEMS = [
-  { icon: '📋', label: 'اليوم', active: true },
-  { icon: '📅', label: 'الأيام القادمة', active: false },
-  { icon: '💰', label: 'الخدمات والأسعار', active: false },
-  { icon: '🕐', label: 'المواعيد المتاحة', active: false },
-  { icon: '🏥', label: 'بيانات الفرع', active: false },
+  { icon: '📋', label: 'اليوم', href: '/dashboard/today', testId: 'nav-today' },
+  { icon: '📅', label: 'الأيام القادمة', href: '/dashboard/upcoming', testId: 'nav-upcoming' },
+  { icon: '💰', label: 'الخدمات والأسعار', href: null, testId: undefined },
+  { icon: '🕐', label: 'المواعيد المتاحة', href: null, testId: undefined },
+  { icon: '🏥', label: 'بيانات الفرع', href: null, testId: undefined },
 ]
 
+const ACTIVE_CLASS =
+  'flex items-center gap-2.5 rounded-lg bg-white/15 px-3 py-2.5 text-[13.5px] font-semibold text-white'
+const LINK_CLASS =
+  'flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13.5px] font-semibold text-white/80 transition-colors hover:bg-white/10 hover:text-white'
+const DISABLED_CLASS =
+  'flex cursor-not-allowed items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13.5px] text-white/40'
+
 export function SidebarNav() {
+  const pathname = usePathname()
+
   return (
     <nav
       data-print="hide"
@@ -19,29 +35,34 @@ export function SidebarNav() {
       style={{ background: 'var(--ih-surface-sidebar)' }}
     >
       <div className="flex items-center gap-2.5 px-3 pb-4 pt-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-ih-primary-400 text-base text-white">
-          ⚕
-        </div>
+        <Logo variant="white" size={32} />
         <span className="font-arabic text-[15px] font-bold text-white">بوابة الشركاء</span>
       </div>
 
-      {NAV_ITEMS.map((item) => (
-        <div
-          key={item.label}
-          aria-current={item.active ? 'page' : undefined}
-          aria-disabled={item.active ? undefined : true}
-          data-testid={item.active ? 'nav-today' : undefined}
-          className={
-            item.active
-              ? 'flex items-center gap-2.5 rounded-lg bg-white/15 px-3 py-2.5 text-[13.5px] font-semibold text-white'
-              : 'flex cursor-not-allowed items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13.5px] text-white/40'
-          }
-          title={item.active ? undefined : 'قريباً'}
-        >
-          <span aria-hidden="true">{item.icon}</span>
-          <span>{item.label}</span>
-        </div>
-      ))}
+      {NAV_ITEMS.map((item) => {
+        if (item.href === null) {
+          return (
+            <div key={item.label} aria-disabled={true} className={DISABLED_CLASS} title="قريباً">
+              <span aria-hidden="true">{item.icon}</span>
+              <span>{item.label}</span>
+            </div>
+          )
+        }
+
+        const isActive = pathname === item.href
+        return (
+          <Link
+            key={item.label}
+            href={item.href}
+            data-testid={item.testId}
+            aria-current={isActive ? 'page' : undefined}
+            className={isActive ? ACTIVE_CLASS : LINK_CLASS}
+          >
+            <span aria-hidden="true">{item.icon}</span>
+            <span>{item.label}</span>
+          </Link>
+        )
+      })}
     </nav>
   )
 }

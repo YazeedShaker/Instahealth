@@ -107,6 +107,26 @@ export function cairoWallClockToInstant(slotDate: string, slotTime: string): Dat
   return new Date(naiveUtc - cairoOffsetMsAt(new Date(naiveUtc)))
 }
 
+/**
+ * The Cairo calendar date at a given instant, as `YYYY-MM-DD`.
+ *
+ * This is the date the DASHBOARD means by "today", and it must be Cairo's, not
+ * the viewer's: a receptionist on a laptop whose clock says UTC would otherwise
+ * see the wrong day's list for two hours every night. It is also the value
+ * compared against `slots.slot_date`, which is a bare Egypt wall-clock date
+ * with no zone of its own.
+ *
+ * Built from `formatToParts` rather than `toISOString().slice(0, 10)` — the
+ * latter is the UTC date, which is a different day for part of every evening.
+ */
+export function formatCairoIsoDate(now: Date): string {
+  const parts = CAIRO_PARTS_FORMATTER.formatToParts(now)
+  const year = String(readPart(parts, 'year')).padStart(4, '0')
+  const month = String(readPart(parts, 'month')).padStart(2, '0')
+  const day = String(readPart(parts, 'day')).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 const ARABIC_INDIC_DIGITS = '٠١٢٣٤٥٦٧٨٩'
 
 /** Renders Western digits as Arabic-Indic for display (timers, distances, counters). */
