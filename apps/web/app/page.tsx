@@ -1,57 +1,30 @@
-import { CURRENCY, SLOT_HOLD_MINUTES } from '@instahealth/core'
-import { colors } from '@instahealth/design-tokens'
+import { redirect } from 'next/navigation'
 
-// Placeholder — proves tokens, fonts, and RTL work on web.
-// Becomes a redirect to /provider or /admin once those surfaces exist.
-export default function Home() {
-  return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-6 p-8">
-      {/* Arabic heading in Cairo (dir="rtl" on <html> switches the font stack) */}
-      <h1
-        className="text-3xl"
-        style={{
-          fontFamily: 'var(--font-cairo)',
-          fontWeight: 700,
-          color: 'var(--ih-neutral-900)',
-        }}
-      >
-        إنستاهيلث — منصة الحجوزات الطبية
-      </h1>
+import { getProviderContext } from '../lib/auth/provider'
 
-      {/* English subtitle in Atkinson Hyperlegible */}
-      <p
-        dir="ltr"
-        className="text-base"
-        style={{ fontFamily: 'var(--font-atkinson)', color: 'var(--ih-text-secondary)' }}
-      >
-        InstaHealth — provider dashboard &amp; admin (web shell)
-      </p>
+// The root is a signpost, not a page.
+//
+// It used to be SETUP-01's scaffold proof — an Arabic heading, a cream block
+// and a line printing `CURRENCY` and a resolved token — which existed to show
+// that fonts, RTL, `packages/core` and the token pipeline all worked on web.
+// Every one of those is now proven by a real screen the founder uses daily, so
+// keeping it meant `partners.instahealth.eg` greeted staff with a demo page.
+//
+// Routing matches what the dashboard already enforces, so there is ONE answer
+// to "who are you?" across this app:
+//   provider staff        → the Today view
+//   signed in, not staff  → back to the portal, rejected (same as /dashboard)
+//   signed out            → the portal
+//
+// `getProviderContext()` is the same server-side lookup the dashboard layout
+// uses — the branch is never derived from a URL, and a patient session cannot
+// talk its way in here any more than it can at /dashboard.
+export const dynamic = 'force-dynamic'
 
-      {/* Cream accent element via token */}
-      <div
-        className="rounded-ih-md p-4"
-        style={{ background: 'var(--ih-accent-300)', color: 'var(--ih-primary-700)' }}
-      >
-        ملاحظات التحضير تظهر هنا — لون الكريم هو بصمتنا البصرية
-      </div>
+export default async function RootPage() {
+  const lookup = await getProviderContext()
 
-      {/* Primary CTA using the teal token (via token, not hardcoded) */}
-      <button
-        type="button"
-        className="rounded-ih-md px-6 py-4 text-base"
-        style={{
-          background: 'var(--ih-primary-400)',
-          color: 'var(--ih-text-on-primary)',
-          fontFamily: 'var(--font-cairo)',
-          fontWeight: 600,
-        }}
-      >
-        لوحة تحكم مقدّم الخدمة
-      </button>
-
-      <p dir="ltr" className="text-xs" style={{ color: 'var(--ih-neutral-400)' }}>
-        core: {CURRENCY} · hold {SLOT_HOLD_MINUTES}m · tokens resolve: {colors.primary[400]}
-      </p>
-    </main>
-  )
+  if (lookup.kind === 'ok') redirect('/dashboard/today')
+  if (lookup.kind === 'notProvider') redirect('/login?rejected=1')
+  redirect('/login')
 }

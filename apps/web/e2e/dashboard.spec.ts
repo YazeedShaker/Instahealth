@@ -65,6 +65,29 @@ test.describe('provider dashboard — login', () => {
     await expect(page).toHaveURL(/\/login/)
   })
 
+  test('the ROOT sends a signed-in provider straight to Today', async ({ page }) => {
+    test.skip(!HAS_CREDS, 'PROVIDER_TEST_EMAIL / PROVIDER_TEST_PASSWORD not set')
+    await login(page, TOWN_RECEPTION)
+    await page.waitForURL('**/dashboard/today')
+
+    // The root is a signpost now, not SETUP-01's scaffold page.
+    await page.goto('/')
+    await expect(page).toHaveURL(/\/dashboard\/today/)
+  })
+
+  test('a rejected session is NOT bounced back into the dashboard', async ({ page }) => {
+    test.skip(!HAS_CREDS, 'PROVIDER_TEST_EMAIL / PROVIDER_TEST_PASSWORD not set')
+    await login(page, TOWN_RECEPTION)
+    await page.waitForURL('**/dashboard/today')
+
+    // Middleware normally sends a signed-in visitor from /login to the
+    // dashboard. With `rejected=1` it must NOT — that bounce is what made the
+    // rejection path an infinite loop for a session that is not staff.
+    await page.goto('/login?rejected=1')
+    await expect(page).toHaveURL(/rejected=1/)
+    await expect(page.getByTestId('login-rejected')).toBeVisible()
+  })
+
   test('signed-out visitors cannot reach the dashboard', async ({ page }) => {
     await page.goto('/dashboard/today')
     await expect(page).toHaveURL(/\/login/)
