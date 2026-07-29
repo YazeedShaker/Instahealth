@@ -76,17 +76,20 @@ export type Database = {
       }
       bookings: {
         Row: {
+          arrived_at: string | null
           booking_ref: string | null
           branch_id: string
           cancellation_reason: string | null
           cancelled_at: string | null
           cancelled_by: string | null
+          closed_by: string | null
           commission_amount: number | null
           commission_rate: number | null
           completed_at: string | null
           confirmed_at: string | null
           created_at: string | null
           id: string
+          no_show_at: string | null
           patient_notes: string | null
           payment_method: string | null
           payment_status: string | null
@@ -98,17 +101,20 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          arrived_at?: string | null
           booking_ref?: string | null
           branch_id: string
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
+          closed_by?: string | null
           commission_amount?: number | null
           commission_rate?: number | null
           completed_at?: string | null
           confirmed_at?: string | null
           created_at?: string | null
           id?: string
+          no_show_at?: string | null
           patient_notes?: string | null
           payment_method?: string | null
           payment_status?: string | null
@@ -120,17 +126,20 @@ export type Database = {
           user_id: string
         }
         Update: {
+          arrived_at?: string | null
           booking_ref?: string | null
           branch_id?: string
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
+          closed_by?: string | null
           commission_amount?: number | null
           commission_rate?: number | null
           completed_at?: string | null
           confirmed_at?: string | null
           created_at?: string | null
           id?: string
+          no_show_at?: string | null
           patient_notes?: string | null
           payment_method?: string | null
           payment_status?: string | null
@@ -792,6 +801,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      auto_close_stale_bookings: { Args: never; Returns: number }
       cancel_booking: {
         Args: { p_booking_id: string; p_cancelled_by: string; p_reason: string }
         Returns: Json
@@ -818,6 +828,33 @@ export type Database = {
           p_start_date?: string
         }
         Returns: number
+      }
+      get_branch_bookings_for_date: {
+        Args: { p_branch_id: string; p_date: string }
+        Returns: {
+          arrived_at: string
+          booking_ref: string
+          cancellation_reason: string
+          cancelled_at: string
+          cancelled_by: string
+          closed_by: string
+          completed_at: string
+          confirmed_at: string
+          created_at: string
+          id: string
+          no_show_at: string
+          patient_name_ar: string
+          patient_notes: string
+          patient_phone: string
+          payment_method: string
+          payment_status: string
+          services: Json
+          slot_date: string
+          slot_id: string
+          slot_time: string
+          status: string
+          total_amount: number
+        }[]
       }
       get_branch_slots: {
         Args: { p_branch_id: string; p_from?: string; p_to?: string }
@@ -857,6 +894,11 @@ export type Database = {
       }
       get_provider_branch_ids: { Args: never; Returns: string[] }
       get_user_role: { Args: never; Returns: string }
+      is_internal_caller: { Args: never; Returns: boolean }
+      mark_booking_outcome: {
+        Args: { p_booking_id: string; p_outcome: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
