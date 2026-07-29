@@ -185,6 +185,27 @@ pnpm audit --audit-level=high
   `auth.role()`. And check the GRANT as well as the body: the same idiom was
   harmless in three sibling functions purely because they had no anon grant.
 
+- **⚠ THE GENERAL LAW, learned three times: any fact with MONEY, STATE or
+  IDENTITY consequences is SERVER-DERIVED. Clients supply identities, never
+  values.** The three instances, each found the same way and each more
+  expensive than the last:
+  ① `confirm_booking` was PUBLIC-executable, so the client could declare a
+  booking paid (F06). ② `cancel_booking` wrote `p_cancelled_by` verbatim, so
+  the client could declare WHO cancelled (P02). ③ `bookings.total_amount` and
+  `booking_services.price_at_booking` were plain client INSERTs, so the client
+  could declare WHAT IT PAID — a 400 EGP service booked for 1 EGP, proven on
+  dev (migration 20260729160519).
+  The pattern is always the same: a value the client had no business asserting
+  travelled from the app to the database unchecked, and the guard that should
+  have caught it was somewhere else entirely (a policy about ownership, a
+  function about status). **Ownership is not authorization, and authorization
+  is not validation.**
+  So: **every new INSERT/UPDATE policy gets audited against this before merge.**
+  Ask of each column the client can write — could a modified client set this to
+  something that benefits it? If yes, the write belongs behind a SECURITY
+  DEFINER function that derives the value from data the client cannot reach.
+  And when you add that function, **close the old door in the same migration**:
+  an RPC beside an open INSERT policy is decoration, not a fix.
 - **A discriminator the CLIENT supplies is not a discriminator.**
   `cancel_booking` wrote `p_cancelled_by` verbatim, so a patient could record
   their own cancellation as `'provider'` — corrupting the field the dashboard

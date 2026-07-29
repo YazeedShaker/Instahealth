@@ -24,6 +24,10 @@ export interface PendingBooking {
   id: string
   bookingRef: string | null
   slotId: string
+  /** What the SERVER charged, derived from `branch_services` at creation time.
+   * Authoritative: if a price moved while the patient was choosing, this is
+   * the number to render, not the client's own sum. */
+  totalEgp: number
 }
 
 interface BookingStore {
