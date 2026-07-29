@@ -48,7 +48,7 @@ export function CancelOnBehalfDialog({
       aria-modal="true"
       aria-label="تأكيد إلغاء الحجز"
       style={{
-        position: 'absolute',
+        position: 'fixed',
         inset: 0,
         zIndex: 40,
         background: 'rgba(2,20,27,0.45)',

@@ -10,6 +10,7 @@ import {
 import { useRouter } from 'next/navigation'
 import { useCallback, useTransition } from 'react'
 
+import { signOut } from '../../app/login/actions'
 import { useBranchBookings } from '../../hooks/useBranchBookings'
 import type { BranchDay } from '../../lib/bookings/branch-days'
 import { Alert } from '../ui/Alert'
@@ -153,9 +154,32 @@ export function UpcomingView({
           >
             {displayName.trim().charAt(0)}
           </div>
-          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--ih-neutral-700)' }}>
-            {displayName}
-          </span>
+          {/* Name ABOVE sign-out, as the design draws it. A receptionist on a
+              shared front desk must be able to sign out from EVERY screen, not
+              only from Today. */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--ih-neutral-700)' }}>
+              {displayName}
+            </span>
+            <form action={signOut}>
+              <button
+                type="submit"
+                data-testid="logout"
+                style={{
+                  fontSize: 11,
+                  color: 'var(--ih-neutral-500)',
+                  textDecoration: 'underline',
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer',
+                  font: 'inherit',
+                }}
+              >
+                تسجيل خروج
+              </button>
+            </form>
+          </div>
         </div>
       </header>
 
@@ -171,7 +195,7 @@ export function UpcomingView({
 
       <main
         data-print="scroll"
-        className="relative min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-4"
+        className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-4"
         style={{ opacity: isSwitching ? 0.6 : 1, transition: 'opacity 120ms' }}
       >
         <div

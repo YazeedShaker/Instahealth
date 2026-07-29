@@ -152,7 +152,7 @@ export function TodayView({
 
       {/* `position: relative` anchors the drawer and its scrim to the content
           column, so the sidebar stays reachable behind them. */}
-      <main data-print="scroll" className="relative min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-4">
+      <main data-print="scroll" className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-4">
         {loadFailed && bookings.length === 0 ? (
           <BookingsLoadError onRetry={() => void refresh()} />
         ) : (

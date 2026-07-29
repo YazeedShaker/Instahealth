@@ -82,10 +82,16 @@ export function BookingDrawer({
 
   return (
     <>
+      {/* `fixed`, not `absolute`: the design anchors the scrim and the drawer to
+          the ROOT shell container, so they cover the sidebar and the top header
+          too. The dashboard shell is h-screen, which makes viewport-fixed
+          exactly equivalent — and it avoids threading a portal target through
+          two screens. A scrim confined to <main> dims the list but leaves the
+          nav looking live, which reads as "still clickable" when it is not. */}
       <div
         data-print="hide"
         onClick={onClose}
-        style={{ position: 'absolute', inset: 0, zIndex: 20, background: 'rgba(2,20,27,0.35)' }}
+        style={{ position: 'fixed', inset: 0, zIndex: 20, background: 'rgba(2,20,27,0.35)' }}
       />
       <div
         data-testid="booking-drawer"
@@ -94,7 +100,7 @@ export function BookingDrawer({
         aria-modal="true"
         aria-label="تفاصيل الحجز"
         style={{
-          position: 'absolute',
+          position: 'fixed',
           top: 0,
           bottom: 0,
           left: 0,
