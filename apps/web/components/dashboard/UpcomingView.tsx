@@ -31,6 +31,7 @@ export function UpcomingView({
   cairoTodayIso,
   days,
   initialBookings,
+  initialTotal,
   initialLoadFailed,
 }: {
   branchId: string
@@ -42,6 +43,7 @@ export function UpcomingView({
   cairoTodayIso: string
   days: BranchDay[]
   initialBookings: BranchBooking[]
+  initialTotal: number
   initialLoadFailed: boolean
 }) {
   const router = useRouter()
@@ -56,10 +58,20 @@ export function UpcomingView({
     refresh,
     markOutcome,
     cancelOnBehalf,
+    search,
+    setSearch,
+    status,
+    setStatus,
+    page,
+    setPage,
+    pageSize,
+    total,
+    isQuerying,
   } = useBranchBookings({
     branchId,
     isoDate,
     initialBookings,
+    initialTotal,
     initialLoadFailed,
     // A future day has no "new since you last looked" — every booking on it is
     // pending. The highlight would be noise rather than a signal.
@@ -253,6 +265,17 @@ export function UpcomingView({
             newIds={newIds}
             pendingIds={pendingIds}
             nowHHMM="00:00"
+            toolbar={{
+              search,
+              onSearch: setSearch,
+              status,
+              onStatus: setStatus,
+              page,
+              pageSize,
+              total,
+              onPage: setPage,
+              isQuerying,
+            }}
             onMark={(id, outcome) => void markOutcome(id, outcome)}
             onCancel={cancelOnBehalf}
             emptyState={

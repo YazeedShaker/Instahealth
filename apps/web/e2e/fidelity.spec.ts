@@ -69,6 +69,15 @@ async function signIn(page: import('@playwright/test').Page) {
   await page.getByTestId('login-password').fill(PROVIDER_PASSWORD)
   await page.getByTestId('login-submit').click()
   await page.waitForURL('**/dashboard/today')
+  // Wait for the TABLE, not just the URL. `waitForURL` resolves before the
+  // RSC payload paints, so a `rows.count()` straight after it read 0 and the
+  // capture skipped itself — a skip that looked exactly like "no data today".
+  // Generous timeout on purpose: this waits on a SERVER-rendered fetch against
+  // the remote dev database, and three Playwright workers contend for the dev
+  // server. The default 5s is a load-dependent flake, not a real signal.
+  await expect(page.getByTestId('bookings-list').or(page.getByTestId('today-empty'))).toBeVisible({
+    timeout: 30_000,
+  })
 }
 
 test('capture: booking detail drawer', async ({ page }) => {
@@ -120,4 +129,44 @@ test('capture: upcoming days', async ({ page }) => {
   await hideDevOverlay(page)
   await page.evaluate(() => document.fonts.ready)
   await page.screenshot({ path: `${P02_SHOT_DIR}/upcoming-build.png`, fullPage: false })
+})
+
+test('capture: drawer with the preparation detail expanded', async ({ page }) => {
+  test.skip(!HAS_CREDS, 'PROVIDER_TEST_EMAIL / PROVIDER_TEST_PASSWORD not set')
+  await signIn(page)
+
+  const rows = page.getByTestId(/^booking-row-/)
+  const count = await rows.count()
+  test.skip(count === 0, 'no bookings today at Town to open')
+
+  // Open the first booking that actually carries preparation.
+  for (let index = 0; index < count; index += 1) {
+    await rows.nth(index).click()
+    if ((await page.getByTestId('prep-strip').count()) > 0) break
+    await page.getByTestId('drawer-close').click()
+  }
+  test.skip(
+    (await page.getByTestId('prep-strip').count()) === 0,
+    'no booking today needs preparation',
+  )
+
+  await page.getByTestId('prep-strip-toggle').click()
+  await expect(page.getByTestId('prep-strip-details')).toBeVisible()
+  // The drawer body scrolls, and the strip sits near its foot — bring the
+  // expanded detail into frame or the capture proves nothing.
+  await page.getByTestId('prep-strip-details').scrollIntoViewIfNeeded()
+  await hideDevOverlay(page)
+  await page.evaluate(() => document.fonts.ready)
+  await page.screenshot({ path: `${P02_SHOT_DIR}/drawer-prep-expanded-build.png`, fullPage: false })
+})
+
+test('capture: today with the search and filter toolbar', async ({ page }) => {
+  test.skip(!HAS_CREDS, 'PROVIDER_TEST_EMAIL / PROVIDER_TEST_PASSWORD not set')
+  await signIn(page)
+  await expect(page.getByTestId('bookings-search')).toBeVisible()
+  await page.getByTestId('filter-completed').click()
+  await expect(page.getByTestId('bookings-count')).toContainText('من')
+  await hideDevOverlay(page)
+  await page.evaluate(() => document.fonts.ready)
+  await page.screenshot({ path: `${P02_SHOT_DIR}/today-filtered-build.png`, fullPage: false })
 })

@@ -31,6 +31,7 @@ export function TodayView({
   slotDurationMinutes,
   isoDate,
   initialBookings,
+  initialTotal,
   initialLoadFailed,
 }: {
   branchId: string
@@ -40,6 +41,7 @@ export function TodayView({
   slotDurationMinutes: number | null
   isoDate: string
   initialBookings: BranchBooking[]
+  initialTotal: number
   initialLoadFailed: boolean
 }) {
   const [nowHHMM, setNowHHMM] = useState(cairoNowHHMM)
@@ -56,10 +58,20 @@ export function TodayView({
     refresh,
     markOutcome,
     cancelOnBehalf,
+    search,
+    setSearch,
+    status,
+    setStatus,
+    page,
+    setPage,
+    pageSize,
+    total,
+    isQuerying,
   } = useBranchBookings({
     branchId,
     isoDate,
     initialBookings,
+    initialTotal,
     initialLoadFailed,
     trackArrivals: true,
   })
@@ -165,6 +177,17 @@ export function TodayView({
               newIds={newIds}
               pendingIds={pendingIds}
               nowHHMM={nowHHMM}
+              toolbar={{
+                search,
+                onSearch: setSearch,
+                status,
+                onStatus: setStatus,
+                page,
+                pageSize,
+                total,
+                onPage: setPage,
+                isQuerying,
+              }}
               onMark={(id, outcome) => void markOutcome(id, outcome)}
               onCancel={cancelOnBehalf}
               emptyState={

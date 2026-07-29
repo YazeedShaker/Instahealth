@@ -830,7 +830,14 @@ export type Database = {
         Returns: number
       }
       get_branch_bookings_for_date: {
-        Args: { p_branch_id: string; p_date: string }
+        Args: {
+          p_branch_id: string
+          p_date: string
+          p_limit?: number
+          p_offset?: number
+          p_search?: string
+          p_status?: string
+        }
         Returns: {
           arrived_at: string
           booking_ref: string
@@ -854,6 +861,7 @@ export type Database = {
           slot_time: string
           status: string
           total_amount: number
+          total_count: number
         }[]
       }
       get_branch_slots: {

@@ -441,6 +441,20 @@ Two more, both found while capturing P02's screenshots:
   in the first fidelity capture looking like a stray black disc over the drawer
   footer. Hide it in captures (`nextjs-portal` display:none) rather than
   explaining it away in the PR.
+- **`waitForURL` resolves BEFORE the page paints.** Nine P02 tests guarded on
+  `test.skip((await rows.count()) === 0)` and quietly began skipping themselves
+  once the page got a little heavier — the count ran before the RSC payload
+  landed. They had been passing on timing luck. Wait for the CONTENT
+  (`expect(list.or(empty)).toBeVisible()`), and give it a real budget when it
+  waits on a server-rendered fetch against the remote dev DB with several
+  workers contending. Same family as the credentials skip in §4: **a skipped
+  suite and a passing suite look identical in the summary line** — read the
+  counts, and if a number moved, find out why.
+- **A fixed `waitForTimeout` after a debounced action is a coin flip.** The
+  server-side search check raced its own 300ms debounce plus a round trip and
+  reported a false failure at 1200ms. Use a web-first assertion that describes
+  the END STATE and retries — for a filter, assert that no NON-matching row
+  remains rather than sampling the rows once.
 - **Read the screenshot you just captured.** The first P02 drawer capture looked
   fine in the accessibility tree but showed the scrim confined to `<main>`, with
   the sidebar and header undimmed — the design anchors both to the root shell.

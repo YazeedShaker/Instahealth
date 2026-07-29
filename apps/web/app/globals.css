@@ -17,6 +17,39 @@ body {
   color: var(--ih-text-primary);
 }
 
+/* ── Loading shimmer ───────────────────────────────────────────────────────
+ * Used by the route-level loading.tsx skeletons. The dashboard routes are
+ * force-dynamic and fetch server-side before first paint, so without a
+ * skeleton a navigation left the OLD screen on display and read as a click
+ * that never registered. */
+.ih-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--ih-neutral-100) 25%,
+    var(--ih-neutral-50) 37%,
+    var(--ih-neutral-100) 63%
+  );
+  background-size: 400% 100%;
+  animation: ih-shimmer-sweep 1.4s ease-in-out infinite;
+}
+
+@keyframes ih-shimmer-sweep {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+/* Respect the OS setting — a sweeping gradient is exactly the kind of motion
+   people turn this on to avoid. The placeholder stays, it just stops moving. */
+@media (prefers-reduced-motion: reduce) {
+  .ih-shimmer {
+    animation: none;
+  }
+}
+
 /* ── Print / PDF export ────────────────────────────────────────────────────
  * "طباعة القائمة" was printing the SCREEN: a fixed 220px sidebar, a flex
  * column locked to 100vh with its own scroll container, and a 7-column grid

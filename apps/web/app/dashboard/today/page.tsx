@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 
 import { getProviderContext } from '../../../lib/auth/provider'
 import { createClient } from '../../../lib/supabase/server'
+import { BOOKINGS_PAGE_SIZE } from '../../../hooks/useBranchBookings'
 import { fetchBranchBookings } from '../../../lib/bookings/branch-bookings'
 import { TodayView } from '../../../components/dashboard/TodayView'
 
@@ -27,12 +28,19 @@ export default async function TodayPage() {
 
   // Server-rendered first paint: the desk sees today's list immediately rather
   // than a skeleton that resolves after hydration.
-  let initialBookings: BranchBooking[]
+  // Server-rendered first paint: page one, unfiltered. The client re-queries
+  // only once the desk searches, filters or pages.
+  let initialBookings: BranchBooking[] = []
+  let initialTotal = 0
   let loadFailed = false
   try {
-    initialBookings = await fetchBranchBookings(supabase, context.branchId, isoDate)
+    const page = await fetchBranchBookings(supabase, context.branchId, isoDate, {
+      limit: BOOKINGS_PAGE_SIZE,
+      offset: 0,
+    })
+    initialBookings = page.bookings
+    initialTotal = page.total
   } catch {
-    initialBookings = []
     loadFailed = true
   }
 
@@ -45,6 +53,7 @@ export default async function TodayPage() {
       slotDurationMinutes={context.slotDurationMinutes}
       isoDate={isoDate}
       initialBookings={initialBookings}
+      initialTotal={initialTotal}
       initialLoadFailed={loadFailed}
     />
   )

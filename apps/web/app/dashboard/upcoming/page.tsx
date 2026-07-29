@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 
 import { UpcomingView } from '../../../components/dashboard/UpcomingView'
 import { getProviderContext } from '../../../lib/auth/provider'
+import { BOOKINGS_PAGE_SIZE } from '../../../hooks/useBranchBookings'
 import { fetchBranchBookings } from '../../../lib/bookings/branch-bookings'
 import { fetchBranchDays, type BranchDay } from '../../../lib/bookings/branch-days'
 import { createClient } from '../../../lib/supabase/server'
@@ -61,12 +62,19 @@ export default async function UpcomingPage({
       ? requested
       : (days[0]?.isoDate ?? tomorrowIso)
 
-  let initialBookings: BranchBooking[]
+  // Server-rendered first paint: page one, unfiltered. The client re-queries
+  // only once the desk searches, filters or pages.
+  let initialBookings: BranchBooking[] = []
+  let initialTotal = 0
   let loadFailed = false
   try {
-    initialBookings = await fetchBranchBookings(supabase, context.branchId, isoDate)
+    const page = await fetchBranchBookings(supabase, context.branchId, isoDate, {
+      limit: BOOKINGS_PAGE_SIZE,
+      offset: 0,
+    })
+    initialBookings = page.bookings
+    initialTotal = page.total
   } catch {
-    initialBookings = []
     loadFailed = true
   }
 
@@ -81,6 +89,7 @@ export default async function UpcomingPage({
       cairoTodayIso={cairoTodayIso}
       days={days}
       initialBookings={initialBookings}
+      initialTotal={initialTotal}
       initialLoadFailed={loadFailed}
     />
   )
