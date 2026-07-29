@@ -54,7 +54,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  if (pathname === '/login' && user) {
+  // A signed-in visitor has no business on the portal — EXCEPT when they were
+  // just bounced off a staff-only surface.
+  //
+  // ⚠ Without the `rejected` exemption this is an infinite loop: the dashboard
+  // layout sends a non-staff session to /login?rejected=1, middleware sees a
+  // session on /login and sends it back to /dashboard/today, the layout rejects
+  // it again. It is reachable whenever a session exists that is NOT provider
+  // staff — a provider deactivated mid-session, which is exactly the case the
+  // layout calls its backstop. Found while pointing the root route at the same
+  // rejection path.
+  const wasRejected = request.nextUrl.searchParams.get('rejected') === '1'
+  if (pathname === '/login' && user && !wasRejected) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard/today'
     url.search = ''
