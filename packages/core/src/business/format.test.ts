@@ -1,7 +1,13 @@
 import { describe, expect, test } from 'vitest'
 
 import { convertArabicDigits } from './phone'
-import { cairoWallClockToInstant, formatArabicDate, formatEGP, formatSlotTime } from './format'
+import {
+  cairoWallClockToInstant,
+  formatArabicDate,
+  formatCairoIsoDate,
+  formatEGP,
+  formatSlotTime,
+} from './format'
 
 // A January date keeps Cairo firmly at UTC+2 (no DST ambiguity in assertions).
 const WINTER_MORNING = new Date(Date.UTC(2026, 0, 15, 7, 30)) // Thursday 09:30 Cairo time
@@ -84,5 +90,30 @@ describe('cairoWallClockToInstant', () => {
   test('malformed values throw rather than yielding an Invalid Date', () => {
     expect(() => cairoWallClockToInstant('28-07-2026', '15:00:00')).toThrow(/slotDate/)
     expect(() => cairoWallClockToInstant('2026-07-28', 'quarter past three')).toThrow(/slotTime/)
+  })
+})
+
+describe('formatCairoIsoDate — the dashboard\'s "today"', () => {
+  test('reads the Cairo calendar date, not the UTC one', () => {
+    // 22:30 UTC on the 20th is already 00:30 on the 21st in Cairo. This is the
+    // whole reason the helper exists: `toISOString().slice(0, 10)` would answer
+    // "2026-01-20" and the desk would be shown yesterday's list every evening.
+    expect(formatCairoIsoDate(new Date(Date.UTC(2026, 0, 20, 22, 30)))).toBe('2026-01-21')
+  })
+
+  test('a mid-morning instant is the same day either way', () => {
+    expect(formatCairoIsoDate(new Date(Date.UTC(2026, 0, 20, 7, 30)))).toBe('2026-01-20')
+  })
+
+  test('it crosses the year boundary with Cairo, not with UTC', () => {
+    expect(formatCairoIsoDate(new Date(Date.UTC(2026, 11, 31, 22, 30)))).toBe('2027-01-01')
+  })
+
+  test('single-digit months and days are zero-padded, so string compare is safe', () => {
+    // The future-day rule compares this against slots.slot_date as plain
+    // strings — unpadded output would make "2026-1-9" > "2026-01-20".
+    const formatted = formatCairoIsoDate(new Date(Date.UTC(2026, 0, 9, 10, 0)))
+    expect(formatted).toBe('2026-01-09')
+    expect(formatted).toMatch(/^\d{4}-\d{2}-\d{2}$/)
   })
 })

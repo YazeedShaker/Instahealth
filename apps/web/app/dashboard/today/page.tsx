@@ -1,4 +1,4 @@
-import type { BranchBooking } from '@instahealth/core'
+import { formatCairoIsoDate, type BranchBooking } from '@instahealth/core'
 import type { Metadata } from 'next'
 
 import { getProviderContext } from '../../../lib/auth/provider'
@@ -13,19 +13,16 @@ export const metadata: Metadata = {
 // Never cache: the desk's whole job is seeing what is true right now.
 export const dynamic = 'force-dynamic'
 
-/** Today in CAIRO, not in the server's timezone — slots are Egypt wall clock,
- * so a Frankfurt-hosted render must still ask for the Egyptian date. */
-function cairoToday(): string {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Cairo' }).format(new Date())
-}
-
 export default async function TodayPage() {
   // The layout already redirected anyone who is not staff, so this is staff.
   const lookup = await getProviderContext()
   if (lookup.kind !== 'ok') return null
   const { context } = lookup
 
-  const isoDate = cairoToday()
+  // Today in CAIRO, not in the server's timezone — slots are Egypt wall clock,
+  // so a Frankfurt-hosted render must still ask for the Egyptian date. Shared
+  // with the future-day predicate in core, so both sides mean the same "today".
+  const isoDate = formatCairoIsoDate(new Date())
   const supabase = await createClient()
 
   // Server-rendered first paint: the desk sees today's list immediately rather
@@ -45,6 +42,7 @@ export default async function TodayPage() {
       branchNameAr={context.branchNameAr}
       displayName={context.displayName}
       slotAllocation={context.slotAllocation}
+      slotDurationMinutes={context.slotDurationMinutes}
       isoDate={isoDate}
       initialBookings={initialBookings}
       initialLoadFailed={loadFailed}

@@ -5,6 +5,8 @@ import {
   BUTTON_BASE,
   BUTTON_SIZES,
   BUTTON_VARIANTS,
+  CHIP_BASE,
+  PREPARATION_NOTE,
   STATUS_BADGES,
   STATUS_BADGE_BASE,
   type ButtonVariant,
@@ -159,6 +161,12 @@ describe('token resolution', () => {
       ]),
       ...Object.values(STATUS_BADGES).flatMap((s) => [s.background, s.color]),
       ...Object.values(ALERTS).flatMap((a) => [a.background, a.accent, a.text]),
+      PREPARATION_NOTE.background,
+      PREPARATION_NOTE.borderColor,
+      PREPARATION_NOTE.titleColor,
+      PREPARATION_NOTE.bodyColor,
+      CHIP_BASE.defaultBackground,
+      CHIP_BASE.defaultColor,
     ].filter((ref): ref is string => ref !== null)
 
     for (const ref of refs) {

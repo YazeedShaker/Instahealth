@@ -16,25 +16,46 @@ import {
 import { Button } from '../ui/Button'
 import { StatusBadge } from '../ui/StatusBadge'
 
-// One row of the Today list. The column grid matches the approved design:
+// One row of the bookings list. The column grid matches the approved design:
 // الموعد · المريض · الخدمات · الدفع · الحالة · الإجراء
-const GRID = 'grid grid-cols-[90px_200px_1fr_150px_118px_180px_44px] items-center gap-3'
+//
+// ONE row component serves Today AND Upcoming Days (SPEC-P02: "literally the
+// same component, parameterized by date"). The action column collapses on a
+// future day because `getPrimaryOutcomeAction` is date-aware — not because the
+// screen decided to hide it, which is what would let the two views drift.
+// Today carries the الإجراء column; the Upcoming Days design drops it and ends
+// the row with a ‹ detail chevron instead, because a future day has no outcome
+// to record. Two layouts, ONE component — and the behaviour is still governed
+// by the date predicate below, not by which grid was chosen.
+export const BOOKINGS_GRID_WITH_ACTIONS =
+  'grid grid-cols-[90px_200px_1fr_150px_118px_180px_44px] items-center gap-3'
+export const BOOKINGS_GRID_READ_ONLY =
+  'grid grid-cols-[90px_200px_1fr_150px_118px_44px] items-center gap-3'
 
 export function BookingRow({
   booking,
+  cairoTodayIso,
+  showActions,
   isNew,
   isPast,
   isPending,
+  isSelected,
   onMark,
+  onOpen,
 }: {
   booking: BranchBooking
+  cairoTodayIso: string
+  showActions: boolean
   isNew: boolean
   isPast: boolean
   isPending: boolean
+  isSelected: boolean
   onMark: (bookingId: string, outcome: BookingOutcome) => void
+  onOpen: (bookingId: string) => void
 }) {
-  const action = getPrimaryOutcomeAction(booking)
-  const showNoShow = canMarkNoShow(booking) && isPast
+  const GRID = showActions ? BOOKINGS_GRID_WITH_ACTIONS : BOOKINGS_GRID_READ_ONLY
+  const action = getPrimaryOutcomeAction(booking, cairoTodayIso)
+  const showNoShow = canMarkNoShow(booking, cairoTodayIso) && isPast
   const cash = isAwaitingCashCollection(booking)
   const isCancelled = booking.status === 'cancelled'
 
@@ -42,15 +63,28 @@ export function BookingRow({
     <div
       data-testid={`booking-row-${booking.id}`}
       data-print="row"
-      className={`${GRID} min-h-16 border-b border-ih-neutral-100 px-4 transition-colors`}
+      role="button"
+      tabIndex={0}
+      aria-label={`تفاصيل حجز ${booking.patientNameAr ?? 'مريض'}`}
+      onClick={() => onOpen(booking.id)}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          onOpen(booking.id)
+        }
+      }}
+      className={`${GRID} min-h-16 cursor-pointer border-b border-ih-neutral-100 px-4 transition-colors`}
       style={{
         // Past rows grey out; a brand-new one carries the cream highlight and
-        // the primary edge, both from the design's legend.
-        background: isNew
-          ? 'var(--ih-accent-200)'
-          : isPast && booking.status !== 'arrived'
-            ? 'var(--ih-neutral-50)'
-            : 'var(--ih-neutral-0)',
+        // the primary edge, both from the design's legend. The row whose
+        // drawer is open takes the primary tint, as the design draws it.
+        background: isSelected
+          ? 'var(--ih-primary-50)'
+          : isNew
+            ? 'var(--ih-accent-200)'
+            : isPast && booking.status !== 'arrived'
+              ? 'var(--ih-neutral-50)'
+              : 'var(--ih-neutral-0)',
         borderInlineStartWidth: 3,
         borderInlineStartStyle: 'solid',
         borderInlineStartColor: isNew ? 'var(--ih-primary-400)' : 'transparent',
@@ -97,6 +131,9 @@ export function BookingRow({
           <a
             href={`tel:${booking.patientPhone}`}
             dir="ltr"
+            // The row opens the drawer; the phone link must place a call and
+            // nothing else.
+            onClick={(event) => event.stopPropagation()}
             style={{
               display: 'block',
               fontSize: 12.5,
@@ -162,44 +199,53 @@ export function BookingRow({
         <StatusBadge status={booking.status} testId={`status-chip-${booking.id}`} />
       </div>
 
-      <div className="flex gap-1.5" data-print="hide">
-        {action !== null ? (
-          <Button
-            size="sm"
-            variant="primary"
-            data-testid={`action-${action.outcome}-${booking.id}`}
-            disabled={isPending}
-            onClick={() => onMark(booking.id, action.outcome)}
-          >
-            {action.labelAr}
-          </Button>
-        ) : null}
-        {showNoShow ? (
-          <Button
-            size="sm"
-            variant="ghost"
-            data-testid={`action-no_show-${booking.id}`}
-            disabled={isPending}
-            onClick={() => onMark(booking.id, 'no_show')}
-            style={{ color: 'var(--ih-neutral-600)' }}
-          >
-            لم يحضر
-          </Button>
-        ) : null}
-        {action === null && !showNoShow ? (
-          <span className="text-[12.5px] text-ih-neutral-400">—</span>
-        ) : null}
-      </div>
+      {showActions ? (
+        <div className="flex gap-1.5" data-print="hide">
+          {action !== null ? (
+            <Button
+              size="sm"
+              variant="primary"
+              data-testid={`action-${action.outcome}-${booking.id}`}
+              disabled={isPending}
+              onClick={(event) => {
+                event.stopPropagation()
+                onMark(booking.id, action.outcome)
+              }}
+            >
+              {action.labelAr}
+            </Button>
+          ) : null}
+          {showNoShow ? (
+            <Button
+              size="sm"
+              variant="ghost"
+              data-testid={`action-no_show-${booking.id}`}
+              disabled={isPending}
+              onClick={(event) => {
+                event.stopPropagation()
+                onMark(booking.id, 'no_show')
+              }}
+              style={{ color: 'var(--ih-neutral-600)' }}
+            >
+              لم يحضر
+            </Button>
+          ) : null}
+          {action === null && !showNoShow ? (
+            <span className="text-[12.5px] text-ih-neutral-400">—</span>
+          ) : null}
+        </div>
+      ) : null}
 
-      {/* Row overflow — the drawer it opens is P02, so it is present and
-          visibly inert rather than missing from the layout. */}
+      {/* The detail affordance. The whole row is the click target, so this is
+          a visual cue rather than a second control — a nested <button> inside
+          a role="button" row would be two overlapping controls to a screen
+          reader (the same trap as nested Pressables on mobile). */}
       <div
         data-print="hide"
-        aria-label="خيارات أخرى"
-        title="قريباً"
+        aria-hidden="true"
         className="flex h-11 w-11 items-center justify-center rounded-lg text-base text-ih-neutral-400"
       >
-        ⋯
+        {showActions ? '⋯' : '‹'}
       </div>
     </div>
   )

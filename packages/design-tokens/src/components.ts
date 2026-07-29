@@ -250,6 +250,32 @@ export const STATUS_BADGE_BASE = {
   gap: 6,
 } as const
 
+// ── PreparationNote ────────────────────────────────────────────────────────
+
+/** The design system's own `components/feedback/PreparationNote.jsx` — the
+ * accent-tinted block that carries fasting/preparation instructions. Both the
+ * patient app and the dashboard drawer show the SAME note to the SAME patient,
+ * so it belongs in the contract rather than being drawn twice.
+ *
+ * `titleColor` on the primary-700 and body on primary-800 is the bundle's own
+ * pairing, not a choice made here. */
+export const PREPARATION_NOTE = {
+  background: 'accent.200',
+  borderWidth: 1,
+  borderColor: 'accent.400',
+  borderRadius: 8,
+  paddingY: 14, // 0.875rem
+  paddingX: 16, // 1rem
+  titleFontSize: 12, // 0.75rem
+  titleFontWeight: 700,
+  titleColor: 'primary.700',
+  titleLetterSpacing: '0.08em',
+  titleMarginBottom: 5.6, // 0.35rem
+  bodyFontSize: 14, // 0.875rem
+  bodyColor: 'primary.800',
+  bodyLineHeight: 1.6,
+} as const
+
 // ── Chip ───────────────────────────────────────────────────────────────────
 
 export const CHIP_BASE = {

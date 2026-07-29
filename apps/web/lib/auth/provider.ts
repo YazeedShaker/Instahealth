@@ -15,6 +15,10 @@ export interface ProviderContext {
   branchId: string
   branchNameAr: string
   slotAllocation: number
+  /** Expected minutes per visit, for the drawer's «مدة الخدمة المتوقعة» line.
+   * NULL when the branch never declared one — the line then disappears rather
+   * than inventing a number. */
+  slotDurationMinutes: number | null
 }
 
 export type ProviderLookup =
@@ -48,7 +52,7 @@ export async function getProviderContext(): Promise<ProviderLookup> {
   // this is the flag the spec asked for — a branch switcher is P03+ work.
   const { data: branch } = await supabase
     .from('branches')
-    .select('name_ar, instahealth_slot_allocation')
+    .select('name_ar, instahealth_slot_allocation, slot_duration_minutes')
     .eq('id', branchId)
     .maybeSingle()
 
@@ -66,6 +70,7 @@ export async function getProviderContext(): Promise<ProviderLookup> {
       branchId,
       branchNameAr: branch.name_ar,
       slotAllocation: branch.instahealth_slot_allocation ?? 0,
+      slotDurationMinutes: branch.slot_duration_minutes,
     },
   }
 }
