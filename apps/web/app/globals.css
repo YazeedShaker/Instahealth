@@ -1,10 +1,96 @@
 @import 'tailwindcss';
 @config '../tailwind.config.ts';
 
-/* Shared design tokens — CSS custom properties (--ih-*) from packages/design-tokens */
-@import '@instahealth/design-tokens/tokens.css';
+/* Shared design tokens — CSS custom properties (--ih-*) from packages/design-tokens.
+ *
+ * ⚠ `layer(base)` IS LOAD-BEARING. tokens.css carries a `*, *::before, *::after`
+ * reset that zeroes margin and padding. Imported unlayered, it lands OUTSIDE
+ * Tailwind's cascade layers — and unlayered CSS beats layered CSS no matter the
+ * specificity — so it silently deleted every `p-*` and `m-*` utility in the
+ * whole web app. (`gap-*` survived, which is why the breakage read as "the
+ * design is just wrong" rather than "the CSS is broken".) Putting it in the
+ * base layer restores the normal reset → utilities order. */
+@import '@instahealth/design-tokens/tokens.css' layer(base);
 
 body {
   background: var(--ih-bg);
   color: var(--ih-text-primary);
+}
+
+/* ── Print / PDF export ────────────────────────────────────────────────────
+ * "طباعة القائمة" was printing the SCREEN: a fixed 220px sidebar, a flex
+ * column locked to 100vh with its own scroll container, and a 7-column grid
+ * sized for 1366px. On A4 that cropped the row, overlapped the columns and
+ * lost everything below the fold.
+ *
+ * The desk prints this to work from on paper, so the print view is a DIFFERENT
+ * layout, not a scaled screenshot: chrome off, one flat table, every row
+ * visible, and page breaks that never split a patient in half. */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 12mm 10mm;
+  }
+
+  html,
+  body {
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  /* Keep the chips and the cash highlight — they are the whole point of the
+     printed sheet, and browsers drop backgrounds by default. */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Interactive chrome has no meaning on paper. */
+  [data-print='hide'] {
+    display: none !important;
+  }
+
+  /* The app shell is built for a fixed viewport; let it flow for print. */
+  [data-print='page'],
+  [data-print='page'] * {
+    overflow: visible !important;
+  }
+  [data-print='page'] {
+    display: block !important;
+    height: auto !important;
+  }
+  [data-print='scroll'] {
+    display: block !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  /* Rows and their header keep their column rhythm but stop reserving space
+     for the action buttons and the overflow control, which are hidden. */
+  [data-print='row'],
+  [data-print='head'] {
+    grid-template-columns: 64px 190px 1fr 130px 96px !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    min-height: 0 !important;
+    padding: 6px 8px !important;
+  }
+
+  [data-print='card'] {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
+  /* A header the paper needs but the screen does not. */
+  [data-print='title'] {
+    display: block !important;
+    margin-bottom: 8px;
+  }
+}
+
+[data-print='title'] {
+  display: none;
 }

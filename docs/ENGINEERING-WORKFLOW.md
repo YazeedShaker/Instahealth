@@ -371,6 +371,33 @@ pnpm audit --audit-level=high
   `formatPrepSmsNoteAr` ("صيام ١٢ ساعة قبل الموعد") and the app holds the
   detail. Print the actual message in verification scripts and read it.
 
+## 9 · UI fidelity — prove it, don't assert it
+
+**Any PR claiming design fidelity ships comparison screenshots in its body:
+your build beside the design bundle's screen.** No screenshots, no fidelity
+claim. `apps/web/e2e/fidelity.spec.ts` is the capture harness — it writes to
+`docs/design-briefs/<feature>-fidelity/` at **1366×768**, the desktop floor from
+the DESIGN-02 brief, because that is where layouts break.
+
+Why this is a rule: P01's first dashboard build was written from the `.dc.html`
+by eye, looked plausible in an accessibility tree, and was visibly wrong the
+moment the founder opened it. Reading markup is not seeing a screen.
+
+Two failure modes it catches, both from that build:
+
+- **Hand-copied values drift.** Implement design-system components from the
+  shared contract (`packages/design-tokens/src/components.ts`), never by
+  measuring a prototype. See CLAUDE.md §3a.
+- **Utilities can be silently dead.** In Tailwind v4, `@import 'tailwindcss'`
+  puts utilities in `@layer utilities`, and **unlayered CSS beats layered CSS
+  regardless of specificity**. `tokens.css` carries a
+  `*, *::before, *::after { margin: 0; padding: 0 }` reset — imported unlayered
+  it deleted EVERY `p-*` and `m-*` in the whole web app, while `gap-*` kept
+  working, so the breakage read as "the design is just wrong" instead of "the
+  CSS is broken". Import shared CSS with `layer(base)`. When spacing looks
+  uniformly wrong, probe a utility in the browser
+  (`getComputedStyle`) before touching markup.
+
 ## 8 · When something isn't in this file
 
 If you debug a toolchain/CI/platform trap that cost you more than one

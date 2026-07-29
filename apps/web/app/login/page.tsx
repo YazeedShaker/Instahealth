@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 
+import { Logo } from '../../components/ui/Logo'
 import { LoginForm } from './LoginForm'
 
 export const metadata: Metadata = {
@@ -27,19 +28,7 @@ export default async function LoginPage({
       <div className="flex min-w-0 flex-1 items-center justify-center p-10">
         <div className="flex w-full max-w-[380px] flex-col gap-[26px]">
           <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-ih-primary-400 text-lg text-white">
-                ⚕
-              </div>
-              <div className="flex flex-col items-start gap-px">
-                <span className="font-arabic text-[17px] font-bold leading-tight text-ih-primary-800">
-                  انستاهيلث
-                </span>
-                <span dir="ltr" className="font-english text-[11px] font-bold text-ih-neutral-600">
-                  InstaHealth
-                </span>
-              </div>
-            </div>
+            <Logo variant="color" size={36} withWordmark />
             <div className="flex flex-col gap-1.5">
               <h1 className="font-arabic text-2xl font-extrabold text-ih-neutral-800">
                 بوابة الشركاء
@@ -73,9 +62,7 @@ export default async function LoginPage({
           background: 'linear-gradient(135deg, var(--ih-primary-700), var(--ih-primary-500))',
         }}
       >
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/20 text-xl text-white">
-          ⚕
-        </div>
+        <Logo variant="white" size={44} />
         <div className="flex flex-col gap-[22px]">
           <div className="font-arabic text-[26px] font-extrabold leading-[1.5] text-white">
             كل حجوزات فرعك
