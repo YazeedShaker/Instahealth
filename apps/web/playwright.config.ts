@@ -38,6 +38,12 @@ loadEnvLocal()
 
 export default defineConfig({
   testDir: './e2e',
+  // Playwright's 30s default is not enough here: every dashboard test signs in
+  // and then waits on a SERVER-rendered fetch against the remote dev database,
+  // with three workers contending for one dev server. A 30s inner assertion
+  // inside a 30s test can never pass — the test dies first, and it looks like
+  // a missing element rather than a budget problem.
+  timeout: 90_000,
   reporter: [['html', { outputFolder: 'playwright-report', open: 'never' }], ['list']],
   use: {
     baseURL: 'http://localhost:3000',

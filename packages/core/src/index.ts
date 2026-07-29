@@ -23,6 +23,7 @@ export * from './business/payment'
 export * from './business/payment-paytabs'
 export * from './business/bookings'
 export * from './business/provider-bookings'
+export * from './business/service-pricing'
 export * from './business/sms'
 
 // Schemas

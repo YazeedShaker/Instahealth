@@ -6,13 +6,13 @@ import { usePathname } from 'next/navigation'
 import { Logo } from '../ui/Logo'
 
 // Sidebar per the approved design. اليوم and الأيام القادمة are real
-// destinations as of P02; the rest are P03+ screens and render DISABLED rather
+// destinations as of P03; the rest are P04+ screens and render DISABLED rather
 // than hidden, so the receptionist sees where the product is going without
 // hitting dead links.
 const NAV_ITEMS = [
   { icon: '📋', label: 'اليوم', href: '/dashboard/today', testId: 'nav-today' },
   { icon: '📅', label: 'الأيام القادمة', href: '/dashboard/upcoming', testId: 'nav-upcoming' },
-  { icon: '💰', label: 'الخدمات والأسعار', href: null, testId: undefined },
+  { icon: '💰', label: 'الخدمات والأسعار', href: '/dashboard/services', testId: 'nav-services' },
   { icon: '🕐', label: 'المواعيد المتاحة', href: null, testId: undefined },
   { icon: '🏥', label: 'بيانات الفرع', href: null, testId: undefined },
 ]

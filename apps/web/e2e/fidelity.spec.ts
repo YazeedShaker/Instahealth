@@ -170,3 +170,43 @@ test('capture: today with the search and filter toolbar', async ({ page }) => {
   await page.evaluate(() => document.fonts.ready)
   await page.screenshot({ path: `${P02_SHOT_DIR}/today-filtered-build.png`, fullPage: false })
 })
+
+test('capture: prices editor', async ({ page }) => {
+  test.skip(!HAS_CREDS, 'PROVIDER_TEST_EMAIL / PROVIDER_TEST_PASSWORD not set')
+  await signIn(page)
+  await page.getByTestId('nav-services').click()
+  await page.waitForURL('**/dashboard/services')
+  await expect(page.getByTestId('prices-notice')).toBeVisible({ timeout: 30_000 })
+  await hideDevOverlay(page)
+  await page.evaluate(() => document.fonts.ready)
+  await page.screenshot({
+    path: `${P02_SHOT_DIR}/../p03-fidelity/prices-build.png`,
+    fullPage: false,
+  })
+})
+
+test('capture: prices editor with the type-to-confirm dialog', async ({ page }) => {
+  test.skip(!HAS_CREDS, 'PROVIDER_TEST_EMAIL / PROVIDER_TEST_PASSWORD not set')
+  await signIn(page)
+  await page.getByTestId('nav-services').click()
+  await page.waitForURL('**/dashboard/services')
+  await expect(page.getByTestId('prices-notice')).toBeVisible({ timeout: 30_000 })
+
+  const edit = page.getByTestId(/^edit-/).first()
+  await edit.click()
+  const input = page.getByTestId(/^price-input-/).first()
+  const current = Number(await input.inputValue())
+  // A change big enough to demand retyping, but inside the server's 10x guard.
+  await input.fill(String(current * 3))
+  await page
+    .getByTestId(/^save-/)
+    .first()
+    .click()
+  await expect(page.getByTestId('price-confirm-dialog')).toBeVisible()
+  await hideDevOverlay(page)
+  await page.evaluate(() => document.fonts.ready)
+  await page.screenshot({
+    path: `${P02_SHOT_DIR}/../p03-fidelity/prices-confirm-build.png`,
+    fullPage: false,
+  })
+})
