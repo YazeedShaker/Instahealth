@@ -62,6 +62,28 @@ export const colors = {
     info: '#028090',
     infoBg: '#E0F2F4',
   },
+  // Theme-layer tokens, LIGHT values. On web these resolve to the `--ih-*`
+  // custom properties in tokens.css so themes keep working; React Native has
+  // no CSS vars and the patient app is light-only, so it needs the literals.
+  // Mirror any change to the `[data-theme='light']` block in tokens.css.
+  surface: {
+    base: '#FFFFFF',
+    raised: '#FFFFFF',
+    sidebar: '#05668D',
+    header: '#FFFFFF',
+  },
+  border: {
+    base: '#E0E5E8',
+    strong: '#CDD4D8',
+    focus: '#02C39A',
+  },
+  text: {
+    primary: '#111C21',
+    secondary: '#3D5059',
+    tertiary: '#5E737C',
+    placeholder: '#B0BBC2',
+    inverse: '#FFFFFF',
+  },
   status: {
     confirmed: '#02C39A',
     pending: '#D97706',

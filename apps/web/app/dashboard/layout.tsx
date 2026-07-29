@@ -17,7 +17,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (lookup.kind === 'notProvider') redirect('/login?rejected=1')
 
   return (
-    <div dir="rtl" className="flex h-screen overflow-hidden bg-ih-neutral-100">
+    <div dir="rtl" data-print="page" className="flex h-screen overflow-hidden bg-ih-neutral-100">
       <SidebarNav />
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">{children}</div>
     </div>

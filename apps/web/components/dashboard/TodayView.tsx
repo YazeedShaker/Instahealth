@@ -9,10 +9,13 @@ import {
 } from '@instahealth/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import { signOut } from '../../app/login/actions'
 import { fetchBranchBookings, markBookingOutcome } from '../../lib/bookings/branch-bookings'
 import { createClient } from '../../lib/supabase/client'
+import { Alert } from '../ui/Alert'
+import { Button } from '../ui/Button'
+import { Card } from '../ui/Card'
 import { BookingRow } from './BookingRow'
+import { TodayHeader } from './TodayHeader'
 
 const POLL_MS = 60_000
 
@@ -50,6 +53,7 @@ export function TodayView({
   const [newIds, setNewIds] = useState<ReadonlySet<string>>(new Set())
   const [toastAr, setToastAr] = useState<string | null>(null)
   const [nowHHMM, setNowHHMM] = useState(cairoNowHHMM)
+  const [soundOn, setSoundOn] = useState(false) // default OFF, per spec
 
   const supabase = useMemo(() => createClient(), [])
   // Kept in a ref so the realtime callback never closes over a stale list.
@@ -165,98 +169,90 @@ export function TodayView({
 
   return (
     <>
-      {/* sticky header */}
-      <header className="flex min-h-14 shrink-0 items-center gap-5 border-b border-ih-neutral-200 bg-white px-6 py-3">
-        <div className="flex flex-col gap-px">
-          <div data-testid="branch-name" className="text-base font-extrabold text-ih-neutral-800">
-            {branchNameAr}
-          </div>
-          <div className="text-[12.5px] text-ih-neutral-500">{dateLabel}</div>
-        </div>
-        <div className="h-8 w-px bg-ih-neutral-200" />
-        <div className="flex items-center gap-2.5">
-          <div className="flex gap-[3px]">
-            {Array.from({ length: capacity }, (_, index) => (
-              <div
-                key={index}
-                className="h-2 w-3.5 rounded-sm"
-                style={{
-                  background: index < booked ? 'var(--ih-primary-400)' : 'var(--ih-neutral-200)',
-                }}
-              />
-            ))}
-          </div>
-          <div className="text-[12.5px] text-ih-neutral-600">
-            <span data-testid="fill-indicator" className="font-bold text-ih-neutral-800">
-              {toArabicDigits(String(booked))}/{toArabicDigits(String(capacity))}
-            </span>{' '}
-            محجوز اليوم
-          </div>
-        </div>
+      <TodayHeader
+        branchNameAr={branchNameAr}
+        dateLabel={dateLabel}
+        booked={booked}
+        capacity={capacity}
+        displayName={displayName}
+        isConnected={isConnected}
+        soundOn={soundOn}
+        onToggleSound={() => setSoundOn((on) => !on)}
+      />
 
-        <div className="flex-1" />
-
+      {/* New-arrival banner from the design — the desk's cue that something
+          landed while they were looking elsewhere. */}
+      {newIds.size > 0 ? (
         <div
-          data-testid="connection-dot"
-          data-connected={isConnected ? 'yes' : 'no'}
-          className="flex items-center gap-2 rounded-full border border-ih-neutral-200 px-3 py-1.5 text-[12px] text-ih-neutral-500"
-          title={isConnected ? 'التحديث فوري' : 'سيتم التحديث تلقائياً كل دقيقة'}
-        >
-          <span
-            className="inline-block h-[7px] w-[7px] rounded-full"
-            style={{ background: isConnected ? 'var(--ih-success)' : 'var(--ih-neutral-400)' }}
-          />
-          {isConnected ? 'متصل' : 'غير متصل'}
-        </div>
-
-        <div className="flex items-center gap-2 border-r border-ih-neutral-200 pr-4">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-ih-primary-50 text-[13px] font-bold text-ih-primary-700">
-            {displayName.slice(0, 1)}
-          </div>
-          <div className="flex flex-col items-start">
-            <span className="text-xs font-semibold text-ih-neutral-700">{displayName}</span>
-            <form action={signOut}>
-              <button
-                type="submit"
-                data-testid="logout"
-                className="text-[11px] text-ih-neutral-500 underline"
-              >
-                تسجيل خروج
-              </button>
-            </form>
-          </div>
-        </div>
-      </header>
-
-      {toastAr !== null ? (
-        <div
-          role="alert"
-          data-testid="error-toast"
-          className="shrink-0 border-b px-6 py-2.5 text-[13px] font-semibold"
+          data-testid="new-arrival-banner"
+          data-print="hide"
           style={{
-            background: 'var(--ih-error-bg)',
-            borderColor: 'var(--ih-error)',
-            color: 'var(--ih-error-text)',
+            flexShrink: 0,
+            background: 'var(--ih-accent-200)',
+            borderBottom: '1px solid var(--ih-accent-400)',
+            padding: '8px 24px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
           }}
         >
-          {toastAr}
+          <span
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              background: 'var(--ih-primary-400)',
+            }}
+          />
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ih-primary-800)' }}>
+            {newIds.size === 1
+              ? 'وصل حجز جديد الآن'
+              : `وصلت ${toArabicDigits(String(newIds.size))} حجوزات جديدة`}
+          </span>
+          <button
+            type="button"
+            data-testid="dismiss-new"
+            onClick={() => setNewIds(new Set())}
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              color: 'var(--ih-primary-700)',
+              textDecoration: 'underline',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              font: 'inherit',
+            }}
+          >
+            تم
+          </button>
         </div>
       ) : null}
 
-      <main className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-4">
+      {toastAr !== null ? (
+        <div data-print="hide" style={{ flexShrink: 0, padding: '10px 24px 0' }}>
+          <Alert type="error" testId="error-toast">
+            {toastAr}
+          </Alert>
+        </div>
+      ) : null}
+
+      <div data-print="title" style={{ padding: '0 4px' }}>
+        <div style={{ fontSize: 15, fontWeight: 800 }}>{branchNameAr}</div>
+        <div style={{ fontSize: 12 }}>
+          {dateLabel} — {toArabicDigits(String(booked))}/{toArabicDigits(String(capacity))} محجوز
+        </div>
+      </div>
+
+      <main data-print="scroll" className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-4">
         {loadFailed && bookings.length === 0 ? (
           <div className="flex flex-col items-center gap-3 rounded-xl border border-ih-neutral-200 bg-white p-10 text-center">
             <div className="text-sm text-ih-neutral-700">
               تعذّر تحميل حجوزات اليوم — تحقق من الاتصال وحاول مرة أخرى.
             </div>
-            <button
-              type="button"
-              data-testid="today-retry"
-              onClick={() => void refresh()}
-              className="h-10 rounded-lg border border-ih-neutral-200 px-4 text-sm font-semibold text-ih-neutral-700"
-            >
+            <Button variant="outline" data-testid="today-retry" onClick={() => void refresh()}>
               إعادة المحاولة
-            </button>
+            </Button>
           </div>
         ) : bookings.length === 0 ? (
           <div
@@ -273,14 +269,18 @@ export function TodayView({
           </div>
         ) : (
           <>
-            <div className="overflow-hidden rounded-xl border border-ih-neutral-200 bg-white">
-              <div className="grid grid-cols-[90px_200px_1fr_150px_118px_180px] items-center gap-3 border-b border-ih-neutral-200 bg-ih-neutral-50 px-4 py-2.5 text-[11.5px] font-bold text-ih-neutral-500">
+            <Card padding={0} style={{ overflow: 'hidden' }} testId="today-card">
+              <div
+                data-print="head"
+                className="grid grid-cols-[90px_200px_1fr_150px_118px_180px_44px] items-center gap-3 border-b border-ih-neutral-200 bg-ih-neutral-50 px-4 py-2.5 text-[11.5px] font-bold text-ih-neutral-500"
+              >
                 <div>الموعد</div>
                 <div>المريض</div>
                 <div>الخدمات</div>
                 <div>الدفع</div>
                 <div>الحالة</div>
                 <div>الإجراء</div>
+                <div />
               </div>
               <div data-testid="today-list">
                 {bookings.map((booking) => (
@@ -294,9 +294,12 @@ export function TodayView({
                   />
                 ))}
               </div>
-            </div>
+            </Card>
 
-            <div className="flex gap-5 px-1 pt-3 text-[11.5px] text-ih-neutral-500">
+            <div
+              data-print="hide"
+              className="flex gap-5 px-1 pt-3 text-[11.5px] text-ih-neutral-500"
+            >
               <span className="inline-flex items-center gap-1.5">
                 <span
                   className="inline-block h-2.5 w-2.5 rounded-sm border"

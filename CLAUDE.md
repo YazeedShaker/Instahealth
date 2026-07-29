@@ -138,11 +138,11 @@ docs/
 ├── design-briefs/            # DESIGN-01, DESIGN-02
 └── data/                     # seed-source tables (saridar branches…)
 
-design/                       # Claude Design handoff bundles, one folder per handoff
-├── mobile/                   # onboarding · home · branch-profile · booking · confirmation · bookings
-├── dashboard/                # DESIGN-02 handoff; P02+ screens
-├── admin/                    # A-series (empty)
-└── brand/                    # logo set once approved (empty)
+design/
+├── handoff/                  # THE Claude Design export — exactly one, always latest
+│   ├── EXPORT.md             # export date + what changed (git history is the archive)
+│   └── project/              # all screens + the shared design system under _ds/
+└── brand/                    # our extracted/generated brand assets (logo files)
 
 CLAUDE.md · PRODUCT.md · PROGRESS.md    # repo ROOT
 ```
@@ -154,11 +154,24 @@ CLAUDE.md · PRODUCT.md · PROGRESS.md    # repo ROOT
    and every spec opens these by path; moving them breaks the bootstrap in §1 of the workflow doc.
 2. **New artifacts land in their typed folder** — a new spec goes to `docs/specs/`, a new decision
    to `docs/decisions/`, a new design brief to `docs/design-briefs/`, seed-source data to
-   `docs/data/`. New handoff bundles go under the surface they belong to: dashboard screens to
-   `design/dashboard/`, admin to `design/admin/`. Never at the root of `docs/` or `design/`.
+   `docs/data/`. Never at the root of `docs/`.
 
-Note for tooling: handoff bundles are Prettier-ignored via `design/*/*/project` — the glob has one
-segment per level, so it only works while bundles sit at `design/<surface>/<handoff>/project`.
+3. **There is exactly ONE design handoff bundle: `design/handoff/`.** Claude Design exports the
+   WHOLE project every time, so per-surface folders (`design/mobile/`, `design/dashboard/`…) are
+   self-deceiving duplicates — each holds a full copy, an older export ends up beside a newer one,
+   and a session can read either. That is what happened before 2026-07-28: `design/mobile/` was a
+   stale 6-screen subset sitting next to the 12-screen `design/dashboard/`, with a byte-identical
+   `_ds` in both. **Replace `design/handoff/` wholesale on each export** and log it in
+   `design/handoff/EXPORT.md`; never add a second bundle beside it.
+
+**Design-system components are a SHARED CONTRACT, not per-app guesswork.** The bundle's `_ds`
+defines Button, Card, Alert, Chip, StatusBadge, Input and friends. Their sizes/variants →
+token mappings live in `packages/design-tokens/src/components.ts`, and each app writes a thin
+platform shell (`<button>` on web, `<Pressable>` on RN) over that one contract. Do NOT copy pixel
+values out of a `.dc.html` prototype — the prototype is one rendering of the system, the contract
+is the system. Hand-copying is exactly how P01's first dashboard build drifted.
+
+Note for tooling: the bundle is Prettier-ignored via `design/*/project`.
 
 ## 4. The shared-core discipline (critical — two apps, one core)
 
