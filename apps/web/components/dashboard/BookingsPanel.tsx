@@ -7,6 +7,7 @@ import { Button } from '../ui/Button'
 import { Card } from '../ui/Card'
 import { BOOKINGS_GRID_READ_ONLY, BOOKINGS_GRID_WITH_ACTIONS, BookingRow } from './BookingRow'
 import { BookingDrawer } from './BookingDrawer'
+import { BookingsToolbar } from './BookingsToolbar'
 import { CancelOnBehalfDialog } from './CancelOnBehalfDialog'
 
 // The list + drawer + confirm, shared verbatim by Today and Upcoming Days.
@@ -22,6 +23,7 @@ export function BookingsPanel({
   pendingIds,
   nowHHMM,
   emptyState,
+  toolbar,
   onMark,
   onCancel,
 }: {
@@ -33,6 +35,19 @@ export function BookingsPanel({
   pendingIds: ReadonlySet<string>
   nowHHMM: string
   emptyState: ReactNode
+  /** Server-side search/filter/pagination controls. Omit to render a plain
+   * table (nothing does today — both screens pass it). */
+  toolbar?: {
+    search: string
+    onSearch: (value: string) => void
+    status: string | null
+    onStatus: (value: string | null) => void
+    page: number
+    pageSize: number
+    total: number
+    onPage: (value: number) => void
+    isQuerying: boolean
+  }
   onMark: (bookingId: string, outcome: BookingOutcome) => void
   onCancel: (bookingId: string, reasonAr: string) => Promise<boolean>
 }) {
@@ -75,10 +90,54 @@ export function BookingsPanel({
     [openBooking, onCancel],
   )
 
-  if (bookings.length === 0) return <>{emptyState}</>
+  const isFiltered =
+    toolbar !== undefined && (toolbar.search.trim() !== '' || toolbar.status !== null)
+
+  // The toolbar renders even when the table is empty — a filter that matches
+  // nothing must still offer the way back out. Hiding it was the obvious
+  // shortcut and would have trapped the desk on an empty screen.
+  const toolbarNode =
+    toolbar !== undefined ? (
+      <BookingsToolbar
+        search={toolbar.search}
+        onSearch={toolbar.onSearch}
+        status={toolbar.status}
+        onStatus={toolbar.onStatus}
+        page={toolbar.page}
+        pageSize={toolbar.pageSize}
+        total={toolbar.total}
+        onPage={toolbar.onPage}
+        isQuerying={toolbar.isQuerying}
+      />
+    ) : null
+
+  if (bookings.length === 0) {
+    return (
+      <>
+        {toolbarNode}
+        {isFiltered ? (
+          <div
+            data-testid="bookings-no-matches"
+            className="flex flex-col items-center justify-center gap-3 rounded-xl border border-ih-neutral-200 bg-white py-16 text-center"
+          >
+            <div className="text-3xl" aria-hidden="true">
+              🔍
+            </div>
+            <div className="text-[15px] font-bold text-ih-neutral-800">لا توجد حجوزات مطابقة</div>
+            <p className="max-w-[380px] text-[13px] leading-[1.7] text-ih-neutral-600">
+              جرّب اسماً أو رقماً آخر، أو امسح عوامل التصفية لعرض اليوم كاملاً.
+            </p>
+          </div>
+        ) : (
+          emptyState
+        )}
+      </>
+    )
+  }
 
   return (
     <>
+      {toolbarNode}
       <Card padding={0} style={{ overflow: 'hidden' }} testId="bookings-card">
         <div
           data-print="head"

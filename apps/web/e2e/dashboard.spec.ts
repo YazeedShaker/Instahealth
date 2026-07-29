@@ -80,6 +80,13 @@ test.describe('provider dashboard — Today view', () => {
   test.beforeEach(async ({ page }) => {
     await login(page, TOWN_RECEPTION)
     await page.waitForURL('**/dashboard/today')
+    // Wait for the TABLE, not just the URL. `waitForURL` resolves before the
+    // RSC payload paints, so a `rows.count()` straight after it reads 0 and
+    // every count-guarded test SKIPS itself — and a skipped suite looks
+    // exactly like a passing one in the summary line (§4).
+    await expect(page.getByTestId('bookings-list').or(page.getByTestId('today-empty'))).toBeVisible(
+      { timeout: 30_000 },
+    )
   })
 
   test('the shell renders the branch, the date and the fill indicator', async ({ page }) => {
@@ -148,6 +155,13 @@ test.describe('provider dashboard — booking detail drawer (P02)', () => {
   test.beforeEach(async ({ page }) => {
     await login(page, TOWN_RECEPTION)
     await page.waitForURL('**/dashboard/today')
+    // Wait for the TABLE, not just the URL. `waitForURL` resolves before the
+    // RSC payload paints, so a `rows.count()` straight after it reads 0 and
+    // every count-guarded test SKIPS itself — and a skipped suite looks
+    // exactly like a passing one in the summary line (§4).
+    await expect(page.getByTestId('bookings-list').or(page.getByTestId('today-empty'))).toBeVisible(
+      { timeout: 30_000 },
+    )
   })
 
   test('a row opens the drawer and the list stays LIVE behind it', async ({ page }) => {
@@ -219,6 +233,9 @@ test.describe('provider dashboard — upcoming days (P02)', () => {
     await page.waitForURL('**/dashboard/today')
     await page.getByTestId('nav-upcoming').click()
     await page.waitForURL('**/dashboard/upcoming**')
+    await expect(
+      page.getByTestId('bookings-list').or(page.getByTestId('upcoming-empty')),
+    ).toBeVisible({ timeout: 30_000 })
   })
 
   test('the date switcher renders the slot window and a selected day', async ({ page }) => {
@@ -269,5 +286,119 @@ test.describe('provider dashboard — upcoming days (P02)', () => {
     const list = page.getByTestId('bookings-list')
     const empty = page.getByTestId('upcoming-empty')
     await expect(list.or(empty)).toBeVisible()
+  })
+})
+
+test.describe('provider dashboard — search, filter & pagination (P02 follow-up)', () => {
+  test.skip(!HAS_CREDS, 'PROVIDER_TEST_EMAIL / PROVIDER_TEST_PASSWORD not set')
+
+  test.beforeEach(async ({ page }) => {
+    await login(page, TOWN_RECEPTION)
+    await page.waitForURL('**/dashboard/today')
+    await expect(page.getByTestId('bookings-list').or(page.getByTestId('today-empty'))).toBeVisible(
+      { timeout: 30_000 },
+    )
+  })
+
+  test('the status filter narrows the table SERVER-side', async ({ page }) => {
+    const rows = page.getByTestId(/^booking-row-/)
+    test.skip((await rows.count()) === 0, 'no bookings today at Town')
+
+    await page.getByTestId('filter-completed').click()
+
+    // Every chip on screen must be the one filtered for — proof the DATABASE
+    // filtered, not that we hid rows in the browser.
+    //
+    // Asserted as "no NON-matching chip remains", which RETRIES until the
+    // query lands. Reading the chips once raced the round trip and captured
+    // the pre-filter DOM — the same trap as a fixed wait, just quieter.
+    await expect(
+      page.locator('[data-testid^="status-chip-"]:not([data-status="completed"])'),
+    ).toHaveCount(0)
+    expect(await page.getByTestId(/^booking-row-/).count()).toBeGreaterThan(0)
+  })
+
+  test('a search that matches nothing keeps the way back out', async ({ page }) => {
+    await page.getByTestId('bookings-search').fill('zzzz-no-such-patient')
+    await expect(page.getByTestId('bookings-no-matches')).toBeVisible()
+    // The toolbar MUST survive the empty state, or the desk is trapped.
+    await expect(page.getByTestId('bookings-search')).toBeVisible()
+
+    await page.getByTestId('bookings-search').fill('')
+    await expect(page.getByTestId('bookings-no-matches')).toHaveCount(0)
+  })
+
+  test('searching by phone works with Arabic-Indic digits', async ({ page }) => {
+    const rows = page.getByTestId(/^booking-row-/)
+    const before = await rows.count()
+    test.skip(before === 0, 'no bookings today at Town')
+
+    // The desk types Arabic numerals; the phone is stored in Western ones.
+    await page.getByTestId('bookings-search').fill('٢٠١٠٠٠٠٠٠٠٠')
+    await expect(page.getByTestId('bookings-no-matches')).toHaveCount(0)
+    expect(await rows.count()).toBeGreaterThan(0)
+  })
+})
+
+test.describe('provider dashboard — preparation detail (P02 follow-up)', () => {
+  test.skip(!HAS_CREDS, 'PROVIDER_TEST_EMAIL / PROVIDER_TEST_PASSWORD not set')
+
+  test('the drawer reveals the ACTUAL per-service requirement, not just a summary', async ({
+    page,
+  }) => {
+    await login(page, TOWN_RECEPTION)
+    await page.waitForURL('**/dashboard/today')
+    await expect(page.getByTestId('bookings-list').or(page.getByTestId('today-empty'))).toBeVisible(
+      { timeout: 30_000 },
+    )
+
+    const rows = page.getByTestId(/^booking-row-/)
+    const count = await rows.count()
+    test.skip(count === 0, 'no bookings today at Town')
+
+    for (let index = 0; index < count; index += 1) {
+      await rows.nth(index).click()
+      if ((await page.getByTestId('prep-strip').count()) > 0) break
+      await page.getByTestId('drawer-close').click()
+    }
+    test.skip(
+      (await page.getByTestId('prep-strip').count()) === 0,
+      'nothing needs preparation today',
+    )
+
+    // Collapsed by default; the summary's own copy invites the press.
+    await expect(page.getByTestId('prep-strip-details')).toHaveCount(0)
+    await page.getByTestId('prep-strip-toggle').click()
+
+    const details = page.getByTestId('prep-strip-details')
+    await expect(details).toBeVisible()
+    // Not empty: the whole complaint was a summary pointing at nothing.
+    expect((await details.innerText()).trim().length).toBeGreaterThan(0)
+  })
+})
+
+test.describe('provider dashboard — day strip scrolling (P02 follow-up)', () => {
+  test.skip(!HAS_CREDS, 'PROVIDER_TEST_EMAIL / PROVIDER_TEST_PASSWORD not set')
+
+  // A NARROW desktop viewport is the case that broke: the strip overflowed,
+  // the scrollbar is hidden by design, and a vertical wheel scrolled the page.
+  test.use({ viewport: { width: 1100, height: 720 } })
+
+  test('an overflowing strip is scrollable with the arrows', async ({ page }) => {
+    await login(page, TOWN_RECEPTION)
+    await page.waitForURL('**/dashboard/today')
+    await page.getByTestId('nav-upcoming').click()
+    await page.waitForURL('**/dashboard/upcoming**')
+
+    const strip = page.getByTestId('day-strip')
+    await expect(strip).toBeVisible()
+
+    const overflows = await strip.evaluate((el) => el.scrollWidth > el.clientWidth + 1)
+    test.skip(!overflows, 'the slot window fits without scrolling at this width')
+
+    await expect(page.getByTestId('day-strip-end')).toBeVisible()
+    const before = await strip.evaluate((el) => Math.abs(el.scrollLeft))
+    await page.getByTestId('day-strip-end').click()
+    await expect.poll(async () => strip.evaluate((el) => Math.abs(el.scrollLeft))).not.toBe(before)
   })
 })

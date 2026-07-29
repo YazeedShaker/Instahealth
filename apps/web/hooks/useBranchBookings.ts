@@ -36,18 +36,41 @@ export interface BranchBookingsState {
   refresh: () => Promise<void>
   markOutcome: (bookingId: string, outcome: BookingOutcome) => Promise<void>
   cancelOnBehalf: (bookingId: string, reasonAr: string) => Promise<boolean>
+  // ── server-side query state ──
+  search: string
+  setSearch: (value: string) => void
+  status: string | null
+  setStatus: (value: string | null) => void
+  page: number
+  setPage: (value: number) => void
+  pageSize: number
+  /** Rows matching the FILTER across all pages — not the page length. */
+  total: number
+  /** A query is in flight. Distinct from the route-level skeleton: the table
+   * is already on screen and is being narrowed, not replaced. */
+  isQuerying: boolean
 }
+
+/** One screenful. Small enough that a desk never scrolls to find a patient,
+ * large enough that a normal day needs no paging at all. */
+export const BOOKINGS_PAGE_SIZE = 25
+
+/** A search fires on every keystroke otherwise. Long enough to swallow typing,
+ * short enough that it never feels laggy. */
+const SEARCH_DEBOUNCE_MS = 300
 
 export function useBranchBookings({
   branchId,
   isoDate,
   initialBookings,
+  initialTotal,
   initialLoadFailed,
   trackArrivals,
 }: {
   branchId: string
   isoDate: string
   initialBookings: BranchBooking[]
+  initialTotal: number
   initialLoadFailed: boolean
   /** Today highlights newly-arrived bookings; a future day does not — every
    * booking on it is "new" in the only sense that matters, so the highlight
@@ -55,38 +78,74 @@ export function useBranchBookings({
   trackArrivals: boolean
 }): BranchBookingsState {
   const [bookings, setBookings] = useState<BranchBooking[]>(initialBookings)
+  const [total, setTotal] = useState(initialTotal)
   const [loadFailed, setLoadFailed] = useState(initialLoadFailed)
   const [isConnected, setIsConnected] = useState(false)
   const [pendingIds, setPendingIds] = useState<ReadonlySet<string>>(new Set())
   const [newIds, setNewIds] = useState<ReadonlySet<string>>(new Set())
   const [toastAr, setToastAr] = useState<string | null>(null)
 
+  // What the DATABASE is being asked for. `search` is what the box shows;
+  // `appliedSearch` is what has actually been sent, so typing does not fire a
+  // query per keystroke.
+  const [search, setSearch] = useState('')
+  const [appliedSearch, setAppliedSearch] = useState('')
+  const [status, setStatusRaw] = useState<string | null>(null)
+  const [page, setPage] = useState(0)
+  const [isQuerying, setIsQuerying] = useState(false)
+
   const supabase = useMemo(() => createClient(), [])
   // Kept in a ref so the realtime callback never closes over a stale list.
   const knownIds = useRef<Set<string>>(new Set(initialBookings.map((booking) => booking.id)))
 
+  useEffect(() => {
+    const timer = setTimeout(() => setAppliedSearch(search), SEARCH_DEBOUNCE_MS)
+    return () => clearTimeout(timer)
+  }, [search])
+
+  // Narrowing the results must return to page one, or a filter that matches
+  // three rows shows an empty page four.
+  const setStatus = useCallback((value: string | null) => {
+    setStatusRaw(value)
+    setPage(0)
+  }, [])
+  useEffect(() => setPage(0), [appliedSearch])
+
   // Switching days re-seeds everything from the server payload for the new date.
   useEffect(() => {
     setBookings(initialBookings)
+    setTotal(initialTotal)
     setLoadFailed(initialLoadFailed)
     knownIds.current = new Set(initialBookings.map((booking) => booking.id))
     setNewIds(new Set())
-  }, [isoDate, initialBookings, initialLoadFailed])
+  }, [isoDate, initialBookings, initialTotal, initialLoadFailed])
 
   const refresh = useCallback(async () => {
+    setIsQuerying(true)
     try {
-      const rows = await fetchBranchBookings(supabase, branchId, isoDate)
-      const arrivals = trackArrivals
-        ? rows.filter((row) => !knownIds.current.has(row.id)).map((row) => row.id)
-        : []
-      for (const row of rows) knownIds.current.add(row.id)
-      setBookings(rows)
+      const result = await fetchBranchBookings(supabase, branchId, isoDate, {
+        search: appliedSearch,
+        status,
+        limit: BOOKINGS_PAGE_SIZE,
+        offset: page * BOOKINGS_PAGE_SIZE,
+      })
+      // Only rows the desk has never seen count as arrivals. Under a filter
+      // that would otherwise flag every match as "new" the moment it is typed.
+      const arrivals =
+        trackArrivals && appliedSearch === '' && status === null
+          ? result.bookings.filter((row) => !knownIds.current.has(row.id)).map((row) => row.id)
+          : []
+      for (const row of result.bookings) knownIds.current.add(row.id)
+      setBookings(result.bookings)
+      setTotal(result.total)
       setLoadFailed(false)
       if (arrivals.length > 0) setNewIds((prev) => new Set([...prev, ...arrivals]))
     } catch {
       setLoadFailed(true)
+    } finally {
+      setIsQuerying(false)
     }
-  }, [supabase, branchId, isoDate, trackArrivals])
+  }, [supabase, branchId, isoDate, trackArrivals, appliedSearch, status, page])
 
   // ── realtime ──────────────────────────────────────────────────────────────
   // Broadcast on a private per-branch topic, NOT postgres_changes — the payload
@@ -102,6 +161,18 @@ export function useBranchBookings({
   // date to the broadcast payload.)
   const refreshRef = useRef(refresh)
   refreshRef.current = refresh
+
+  // Re-query whenever the desk narrows or pages the table. Skipped on the
+  // FIRST render because the server already delivered page one unfiltered —
+  // re-fetching it immediately would throw away the server-rendered paint.
+  const isFirstQuery = useRef(true)
+  useEffect(() => {
+    if (isFirstQuery.current) {
+      isFirstQuery.current = false
+      return
+    }
+    void refreshRef.current()
+  }, [appliedSearch, status, page])
 
   useEffect(() => {
     let cancelled = false
@@ -235,5 +306,14 @@ export function useBranchBookings({
     refresh,
     markOutcome,
     cancelOnBehalf,
+    search,
+    setSearch,
+    status,
+    setStatus,
+    page,
+    setPage,
+    pageSize: BOOKINGS_PAGE_SIZE,
+    total,
+    isQuerying,
   }
 }

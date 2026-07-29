@@ -20,7 +20,7 @@ import { STATUS_BADGES, STATUS_BADGE_BASE } from '@instahealth/design-tokens'
 import { useEffect } from 'react'
 
 import { Button } from '../ui/Button'
-import { PreparationNote } from '../ui/PreparationNote'
+import { PreparationStrip } from './PreparationStrip'
 
 // The booking-detail drawer from `Provider Dashboard - Booking Detail.dc.html`.
 // It is a PANEL, never a navigation: the list stays mounted and live behind it,
@@ -485,10 +485,12 @@ export function BookingDrawer({
             </div>
           </div>
 
-          {/* preparation — absent when the selection needs none */}
+          {/* preparation — absent when the selection needs none, expandable
+              when it is present. The summary's own copy invites a press, so it
+              must have somewhere to go. */}
           {prep.summaryAr !== null ? (
             <div style={{ flexShrink: 0 }}>
-              <PreparationNote testId="drawer-prep">{prep.summaryAr}</PreparationNote>
+              <PreparationStrip prep={prep} />
             </div>
           ) : null}
 

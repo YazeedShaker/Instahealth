@@ -98,17 +98,43 @@ function toBranchBooking(row: BranchBookingRow): BranchBooking {
    type now carries these RPCs, but the dashboard's Supabase client is created
    untyped (createClient() in lib/supabase/client.ts), so the rpc() overloads
    still resolve to `any` here. The row shape is narrowed by hand above. */
+/** What the desk asked the DATABASE for. Filtering happens server-side so the
+ * client never holds a whole branch's history to search through it. */
+export interface BranchBookingsQuery {
+  search?: string
+  status?: string | null
+  limit?: number
+  offset?: number
+}
+
+export interface BranchBookingsPage {
+  bookings: BranchBooking[]
+  /** Rows matching the FILTER, not the page — the count the pager needs. */
+  total: number
+}
+
 export async function fetchBranchBookings(
   supabase: SupabaseClient<any, any, any>,
   branchId: string,
   isoDate: string,
-): Promise<BranchBooking[]> {
+  query: BranchBookingsQuery = {},
+): Promise<BranchBookingsPage> {
   const { data, error } = await supabase.rpc('get_branch_bookings_for_date', {
     p_branch_id: branchId,
     p_date: isoDate,
+    p_search: query.search?.trim() ? query.search.trim() : null,
+    p_status: query.status ?? null,
+    p_limit: query.limit ?? null,
+    p_offset: query.offset ?? 0,
   })
   if (error) throw error
-  return ((data ?? []) as BranchBookingRow[]).map(toBranchBooking)
+
+  const rows = (data ?? []) as (BranchBookingRow & { total_count: number | null })[]
+  return {
+    bookings: rows.map(toBranchBooking),
+    // An empty page reports no total, and zero IS the right answer there.
+    total: rows.length > 0 ? Number(rows[0]?.total_count ?? rows.length) : 0,
+  }
 }
 
 export type MarkOutcomeResult =

@@ -72,6 +72,67 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 
 ## Shipped
 
+### 2026-07-29 · P02 FOLLOW-UP — founder review: strip scrolling, loading states, prep detail, server-side tables
+
+Four items from the founder's review of the merged P02.
+
+**1 · The day strip could not be scrolled with a mouse.** It worked under
+touch emulation, which is what made it look like a mobile-only feature. The
+cause is a design decision taken literally: the bundle hides the scrollbar
+(`.ih-daystrip::-webkit-scrollbar { display: none }`) and the prototype is only
+ever dragged by hand. On a real desk that left NO affordance — a vertical wheel
+over a horizontally-overflowing box scrolls the PAGE, and with the scrollbar
+hidden there is nothing to drag. Now: wheel is translated to horizontal, ‹ ›
+arrows appear only when the strip actually overflows, and the selected day is
+scrolled into view. ⚠ `scrollLeft` is NEGATIVE in an RTL container, so the
+arrow logic compares absolute distance — reading it as a positive offset is the
+classic RTL scrolling bug.
+
+**2 · Navigation felt stuck.** Both dashboard routes are `force-dynamic` and
+fetch server-side BEFORE first paint, so a click left the OLD screen on display
+with no feedback. Added route-level `loading.tsx` for both, with skeletons that
+mirror the real layout (same grid, same row height) so nothing jumps when data
+lands. The shimmer respects `prefers-reduced-motion`.
+
+**3 · The drawer's preparation note pointed at nothing.** It rendered only
+`computePreparationNotes`' SUMMARY — whose copy is "بعض الخدمات المختارة تتطلب
+تحضيراً — اضغط لعرض التفاصيل", an instruction to press something that was not
+there. The summary is written to be a HANDLE for the detail. Now the web has a
+`PreparationStrip` mirroring mobile's: collapsed summary, click to reveal the
+per-service detail in place, from the same core result
+(DECISION-provider-data-model §3 — expandable inline, no modal). The desk now
+reads «موجات صوتية على البطن: صيام من ٦ إلى ٨ ساعات قبل الفحص», the same words
+the patient got.
+
+**4 · Server-side search, filter and pagination** (migration `20260729130341`).
+`get_branch_bookings_for_date` gained `p_search`, `p_status`, `p_limit`,
+`p_offset` and a `total_count` window — all DEFAULTED, so every existing caller
+keeps working. Search matches patient name, phone and booking ref, **folding
+Arabic-Indic digits to Western** so a receptionist typing ٠١٠ finds a phone
+stored as 010, and escaping `%`/`_` so a stray wildcard cannot widen the match
+(verified: searching `%` returns 0 rows, not all of them). Ordering is
+`slot_time, id` — an unstable sort silently repeats or drops rows across pages.
+The toolbar renders even when the result set is EMPTY, because a filter that
+matches nothing must still offer the way back out.
+
+**Verified in a real browser** at a narrow desktop width: search 6 → 1 rows,
+status filter leaves only matching chips, no-match state keeps the search box
+reachable, prep detail expands with real text, strip `scrollLeft` 0 → 380 on an
+arrow click. Two new fidelity captures in `docs/design-briefs/p02-fidelity/`.
+
+**⚠ A latent test race, exposed and fixed.** Nine P02 tests began SKIPPING
+themselves: `test.skip((await rows.count()) === 0)` runs before the RSC payload
+paints, so the guard read 0 rows and skipped. They had been passing by luck of
+timing. **A skipped suite looks exactly like a passing one in the summary
+line** — the same lesson as the credentials skip in §4. Every `beforeEach` now
+waits for the table, with a 30s budget because it waits on a server-rendered
+fetch against the remote dev DB while three workers contend.
+
+**Note for whoever runs the suite:** the outcome-workflow E2E CONSUMES its
+fixture — it marks a booking completed on every run — so a second same-day run
+skips with "no actionable booking today". That is honest, not broken; reseed a
+confirmed booking for today to exercise it again.
+
 ### 2026-07-29 · P02 — Booking detail drawer, cancel-on-behalf & upcoming days (web)
 
 The desk can now open any booking, read its whole story, cancel it on the
