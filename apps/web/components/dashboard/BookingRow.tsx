@@ -13,11 +13,12 @@ import {
   type BranchBooking,
 } from '@instahealth/core'
 
-import { StatusChip } from './StatusChip'
+import { Button } from '../ui/Button'
+import { StatusBadge } from '../ui/StatusBadge'
 
 // One row of the Today list. The column grid matches the approved design:
 // الموعد · المريض · الخدمات · الدفع · الحالة · الإجراء
-const GRID = 'grid grid-cols-[90px_200px_1fr_150px_118px_180px] items-center gap-3'
+const GRID = 'grid grid-cols-[90px_200px_1fr_150px_118px_180px_44px] items-center gap-3'
 
 export function BookingRow({
   booking,
@@ -129,35 +130,46 @@ export function BookingRow({
       </div>
 
       <div>
-        <StatusChip booking={booking} />
+        <StatusBadge status={booking.status} testId={`status-chip-${booking.id}`} />
       </div>
 
       <div className="flex gap-1.5">
         {action !== null ? (
-          <button
-            type="button"
+          <Button
+            size="sm"
+            variant="primary"
             data-testid={`action-${action.outcome}-${booking.id}`}
             disabled={isPending}
             onClick={() => onMark(booking.id, action.outcome)}
-            className="h-9 whitespace-nowrap rounded-lg bg-ih-primary-400 px-3 text-[13px] font-semibold text-white transition-opacity disabled:opacity-45"
           >
             {action.labelAr}
-          </button>
+          </Button>
         ) : null}
         {showNoShow ? (
-          <button
-            type="button"
+          <Button
+            size="sm"
+            variant="ghost"
             data-testid={`action-no_show-${booking.id}`}
             disabled={isPending}
             onClick={() => onMark(booking.id, 'no_show')}
-            className="h-9 whitespace-nowrap rounded-lg px-3 text-[13px] font-semibold text-ih-neutral-600 transition-colors hover:bg-ih-neutral-100 disabled:opacity-45"
+            style={{ color: 'var(--ih-neutral-600)' }}
           >
             لم يحضر
-          </button>
+          </Button>
         ) : null}
         {action === null && !showNoShow ? (
           <span className="text-[12.5px] text-ih-neutral-400">—</span>
         ) : null}
+      </div>
+
+      {/* Row overflow — the drawer it opens is P02, so it is present and
+          visibly inert rather than missing from the layout. */}
+      <div
+        aria-label="خيارات أخرى"
+        title="قريباً"
+        className="flex h-11 w-11 items-center justify-center rounded-lg text-base text-ih-neutral-400"
+      >
+        ⋯
       </div>
     </div>
   )

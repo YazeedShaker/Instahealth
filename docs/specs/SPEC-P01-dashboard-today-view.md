@@ -3,7 +3,7 @@
 > Hand this to Claude Code. Read `CLAUDE.md`, `PRODUCT.md`, `docs/ENGINEERING-WORKFLOW.md`,
 > `PROGRESS.md` (F06/F07 Shipped entries + hand-off notes: statuses, payment semantics,
 > cancellation policy, the two open business decisions), the dashboard design handoff in
-> `design/dashboard/` (Login + Today view + the extended status-chip set; the other screens
+> `design/handoff/project` (Login + Today view + the extended status-chip set; the other screens
 > are LATER P-specs — do not build them), and the DB contract (bookings statuses,
 > provider_users, RLS). Verify everything against the live dev DB. One PR.
 > This is the FIRST real feature in `apps/web` — foundation choices here carry.

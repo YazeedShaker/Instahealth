@@ -14,10 +14,10 @@ Pre-docs
 Implementation Docs
 UI screens
 # Claude Design handoff bundles — exported prototypes, not our code style.
-# Bundles now sit one level deeper (design/<surface>/<handoff>/project), so this
-# glob gained a segment — without it Prettier would reformat every bundle and
-# the format gate would fail on files we deliberately keep verbatim.
-design/*/*/project
+# There is exactly ONE bundle: design/handoff/project (see design/handoff/
+# EXPORT.md). Without this, Prettier reformats an exported prototype we keep
+# verbatim and the format gate fails.
+design/*/project
 supabase/migrations
 supabase/functions
 packages/core/src/types/database.ts

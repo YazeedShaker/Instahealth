@@ -71,6 +71,83 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 
 ## Shipped
 
+### 2026-07-28 · P01 FOLLOW-UP — shared design-system contract, design restructure, outcome lifecycle
+
+The founder's review of the first P01 build: "the UI has nothing to do with the
+design that was handed off" and "why do I feel we are re-inventing the wheel in
+the design aspect — this should be a shared resource, not per project." Both
+correct, and the second one found a real architectural hole.
+
+**⚠ ROOT CAUSE OF THE UI DRIFT: every padding utility in the web app was
+silently dead.** `tokens.css` carries a `*, *::before, *::after { margin: 0;
+padding: 0 }` reset. Imported unlayered AFTER `@import 'tailwindcss'`, it landed
+outside Tailwind v4's cascade layers — and **unlayered CSS beats layered CSS
+regardless of specificity** — so it deleted every `p-*` and `m-*` in
+`apps/web`. `gap-*` survived (the reset does not touch `gap`), which is exactly
+why the breakage read as "the design is wrong" rather than "the CSS is broken".
+Proved it in the browser: `getComputedStyle` returned `padding: 0px` on an
+element with `p-11`, and the `.p-11` rule was never generated at all. Fixed with
+`@import '…/tokens.css' layer(base)`. **No amount of correct markup could have
+rendered correctly before this.**
+
+**The shared component contract (the architectural fix).** The design system
+defines 13 components; neither app implemented any of them as a system.
+`packages/design-tokens` shared VALUES but there was no contract for what
+"Button, size=lg, variant=outline" MEANS — so mobile hardcoded `h-[52px]`, the
+dashboard hardcoded `h-9`, and both were wrong. New
+`packages/design-tokens/src/components.ts` encodes Button/Card/Alert/Chip/
+StatusBadge/Input sizes + variants → token mappings, transcribed from the `_ds`
+bundle source. A `resolve.ts` turns refs into CSS vars (web) or literals (RN),
+so ONE spec serves both platforms and each app writes a thin shell. 17 new
+tests, including one asserting every ref in the contract resolves on both
+platforms, and one pinning `confirmed` to the design system's **#028090
+cerulean** — not the green I had invented a `successText` token for.
+
+**Mobile keeps its current components for now**; retrofitting them onto the
+contract happens opportunistically as screens are touched — **the i18n pass is
+the natural moment**, since it rewrites the same JSX anyway.
+
+**design/ restructured to ONE bundle.** Claude Design exports the whole project
+every time, so per-surface folders were self-deceiving duplicates:
+`design/mobile/` was a stale 6-screen subset sitting beside the 12-screen
+`design/dashboard/`, with a byte-identical `_ds` in both (verified by hash). Now
+`design/handoff/` — latest export only, replaced wholesale, with `EXPORT.md`
+logging each export; `design/brand/` keeps our extracted assets. CLAUDE.md §3a
+rewritten, all path references swept, `.prettierignore` glob updated.
+
+**Dashboard Login + Today rebuilt on the contract**, including everything the
+first build dropped: the real logo SVGs (I had substituted a ⚕ emoji), the
+"هل نسيتها؟" link, the remember-me checkbox, the sound toggle, the print button,
+the new-arrival banner, and the row overflow affordance.
+
+**Fidelity is now proven, not asserted.** `apps/web/e2e/fidelity.spec.ts`
+captures at 1366×768 (the DESIGN-02 desktop floor) into
+`docs/design-briefs/p01-fidelity/`. New ENGINEERING-WORKFLOW §9: **any PR
+claiming design fidelity ships comparison screenshots in its body.**
+
+**Both open business decisions ratified** — see `docs/decisions/`:
+
+- **`DECISION-booking-outcome-lifecycle.md`** — the desk marks outcomes; a
+  nightly job (02:30 Cairo) closes anything still open >24h after its slot, as
+  `no_show` with `closed_by = 'system'`. The 24h grace exists so the desk can
+  fix yesterday honestly before the system guesses; system guesses stay
+  distinguishable from human judgements **forever** so future reputation logic
+  excludes them; and an auto-closed CASH booking does NOT flip to paid — nobody
+  collected anything. Verified on dev against a seeded stale cash booking:
+  `no_show` + `payment_status` still `cash` + `payments` still `pending`.
+- **`DECISION-commission-attachment.md`** — at payment for prepaid, at
+  completion for cash. We only bill a partner for a visit that happened and
+  money that moved. `confirmed_at` / `completed_at` / `no_show_at` / `closed_by`
+  are the data trail; nothing computes commission yet, and auto-closed bookings
+  never attach any.
+
+**Slot-horizon sanity check — both pass, nothing was broken.** All 24 branches
+hold slots to 2026-08-27 (exactly the 30-day rolling window), and
+`generate-slot-window` ran at 00:10 UTC with status `succeeded`
+(`cleanup-expired-holds` healthy too). The founder could not book at 10 PM
+because only Today is visible on the dashboard — expected, and resolved by P02's
+date switcher.
+
 ### 2026-07-28 · P01 — Provider Dashboard: auth, shell & Today view (web) — 🎉 MILESTONE ONE
 
 **The loop is closed.** A patient books on a phone → the branch's desk sees it →
@@ -880,7 +957,7 @@ now the real 4-tab bar; logout moved to حسابي.
 
 ### 2026-07-23 · F01 — Patient phone-OTP authentication (mobile)
 
-Full onboarding flow built to the DESIGN-01 handoff bundle (`design/mobile/onboarding/`): welcome →
+Full onboarding flow built to the DESIGN-01 handoff bundle (`design/handoff/project` (Onboarding Flow)): welcome →
 phone → OTP → (first-time) name → Home placeholder. Route groups `(auth)` / `(app)` with
 protection in the group layouts; Supabase Auth phone flow; session survives restarts via
 AsyncStorage injected into core's `createClient()`. 21 unit tests on the pure auth modules.
