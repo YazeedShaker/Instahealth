@@ -123,9 +123,12 @@ describe('booking flow state (F05)', () => {
   })
 
   it('pending booking is stored and clearable', () => {
-    useBookingStore
-      .getState()
-      .setPendingBooking({ id: 'bk-1', bookingRef: 'IH-2026-00001', slotId: 'slot-1' })
+    useBookingStore.getState().setPendingBooking({
+      id: 'bk-1',
+      bookingRef: 'IH-2026-00001',
+      slotId: 'slot-1',
+      totalEgp: 150,
+    })
     expect(useBookingStore.getState().pendingBooking?.id).toBe('bk-1')
 
     useBookingStore.getState().clearPendingBooking()
@@ -134,7 +137,9 @@ describe('booking flow state (F05)', () => {
 
   it('clearFlowState drops hold + booking + notes but KEEPS the selection', () => {
     useBookingStore.getState().setHold(HOLD)
-    useBookingStore.getState().setPendingBooking({ id: 'bk-1', bookingRef: null, slotId: 'slot-1' })
+    useBookingStore
+      .getState()
+      .setPendingBooking({ id: 'bk-1', bookingRef: null, slotId: 'slot-1', totalEgp: 150 })
     useBookingStore.getState().setNotes('لدي حساسية')
     useBookingStore.getState().clearFlowState()
 
@@ -180,7 +185,9 @@ describe('confirmation hand-off (F06)', () => {
     useBookingStore.getState().openBranch('branch-1', 'ساريدار — الدقي')
     useBookingStore.getState().toggleService(makeService())
     useBookingStore.getState().setHold(HOLD)
-    useBookingStore.getState().setPendingBooking({ id: 'bk-1', bookingRef: null, slotId: 'slot-1' })
+    useBookingStore
+      .getState()
+      .setPendingBooking({ id: 'bk-1', bookingRef: null, slotId: 'slot-1', totalEgp: 150 })
   })
 
   it('completeBooking clears the flow state the cleanup watcher acts on', () => {

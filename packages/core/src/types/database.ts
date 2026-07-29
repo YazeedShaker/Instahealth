@@ -817,6 +817,14 @@ export type Database = {
         }
         Returns: Json
       }
+      create_pending_booking: {
+        Args: {
+          p_branch_service_ids: string[]
+          p_notes?: string
+          p_slot_id: string
+        }
+        Returns: Json
+      }
       create_slot_hold: {
         Args: { p_slot_id: string; p_user_id: string }
         Returns: Json

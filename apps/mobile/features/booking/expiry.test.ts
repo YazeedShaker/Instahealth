@@ -18,7 +18,7 @@ const HOLD = {
   slotTime: '09:00:00',
   expiresAt: '2026-08-01T09:00:00Z',
 }
-const PENDING = { id: 'booking-1', bookingRef: 'IH-2026-00001', slotId: 'slot-1' }
+const PENDING = { id: 'booking-1', bookingRef: 'IH-2026-00001', slotId: 'slot-1', totalEgp: 150 }
 
 describe('handleHoldExpired', () => {
   beforeEach(() => {

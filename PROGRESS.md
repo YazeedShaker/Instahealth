@@ -72,6 +72,61 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 
 ## Shipped
 
+### 2026-07-29 · FIX — booking money is server-derived (money integrity, no feature work)
+
+**A patient could book a 400 EGP service for 1 EGP.** Booking creation was a
+raw client INSERT into `bookings` + `booking_services`, and the only INSERT
+policy on either table checked that the booking belonged to the caller — never
+what the caller was claiming to PAY. Both `total_amount` and `price_at_booking`
+were client-supplied and unvalidated. Proven on dev before the fix, probe rows
+deleted afterwards:
+
+```
+booking insert: CREATED IH-2026-21236   total_amount = 1
+line insert   : ACCEPTED at 1 EGP       real branch_services.price = 400
+```
+
+**⚠ Why no real harm occurred: payments are still SIMULATED.** Nothing settles
+against a gateway — `MockPaymentProvider` fakes the money and `settle-payment`
+records the outcome. This hole is therefore closed **before** live money, not
+after. Had PayTabs already been integrated, every one of those 1 EGP bookings
+would have been a real underpayment we had no record of disputing. The
+launch-blocker ordering matters: **PayTabs must not go live on a booking path
+that lets the client price itself.**
+
+Two more gaps in the same missing guard: an `is_available = false` service
+could still be booked (mobile filtered it in JavaScript only), and nothing tied
+a `booking_service` to the booking's own BRANCH — the FK references
+`branch_services(id)` with no branch correlation, so branch A's service could
+be attached to a booking at branch B.
+
+**The fix** (migration `20260729160519`): `create_pending_booking` owns every
+money fact. The client sends IDENTITIES — slot id, service ids, notes — and the
+server derives the per-line price and the total from `branch_services`, rejects
+inactive services, inactive branches and inactive providers, requires an active
+hold on the slot, and refuses any service that does not belong to the slot's
+branch. Duplicate ids collapse so a repeated id cannot inflate a total. **The
+old INSERT policies are DROPPED in the same migration** — an RPC beside an open
+INSERT is decoration.
+
+The client's displayed total is now advisory: the RPC returns the authoritative
+total and the payment screen renders THAT, so a price that moved mid-session is
+ordinary staleness rather than an error.
+
+**Regression evidence (10 Node checks, all passing):** the raw INSERT is
+refused by RLS · the happy path derives 300 EGP from `branch_services` · the
+line price is the real price · another branch's service refused · a mixed
+basket refused WHOLESALE · an inactive service refused server-side · a
+duplicated id cannot inflate the total · an empty basket refused.
+
+**Recorded as the general law in ENGINEERING-WORKFLOW §5** — third instance
+after `confirm_booking`'s grants and `cancelled_by`: any fact with money, state
+or identity consequences is server-derived; clients supply identities, never
+values; every new INSERT/UPDATE policy is audited against that before merge.
+
+⚠ **Device re-test required before P03 stacks on top** — this changes the
+shipped patient booking path.
+
 ### 2026-07-29 · CHORE — retire the SETUP-01 root placeholder
 
 `/` served SETUP-01's scaffold proof: an Arabic heading, a cream block and a

@@ -1,6 +1,5 @@
 import {
   PAYMENT_METHOD_OPTIONS,
-  calculateBookingTotal,
   createMockPaymentProvider,
   formatPayCtaLabelAr,
   getRemainingHoldSeconds,
@@ -60,7 +59,11 @@ export default function PaymentScreen() {
     return <Redirect href="/(app)/booking/slot" />
   }
 
-  const totalEgp = calculateBookingTotal(selectedServices)
+  // The SERVER's total, derived from branch_services when the pending booking
+  // was created — not a client-side sum. If a price moved while the patient
+  // was choosing, this is what they are actually charged, so it is what they
+  // must see before paying.
+  const totalEgp = pendingBooking.totalEgp
   const isHospital = selectedServices.some((service) => service.categorySlug === 'scans')
 
   const handlePay = async () => {
