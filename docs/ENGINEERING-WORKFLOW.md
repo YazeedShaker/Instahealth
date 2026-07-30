@@ -476,6 +476,32 @@ Two more, both found while capturing P02's screenshots:
   reported a false failure at 1200ms. Use a web-first assertion that describes
   the END STATE and retries — for a filter, assert that no NON-matching row
   remains rather than sampling the rows once.
+- **An out-of-order REFETCH can paint over a newer state.** The outcome E2E
+  failed in CI while passing locally: marking a booking arrived fires a realtime
+  broadcast, and its debounced refetch was still in flight when the next action
+  (completed) was saved — so the older response returned `arrived` and painted
+  over the newer row. It looked un-saved while the database had taken the write.
+  Local latency hid the window; a runner reaching Frankfurt did not. Any
+  component that refetches from more than one trigger (realtime + poll + focus +
+  post-mutation) needs a **monotonic request sequence** so only the newest
+  response is allowed to paint, and its post-mutation refetch must be AWAITED
+  rather than fire-and-forget. **A CI-only failure is usually a latency window,
+  not a flake — find the window.**
+- **Fidelity captures do NOT belong in CI.** They are a local authoring tool:
+  run them, commit the images, put them in the PR body. They assert almost
+  nothing, they were the slowest thing in the E2E job (a login and a navigation
+  each), they competed for the single dev server, and they wrote screenshots into
+  a container nobody would ever open — while being the only thing turning the
+  job red. `testIgnore` them under `process.env.CI`; locally they all still run,
+  so §9's discipline is unchanged.
+- **An E2E suite that MUTATES shared data consumes its own fixtures.** The
+  outcome test marks a booking completed, which also flips a cash booking to
+  paid, starving the cash-row and cancel-on-behalf tests after it. Six tests had
+  quietly skipped themselves with plausible messages. `supabase/seeds/004_dashboard_e2e_fixtures.sql`
+  RESETS the day rather than appending, and seeds a SPARE so tests do not starve
+  each other within one run. Residual: three workers share one mutable dev
+  database, so a data-dependent skip can still race — the durable fixes are
+  per-worker fixtures or `workers: 1`.
 - **Read the screenshot you just captured.** The first P02 drawer capture looked
   fine in the accessibility tree but showed the scrim confined to `<main>`, with
   the sidebar and header undimmed — the design anchors both to the root shell.
