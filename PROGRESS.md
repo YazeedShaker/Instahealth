@@ -59,7 +59,8 @@ visual contract. Then specs → Claude Code.
 - [x] **F06** — ✅ DONE. Mobile: payment (mock provider) + settle-payment + confirmation + SMS (see Shipped)
 - [x] **P01** — ✅ DONE. Web: provider auth, shell & Today view — **MILESTONE ONE, loop closed** (see Shipped)
 - [x] **P02** — ✅ DONE. Web: booking detail drawer + cancel-on-behalf + upcoming days (see Shipped)
-- [ ] **P03–P06** — Web: prices editor, slot allocation, branch profile
+- [x] **P03** — ✅ DONE. Web: services & prices editor with audit trail (see Shipped)
+- [ ] **P04–P06** — Web: slot allocation, branch profile
 - [x] **F07** — ✅ DONE. Mobile: My Bookings list, detail & cancel (see Shipped)
 - [ ] **F08–F09** — Mobile: reviews, profile
 - [ ] **A01–A06** — Web: admin panel
@@ -71,6 +72,85 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 ---
 
 ## Shipped
+
+### 2026-07-29 · P03 — Services & prices editor (web)
+
+The branch's price list becomes provider-managed. The launch blocker stops
+being a code task and becomes a data-entry task for partners.
+
+**⚠ PRE-WORK FIRST, because it protects money.** SPEC-P03 gates on proving that
+a price edit can never touch an existing booking. Verified before writing a
+line of the feature, and it HOLDS on every path:
+`booking_services.price_at_booking` snapshots at booking time · both
+`get_patient_bookings` and `get_branch_bookings_for_date` read that snapshot,
+never `branch_services.price` · `settle-payment` joins `branch_services` only
+for names and preparation notes · `booking-reminder` reads no price at all.
+Then proven end-to-end from Node: the price of a service moved 150 → 175 while
+an existing booking kept its 400 total and its 150 line price. The design says
+as much to the user — «الحجوزات القائمة تحتفظ بسعرها القديم» — and the screen
+now shows that sentence above the table, because the person changing a price is
+exactly who needs to know it.
+
+**The write path** (migration `20260729175927`): `update_branch_service` owns
+validation. Bounds are 1–100,000 EGP; **zero is out of bounds on purpose** — a
+free service is modelled by making it unavailable, not by pricing it at nothing.
+The absurd-jump guard is a symmetric 10× ratio, deliberately far WIDER than the
+UI's confirm threshold: the server is catching a fat-fingered extra digit, not
+second-guessing a partner's pricing. Re-saving identical values succeeds
+without writing history, so the trail records CHANGES rather than clicks.
+
+**The audit trail:** `branch_service_price_history` — old/new price, old/new
+availability, `changed_by`, `changed_at`. Append-only by construction: there is
+no INSERT/UPDATE/DELETE policy for anyone, and the SECURITY DEFINER function is
+the only writer. It is dispute insurance now and the data behind «آخر تحديث»
+today. **The direct-write door is closed in the same migration** — same
+discipline as the booking-money fix.
+
+**Two confirm thresholds, on purpose.** The design's type-to-confirm fires at
+
+> 50% or >200 EGP absolute (the absolute arm matters: 10% of a 2,500 EGP scan is
+> real money, while 50% of a 45 EGP test is pocket change). The server's guard is
+> 10×. They are different numbers because they answer different questions — "did
+> you mean this?" versus "is this even possible?".
+
+**«آخر تحديث» is honest.** NULL when a price has never been edited, rendered as
+«لم يُحدَّث بعد» in a warning tone. A placeholder price that no partner has
+confirmed must not look maintained.
+
+**Verified against the LIVE dev DB (14 Node checks, all passing):** zero,
+negative and over-ceiling prices refused · >10× jump AND >10× drop both refused
+· another branch's service refused as `service_not_found` · a patient can
+neither read the editor nor edit a price · the happy path writes the audit row
+and populates «آخر تحديث» · re-saving is an idempotent no-op · **and the money
+contract: the existing booking's total and line price are untouched.**
+
+**43 Playwright tests pass** (6 new). Core at **328 tests, 100% lines**.
+Fidelity captures in `docs/design-briefs/p03-fidelity/`.
+
+**Decisions / deviations:**
+
+- **«+ إضافة خدمة» renders DISABLED**, per SPEC-P03 §A.3 — the catalogue is
+  admin-owned (A-series). A branch sets prices and availability for services it
+  already has; it does not invent new ones.
+- **Prices are integers.** "150.5" typed on a shared desk is far likelier a slip
+  than intent, and a price list has no need of piaster precision.
+- **The Playwright test timeout was raised to 90s.** A 30s inner assertion
+  inside Playwright's 30s default can never pass — the test dies first and it
+  reads as a missing element rather than a budget problem. Every dashboard test
+  signs in and then waits on a server-rendered fetch to the remote dev DB with
+  three workers contending.
+
+**For P04 (slot allocation) — hand-off:**
+
+- `update_branch_service` is the template for any provider-facing write:
+  membership check first, validation server-side, audit row, no client policy.
+- **⚠ THE ROLE QUESTION P04 MUST RESOLVE OR EXPLICITLY DEFER:** the design gates
+  slot-allocation editing to branch OWNERS, but `provider_users.role` exists
+  with no tiers defined and nothing reads it. Every P01–P03 surface treats any
+  member of `provider_users` as equally privileged. P04 either introduces the
+  tier (and back-fills existing rows) or ships read-only and says so.
+- `branch_service_price_history` is the pattern for auditing any other
+  provider-editable value.
 
 ### 2026-07-29 · FIX — booking money is server-derived (money integrity, no feature work)
 
@@ -1463,8 +1543,11 @@ _Next entry after SETUP-02._
 - **⚠ `create_slot_hold(p_slot_id, p_user_id)` doesn't verify `p_user_id = auth.uid()`**
   (SECURITY DEFINER, callable by any authenticated user) — a malicious client could hold
   slots as another user. Harden with an auth.uid() check in a follow-up migration.
-- **⚠ All seeded prices are PLACEHOLDERS** (labs 150/250/400, scans 300–2500 EGP rounds) —
-  replace with real Saridar/Town prices via the provider dashboard before real patients.
+- **⚠ Seeded prices are PLACEHOLDERS — now a DATA task, not a code task.** P03 shipped the
+  editor, so partners enter their real prices themselves at
+  `/dashboard/services`. The rows that have never been touched show
+  «لم يُحدَّث بعد», which is the checklist. **Verify every service has a
+  partner-confirmed price before launch.**
 - **⚠ `branches.slot_duration_minutes` is a uniform seeded 30 across ALL 24 branches** and no
   longer describes the slot grid (spacing is `opening window ÷ allocation` since migration
   20260726151039 — 150 min at Saridar, 120 at Town). P02's drawer renders it as "expected

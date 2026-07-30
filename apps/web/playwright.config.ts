@@ -38,6 +38,33 @@ loadEnvLocal()
 
 export default defineConfig({
   testDir: './e2e',
+  // Fidelity captures are a LOCAL AUTHORING TOOL, not a test suite — their own
+  // header says so: run them, commit the images, put them in the PR body. They
+  // assert almost nothing. In CI they were the slowest thing in the job (a login
+  // and a navigation each), competed with the real specs for one dev server,
+  // and wrote screenshots into a container where nobody would ever look at them
+  // — while being the only thing turning the job red. Excluding them removes
+  // no coverage: every real assertion lives in dashboard.spec.ts.
+  //
+  //   pnpm --filter @instahealth/web exec playwright test fidelity
+  testIgnore: process.env.CI ? ['**/fidelity.spec.ts'] : [],
+  // Playwright's 30s default is not enough here: every dashboard test signs in
+  // and then waits on a SERVER-rendered fetch against the remote dev database,
+  // with three workers contending for one dev server. A 30s inner assertion
+  // inside a 30s test can never pass — the test dies first, and it looks like
+  // a missing element rather than a budget problem.
+  //
+  // CI is markedly slower than a local run — a GitHub runner reaching Supabase
+  // in Frankfurt, cold, is nothing like localhost. These two failed in CI while
+  // passing locally, which is exactly the signal that the budget was tuned to
+  // the wrong machine.
+  timeout: 120_000,
+  expect: {
+    // 5s (the default) does not cover a DEBOUNCED query plus a round trip to a
+    // remote database. Assertions here routinely wait on both, so the realistic
+    // floor is much higher — a slow assertion is not a failing one.
+    timeout: 15_000,
+  },
   reporter: [['html', { outputFolder: 'playwright-report', open: 'never' }], ['list']],
   use: {
     baseURL: 'http://localhost:3000',

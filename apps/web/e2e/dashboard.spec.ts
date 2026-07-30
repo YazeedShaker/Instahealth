@@ -425,3 +425,114 @@ test.describe('provider dashboard — day strip scrolling (P02 follow-up)', () =
     await expect.poll(async () => strip.evaluate((el) => Math.abs(el.scrollLeft))).not.toBe(before)
   })
 })
+
+test.describe('provider dashboard — prices editor (P03)', () => {
+  test.skip(!HAS_CREDS, 'PROVIDER_TEST_EMAIL / PROVIDER_TEST_PASSWORD not set')
+
+  test.beforeEach(async ({ page }) => {
+    await login(page, TOWN_RECEPTION)
+    await page.waitForURL('**/dashboard/today')
+    await page.getByTestId('nav-services').click()
+    await page.waitForURL('**/dashboard/services')
+    await expect(page.getByTestId('prices-notice')).toBeVisible({ timeout: 30_000 })
+  })
+
+  test('the money contract is stated to the person changing prices', async ({ page }) => {
+    await expect(page.getByTestId('prices-notice')).toContainText('تحتفظ بسعرها القديم')
+  })
+
+  test('the catalogue cannot be extended from here — that is admin-owned', async ({ page }) => {
+    await expect(page.getByRole('button', { name: /إضافة خدمة/ })).toBeDisabled()
+  })
+
+  test('a small edit saves inline and stamps آخر تحديث', async ({ page }) => {
+    const edit = page.getByTestId(/^edit-/).first()
+    await edit.click()
+
+    const input = page.getByTestId(/^price-input-/).first()
+    const serviceId = (await input.getAttribute('data-testid'))!.replace('price-input-', '')
+    const original = Number(await input.inputValue())
+
+    // +10 EGP: under the design's confirm threshold, so it commits directly.
+    await input.fill(String(original + 10))
+    await page.getByTestId(`save-${serviceId}`).click()
+
+    await expect(page.getByTestId('prices-saved')).toBeVisible()
+    await expect(page.getByTestId(`price-${serviceId}`)).toBeVisible()
+    // Never-edited rows read «لم يُحدَّث بعد»; this one must not.
+    await expect(page.getByTestId(`updated-${serviceId}`)).not.toContainText('لم يُحدَّث بعد')
+
+    // Put it back so the suite is repeatable.
+    await page.getByTestId(`edit-${serviceId}`).click()
+    await page.getByTestId(`price-input-${serviceId}`).fill(String(original))
+    await page.getByTestId(`save-${serviceId}`).click()
+    await expect(page.getByTestId('prices-saved')).toBeVisible()
+  })
+
+  test('a BIG change demands the price be retyped', async ({ page }) => {
+    const edit = page.getByTestId(/^edit-/).first()
+    await edit.click()
+    const input = page.getByTestId(/^price-input-/).first()
+    const serviceId = (await input.getAttribute('data-testid'))!.replace('price-input-', '')
+    const original = Number(await input.inputValue())
+
+    await input.fill(String(original * 3))
+    await page.getByTestId(`save-${serviceId}`).click()
+
+    const dialog = page.getByTestId('price-confirm-dialog')
+    await expect(dialog).toBeVisible()
+
+    // Confirm stays disabled until the typed number matches exactly.
+    await expect(page.getByTestId('price-confirm-save')).toBeDisabled()
+    await page.getByTestId('price-confirm-input').fill(String(original * 3 + 1))
+    await expect(page.getByTestId('price-confirm-save')).toBeDisabled()
+    await page.getByTestId('price-confirm-input').fill(String(original * 3))
+    await expect(page.getByTestId('price-confirm-save')).toBeEnabled()
+
+    // Back out — this test proves the GUARD, and must not move a real price.
+    await page.getByTestId('price-confirm-dismiss').click()
+    await expect(dialog).toBeHidden()
+  })
+
+  test('the save button stays disabled for an unchanged or invalid price', async ({ page }) => {
+    const edit = page.getByTestId(/^edit-/).first()
+    await edit.click()
+    const input = page.getByTestId(/^price-input-/).first()
+    const serviceId = (await input.getAttribute('data-testid'))!.replace('price-input-', '')
+
+    // Unchanged.
+    await expect(page.getByTestId(`save-${serviceId}`)).toBeDisabled()
+    // Zero is out of bounds — free is modelled by unavailable, not by 0.
+    await input.fill('0')
+    await expect(page.getByTestId(`save-${serviceId}`)).toBeDisabled()
+    // Empty.
+    await input.fill('')
+    await expect(page.getByTestId(`save-${serviceId}`)).toBeDisabled()
+  })
+
+  test('availability toggles and survives a reload', async ({ page }) => {
+    const toggle = page.getByTestId(/^toggle-/).first()
+    const serviceId = (await toggle.getAttribute('data-testid'))!.replace('toggle-', '')
+    const before = await toggle.getAttribute('aria-checked')
+
+    await toggle.click()
+    await expect(page.getByTestId('prices-saved')).toBeVisible()
+    await expect(page.getByTestId(`toggle-${serviceId}`)).toHaveAttribute(
+      'aria-checked',
+      before === 'true' ? 'false' : 'true',
+    )
+
+    await page.reload()
+    await expect(page.getByTestId(`toggle-${serviceId}`)).toHaveAttribute(
+      'aria-checked',
+      before === 'true' ? 'false' : 'true',
+    )
+
+    // Restore.
+    await page.getByTestId(`toggle-${serviceId}`).click()
+    await expect(page.getByTestId(`toggle-${serviceId}`)).toHaveAttribute(
+      'aria-checked',
+      before ?? 'true',
+    )
+  })
+})
