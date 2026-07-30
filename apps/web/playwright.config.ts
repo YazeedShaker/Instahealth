@@ -38,6 +38,16 @@ loadEnvLocal()
 
 export default defineConfig({
   testDir: './e2e',
+  // Fidelity captures are a LOCAL AUTHORING TOOL, not a test suite — their own
+  // header says so: run them, commit the images, put them in the PR body. They
+  // assert almost nothing. In CI they were the slowest thing in the job (a login
+  // and a navigation each), competed with the real specs for one dev server,
+  // and wrote screenshots into a container where nobody would ever look at them
+  // — while being the only thing turning the job red. Excluding them removes
+  // no coverage: every real assertion lives in dashboard.spec.ts.
+  //
+  //   pnpm --filter @instahealth/web exec playwright test fidelity
+  testIgnore: process.env.CI ? ['**/fidelity.spec.ts'] : [],
   // Playwright's 30s default is not enough here: every dashboard test signs in
   // and then waits on a SERVER-rendered fetch against the remote dev database,
   // with three workers contending for one dev server. A 30s inner assertion
