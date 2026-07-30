@@ -111,14 +111,35 @@ export function useBranchBookings({
   }, [])
   useEffect(() => setPage(0), [appliedSearch])
 
-  // Switching days re-seeds everything from the server payload for the new date.
+  // Switching DAYS re-seeds everything from the server payload for the new date.
+  //
+  // ⚠ Keyed on `isoDate` ALONE, deliberately. Keying it on `initialBookings`
+  // too — which looks more correct, and which ESLint asks for — meant any RSC
+  // re-render handed down a new array identity and reset the table to the
+  // UNFILTERED server payload, while the filter chip still showed as active.
+  // The desk would be looking at rows its own filter excludes. Caught by the
+  // status-filter E2E, which saw a non-matching row reappear mid-assertion.
+  //
+  // The server payload is only ever page one, unfiltered — it is the right
+  // answer on a date change and the wrong answer at every other moment,
+  // because by then the client's query state is the truth.
+  const seededDate = useRef(isoDate)
   useEffect(() => {
+    if (seededDate.current === isoDate) return
+    seededDate.current = isoDate
     setBookings(initialBookings)
     setTotal(initialTotal)
     setLoadFailed(initialLoadFailed)
     knownIds.current = new Set(initialBookings.map((booking) => booking.id))
     setNewIds(new Set())
-  }, [isoDate, initialBookings, initialTotal, initialLoadFailed])
+    setSearch('')
+    setAppliedSearch('')
+    setStatusRaw(null)
+    setPage(0)
+    // The payload props are READ here but deliberately not TRACKED — tracking
+    // them is the bug described above.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isoDate])
 
   const refresh = useCallback(async () => {
     setIsQuerying(true)

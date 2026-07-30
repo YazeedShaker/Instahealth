@@ -43,7 +43,18 @@ export default defineConfig({
   // with three workers contending for one dev server. A 30s inner assertion
   // inside a 30s test can never pass — the test dies first, and it looks like
   // a missing element rather than a budget problem.
-  timeout: 90_000,
+  //
+  // CI is markedly slower than a local run — a GitHub runner reaching Supabase
+  // in Frankfurt, cold, is nothing like localhost. These two failed in CI while
+  // passing locally, which is exactly the signal that the budget was tuned to
+  // the wrong machine.
+  timeout: 120_000,
+  expect: {
+    // 5s (the default) does not cover a DEBOUNCED query plus a round trip to a
+    // remote database. Assertions here routinely wait on both, so the realistic
+    // floor is much higher — a slow assertion is not a failing one.
+    timeout: 15_000,
+  },
   reporter: [['html', { outputFolder: 'playwright-report', open: 'never' }], ['list']],
   use: {
     baseURL: 'http://localhost:3000',

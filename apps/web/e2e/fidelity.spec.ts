@@ -63,6 +63,19 @@ async function hideDevOverlay(page: import('@playwright/test').Page) {
   })
 }
 
+/** Sign in and go STRAIGHT to a screen, without waiting for the Today table
+ * first. The prices captures do not need Today at all, and stacking its
+ * server-rendered fetch in front of theirs is what pushed them past the test
+ * budget on a CI runner. */
+async function signInAndGo(page: import('@playwright/test').Page, path: string) {
+  await page.goto('/login')
+  await page.getByTestId('login-email').fill(PROVIDER_EMAIL)
+  await page.getByTestId('login-password').fill(PROVIDER_PASSWORD)
+  await page.getByTestId('login-submit').click()
+  await page.waitForURL('**/dashboard/**')
+  await page.goto(path)
+}
+
 async function signIn(page: import('@playwright/test').Page) {
   await page.goto('/login')
   await page.getByTestId('login-email').fill(PROVIDER_EMAIL)
@@ -173,10 +186,8 @@ test('capture: today with the search and filter toolbar', async ({ page }) => {
 
 test('capture: prices editor', async ({ page }) => {
   test.skip(!HAS_CREDS, 'PROVIDER_TEST_EMAIL / PROVIDER_TEST_PASSWORD not set')
-  await signIn(page)
-  await page.getByTestId('nav-services').click()
-  await page.waitForURL('**/dashboard/services')
-  await expect(page.getByTestId('prices-notice')).toBeVisible({ timeout: 30_000 })
+  await signInAndGo(page, '/dashboard/services')
+  await expect(page.getByTestId('prices-notice')).toBeVisible({ timeout: 60_000 })
   await hideDevOverlay(page)
   await page.evaluate(() => document.fonts.ready)
   await page.screenshot({
@@ -187,10 +198,8 @@ test('capture: prices editor', async ({ page }) => {
 
 test('capture: prices editor with the type-to-confirm dialog', async ({ page }) => {
   test.skip(!HAS_CREDS, 'PROVIDER_TEST_EMAIL / PROVIDER_TEST_PASSWORD not set')
-  await signIn(page)
-  await page.getByTestId('nav-services').click()
-  await page.waitForURL('**/dashboard/services')
-  await expect(page.getByTestId('prices-notice')).toBeVisible({ timeout: 30_000 })
+  await signInAndGo(page, '/dashboard/services')
+  await expect(page.getByTestId('prices-notice')).toBeVisible({ timeout: 60_000 })
 
   const edit = page.getByTestId(/^edit-/).first()
   await edit.click()
