@@ -141,7 +141,21 @@ export function useBranchBookings({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isoDate])
 
+  // ⚠ Refetches can land OUT OF ORDER, and the last response to arrive wins the
+  // screen unless something stops it. The concrete failure: marking a booking
+  // arrived fires a realtime broadcast, whose debounced refetch can be in
+  // flight while the NEXT action (completed) is being saved. That older
+  // response returns `arrived` and paints over the newer state, and the row sits
+  // there looking un-saved even though the database took the write. It survived
+  // local runs and failed in CI, because the window is latency.
+  //
+  // A monotonic sequence makes the newest request the only one allowed to
+  // paint. Cheaper and more honest than trying to order the callers.
+  const requestSeq = useRef(0)
+
   const refresh = useCallback(async () => {
+    const seq = requestSeq.current + 1
+    requestSeq.current = seq
     setIsQuerying(true)
     try {
       const result = await fetchBranchBookings(supabase, branchId, isoDate, {
@@ -150,6 +164,9 @@ export function useBranchBookings({
         limit: BOOKINGS_PAGE_SIZE,
         offset: page * BOOKINGS_PAGE_SIZE,
       })
+      // A newer request started while this one was in flight — its answer is
+      // the current one, so drop this stale payload on the floor.
+      if (seq !== requestSeq.current) return
       // Only rows the desk has never seen count as arrivals. Under a filter
       // that would otherwise flag every match as "new" the moment it is typed.
       const arrivals =
@@ -162,9 +179,9 @@ export function useBranchBookings({
       setLoadFailed(false)
       if (arrivals.length > 0) setNewIds((prev) => new Set([...prev, ...arrivals]))
     } catch {
-      setLoadFailed(true)
+      if (seq === requestSeq.current) setLoadFailed(true)
     } finally {
-      setIsQuerying(false)
+      if (seq === requestSeq.current) setIsQuerying(false)
     }
   }, [supabase, branchId, isoDate, trackArrivals, appliedSearch, status, page])
 
@@ -282,8 +299,10 @@ export function useBranchBookings({
         }
       })
       // Re-read either way: on success to pick up server-side effects (a cash
-      // completion also flips the payment state), on failure to resync.
-      void refresh()
+      // completion also flips the payment state), on failure to resync. AWAITED,
+      // so this refetch is the newest sequence and therefore the one that paints
+      // — a fire-and-forget call could be overtaken by an older in-flight one.
+      await refresh()
     },
     [bookings, pendingIds, supabase, refresh, withPending],
   )
