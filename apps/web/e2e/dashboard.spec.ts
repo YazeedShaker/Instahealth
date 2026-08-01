@@ -122,17 +122,31 @@ test.describe('provider dashboard — Today view', () => {
   // This test does NOT skip. If it is red, the fixtures need reseeding
   // (`supabase/seeds/004_dashboard_e2e_fixtures.sql`) — nothing is wrong with
   // the product. One loud failure beats nine quiet skips.
-  test('FIXTURE TRIPWIRE — today has actionable bookings to test with', async ({ page }) => {
-    const rows = page.getByTestId(/^booking-row-/)
-    const count = await rows.count()
+  //
+  // ⚠ IT COUNTS WHAT THE SUITE ACTUALLY CONSUMES, not merely "more than zero".
+  // A threshold of 1 is worthless: it passed while the two regression tests
+  // below skipped for want of a fixture, which is the same green-by-absence
+  // this tripwire exists to prevent — caught on this PR's own first CI run.
+  // THREE tests each consume one actionable booking today:
+  //   · the outcome workflow progresses وصل → تمت الخدمة
+  //   · a completion survives a SLOW round trip
+  //   · a rapid double-click writes ONCE
+  // Adding another consumer means raising this number AND seeding another row.
+  const ACTIONABLE_BOOKINGS_THE_SUITE_CONSUMES = 3
+
+  test('FIXTURE TRIPWIRE — today has enough actionable bookings for the suite', async ({
+    page,
+  }) => {
+    const reseed =
+      'Re-run supabase/seeds/004_dashboard_e2e_fixtures.sql (it RESETS the day). This is a test-data problem, not a product failure. In CI it means the SUPABASE_DB_URL secret is missing, so the seed step was skipped.'
     expect(
-      count,
-      'No bookings today at Town. The dashboard suite CONSUMES its fixtures, so the day has drained — re-run supabase/seeds/004_dashboard_e2e_fixtures.sql. This is a test-data problem, not a product failure.',
+      await page.getByTestId(/^booking-row-/).count(),
+      `No bookings today at Town — the suite CONSUMES its fixtures and the day has drained. ${reseed}`,
     ).toBeGreaterThan(0)
     expect(
       await page.getByTestId(/^action-arrived-/).count(),
-      'Bookings exist today but none is still actionable (all already arrived/completed/cancelled). Re-run supabase/seeds/004_dashboard_e2e_fixtures.sql to reset the day.',
-    ).toBeGreaterThan(0)
+      `Today needs ${ACTIONABLE_BOOKINGS_THE_SUITE_CONSUMES} still-actionable bookings; the tests that follow each consume one and would otherwise SKIP THEMSELVES silently. ${reseed}`,
+    ).toBeGreaterThanOrEqual(ACTIONABLE_BOOKINGS_THE_SUITE_CONSUMES)
   })
 
   test('the shell renders the branch, the date and the fill indicator', async ({ page }) => {
@@ -155,7 +169,10 @@ test.describe('provider dashboard — Today view', () => {
 
     // Find a row that still offers the arrive action.
     const arriveButton = page.getByTestId(/^action-arrived-/).first()
-    test.skip((await arriveButton.count()) === 0, 'no actionable booking today')
+    // NOT a skip. These are the regression guards for a lost cash payment — if
+    // one cannot run, that must be RED, not silently green. The FIXTURE
+    // TRIPWIRE above guarantees the fixtures; this asserts rather than trusts.
+    await expect(arriveButton, 'no actionable booking today — reseed 004').toBeVisible()
 
     const bookingId = (await arriveButton.getAttribute('data-testid'))!.replace(
       'action-arrived-',
@@ -218,7 +235,10 @@ test.describe('provider dashboard — Today view', () => {
     )
 
     const arriveButton = page.getByTestId(/^action-arrived-/).first()
-    test.skip((await arriveButton.count()) === 0, 'no actionable booking today')
+    // NOT a skip. These are the regression guards for a lost cash payment — if
+    // one cannot run, that must be RED, not silently green. The FIXTURE
+    // TRIPWIRE above guarantees the fixtures; this asserts rather than trusts.
+    await expect(arriveButton, 'no actionable booking today — reseed 004').toBeVisible()
     const bookingId = (await arriveButton.getAttribute('data-testid'))!.replace(
       'action-arrived-',
       '',
@@ -261,7 +281,10 @@ test.describe('provider dashboard — Today view', () => {
     )
 
     const arriveButton = page.getByTestId(/^action-arrived-/).first()
-    test.skip((await arriveButton.count()) === 0, 'no actionable booking today')
+    // NOT a skip. These are the regression guards for a lost cash payment — if
+    // one cannot run, that must be RED, not silently green. The FIXTURE
+    // TRIPWIRE above guarantees the fixtures; this asserts rather than trusts.
+    await expect(arriveButton, 'no actionable booking today — reseed 004').toBeVisible()
     const bookingId = (await arriveButton.getAttribute('data-testid'))!.replace(
       'action-arrived-',
       '',
