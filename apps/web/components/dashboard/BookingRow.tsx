@@ -27,6 +27,23 @@ import { StatusBadge } from '../ui/StatusBadge'
 // the row with a ‹ detail chevron instead, because a future day has no outcome
 // to record. Two layouts, ONE component — and the behaviour is still governed
 // by the date predicate below, not by which grid was chosen.
+/**
+ * The "saving…" state of an outcome button.
+ *
+ * The LABEL IS KEPT, deliberately: the button must not change width or wording
+ * mid-click, or the desk loses track of what it just pressed. The spinner is
+ * added beside it, and `aria-busy` on the button carries the same fact to a
+ * screen reader. Motion is dropped under `prefers-reduced-motion` (globals.css).
+ */
+function PendingDots({ labelAr }: { labelAr: string }): React.ReactElement {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className="ih-button-spinner" aria-hidden="true" />
+      {labelAr}
+    </span>
+  )
+}
+
 export const BOOKINGS_GRID_WITH_ACTIONS =
   'grid grid-cols-[90px_200px_1fr_150px_118px_180px_44px] items-center gap-3'
 export const BOOKINGS_GRID_READ_ONLY =
@@ -199,20 +216,28 @@ export function BookingRow({
         <StatusBadge status={booking.status} testId={`status-chip-${booking.id}`} />
       </div>
 
+      {/* ⚠ These buttons stay DISABLED for the whole write-then-confirm cycle,
+          not just the write. The status they are derived from is server-confirmed
+          truth now — no optimistic flip — so a row cannot briefly offer an action
+          that the next response contradicts. That window is what let a click on
+          «تمت الخدمة» send `arrived` a second time and lose the completion
+          silently (see useBranchBookings). `data-pending` gives the E2E a way to
+          observe the cycle rather than time it. */}
       {showActions ? (
-        <div className="flex gap-1.5" data-print="hide">
+        <div className="flex gap-1.5" data-print="hide" data-pending={isPending ? 'yes' : 'no'}>
           {action !== null ? (
             <Button
               size="sm"
               variant="primary"
               data-testid={`action-${action.outcome}-${booking.id}`}
               disabled={isPending}
+              aria-busy={isPending}
               onClick={(event) => {
                 event.stopPropagation()
                 onMark(booking.id, action.outcome)
               }}
             >
-              {action.labelAr}
+              {isPending ? <PendingDots labelAr={action.labelAr} /> : action.labelAr}
             </Button>
           ) : null}
           {showNoShow ? (
@@ -221,13 +246,14 @@ export function BookingRow({
               variant="ghost"
               data-testid={`action-no_show-${booking.id}`}
               disabled={isPending}
+              aria-busy={isPending}
               onClick={(event) => {
                 event.stopPropagation()
                 onMark(booking.id, 'no_show')
               }}
               style={{ color: 'var(--ih-neutral-600)' }}
             >
-              لم يحضر
+              {isPending ? <PendingDots labelAr="لم يحضر" /> : 'لم يحضر'}
             </Button>
           ) : null}
           {action === null && !showNoShow ? (

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 // P01 E2E — the reason Playwright has been sitting in CI since SETUP-01.
 // Runs against the live dev project with the seeded provider accounts
@@ -112,6 +112,29 @@ test.describe('provider dashboard — Today view', () => {
     )
   })
 
+  // ⚠ THE FIXTURE TRIPWIRE. Everything below guards itself with
+  // `test.skip(rows.count() === 0)`, which is right for an empty day but means
+  // an EXHAUSTED day turns nine tests green-by-absence. That is exactly what
+  // happened: the suite mutates the data it tests, the day drained, and for two
+  // days CI reported "24 passed, 9 skipped" while the outcome workflow was not
+  // being exercised at all — which is how a real bug hid in plain sight.
+  //
+  // This test does NOT skip. If it is red, the fixtures need reseeding
+  // (`supabase/seeds/004_dashboard_e2e_fixtures.sql`) — nothing is wrong with
+  // the product. One loud failure beats nine quiet skips.
+  test('FIXTURE TRIPWIRE — today has actionable bookings to test with', async ({ page }) => {
+    const rows = page.getByTestId(/^booking-row-/)
+    const count = await rows.count()
+    expect(
+      count,
+      'No bookings today at Town. The dashboard suite CONSUMES its fixtures, so the day has drained — re-run supabase/seeds/004_dashboard_e2e_fixtures.sql. This is a test-data problem, not a product failure.',
+    ).toBeGreaterThan(0)
+    expect(
+      await page.getByTestId(/^action-arrived-/).count(),
+      'Bookings exist today but none is still actionable (all already arrived/completed/cancelled). Re-run supabase/seeds/004_dashboard_e2e_fixtures.sql to reset the day.',
+    ).toBeGreaterThan(0)
+  })
+
   test('the shell renders the branch, the date and the fill indicator', async ({ page }) => {
     await expect(page.getByTestId('branch-name')).toContainText('تاون')
     await expect(page.getByTestId('fill-indicator')).toBeVisible()
@@ -156,6 +179,108 @@ test.describe('provider dashboard — Today view', () => {
     // Terminal: no action remains.
     await expect(page.getByTestId(`action-completed-${bookingId}`)).toHaveCount(0)
     await expect(page.getByTestId(`action-arrived-${bookingId}`)).toHaveCount(0)
+  })
+
+  // ── The swallowed-completion regression ────────────────────────────────────
+  //
+  // This class of bug is INVISIBLE at localhost latency: every one of these
+  // assertions passed locally while failing 2/2 in CI. Rather than tune a
+  // timeout to the slower machine — the P03 session established that budgets
+  // tuned to one machine are the disease — the test MANUFACTURES the window by
+  // delaying the RPC round trips, so a runner is no longer required to find it.
+  //
+  // What went wrong: a read that started BEFORE the write was still the newest
+  // request by sequence number, so its pre-write answer painted over the
+  // optimistic one. The row regressed to `confirmed`, the action button's
+  // identity is derived from the status, so «تمت الخدمة» silently became «وصل»
+  // again — and the desk's click sent `arrived` a second time. The server
+  // answered `unchanged: true`, a SUCCESS, so nothing surfaced. For a cash
+  // booking that completion IS the payment event.
+  const withSlowRpc = async (page: Page, delayMs: number, log: string[]) => {
+    await page.route('**/rest/v1/rpc/**', async (route) => {
+      const url = route.request().url()
+      if (url.includes('mark_booking_outcome')) log.push(route.request().postData() ?? '')
+      await new Promise((resolve) => setTimeout(resolve, delayMs))
+      await route.continue()
+    })
+  }
+
+  test('a completion survives a SLOW round trip — the click cannot be swallowed', async ({
+    page,
+  }) => {
+    const outcomeCalls: string[] = []
+    await withSlowRpc(page, 700, outcomeCalls)
+    await page.reload()
+    await expect(page.getByTestId('bookings-list').or(page.getByTestId('today-empty'))).toBeVisible(
+      {
+        timeout: 30_000,
+      },
+    )
+
+    const arriveButton = page.getByTestId(/^action-arrived-/).first()
+    test.skip((await arriveButton.count()) === 0, 'no actionable booking today')
+    const bookingId = (await arriveButton.getAttribute('data-testid'))!.replace(
+      'action-arrived-',
+      '',
+    )
+
+    await arriveButton.click()
+
+    // The row may NOT claim an outcome the server has not confirmed, so the chip
+    // stays put while the write is in the air. What moves is the pending state.
+    const completeButton = page.getByTestId(`action-completed-${bookingId}`)
+    await expect(completeButton).toBeVisible({ timeout: 30_000 })
+    await expect(completeButton).toBeEnabled({ timeout: 30_000 })
+    // Enabled means the CONFIRMING refetch has already painted — so the action
+    // now on screen is server-confirmed truth, not a guess that can be revoked.
+    await expect(page.getByTestId(`status-chip-${bookingId}`)).toHaveAttribute(
+      'data-status',
+      'arrived',
+    )
+
+    await completeButton.click()
+    await expect(page.getByTestId(`status-chip-${bookingId}`)).toHaveAttribute(
+      'data-status',
+      'completed',
+      { timeout: 30_000 },
+    )
+
+    // The point of the whole test: the SECOND call carried `completed`. Before
+    // the fix it carried `arrived` again, and the chip never moved.
+    expect(outcomeCalls.filter((body) => body.includes('"p_outcome":"completed"'))).toHaveLength(1)
+  })
+
+  test('a rapid double-click writes ONCE and shows no error', async ({ page }) => {
+    const outcomeCalls: string[] = []
+    await withSlowRpc(page, 700, outcomeCalls)
+    await page.reload()
+    await expect(page.getByTestId('bookings-list').or(page.getByTestId('today-empty'))).toBeVisible(
+      {
+        timeout: 30_000,
+      },
+    )
+
+    const arriveButton = page.getByTestId(/^action-arrived-/).first()
+    test.skip((await arriveButton.count()) === 0, 'no actionable booking today')
+    const bookingId = (await arriveButton.getAttribute('data-testid'))!.replace(
+      'action-arrived-',
+      '',
+    )
+
+    // An impatient desk. The guard is a REF, so it holds synchronously — a
+    // state-based check loses this race because React has not re-rendered yet.
+    await arriveButton.click()
+    await arriveButton.click({ force: true }).catch(() => {})
+    await arriveButton.click({ force: true }).catch(() => {})
+
+    await expect(page.getByTestId(`status-chip-${bookingId}`)).toHaveAttribute(
+      'data-status',
+      'arrived',
+      { timeout: 30_000 },
+    )
+    expect(outcomeCalls).toHaveLength(1)
+    // A no-op is not an error — the desk must see nothing at all.
+    await expect(page.getByTestId('error-toast')).toHaveCount(0)
   })
 
   test('a cash row is unmissable and a prepaid row is quiet', async ({ page }) => {
@@ -232,9 +357,23 @@ test.describe('provider dashboard — booking detail drawer (P02)', () => {
     const rows = page.getByTestId(/^booking-row-/)
     test.skip((await rows.count()) === 0, 'no bookings today at Town')
 
-    await rows.first().click()
+    // Pick a CANCELLABLE row, not blindly the first one. `rows.first()` made
+    // this test a hostage to row order: the outcome tests run earlier and
+    // consume the earliest rows, so the first row is routinely already closed
+    // and the test skipped itself. Selecting by the predicate it actually needs
+    // is what makes it independent of what ran before it.
+    const cancellable = rows.filter({
+      has: page.locator(
+        '[data-testid^="status-chip-"][data-status="confirmed"], [data-testid^="status-chip-"][data-status="arrived"]',
+      ),
+    })
+    test.skip(
+      (await cancellable.count()) === 0,
+      'every booking today is already closed — reseed 004_dashboard_e2e_fixtures.sql',
+    )
+    await cancellable.first().click()
     const cancelButton = page.getByTestId('drawer-cancel')
-    test.skip((await cancelButton.count()) === 0, 'the first booking is already closed')
+    await expect(cancelButton).toBeVisible()
 
     await cancelButton.click()
     const dialog = page.getByTestId('cancel-dialog')
