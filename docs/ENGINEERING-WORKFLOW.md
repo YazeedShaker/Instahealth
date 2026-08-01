@@ -141,6 +141,15 @@ detect` over the entire history. The weekly Monday scan is the full one, and
   block — but a permanently red scanner would have hidden a real one just as
   well. Same family as the skipped suite in §9: **check the scanners nothing is
   waiting on.** Fixed by widening `.gitleaks.toml`'s placeholder allowlist.
+- **Secret scanners have a MERGE-COMMIT blind spot.** gitleaks runs
+  `git log -p -U0 --full-history --all`, and `git log -p` emits **no diff for a
+  merge commit** — so conflict-resolution content, which can differ from BOTH
+  parents, is never scanned. A secret pasted in while resolving a conflict is
+  invisible to it. This repo has 2 merges and one (`f38c4e58`) carries 211 real
+  resolution lines; scanned separately with `git show --cc` during the
+  2026-08-01 audit, clean. **Any full-history claim must cover merges
+  separately** — enumerate them with `git rev-list --all --merges` and diff each
+  with `--cc`.
 - New upstream advisories WILL land mid-PR and fail Dependency Audit (has
   happened three times: vitest/vite, postcss, brace-expansion). Fix order:
   ① bump the dep, ② pnpm override to the patched version — but TEST it

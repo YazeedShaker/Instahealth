@@ -133,10 +133,17 @@ race and an expired session are different facts and must not share a message.
 **FULL-HISTORY SECRET AUDIT — the rotation list is EMPTY.** All 76 commits on
 all refs, checked two independent ways (see the PR body for the full report):
 
-- **Zero credentials found.** No JWT of any kind has ever appeared in any
-  commit — which is the history-wide answer the earlier `git grep` at HEAD
-  could not give. No GitHub/AWS/OpenAI/Slack/Google keys, no private-key
-  blocks, no connection string carrying a password, no `crypt('literal')`.
+- **Zero credentials found.** Real gitleaks over the full history
+  (`workflow_dispatch` run 30677734584, 19.19 MB, **«no leaks found»**) plus an
+  independent sweep self-tested against synthetic positives first — a scanner
+  with a dead regex looks exactly like a clean repo. No JWT of any kind has
+  ever appeared in any commit, which is the history-wide answer the earlier
+  `git grep` at HEAD could not give. No GitHub/AWS/OpenAI/Slack/Google keys, no
+  private-key blocks, no connection string carrying a password, no
+  `crypt('literal')`.
+- **The merge-commit blind spot was covered separately.** `git log -p` emits no
+  diff for a merge, so conflict-resolution content is invisible to gitleaks;
+  `f38c4e58` carries 211 such lines. Scanned with `git show --cc` — clean.
 - **The Supabase project ref and anon key are PUBLIC BY DESIGN** — the ref is
   in every URL the app calls and the anon key ships in the Expo bundle. They
   are not secrets and are not rotation candidates. RLS is what protects the
