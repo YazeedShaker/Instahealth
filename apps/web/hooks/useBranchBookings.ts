@@ -153,6 +153,44 @@ export function useBranchBookings({
   // paint. Cheaper and more honest than trying to order the callers.
   const requestSeq = useRef(0)
 
+  /**
+   * Invalidate every READ currently in flight.
+   *
+   * ⚠ THE BUG THIS EXISTS FOR (proven with a network timeline, not guessed):
+   * the sequence guard above only ordered reads against each other. A read that
+   * started BEFORE a write was still the newest request by sequence number, so
+   * when it landed — carrying pre-write data — it painted, and the row silently
+   * regressed to the state it held a second earlier:
+   *
+   *   4139  refetch START                       (queries the DB: still 'confirmed')
+   *   4341  RPC mark_booking_outcome 'arrived'
+   *   5327  refetch END  → ['confirmed', …]     ← STALE response paints
+   *   5454  RPC END      → status 'arrived'     (the database HAD taken the write)
+   *   5784  RPC mark_booking_outcome 'arrived'  ← the desk's next click, wrong outcome
+   *
+   * Because the action button's identity is derived from `booking.status`
+   * (`action-arrived-…` vs `action-completed-…`), that regression rewrote the
+   * button back to «وصل» — so the receptionist's click on «تمت الخدمة» sent
+   * `arrived` a second time. The server answered `unchanged: true`, which is a
+   * SUCCESS, so there was no error, no toast and no rollback: the completion
+   * simply never happened. For a CASH booking that is the payment event
+   * (DECISION-commission-attachment), so the money was never recorded.
+   *
+   * A write therefore invalidates reads too — anything already in flight was
+   * asked a question whose answer is now out of date.
+   */
+  const invalidateInFlightReads = useCallback(() => {
+    requestSeq.current += 1
+  }, [])
+
+  /**
+   * In-flight writes, keyed by booking id — a REF, not state, because the guard
+   * has to hold synchronously. `pendingIds` cannot do this job: a second click
+   * arriving before React re-renders reads the OLD set and sails through, which
+   * is how a double-click became two writes.
+   */
+  const writesInFlight = useRef<Set<string>>(new Set())
+
   const refresh = useCallback(async () => {
     const seq = requestSeq.current + 1
     requestSeq.current = seq
@@ -261,32 +299,65 @@ export function useBranchBookings({
     return () => clearTimeout(timer)
   }, [toastAr])
 
-  const withPending = useCallback(async (bookingId: string, work: () => Promise<void>) => {
-    setPendingIds((prev) => new Set([...prev, bookingId]))
-    try {
-      await work()
-    } finally {
-      setPendingIds((prev) => {
-        const next = new Set(prev)
-        next.delete(bookingId)
-        return next
-      })
-    }
-  }, [])
+  /**
+   * Hold a booking PENDING across the whole write-then-read cycle.
+   *
+   * The pending flag is lowered only after the confirming refetch has painted,
+   * not when the write resolves. That gap was the window: the button re-enabled
+   * while a stale read was still in flight, so the desk could click an action
+   * the screen was about to contradict. While pending, the row's action buttons
+   * are disabled, which means there is no moment where a stale action is
+   * clickable — the handler cannot be raced because it cannot be reached.
+   */
+  const withPending = useCallback(
+    async (bookingId: string, work: () => Promise<void>): Promise<void> => {
+      if (writesInFlight.current.has(bookingId)) return
+      writesInFlight.current.add(bookingId)
+      setPendingIds((prev) => new Set([...prev, bookingId]))
+      // Any read already in flight was asked before this write — its answer is
+      // stale by construction and must never paint.
+      invalidateInFlightReads()
+      try {
+        await work()
+        // Re-read INSIDE the pending window: on success to pick up server-side
+        // effects (a cash completion also flips the payment state), on failure
+        // to resync. AWAITED, so this is the newest sequence and therefore the
+        // one that paints.
+        await refresh()
+      } finally {
+        writesInFlight.current.delete(bookingId)
+        setPendingIds((prev) => {
+          const next = new Set(prev)
+          next.delete(bookingId)
+          return next
+        })
+      }
+    },
+    [refresh, invalidateInFlightReads],
+  )
 
+  /**
+   * Record an outcome. THE ROW SHOWS NO OUTCOME UNTIL THE SERVER CONFIRMS IT.
+   *
+   * There used to be an optimistic `setBookings(status = outcome)` here, on the
+   * reasoning that a busy desk feels a 300ms wait. It is exactly what made the
+   * failure invisible: an optimistic status is indistinguishable on screen from
+   * a saved one, so when a stale read painted over it the row fell back to its
+   * previous state with nothing to indicate anything had been lost.
+   *
+   * Per the standing display-predicate law (ENGINEERING-WORKFLOW §1.4), a state
+   * with money consequences is shown only once the server has agreed to it. The
+   * feedback the desk gets in the meantime is a PENDING affordance on the
+   * button — honest about the fact that the write is still in the air.
+   */
   const markOutcome = useCallback(
     async (bookingId: string, outcome: BookingOutcome) => {
-      if (pendingIds.has(bookingId)) return
-      const previous = bookings
-      // Optimistic: the desk is busy and a 300ms wait per click is felt.
-      setBookings((rows) =>
-        rows.map((row) => (row.id === bookingId ? { ...row, status: outcome } : row)),
-      )
-
       await withPending(bookingId, async () => {
         const result = await markBookingOutcome(supabase, bookingId, outcome)
+        // `unchanged: true` maps to `ok` — the RPC is idempotent, so a
+        // double-click that does reach the server twice is a clean no-op and
+        // must not raise a toast.
         if (result.kind !== 'ok') {
-          setBookings(previous) // rollback
           setToastAr(
             result.kind === 'illegalTransition'
               ? 'تغيّرت حالة هذا الحجز — حدّثنا القائمة.'
@@ -298,18 +369,17 @@ export function useBranchBookings({
           )
         }
       })
-      // Re-read either way: on success to pick up server-side effects (a cash
-      // completion also flips the payment state), on failure to resync. AWAITED,
-      // so this refetch is the newest sequence and therefore the one that paints
-      // — a fire-and-forget call could be overtaken by an older in-flight one.
-      await refresh()
     },
-    [bookings, pendingIds, supabase, refresh, withPending],
+    [supabase, withPending],
   )
 
   const cancelOnBehalf = useCallback(
     async (bookingId: string, reasonAr: string): Promise<boolean> => {
       let succeeded = false
+      // Same guarantees as an outcome: reads in flight are invalidated, the row
+      // stays pending until the confirming refetch has painted (which is also
+      // what re-derives the fill indicator, since cancelling frees the slot),
+      // and a second click while the first is in the air is a no-op.
       await withPending(bookingId, async () => {
         const result = await cancelBookingOnBehalf(supabase, bookingId, reasonAr)
         succeeded = result.kind === 'ok'
@@ -325,11 +395,9 @@ export function useBranchBookings({
           )
         }
       })
-      // Cancelling frees the slot, so the fill indicator must re-derive.
-      await refresh()
       return succeeded
     },
-    [supabase, refresh, withPending],
+    [supabase, withPending],
   )
 
   const dismissNew = useCallback(() => setNewIds(new Set()), [])

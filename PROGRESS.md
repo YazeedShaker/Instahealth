@@ -186,6 +186,92 @@ auto-skips was wrong; corrected.
 LICENSE placeholder and the vulnerability-disclosure question, both in
 Known risks below.
 
+### 2026-08-01 · FIX — the swallowed «تمت الخدمة» click (a cash payment that was never recorded)
+
+**A receptionist could mark a cash booking completed and the money would never
+be recorded.** The click produced no error, no toast and no visible change —
+the row simply stayed on «وصل». For a cash booking, the desk marking it
+completed IS the payment event (`DECISION-commission-attachment`), so a
+swallowed click is an uncollected payment with no trace that anything was
+attempted.
+
+**Root cause — proven with a network timeline, not argued.** The monotonic
+sequence added in P02 ordered reads against each other, but **a read that
+started BEFORE a write was still the newest request by sequence number**, so its
+pre-write answer was allowed to paint:
+
+```
+4139  refetch START                      → the DB still says 'confirmed'
+4341  RPC mark_booking_outcome 'arrived'
+5327  refetch END → ['confirmed', …]     ← STALE response PAINTS
+5454  RPC END     → 'arrived'            ← the database HAD taken the write
+5784  RPC mark_booking_outcome 'arrived' ← the desk's next click, wrong outcome
+```
+
+The row regressed to `confirmed`. The action button's identity — both its
+`data-testid` and the outcome its `onClick` sends — is derived from
+`booking.status`, so «تمت الخدمة» silently became «وصل» again and the click sent
+`arrived` a second time. The server answered `unchanged: true`, which is a
+SUCCESS, so nothing surfaced anywhere.
+
+**Ruled OUT with evidence, not by reasoning:** the debounced realtime refetch
+cancelling the handler (the handler fired — it sent the wrong outcome); a stale
+`React.memo` closure (there is no `memo` on the row); the `pendingIds`
+early-return (an RPC was sent). Each was checked before being discarded.
+
+**The fix, to contract:**
+
+- **A write now invalidates reads in flight**, not merely orders itself after
+  them — `invalidateInFlightReads()` bumps the sequence when the mutation starts.
+- **No optimistic status.** The row shows an outcome only once the server has
+  agreed to it. An optimistic status is indistinguishable on screen from a saved
+  one, which is precisely what made the loss invisible. **The desk now sees a
+  spinner on the button instead** (§ device/desk re-test below).
+- **Pending is held across the write AND its confirming refetch**, so the button
+  never re-enables during the window where it would offer an action the next
+  response is about to contradict.
+- **Re-entry is guarded by a REF, not state** — a second click arriving before
+  React re-renders reads the stale set and sails through. Rapid double-click now
+  produces exactly ONE write and no error toast (`unchanged: true` is success).
+
+**Proof — the window is now reproducible on a laptop.** Rather than widen a
+timeout to suit a slower machine (§9: budgets tuned to one machine are the
+disease), the tests `page.route()` the RPC and delay it. Two new Playwright
+tests: _a completion survives a SLOW round trip_ asserts the second call
+actually carries `completed`, and _a rapid double-click writes ONCE_. Node (7/7)
+proves the server half: the write lands, is durable through the RLS-scoped read,
+and **a cash completion flips `payment_status` cash → paid and its `payments`
+row pending → completed** — the money this bug was losing.
+
+**⚠ THE BUG SURVIVED BECAUSE THE TESTS HAD STOPPED RUNNING.** The suite mutates
+the data it tests and nothing reseeded it, so the day drained and nine tests
+skipped themselves — CI reported "24 passed, 9 skipped" for two days while the
+outcome workflow was not being exercised at all. Three fixes: the E2E job now
+**seeds 004 before the suite** (needs a `SUPABASE_DB_URL` repo secret — founder
+action below); `dashboard.spec.ts` opens with a **FIXTURE TRIPWIRE** that does
+not skip, naming the seed in its failure message; and 004 seeds **three** cash
+bookings today instead of two, because the two new tests each consume one.
+**Adding a test that consumes a fixture means adding a fixture.**
+
+Two order-dependent tests were also de-coupled from row order: cancel-on-behalf
+now selects a _cancellable_ row rather than blindly the first, which is what had
+it skipping once the outcome tests consumed the earliest rows.
+
+**Suite: 35 passed, 0 skipped** (was 32 passed + 2 skipped locally, and 24
+passed + 9 skipped in CI).
+
+**Founder actions:**
+
+- **Add `SUPABASE_DB_URL` as a repo secret** so CI reseeds the fixtures itself.
+  Until then the step is skipped and the tripwire fails loudly instead — which
+  is correct behaviour, just noisier.
+- **⚠ Desk re-test — a receptionist-visible behaviour changed.** «وصل» /
+  «تمت الخدمة» / «لم يحضر» now show a spinner and stay disabled for roughly a
+  second while the server confirms, and the status chip no longer flips
+  instantly. This is deliberate: the chip is now server-confirmed truth. Worth
+  one pass on a real desk to confirm the wait reads as "saving" and not as
+  "nothing happened" — that is the one judgement a test cannot make.
+
 ### 2026-07-29 · P03 — Services & prices editor (web)
 
 The branch's price list becomes provider-managed. The launch blocker stops

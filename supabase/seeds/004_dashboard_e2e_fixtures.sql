@@ -36,10 +36,18 @@ DECLARE
   v_ids       UUID[] := ARRAY[
     'eeee0000-0000-4000-8000-000000000001'::uuid,  -- today · cash
     'eeee0000-0000-4000-8000-000000000005'::uuid,  -- today · cash (spare)
+    'eeee0000-0000-4000-8000-000000000006'::uuid,  -- today · cash (spare 2)
     'eeee0000-0000-4000-8000-000000000002'::uuid,  -- today · prepaid
     'eeee0000-0000-4000-8000-000000000003'::uuid,  -- tomorrow · cash + prep
     'eeee0000-0000-4000-8000-000000000004'::uuid   -- tomorrow · prepaid
   ];
+  -- Today's CASH bookings, in the order the suite eats them. THREE of them, not
+  -- two: the swallowed-completion fix added two more tests that each consume an
+  -- actionable booking (one completes, one arrives), and with only two cash rows
+  -- seeded that starved `a cash row is unmissable` and `cancel-on-behalf …` —
+  -- they began SKIPPING, which is the precise failure this whole area exists to
+  -- prevent. Today has 5 slots at capacity 1, so 4 fixtures leave one free.
+  v_today_cash UUID[] := ARRAY[v_ids[1], v_ids[2], v_ids[3]];
   v_id        UUID;
 BEGIN
   SELECT id INTO v_patient FROM users WHERE phone LIKE '%201000000001%' LIMIT 1;
@@ -70,8 +78,8 @@ BEGIN
     DELETE FROM bookings WHERE id = v_id;
   END LOOP;
 
-  -- ── today · cash (index 1) and its spare (index 2) ──────────────────────
-  FOR v_id IN SELECT unnest(ARRAY[v_ids[1], v_ids[2]]) LOOP
+  -- ── today · cash, plus two spares ───────────────────────────────────────
+  FOR v_id IN SELECT unnest(v_today_cash) LOOP
     SELECT id INTO v_slot FROM slots
      WHERE branch_id = v_branch AND slot_date = v_today AND booked_count < capacity
      ORDER BY slot_time LIMIT 1;
@@ -87,17 +95,17 @@ BEGIN
     UPDATE slots SET booked_count = booked_count + 1 WHERE id = v_slot;
   END LOOP;
 
-  -- ── today · prepaid, with preparation (index 3) ──────────────────────────
+  -- ── today · prepaid, with preparation (index 4) ──────────────────────────
   SELECT id INTO v_slot FROM slots
    WHERE branch_id = v_branch AND slot_date = v_today AND booked_count < capacity
    ORDER BY slot_time LIMIT 1;
   IF v_slot IS NOT NULL THEN
     INSERT INTO bookings (id, user_id, branch_id, slot_id, status, payment_status,
                           payment_method, total_amount, confirmed_at, created_at)
-    VALUES (v_ids[3], v_patient, v_branch, v_slot, 'confirmed', 'paid', 'card',
+    VALUES (v_ids[4], v_patient, v_branch, v_slot, 'confirmed', 'paid', 'card',
             (SELECT price FROM branch_services WHERE id = v_prep_svc), now(), now());
     INSERT INTO booking_services (booking_id, branch_service_id, price_at_booking, quantity)
-    SELECT v_ids[3], v_prep_svc, price, 1 FROM branch_services WHERE id = v_prep_svc;
+    SELECT v_ids[4], v_prep_svc, price, 1 FROM branch_services WHERE id = v_prep_svc;
     UPDATE slots SET booked_count = booked_count + 1 WHERE id = v_slot;
   END IF;
 
@@ -109,11 +117,11 @@ BEGIN
   IF v_slot IS NOT NULL THEN
     INSERT INTO bookings (id, user_id, branch_id, slot_id, status, payment_status,
                           payment_method, total_amount, patient_notes, confirmed_at, created_at)
-    VALUES (v_ids[4], v_patient, v_branch, v_slot, 'confirmed', 'cash', 'cash',
+    VALUES (v_ids[5], v_patient, v_branch, v_slot, 'confirmed', 'cash', 'cash',
             (SELECT price FROM branch_services WHERE id = v_prep_svc),
             'من فضلكم اتصلوا قبل الموعد بساعة.', now(), now());
     INSERT INTO booking_services (booking_id, branch_service_id, price_at_booking, quantity)
-    SELECT v_ids[4], v_prep_svc, price, 1 FROM branch_services WHERE id = v_prep_svc;
+    SELECT v_ids[5], v_prep_svc, price, 1 FROM branch_services WHERE id = v_prep_svc;
     UPDATE slots SET booked_count = booked_count + 1 WHERE id = v_slot;
   END IF;
 
@@ -123,15 +131,15 @@ BEGIN
   IF v_slot IS NOT NULL THEN
     INSERT INTO bookings (id, user_id, branch_id, slot_id, status, payment_status,
                           payment_method, total_amount, confirmed_at, created_at)
-    VALUES (v_ids[5], v_patient, v_branch, v_slot, 'confirmed', 'paid', 'card',
+    VALUES (v_ids[6], v_patient, v_branch, v_slot, 'confirmed', 'paid', 'card',
             (SELECT price FROM branch_services WHERE id = v_plain_svc), now(), now());
     INSERT INTO booking_services (booking_id, branch_service_id, price_at_booking, quantity)
-    SELECT v_ids[5], v_plain_svc, price, 1 FROM branch_services WHERE id = v_plain_svc;
+    SELECT v_ids[6], v_plain_svc, price, 1 FROM branch_services WHERE id = v_plain_svc;
     UPDATE slots SET booked_count = booked_count + 1 WHERE id = v_slot;
   END IF;
 END $$;
 
--- Verification: five fixtures — three today (two cash, one prepaid), two
+-- Verification: SIX fixtures — four today (three cash, one prepaid), two
 -- tomorrow (one cash, one prepaid).
 SELECT s.slot_date, b.status, b.payment_status, COUNT(*)
   FROM bookings b JOIN slots s ON s.id = b.slot_id

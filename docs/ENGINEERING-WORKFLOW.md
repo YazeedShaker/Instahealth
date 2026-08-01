@@ -548,6 +548,58 @@ Two more, both found while capturing P02's screenshots:
   response is allowed to paint, and its post-mutation refetch must be AWAITED
   rather than fire-and-forget. **A CI-only failure is usually a latency window,
   not a flake — find the window.**
+- **⚠ A SEQUENCE THAT ONLY ORDERS READS AGAINST READS IS HALF A GUARD — and the
+  half that is missing costs money.** The rule above was implemented and still
+  left the hole, because a read that started BEFORE a write was the newest
+  request by sequence number, so its PRE-WRITE answer was allowed to paint. The
+  row silently regressed to the state it held a second earlier. Proven with a
+  network timeline rather than argued:
+
+  ```
+  4139  refetch START                      → the DB still says 'confirmed'
+  4341  RPC mark_booking_outcome 'arrived'
+  5327  refetch END → ['confirmed', …]     ← STALE response PAINTS
+  5454  RPC END     → 'arrived'            ← the database HAD taken the write
+  5784  RPC mark_booking_outcome 'arrived' ← the desk's next click, wrong outcome
+  ```
+
+  **A WRITE MUST INVALIDATE READS IN FLIGHT**, not merely order itself after
+  them: bump the sequence when the mutation starts. Three compounding rules,
+  all of which P05+ mutation paths inherit:
+
+  ① **Never derive a control's identity from state a response can revoke.** The
+  action button's `data-testid` and its `onClick` outcome both came from
+  `booking.status`, so the regression rewrote «تمت الخدمة» back into «وصل» —
+  and the receptionist's click sent `arrived` a second time. The server replied
+  `unchanged: true`, which is a SUCCESS, so there was no error, no toast and no
+  rollback. The completion simply never happened, and for a CASH booking that
+  completion IS the payment event (DECISION-commission-attachment).
+  ② **Optimistic UI is forbidden for money/state facts.** An optimistic status
+  is indistinguishable on screen from a saved one, which is exactly why the loss
+  was invisible. Render a PENDING affordance instead and show the outcome only
+  once the server has agreed — §1.4's display-predicate law applied to time, not
+  just to data.
+  ③ **Hold the row pending across the write AND its confirming refetch.** Lower
+  the flag after the confirming read paints, never when the write resolves —
+  otherwise the control re-enables during the window and offers an action the
+  next response is about to contradict. And guard re-entry with a **ref**, not
+  state: a second click arriving before React re-renders reads the stale set and
+  sails straight through.
+
+- **Reproduce a latency window; do not widen a timeout to hide it.** This bug
+  passed 32/32 locally and failed 2/2 in CI. Rather than tune a budget to the
+  slower machine (§9's opening lesson — budgets tuned to one machine are the
+  disease), `page.route()` the RPC and `await` a delay before `continue()`. The
+  window becomes deterministic on a laptop, and the regression test lives beside
+  the feature instead of depending on a runner's geography.
+- **A suite that MUTATES its fixtures must reseed BEFORE it runs, not after.**
+  `004_dashboard_e2e_fixtures.sql` RESETS the day, but nothing ran it in CI, so
+  the day drained and nine tests began skipping — CI read "24 passed, 9 skipped"
+  for two days while the outcome workflow was not exercised at all, which is how
+  the bug above survived. The E2E job now seeds first, and `dashboard.spec.ts`
+  opens with a **FIXTURE TRIPWIRE** that does NOT skip: one loud red naming the
+  seed beats nine quiet skips. Adding a test that consumes a fixture means
+  adding a fixture — count the consumers.
 - **Fidelity captures do NOT belong in CI.** They are a local authoring tool:
   run them, commit the images, put them in the PR body. They assert almost
   nothing, they were the slowest thing in the E2E job (a login and a navigation
