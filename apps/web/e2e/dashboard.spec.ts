@@ -754,3 +754,80 @@ test.describe('provider dashboard — prices editor (P03)', () => {
     )
   })
 })
+
+test.describe('provider dashboard — slot allocation, read-only (P04)', () => {
+  test.skip(!HAS_CREDS, 'PROVIDER_TEST_EMAIL / PROVIDER_TEST_PASSWORD not set')
+
+  // ⚠ This suite is READ-ONLY and consumes NO fixture — it never marks an
+  // outcome or cancels anything. The FIXTURE TRIPWIRE count therefore stays at
+  // 3. If a test here ever mutates, raise that number and seed another row.
+  test.beforeEach(async ({ page }) => {
+    await login(page, TOWN_RECEPTION)
+    await page.waitForURL('**/dashboard/today')
+    await page.getByTestId('nav-slots').click()
+    await page.waitForURL('**/dashboard/slots**')
+    await expect(page.getByTestId('slots-grid').or(page.getByTestId('slots-empty'))).toBeVisible({
+      timeout: 30_000,
+    })
+  })
+
+  test('the day renders real slots, and every one carries a state', async ({ page }) => {
+    const cells = page.locator('[data-testid^="slot-"]')
+    test.skip((await cells.count()) === 0, 'no slots generated for the selected day')
+
+    // Every cell must resolve to one of the FIVE shared states — a cell with no
+    // state means the grid invented a rendering path core does not know about.
+    const states = await cells.evaluateAll((els) => els.map((el) => el.getAttribute('data-state')))
+    expect(states.length).toBeGreaterThan(0)
+    for (const state of states) {
+      expect(['booked', 'held', 'available', 'past', 'blocked']).toContain(state)
+    }
+  })
+
+  test('the summary agrees with the grid it sits beside', async ({ page }) => {
+    const cells = page.locator('[data-testid^="slot-"]')
+    test.skip((await cells.count()) === 0, 'no slots generated for the selected day')
+
+    // «٤/٥» — booked over capacity. The booked half must equal the number of
+    // cells the grid itself painted as booked, or the two halves of the screen
+    // are telling the desk different things.
+    const fill = await page.getByTestId('allocation-fill').innerText()
+    const [bookedAr = ''] = fill.split('/')
+    const westernBooked = bookedAr.replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)))
+    const bookedCells = await page.locator('[data-state="booked"]').count()
+    expect(Number(westernBooked)).toBe(bookedCells)
+  })
+
+  test('editing is GATED, and says who to ask', async ({ page }) => {
+    await expect(page.getByTestId('read-only-pill')).toBeVisible()
+    const gate = page.getByTestId('allocation-gate')
+    await expect(gate).toBeVisible()
+    await expect(gate).toContainText('لتعديل عدد المواعيد تواصل مع إنستاهيلث')
+    await expect(page.getByTestId('allocation-support')).toBeVisible()
+
+    // READ-ONLY MEANS READ-ONLY: no control on this screen may be operable.
+    // The ghosted +/− are decoration behind the lock, so they must not be
+    // real buttons or inputs that a keyboard could reach.
+    expect(await gate.locator('button, input, select, textarea').count()).toBe(0)
+  })
+
+  test('the explainer says what allocation is and that it does not roll over', async ({ page }) => {
+    const explainer = page.getByTestId('allocation-explainer')
+    await expect(explainer).toBeVisible()
+    await expect(explainer).toContainText('ثلاثين يوماً')
+    await expect(explainer).toContainText('لا تُضاف إلى الغد')
+  })
+
+  test('switching day keeps the desk where it was on a refresh', async ({ page }) => {
+    const days = page.locator('[data-testid^="day-2"]')
+    test.skip((await days.count()) < 2, 'only one day in the window')
+    await days.nth(1).click()
+    await page.waitForURL(/\/dashboard\/slots\?date=\d{4}-\d{2}-\d{2}/)
+    const url = page.url()
+    await page.reload()
+    await expect(page.getByTestId('slots-grid').or(page.getByTestId('slots-empty'))).toBeVisible({
+      timeout: 30_000,
+    })
+    expect(page.url()).toBe(url)
+  })
+})
