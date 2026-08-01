@@ -13,7 +13,7 @@ const NAV_ITEMS = [
   { icon: '📋', label: 'اليوم', href: '/dashboard/today', testId: 'nav-today' },
   { icon: '📅', label: 'الأيام القادمة', href: '/dashboard/upcoming', testId: 'nav-upcoming' },
   { icon: '💰', label: 'الخدمات والأسعار', href: '/dashboard/services', testId: 'nav-services' },
-  { icon: '🕐', label: 'المواعيد المتاحة', href: null, testId: undefined },
+  { icon: '🕐', label: 'المواعيد المتاحة', href: '/dashboard/slots', testId: 'nav-slots' },
   { icon: '🏥', label: 'بيانات الفرع', href: null, testId: undefined },
 ]
 

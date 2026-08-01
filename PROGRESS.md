@@ -61,7 +61,8 @@ visual contract. Then specs → Claude Code.
 - [x] **P01** — ✅ DONE. Web: provider auth, shell & Today view — **MILESTONE ONE, loop closed** (see Shipped)
 - [x] **P02** — ✅ DONE. Web: booking detail drawer + cancel-on-behalf + upcoming days (see Shipped)
 - [x] **P03** — ✅ DONE. Web: services & prices editor with audit trail (see Shipped)
-- [ ] **P04–P06** — Web: slot allocation, branch profile
+- [x] **P04** — ✅ DONE. Web: slot allocation view, read-only (see Shipped)
+- [ ] **P05–P06** — Web: branch profile, remaining dashboard surfaces
 - [x] **F07** — ✅ DONE. Mobile: My Bookings list, detail & cancel (see Shipped)
 - [ ] **F08–F09** — Mobile: reviews, profile
 - [ ] **A01–A06** — Web: admin panel
@@ -73,6 +74,72 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 ---
 
 ## Shipped
+
+### 2026-08-01 · P04 — Slot allocation view (web, read-only)
+
+The desk can now see the branch's daily slot picture: every generated time, what
+state it is in, and how full the day is — without being able to change the
+number that governs it.
+
+**The decision P03 left open is closed:** allocation editing ships to **no**
+provider role. `instahealth_slot_allocation` and the working window are
+COMMERCIAL TERMS of the partner agreement — changing them is a conversation then
+an InstaHealth-admin action, not a dashboard toggle. So `provider_users.role`
+still needs no tiers, and the A-series inherits that question for onboarding,
+where it is genuinely needed. Full reasoning:
+`docs/decisions/DECISION-slot-allocation-ownership.md`.
+
+**Slot states come from ONE predicate.** `getSlotAllocationState` in core is
+derived from the existing `getSlotStatus` rather than re-deciding fullness — the
+picker, `create_slot_hold` and the capacity trigger all already agree that full
+means `booked + active holds >= capacity`. The grid only splits the REASONS
+apart: booked · **قيد الحجز (held)** · متاح · مضى · موقوف. The held state matters
+— it is the one thing the desk cannot see in the raw table, because holds are
+invisible under RLS, and it is the F05 lesson applied to a new screen.
+Precedence puts `booked` above `past`: a slot that has happened AND has a
+patient is that patient's appointment, not dead time.
+
+**No new RPC and no migration.** It reads the SAME `get_branch_slots` the
+patient picker uses (which already returns `active_hold_count`), plus
+`get_branch_bookings_for_date` for the names. A second reader would have been a
+second definition of "is this slot free", which is what the spec forbids.
+
+**Two deliberate deviations from the design bundle** (§1.5 — spec wins, bundle
+gets flagged):
+
+- **The owner screen is NOT built.** The bundle ships a second screen with
+  working +/− controls, a window picker and a save button. The decision above
+  deletes it.
+- **The gate copy is the SPEC's, not the design's.** The bundle says «تعديل عدد
+  المواعيد ونافذة العمل يتم من حساب الإدارة» — which presumes exactly the branch
+  owner account we just decided not to create. It now reads «لتعديل عدد المواعيد
+  تواصل مع إنستاهيلث» with a support address.
+- Also: the bundle has no HOLD state; added. And the duration line is worded as
+  «مدة الزيارة» and disappears when NULL — since the capacity rewrite,
+  `slot_duration_minutes` no longer describes the grid spacing (Known risks), so
+  «كل ٣٠ دقيقة» over a 120-minute grid would have been a confident lie.
+
+**⚠ Reading the fidelity capture caught a real defect** that the accessibility
+tree did not: the lock overlay printed on top of the ghosted controls, because
+the card was shorter than the design's. §9 exists for exactly this. Fixed by
+restoring the ghosted working-window row and raising the mask.
+
+**Verified against the LIVE dev DB (5 Node checks + 5 Playwright, all passing):**
+the desk reads its own branch's slots with hold counts · patient NAMES for
+another branch return zero rows · anon can read slots (by design — the patient
+picker) but gets `42501` on names · every grid cell resolves to one of the five
+shared states · the summary's booked count equals the cells the grid painted
+booked · the gate is present with the support address and contains **zero**
+operable controls · the explainer states the 30-day window and that slots do not
+roll over. Capture: `docs/design-briefs/p04-fidelity/`.
+
+**⚠ AND IT TURNED UP A REAL HOLE — see Known risks.** SPEC-P04 said "RLS already
+scopes reads to the member's branch — verify, don't assume." Verifying found the
+reads are fine but the WRITES are not: `branches` has a column-blind UPDATE
+policy, so any provider staff member can PATCH any column of their own branch —
+`instahealth_slot_allocation` included. Proven by moving Town 5 → 99 and
+restoring it. P04 does not close it; a read-only screen over an open endpoint is
+decoration.
 
 ### 2026-08-01 · FIX — the desk saw stale actions after navigating back (founder report)
 
@@ -1806,6 +1873,35 @@ _Next entry after SETUP-02._
   the holder comes from `auth.uid()`. It was worse than this entry described: the grant
   reached `anon`, and the body's `DELETE … WHERE user_id = p_user_id` meant a caller could
   destroy a stranger's hold, not merely create one in their name.
+- **⚠⚠ `branches` HAS A COLUMN-BLIND UPDATE POLICY — the fifth instance of the
+  §5 general law, and the first with MARKETPLACE-INTEGRITY consequences.**
+  Found during P04 while verifying the spec's RLS claim.
+
+  ```
+  policy "branches: provider updates own branches"   cmd = UPDATE
+  USING (id = ANY (get_provider_branch_ids()) OR get_user_role() = 'admin')
+  WITH CHECK  = null
+  ```
+
+  Any provider staff member can `PATCH` **any column** of their own branch row.
+  Proven from Node: Town's `instahealth_slot_allocation` moved 5 → 99 and was
+  restored immediately. Writable today, in rough order of severity:
+  - **`rating` and `review_count`** — a partner can set their own rating. This
+    is not capacity, it is fraud against patients choosing a provider, and it
+    silently outranks every genuine review.
+  - **`instahealth_slot_allocation`** — the commercial term P04 just documented
+    as InstaHealth-owned. The dashboard says «تواصل مع إنستاهيلث»; the API says
+    go ahead.
+  - **`is_active`** — a branch can delist itself (or relist itself).
+  - `name_ar`, `address_*`, `lat`/`lng`, `phone`, `operating_hours` — legitimate
+    branch-maintained fields, and the reason the policy exists at all.
+
+  **Not exploited and not urgent-in-the-wild** (the only provider accounts are
+  our two dev logins), but it must close before partner staff get real accounts.
+  The fix is a column-scoped policy, or a SECURITY DEFINER writer for the
+  handful of fields a branch legitimately maintains — the `update_branch_service`
+  pattern from P03. **Its own PR**; P04 deliberately did not widen into it.
+
 - **⚠ Supabase security advisors: 4 open classes, all WARN, all PRE-EXISTING — deliberately
   NOT fixed in the 2026-08-01 security PR to keep it one scope.** Reviewed after the
   `create_slot_hold` migration; `create_slot_hold` no longer appears among the

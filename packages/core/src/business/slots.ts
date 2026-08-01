@@ -121,3 +121,70 @@ export function getFirstAvailableSlotLabel(
   const weekdayFormatter = locale === 'ar' ? CAIRO_WEEKDAY_AR : CAIRO_WEEKDAY_EN
   return `${weekdayFormatter.format(slotDateAtNoonUtc(slot.slotDate))} ${timeLabel}`
 }
+
+// ── Slot allocation view (P04) ───────────────────────────────────────────────
+
+/** What a single slot looks like on the branch's daily allocation grid.
+ *
+ * Deliberately DERIVED from `getSlotStatus` rather than re-deciding fullness:
+ * the picker, `create_slot_hold` and the capacity trigger all mean the same
+ * thing by "full" (booked + active holds >= capacity), and SPEC-P04 requires
+ * the dashboard to show that same predicate rather than invent a second one.
+ * This function only splits the reasons apart for display.
+ */
+export type SlotAllocationState = 'blocked' | 'booked' | 'held' | 'past' | 'available'
+
+export interface AllocationSlot extends SlotAvailability {
+  /** YYYY-MM-DD, Egypt wall clock. */
+  slotDate: string
+  /** HH:MM[:SS], Egypt wall clock. */
+  slotTime: string
+}
+
+/**
+ * Precedence — blocked → booked → held → past → available.
+ *
+ * `booked` outranks `past` on purpose: a slot that already happened AND has a
+ * patient must keep reading as that patient's appointment, not as dead time.
+ * The design makes the same call (a booked cell keeps its colour once the hour
+ * has gone by); an empty past slot is the one that greys out.
+ *
+ * `now` is INJECTED — no hidden `Date.now()` (core discipline §7), and Cairo
+ * wall clock throughout because slots are Egyptian local times.
+ */
+export function getSlotAllocationState(
+  slot: AllocationSlot,
+  now: { cairoTodayIso: string; cairoNowHHMM: string },
+): SlotAllocationState {
+  if (slot.isBlocked) return 'blocked'
+  if (slot.bookedCount >= slot.capacity) return 'booked'
+  // Full without being fully booked ⇒ live holds are consuming the remainder.
+  // This is the F05 lesson: a slot the picker refuses must not read "متاح" here.
+  if (getSlotStatus(slot) === 'full') return 'held'
+  if (isSlotInThePast(slot, now)) return 'past'
+  return 'available'
+}
+
+/** A slot is past once its own start time has gone by, on today only —
+ * a future DATE is never past regardless of the clock. */
+export function isSlotInThePast(
+  slot: Pick<AllocationSlot, 'slotDate' | 'slotTime'>,
+  now: { cairoTodayIso: string; cairoNowHHMM: string },
+): boolean {
+  if (slot.slotDate < now.cairoTodayIso) return true
+  if (slot.slotDate > now.cairoTodayIso) return false
+  return slot.slotTime.slice(0, 5) <= now.cairoNowHHMM
+}
+
+/** Booked-vs-capacity for the day, from the SAME rows the grid renders — so the
+ * summary can never disagree with the cells beneath it. */
+export function summarizeDayAllocation(slots: AllocationSlot[]): {
+  booked: number
+  capacity: number
+  fillPercent: number
+} {
+  const booked = slots.reduce((total, slot) => total + Math.min(slot.bookedCount, slot.capacity), 0)
+  const capacity = slots.reduce((total, slot) => total + slot.capacity, 0)
+  const fillPercent = capacity === 0 ? 0 : Math.round((booked / capacity) * 100)
+  return { booked, capacity, fillPercent }
+}
