@@ -21,7 +21,8 @@ Keep **Current status** and **Next up** accurate at all times.
 
 ## Current status
 
-**Phase:** 🎉 **MILESTONE ONE — the loop is closed.** Patient books on mobile (F01→F07) → the branch desk sees it, records the outcome, opens the detail drawer and can cancel on the patient's behalf (P01–P02). Next: P03–P06 dashboard; F03 Search and F08–F09 still open
+**Phase:** 🎉 **MILESTONE ONE — the loop is closed.** Patient books on mobile (F01→F07) → the branch desk sees it, records the outcome, opens the detail drawer, cancels on the patient's behalf and manages its own prices (P01–P03). The four shipped identity/money holes are all closed and the repo passed a full-history secret audit (2026-08-01). Next: P04–P06 dashboard; F03 Search and F08–F09 still open
+⚠ **Two founder decisions are open and blocking nothing yet: the LICENSE / IP posture and whether vulnerability detail belongs in a public PROGRESS.** Both in Known risks.
 **Milestone target:** Labs + Scans booking working end-to-end at Town Hospital & Saridar Labs
 **Environment:** Supabase `instahealth-dev` live (Frankfurt). Design system published in Claude Design.
 Core patient screens approved. Monorepo scaffolded — both app shells boot with tokens/fonts/RTL.
@@ -72,6 +73,118 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 ---
 
 ## Shipped
+
+### 2026-08-01 · SEC — `create_slot_hold` derives its caller + public-repo hygiene audit
+
+**The last open instance of the general law is closed.** `create_slot_hold`
+took the holder's identity as an ARGUMENT — `create_slot_hold(p_slot_id,
+p_user_id)`, SECURITY DEFINER, never comparing `p_user_id` to `auth.uid()` —
+and, like `cancel_booking` before it, additionally carried a PUBLIC + anon
+EXECUTE grant. Both consequences were reachable with nothing but the public
+anon key that ships in the Expo bundle:
+
+- **Hold destruction.** The body ends every call with
+  `DELETE FROM slot_holds WHERE user_id = p_user_id` — the one-hold-per-patient
+  self-heal. Passing a VICTIM's id deletes the hold they are checking out
+  against, freeing their slot mid-payment. In a loop it denies that patient any
+  hold at all.
+- **Hold forgery.** The INSERT wrote `p_user_id` verbatim, so a hold could be
+  attributed to someone who never took it, consuming a slot's capacity in a
+  third party's name.
+
+**The fix DROPS the parameter rather than checking it** (migration
+`20260801005955`). A `p_user_id = auth.uid()` guard would leave an argument
+whose only correct value is one the server already knows — the same shape §5
+rejects for readers (`get_patient_bookings()` deliberately takes none). With
+the parameter gone, impersonation is impossible **by construction**: there is
+no channel left to carry the lie. The signature therefore CHANGES, so the
+two-argument function is DROPPED, not left as an overload beside the new one.
+
+Two things fixed in passing, in the function being rewritten anyway: it was the
+last SECURITY DEFINER function without a pinned `search_path`, and its capacity
+check was NULL-unsafe (`capacity`/`booked_count`/`is_blocked` are all nullable;
+a NULL `IF` is FALSE in plpgsql and **falls through to ALLOW** an unbounded
+hold — latent, 0 of 5,134 slot rows carry a NULL, but it is exactly the shape
+§5 names).
+
+**Verified against the LIVE dev DB (8 Node checks, all passing), anon key only:**
+the two-argument signature is gone (`PGRST202 Could not find the function
+public.create_slot_hold(p_slot_id, p_user_id)`) · anon with no session is
+refused by the GRANT (`42501`) · a raw `fetch` with the public key gets HTTP
+401 · happy path green · **the hold row belongs to the caller, never the id
+supplied** · the attacker cannot destroy the victim's hold · one-hold-per-
+patient still self-heals · **and a REJECTED re-pick leaves the existing hold
+intact** (the behaviour `slot.tsx` promises the patient).
+
+`database.ts` regenerated in the same PR — a one-line diff,
+`create_slot_hold: { Args: { p_slot_id: string }; Returns: Json }`. Core's
+`createSlotHoldSchema` (which carried a `userId`) is DELETED; the payload is
+now `slotChoiceSchema`, with a test asserting its shape is exactly `['slotId']`
+so a user id cannot creep back in. Maestro flows are unchanged — they drive the
+UI by `testID` and never call the RPC directly.
+
+**A new client-visible outcome: `not_authenticated`.** An expired session now
+fails at the hold rather than holding for nobody, and the picker says «انتهت
+الجلسة — سجّل الدخول مرة أخرى» instead of claiming the slot was just taken. A
+race and an expired session are different facts and must not share a message.
+
+---
+
+**FULL-HISTORY SECRET AUDIT — the rotation list is EMPTY.** All 76 commits on
+all refs, checked two independent ways (see the PR body for the full report):
+
+- **Zero credentials found.** Real gitleaks over the full history
+  (`workflow_dispatch` run 30677734584, 19.19 MB, **«no leaks found»**) plus an
+  independent sweep self-tested against synthetic positives first — a scanner
+  with a dead regex looks exactly like a clean repo. No JWT of any kind has
+  ever appeared in any commit, which is the history-wide answer the earlier
+  `git grep` at HEAD could not give. No GitHub/AWS/OpenAI/Slack/Google keys, no
+  private-key blocks, no connection string carrying a password, no
+  `crypt('literal')`.
+- **The merge-commit blind spot was covered separately.** `git log -p` emits no
+  diff for a merge, so conflict-resolution content is invisible to gitleaks;
+  `f38c4e58` carries 211 such lines. Scanned with `git show --cc` — clean.
+- **The Supabase project ref and anon key are PUBLIC BY DESIGN** — the ref is
+  in every URL the app calls and the anon key ships in the Expo bundle. They
+  are not secrets and are not rotation candidates. RLS is what protects the
+  data behind them.
+- **⚠ The ONE scheduled full-history scan (2026-07-27) had FAILED and nobody
+  saw it**, because a `schedule` run gates no PR. Its two findings were false
+  positives — `PAYMOB_HMAC_SECRET=` and `VONAGE_API_SECRET=` at commit
+  `39de2d88`, both EMPTY placeholders in SPEC-SETUP-01's embedded
+  `.env.example` block. The allowlist covered `.env.example` itself but not a
+  doc quoting it. Widened in `.gitleaks.toml`, matched without a directory
+  prefix so it survives the `docs/` → `docs/specs/` move already in history.
+  **A permanently red scanner hides a real finding exactly as well as a green
+  one** — same family as the skipped suite in §9.
+- **`pull_request` gitleaks scans only the PR's commits.** A green PR check has
+  never said anything about history; only the `schedule` and (new)
+  `workflow_dispatch` runs do. `workflow_dispatch` added so a full-history scan
+  can be demanded on the spot.
+
+**Seed credential hygiene.** `003_provider_users.sql` already used the psql
+variable form and contained no literal — the history check confirms it never
+did. It now documents the ENV VARIABLE NAMES (`PROVIDER_TEST_EMAIL` /
+`PROVIDER_TEST_PASSWORD`) with bash and PowerShell invocations, and says why:
+the repo is public, so removal would not be rotation. No literal credential
+exists in any tracked doc or seed.
+
+**`.env*` ignore coverage verified with `git check-ignore`, not by reading
+globs** — root `.gitignore`'s `.env` / `.env.*` are pathless patterns and so
+apply at EVERY depth. `apps/mobile`, `packages/core`, `packages/design-tokens`,
+`packages/config`, `supabase/`, `supabase/functions/` and `scripts/` are all
+covered; `.env.example` correctly stays tracked. **No change was needed** — the
+per-package `.gitignore` files some of this would have added are redundant.
+
+**CodeQL needed no work** — `security.yml`'s
+`if: ${{ !github.event.repository.private }}` self-adjusted when the repo went
+public and CodeQL has run and passed on every PR since (verified on the last
+three Security runs). Only the stale ENGINEERING-WORKFLOW §4 line claiming it
+auto-skips was wrong; corrected.
+
+**⚠ FOR THE FOUNDERS — two decisions this PR deliberately does NOT make:** the
+LICENSE placeholder and the vulnerability-disclosure question, both in
+Known risks below.
 
 ### 2026-08-01 · FIX — the swallowed «تمت الخدمة» click (a cash payment that was never recorded)
 
@@ -1623,12 +1736,35 @@ _Next entry after SETUP-02._
   founder's real-number check is the only proof the Arabic Unicode message
   actually arrives.
 
-- **⚠ `generate-slots` nightly cron still not scheduled:** the capacity-model fix
-  regenerated a full 30-day window (now through +30 days), but nothing extends it nightly —
-  wire the Edge Function schedule before launch or the window shrinks day by day.
-- **⚠ `create_slot_hold(p_slot_id, p_user_id)` doesn't verify `p_user_id = auth.uid()`**
-  (SECURITY DEFINER, callable by any authenticated user) — a malicious client could hold
-  slots as another user. Harden with an auth.uid() check in a follow-up migration.
+- **⚠ `generate-slots` nightly cron still not scheduled — and the public repo raised the
+  stakes.** The capacity-model fix regenerated a full 30-day window, but nothing extends it
+  nightly, so the bookable horizon shrinks by one day per day. It has been unscheduled since
+  2026-07-26. Two reasons this is now more than a launch chore: the shrinkage is **silent**
+  (the picker simply shows fewer days — it looks like low supply, not a broken cron), and the
+  gap is **documented in public** by this very file. Wire the Edge Function schedule; the
+  sibling crons (`cleanup-expired-holds`, `generate-slot-window`, `auto_close_stale_bookings`)
+  are the working template.
+- ✅ ~~`create_slot_hold(p_slot_id, p_user_id)` doesn't verify `p_user_id = auth.uid()`~~ —
+  **CLOSED 2026-08-01** (migration `20260801005955`). The parameter is gone, not guarded;
+  the holder comes from `auth.uid()`. It was worse than this entry described: the grant
+  reached `anon`, and the body's `DELETE … WHERE user_id = p_user_id` meant a caller could
+  destroy a stranger's hold, not merely create one in their name.
+- **⚠ Supabase security advisors: 4 open classes, all WARN, all PRE-EXISTING — deliberately
+  NOT fixed in the 2026-08-01 security PR to keep it one scope.** Reviewed after the
+  `create_slot_hold` migration; `create_slot_hold` no longer appears among the
+  anon-executable functions. What remains, worst first:
+  - **`auth_leaked_password_protection` is DISABLED.** Supabase can check new passwords
+    against HaveIBeenPwned. ⚠ **Turn this on BEFORE rotating the dev provider passwords**,
+    or the new ones are set without the check that would have caught a weak reuse.
+  - **Six SECURITY DEFINER functions are still anon-executable**: `get_branch_slots`
+    (deliberate — public slot browsing), `get_user_role` / `get_provider_branch_ids`
+    (return empty for anon; harmless but pointless to expose), and
+    `handle_new_user` / `broadcast_slot_hold_change` / `broadcast_branch_booking_change`
+    (TRIGGER functions — Postgres refuses a direct call, so the grant is noise, not a hole).
+    A one-migration REVOKE sweep would clear all but the first.
+  - **Eleven functions have a mutable `search_path`** — the older ones predate the
+    `SET search_path = public` convention. Same sweep.
+  - `pnpm audit` carries one ignored GHSA (`GHSA-mh99-v99m-4gvg`, build tooling).
 - **⚠ Seeded prices are PLACEHOLDERS — now a DATA task, not a code task.** P03 shipped the
   editor, so partners enter their real prices themselves at
   `/dashboard/services`. The rows that have never been touched show
@@ -1645,8 +1781,47 @@ _Next entry after SETUP-02._
 - **7 Saridar branches not yet seeded** (Maadi, Giza, Faisal 3, El-Mahla, Benha, Zagazig,
   Mansoura) — pending confirmation/maps links; add via a data-only follow-up to seed 002.
 
+- **⚠ PLACEHOLDER — NO LICENSE FILE, AND THE IP POSTURE IS UNDECIDED. Founder decision;
+  this build deliberately does not pick one.** The repo went PUBLIC on 2026-07-29 (to unblock
+  GitHub Actions minutes) and carries no `LICENSE`. **Public ≠ open source:** with no licence,
+  default copyright applies and nobody has permission to use, copy, modify or distribute the
+  code — but "all rights reserved by whom?" is exactly the question that has no answer yet.
+  Three unresolved facts make this a decision the founders must take together, not a file
+  someone adds:
+  - **The founder agreement is unsigned** (Mohamed 35 / Yazeed 33 / Tarek 28, verbal only —
+    see below). Until it is, ownership of the copyright is genuinely ambiguous, and a licence
+    is a grant of rights nobody is yet established to be making.
+  - **This is a commercial healthcare product with committed launch partners**, not a side
+    project. A permissive licence (MIT/Apache) hands the booking platform to any competitor;
+    Egypt's healthcare-booking space already has adjacent players.
+  - **The trademark question below is live** — a licence file naming "InstaHealth" as the
+    project asserts a name that has not been cleared.
+
+  **Options, for the founders to choose between** (in rough order of reversibility):
+  ① **Make the repo private again** and pay for Actions minutes — restores every option and
+  costs only money; ② **stay public with no licence** — the status quo: viewable, legally
+  unusable by others, but it reads as carelessness to anyone who looks; ③ **add an explicit
+  proprietary "all rights reserved" notice** — cheap, honest, needs a named holder;
+  ④ **choose a real licence** — only after the entity exists and the agreement is signed.
+  ⚠ Note ① does not undo publication: anything already cloned, forked or indexed stays out.
+  **Decide this before public launch; revisit it the moment the entity is registered.**
+
+- **⚠ THIS FILE NAMES VULNERABILITIES BY FUNCTION IN A PUBLIC REPO — decide whether that
+  is still right.** The Shipped entries deliberately describe each security hole precisely:
+  the function, the migration, the exact predicate that failed, and how it was proven. That
+  candour is why the same mistake stopped recurring, and every hole named so far is CLOSED and
+  verified — so today the disclosure is historical, and it doubles as an honest engineering
+  record. But the file is now world-readable, and the practice generalises badly: the next
+  entry could name a live one, and «Known risks» is precisely a list of things not yet fixed.
+  **The question for the founders is whether the security narrative should move to a PRIVATE
+  security note** (with PROGRESS keeping a dated pointer), or stay public as a deliberate
+  transparency choice. There is a real argument each way and it is not an engineering call.
+  Whatever is decided: **an OPEN, unfixed vulnerability must never be described in a public
+  file** — that is not transparency, it is a how-to.
+
 - **Trademark:** "InstaHealth" name proximity to existing "InstaClinic" (home-visit app) and
   "Instapharm". Check trademark availability in Egypt before public launch / printing.
+  ⚠ Now entangled with the LICENSE decision above — a licence file names the project.
 - **Doctor scheduling complexity:** doctor appointments differ from slot-based labs. Practitioners
   migration needed. Kept out of first milestone deliberately.
 - **Legal not yet signed:** founder split (Mohamed 35 / Yazeed 33 / Tarek 28) agreed verbally only.

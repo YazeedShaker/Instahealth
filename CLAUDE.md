@@ -318,6 +318,14 @@ This is an Arabic-first product. Get this wrong and the whole app feels broken t
   `service_role` alone (migration 20260727111326); the ONLY caller is the
   `settle-payment` Edge Function. Clients have no grant on it and no INSERT
   policy on `payments` — a booking cannot be confirmed from the app.
+- **Slot holds are taken as the CALLER, never as a named user.** `create_slot_hold(p_slot_id)`
+  derives the holder from `auth.uid()` inside the function and is granted to `authenticated` +
+  `service_role` only (migration 20260801005955). It used to take `p_user_id` and carry an anon
+  grant, which let the public anon key destroy or forge another patient's hold. **Never add a
+  user-id parameter to a SECURITY DEFINER function** — see ENGINEERING-WORKFLOW §5.
+- **The repository is PUBLIC (2026-07-29).** Git history is world-readable, so a secret committed
+  once is published even if the next commit deletes it. **Removal is not rotation** — an exposed
+  credential must be reissued and the old one revoked. Seeds and docs carry variable NAMES only.
 - **RLS is the security backbone** — every table has policies. Test them. A patient must never be
   able to read another patient's bookings.
 - **Rate limit** OTP requests (3/phone/hour) and booking creation.

@@ -53,10 +53,14 @@ export default function SlotPickerScreen() {
     setRequestingSlotId(slot.id)
     setRejectionMessage(null)
     try {
-      const { hold: newHold, failure } = await acquireSlotHold(
-        { id: slot.id, slotDate: slot.slotDate, slotTime: slot.slotTime },
-        userId,
-      )
+      // No user id is passed — the server derives the holder from the session
+      // (migration 20260801005955). `userId` above is only the screen's
+      // signed-in precondition, never the identity the hold is written under.
+      const { hold: newHold, failure } = await acquireSlotHold({
+        id: slot.id,
+        slotDate: slot.slotDate,
+        slotTime: slot.slotTime,
+      })
       const store = useBookingStore.getState()
       if (newHold !== null) {
         // A re-pick makes any earlier pending booking stale (patients cannot
@@ -69,7 +73,9 @@ export default function SlotPickerScreen() {
       setRejectionMessage(
         failure === 'slot_taken'
           ? 'تم حجز هذا الموعد للتو — اختر موعداً آخر'
-          : 'تعذر حجز الموعد — تحقق من الاتصال وحاول مرة أخرى',
+          : failure === 'not_authenticated'
+            ? 'انتهت الجلسة — سجّل الدخول مرة أخرى'
+            : 'تعذر حجز الموعد — تحقق من الاتصال وحاول مرة أخرى',
       )
       void slotsQuery.refetch()
     } finally {

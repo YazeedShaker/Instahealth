@@ -8,6 +8,12 @@ on:
   schedule:
     # Weekly full scan, Monday 03:00 UTC
     - cron: '0 3 * * 1'
+  # ⚠ On a `pull_request` event gitleaks-action scans ONLY that PR's commits.
+  # The FULL-HISTORY scan happens on `schedule` and `workflow_dispatch` — so a
+  # green PR check says nothing about what is in an old commit. This trigger
+  # exists so a full-history scan can be demanded on the spot (Actions →
+  # Security → Run workflow) instead of waiting for Monday.
+  workflow_dispatch:
 
 concurrency:
   group: security-${{ github.ref }}
@@ -43,6 +49,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # full history for gitleaks
+      # Scope depends on the EVENT: pull_request → the PR's commits only;
+      # schedule / workflow_dispatch / push → `gitleaks detect` over the whole
+      # history. Placeholder allowlisting lives in `.gitleaks.toml`.
       - name: Gitleaks
         uses: gitleaks/gitleaks-action@v2
         env:
@@ -53,8 +62,10 @@ jobs:
   # ────────────────────────────────────────────────
   codeql:
     name: CodeQL Analysis
-    # CodeQL needs GitHub Advanced Security on private repos — runs automatically
-    # once the repo is public or GHAS is enabled
+    # CodeQL needs GitHub Advanced Security on private repos. This condition
+    # self-adjusted when the repo went PUBLIC on 2026-07-29 — CodeQL has been
+    # running and passing on every PR since. Leave it: it is what keeps the job
+    # from failing if the repo is ever made private again.
     if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
     permissions:
