@@ -196,6 +196,54 @@ test.describe('provider dashboard — Today view', () => {
     // Terminal: no action remains.
     await expect(page.getByTestId(`action-completed-${bookingId}`)).toHaveCount(0)
     await expect(page.getByTestId(`action-arrived-${bookingId}`)).toHaveCount(0)
+
+    // ⚠ AND IT STAYS TERMINAL ACROSS NAVIGATION — the founder's report.
+    //
+    // Next serves back/forward (and, in a PRODUCTION build, ordinary in-app
+    // navigation) from the client Router Cache. `export const dynamic =
+    // 'force-dynamic'` only stops SERVER caching, so the page remounted from the
+    // PRE-ACTION snapshot: the chip read «مؤكد» again and «وصل» came back on a
+    // booking the database considered completed. Measured on a production build:
+    // stale for the full 10s sample with ZERO refetches — it never self-corrected;
+    // only a hard reload cleared it. `next dev` hides this completely, which is
+    // why it has to be asserted rather than eyeballed locally.
+    //
+    // Costs no extra fixture on purpose: it rides the booking this test already
+    // consumed, so the FIXTURE TRIPWIRE count stays at 3.
+    await page.getByTestId('nav-upcoming').click()
+    await page.waitForURL('**/dashboard/upcoming**')
+    await expect(
+      page.getByTestId('bookings-list').or(page.getByTestId('upcoming-empty')),
+    ).toBeVisible({ timeout: 30_000 })
+
+    // ⚠ ASSERT THE MECHANISM, NOT JUST THE OUTCOME. The suite runs against
+    // `next dev`, which refetches the RSC payload on navigation and therefore
+    // CANNOT show this bug — a state-only assertion would pass here whether or
+    // not the fix exists, i.e. a test with no teeth in the only place it runs
+    // automatically. Counting the revalidation request works in both builds:
+    // remove the mount refetch and this goes red in dev too.
+    let revalidations = 0
+    page.on('request', (request) => {
+      if (request.url().includes('get_branch_bookings_for_date')) revalidations += 1
+    })
+
+    await page.goBack()
+    await page.waitForURL('**/dashboard/today**')
+    await expect(page.getByTestId('bookings-list')).toBeVisible({ timeout: 30_000 })
+
+    // Web-first assertions: the revalidation may take a moment, but it must
+    // HAPPEN. On a production build these stayed stale indefinitely without it.
+    await expect(page.getByTestId(`status-chip-${bookingId}`)).toHaveAttribute(
+      'data-status',
+      'completed',
+      { timeout: 30_000 },
+    )
+    await expect(page.getByTestId(`action-arrived-${bookingId}`)).toHaveCount(0)
+    await expect(page.getByTestId(`action-completed-${bookingId}`)).toHaveCount(0)
+    expect(
+      revalidations,
+      'coming back to Today must re-ask the database — without it a production build keeps painting the pre-action snapshot',
+    ).toBeGreaterThan(0)
   })
 
   // ── The swallowed-completion regression ────────────────────────────────────

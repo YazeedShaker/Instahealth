@@ -74,6 +74,49 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 
 ## Shipped
 
+### 2026-08-01 · FIX — the desk saw stale actions after navigating back (founder report)
+
+**Take an action, go to another page, come back — and the action was offered
+again**, on a booking the database had already moved on. A hard refresh cleared
+it. Founder-reported after testing the pending spinners.
+
+**Root cause: `force-dynamic` only stops SERVER caching.** Next serves
+back/forward — and, in a PRODUCTION build, ordinary in-app navigation — from the
+**client Router Cache**. So the page remounted with the PRE-ACTION payload, and
+`useBranchBookings` deliberately skipped its first refetch (an optimisation that
+assumed the server payload was rendered just now). Nothing then corrected it:
+the realtime broadcast had already fired before navigating away, and the poll is
+60 seconds.
+
+**⚠ `next dev` cannot show this bug, which is the important part.** Measured
+before/after, sampling for 10 seconds after coming back:
+
+| build               | after coming back                                                           |
+| ------------------- | --------------------------------------------------------------------------- |
+| production, unfixed | **stale for the whole sample, 0 refetches** — only a hard reload cleared it |
+| production, fixed   | corrects in ~280ms                                                          |
+| `next dev`, either  | corrects in ~295ms — **the bug cannot occur**                               |
+
+Dev refetches the RSC payload on navigation, so the regression test passed with
+AND without the fix there. **The web E2E therefore now runs against a production
+build** (`playwright.config.ts`; `E2E_PROD=1` locally). Proven to have teeth:
+with the fix reverted the test fails `Expected "completed", Received
+"confirmed"` after 62 retries. The suite is also FASTER against the build (1.1m
+vs 1.8m — no on-demand compilation) plus ~40s to build. Full suite green:
+**37 passed, 0 skipped**.
+
+⚠ This also unblocks the long-standing **connection-dot** report (P01
+follow-up), which has been waiting on exactly this production-build check.
+
+**The fix:** the client revalidates on mount. The server payload is still the
+instant first paint; it is simply no longer the final word — a payload is only
+trustworthy if it was rendered _just now_, and after a cached restore it was
+not. One query per page mount. Same law as the two bugs before it: the screen
+may not assert a state the server does not hold.
+
+The regression rides the booking the outcome test already consumes, so the
+FIXTURE TRIPWIRE count stays at 3 — no new fixture pressure.
+
 ### 2026-08-01 · SEC — `create_slot_hold` derives its caller + public-repo hygiene audit
 
 **The last open instance of the general law is closed.** `create_slot_hold`
