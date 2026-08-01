@@ -98,15 +98,29 @@ before/after, sampling for 10 seconds after coming back:
 | `next dev`, either  | corrects in ~295ms — **the bug cannot occur**                               |
 
 Dev refetches the RSC payload on navigation, so the regression test passed with
-AND without the fix there. **The web E2E therefore now runs against a production
-build** (`playwright.config.ts`; `E2E_PROD=1` locally). Proven to have teeth:
-with the fix reverted the test fails `Expected "completed", Received
-"confirmed"` after 62 retries. The suite is also FASTER against the build (1.1m
-vs 1.8m — no on-demand compilation) plus ~40s to build. Full suite green:
+AND without the fix there. `E2E_PROD=1 pnpm test:e2e` runs the suite against a
+production build — proven to have teeth: with the fix reverted it fails
+`Expected "completed", Received "confirmed"` after 62 retries, while the same
+run under `pnpm dev` passes. The suite is also FASTER that way (1.1m vs 1.8m —
+no on-demand compilation) plus ~40s to build. Full suite green both ways:
 **37 passed, 0 skipped**.
 
-⚠ This also unblocks the long-standing **connection-dot** report (P01
-follow-up), which has been waiting on exactly this production-build check.
+⚠ **CI still runs `pnpm dev`.** Switching it over is queued for the refactor
+branch (below) rather than bolted onto a bug fix — one piece of test
+infrastructure at a time. Until then those assertions are documentation plus a
+local guard, stated as such in the test.
+
+⚠ The production-build path also makes the long-standing **connection-dot**
+report (P01 follow-up) reproducible at last — it has been waiting on exactly
+this check. Not investigated here.
+
+**Also found: the CI fixture-seeding step never worked.** `SUPABASE_DB_URL` was
+set to the DIRECT host (`db.<ref>.supabase.co`), which now resolves to IPv6
+only, and GitHub runners have no IPv6 route — `psql` failed with «Network is
+unreachable» and took the whole E2E job with it. The step is now
+`continue-on-error` (seeding is an optimisation; the FIXTURE TRIPWIRE is the
+guard) and prints the diagnosis. **Founder action: change the secret to the
+Session pooler URL** (`aws-0-<region>.pooler.supabase.com`), which is IPv4.
 
 **The fix:** the client revalidates on mount. The server payload is still the
 instant first paint; it is simply no longer the final word — a payload is only

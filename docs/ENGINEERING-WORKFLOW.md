@@ -607,10 +607,18 @@ Two more, both found while capturing P02's screenshots:
   | `next dev`, either  | corrects in ~295ms — **the bug cannot occur**, because dev refetches the RSC payload on navigation |
 
   The dev row is the lesson: the same test passed with AND without the fix in
-  dev, so it would have been a guard with no teeth in the only place it runs
-  automatically. `playwright.config.ts` now builds and starts for CI (and
-  `E2E_PROD=1` locally); the suite is FASTER that way (1.1m vs 1.8m — no
-  on-demand compilation) plus ~40s for the build.
+  dev, so a state-only assertion is a guard with no teeth in the only place it
+  runs automatically. `E2E_PROD=1 pnpm test:e2e` runs the suite against a
+  production build and is FASTER that way (1.1m vs 1.8m — no on-demand
+  compilation) plus ~40s to build. **Use it whenever you touch navigation,
+  caching or realtime.** ⚠ CI still runs `pnpm dev`: switching it over is queued
+  for the refactor branch alongside the shared-fixture-database work, so that
+  one piece of test infrastructure changes at a time. Until then the
+  navigation-staleness assertions are documentation plus a local guard, and that
+  is stated in the test itself rather than left to be discovered.
+  ⚠ Counting the revalidation REQUEST was tried as an environment-independent
+  proxy and does not work — the focus listener satisfies it in dev even with the
+  fix removed. There is no dev-side substitute for running the real build.
   **The fix itself: a server payload is only trustworthy if it was rendered
   JUST NOW.** After any client-side navigation it may come from the cache, so
   the client revalidates on mount — the payload stays the instant first paint

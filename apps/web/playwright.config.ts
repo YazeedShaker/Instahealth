@@ -70,35 +70,17 @@ export default defineConfig({
     baseURL: 'http://localhost:3000',
   },
   webServer: {
-    // ⚠ CI RUNS THE SUITE AGAINST A PRODUCTION BUILD, because `next dev` cannot
-    // show a whole class of bug this dashboard has already shipped twice.
+    // ⚠ `next dev` CANNOT show a whole class of Router-Cache bug this dashboard
+    // has now shipped twice — see ENGINEERING-WORKFLOW §9. Running the suite
+    // against a PRODUCTION build fixes that (and is faster: 1.1m vs 1.8m, no
+    // on-demand compilation). Verified green locally: `E2E_PROD=1 pnpm test:e2e`.
     //
-    // The concrete case: after recording an outcome, coming back to Today
-    // repainted the PRE-ACTION snapshot — the chip reverted and «وصل» reappeared
-    // on a booking the database considered completed. Next serves back/forward
-    // (and, in a production build, ordinary in-app navigation) from the client
-    // Router Cache; `export const dynamic = 'force-dynamic'` only stops SERVER
-    // caching. Measured on a production build: stale for a full 10s sample with
-    // ZERO refetches. In `next dev` the RSC payload is refetched on navigation,
-    // so the same test passed with and without the fix — a guard with no teeth
-    // in the only place it runs automatically.
-    //
-    // (The still-open "connection dot flips to «غير متصل»" report is the other
-    // one waiting on a production-build check — PROGRESS, P01 follow-up.)
-    //
-    // Measured cost: the suite is FASTER against the build (1.1m vs 1.8m — no
-    // on-demand compilation), plus ~40s for `next build`.
-    //
-    // Locally the default stays `pnpm dev` for a fast authoring loop; opt into
-    // the production path with `E2E_PROD=1 pnpm test:e2e` when touching
-    // navigation, caching or realtime.
-    command:
-      process.env.CI !== undefined || process.env.E2E_PROD === '1'
-        ? 'pnpm build && pnpm start'
-        : 'pnpm dev',
+    // NOT switched on for CI yet — deferred to the refactor branch with the
+    // shared-fixture-database work, so one infrastructure change lands at a time.
+    // Use E2E_PROD=1 locally whenever you touch navigation, caching or realtime.
+    command: process.env.E2E_PROD === '1' ? 'pnpm build && pnpm start' : 'pnpm dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
-    // A cold `next build` on a runner needs materially more than a dev boot.
-    timeout: 420_000,
+    timeout: process.env.E2E_PROD === '1' ? 420_000 : 180_000,
   },
 })
