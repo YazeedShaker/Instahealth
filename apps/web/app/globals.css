@@ -42,11 +42,38 @@ body {
   }
 }
 
+/* The pending affordance on an outcome button. The write is no longer painted
+   optimistically — the row shows an outcome only once the server has agreed to
+   it — so this spinner IS the desk's feedback for the second or two in between.
+   It sits beside the unchanged label so the button never resizes mid-click. */
+.ih-button-spinner {
+  display: inline-block;
+  width: 0.85em;
+  height: 0.85em;
+  border: 2px solid currentColor;
+  border-inline-end-color: transparent;
+  border-radius: 9999px;
+  animation: ih-spin 0.7s linear infinite;
+  vertical-align: -0.1em;
+}
+
+@keyframes ih-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Respect the OS setting — a sweeping gradient is exactly the kind of motion
    people turn this on to avoid. The placeholder stays, it just stops moving. */
 @media (prefers-reduced-motion: reduce) {
   .ih-shimmer {
     animation: none;
+  }
+
+  /* The ring still reads as "working" without rotating. */
+  .ih-button-spinner {
+    animation: none;
+    opacity: 0.6;
   }
 }
 
