@@ -825,10 +825,7 @@ export type Database = {
         }
         Returns: Json
       }
-      create_slot_hold: {
-        Args: { p_slot_id: string; p_user_id: string }
-        Returns: Json
-      }
+      create_slot_hold: { Args: { p_slot_id: string }; Returns: Json }
       generate_branch_slots: {
         Args: {
           p_branch_id: string

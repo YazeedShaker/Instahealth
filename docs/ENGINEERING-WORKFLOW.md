@@ -91,9 +91,29 @@ pnpm audit --audit-level=high
 - Prettier ignores live in `.prettierignore` — design handoff bundles
   (`design/*/*/project`), `supabase/migrations|functions`, and the generated
   `database.ts` stay verbatim, never formatted.
-- Gitleaks: `.env.example` is allowlisted via `.gitleaks.toml` (placeholder
-  names only). Never commit a real key anywhere — `.env.local` files are
-  gitignored at root, `apps/web/`, and `apps/mobile/`.
+- Gitleaks: `.env.example` — and SPEC-SETUP-01, which embeds it — are
+  allowlisted via `.gitleaks.toml` (placeholder names only). Never commit a real
+  key anywhere. **`.env` files are ignored REPO-WIDE, not per app**: root
+  `.gitignore`'s `.env` / `.env.*` carry no slash, so git applies them at every
+  depth (`apps/mobile`, `packages/*`, `supabase/`, `scripts/` are all covered —
+  the per-app rules are redundant, not load-bearing). `!.env.example` is the one
+  negation. **Verify with `git check-ignore -v <path>`, never by reading the
+  globs** — pathless-vs-anchored is the whole question and it is invisible on a
+  read.
+- **⚠ THE REPO IS PUBLIC (2026-07-29). History is world-readable, and removal
+  is not rotation.** Going public retroactively changed what every past commit
+  means: `git log -p` is now a public document, so a credential committed once
+  and deleted in the next commit is still published forever — deleting it hides
+  it from the working tree and from nobody else. Three standing consequences:
+  ① **the only remedy for an exposed credential is ROTATION**, and a PR that
+  "removes" one is not finished until the new value has been issued and the old
+  one revoked; ② **seeds never contain literal credentials** — they read them
+  from the environment with DOCUMENTED VARIABLE NAMES (`003_provider_users.sql`
+  is the pattern: names in the header, values only in the founder's password
+  manager, `.env.local` and GitHub secrets); ③ the same applies to PR bodies,
+  commit messages and PROGRESS.md, which are just as public as the code.
+  Rewriting history to purge something is a last resort, not a fix: it breaks
+  every clone and fork, and anything already cloned or indexed is gone anyway.
 - **"It's only a dev password" is not an exemption.** P01 committed a shared dev
   provider password into a seed header, a Playwright spec and PROGRESS because
   the spec said "document the dev credentials in the seed file header".
@@ -103,7 +123,24 @@ pnpm audit --audit-level=high
   `process.env`, and the suite SKIPS (never fails) when the vars are unset so a
   missing secret does not masquerade as a broken feature. Documenting an
   ACCOUNT is fine; documenting its password is not.
-- CodeQL auto-skips while the repo is private (needs GHAS) — not a failure.
+- **CodeQL RUNS and PASSES on every PR.** `security.yml`'s
+  `if: ${{ !github.event.repository.private }}` self-adjusted the moment the
+  repo went public (2026-07-29) — nothing was re-plumbed and nothing needs to
+  be. The condition stays so the job would skip rather than fail if the repo
+  ever went private again (CodeQL needs GHAS there). This line previously said
+  CodeQL auto-skips; that has been false since the repo went public.
+- **`pull_request` gitleaks scans only the PR's commits — a green PR check is
+  NOT a clean history.** gitleaks-action picks its scope from the event: PR →
+  that PR's commits; `schedule` / `workflow_dispatch` / `push` → `gitleaks
+detect` over the entire history. The weekly Monday scan is the full one, and
+  `workflow_dispatch` was added so it can be demanded on the spot.
+- **A scheduled job that fails blocks nothing and is therefore invisible.** The
+  ONE scheduled full-history run (2026-07-27) failed on two findings and nobody
+  noticed for three days, because a `schedule` run gates no PR. Both were false
+  positives — empty placeholders in SPEC-SETUP-01's embedded `.env.example`
+  block — but a permanently red scanner would have hidden a real one just as
+  well. Same family as the skipped suite in §9: **check the scanners nothing is
+  waiting on.** Fixed by widening `.gitleaks.toml`'s placeholder allowlist.
 - New upstream advisories WILL land mid-PR and fail Dependency Audit (has
   happened three times: vitest/vite, postcss, brace-expansion). Fix order:
   ① bump the dep, ② pnpm override to the patched version — but TEST it
@@ -146,9 +183,11 @@ pnpm audit --audit-level=high
   window). Enforced by `generate_branch_slots()` + the `slot_holds` capacity
   trigger (migration 20260726151039). Getting this backwards produced 240
   bookings/day at Town and let 5 patients hold the same slot.
-- **Holds are created ONLY via the `create_slot_hold` RPC** — there is
-  deliberately NO RLS INSERT policy on `slot_holds` (dropped in the same
-  migration; the SECURITY DEFINER function bypasses RLS). Don't re-add one.
+- **Holds are created ONLY via the `create_slot_hold(p_slot_id)` RPC** — there
+  is deliberately NO RLS INSERT policy on `slot_holds` (dropped in the same
+  migration; the SECURITY DEFINER function bypasses RLS). Don't re-add one, and
+  don't re-add a user-id parameter: the holder comes from `auth.uid()` inside
+  the function (20260801005955).
 - **Every SECURITY DEFINER function needs its OWN authorization check — audit
   the ones that already exist.** `confirm_booking` was the first (F06);
   `cancel_booking` was the second and worse, because it stayed reachable: it
@@ -185,16 +224,29 @@ pnpm audit --audit-level=high
   `auth.role()`. And check the GRANT as well as the body: the same idiom was
   harmless in three sibling functions purely because they had no anon grant.
 
-- **⚠ THE GENERAL LAW, learned three times: any fact with MONEY, STATE or
+- **⚠ THE GENERAL LAW, learned four times: any fact with MONEY, STATE or
   IDENTITY consequences is SERVER-DERIVED. Clients supply identities, never
-  values.** The three instances, each found the same way and each more
-  expensive than the last:
+  values.** The four instances, each found the same way:
   ① `confirm_booking` was PUBLIC-executable, so the client could declare a
   booking paid (F06). ② `cancel_booking` wrote `p_cancelled_by` verbatim, so
   the client could declare WHO cancelled (P02). ③ `bookings.total_amount` and
   `booking_services.price_at_booking` were plain client INSERTs, so the client
   could declare WHAT IT PAID — a 400 EGP service booked for 1 EGP, proven on
-  dev (migration 20260729160519).
+  dev (migration 20260729160519). ④ `create_slot_hold(p_slot_id, p_user_id)`
+  took the HOLDER as an argument and never compared it to `auth.uid()`, while
+  also carrying a PUBLIC + anon grant — so the anon key alone could delete a
+  stranger's hold mid-checkout (the body's one-hold-per-patient self-heal is a
+  `DELETE … WHERE user_id = p_user_id`) or attribute a hold to them. Closed in
+  20260801005955 by DROPPING the parameter, not by checking it. **That was the
+  last one open.**
+  **Prefer deleting the parameter to validating it.** A `p_user_id = auth.uid()`
+  guard leaves an argument whose only correct value is one the server already
+  knows — every future edit has to keep remembering why it is there. With the
+  parameter gone, impersonation is impossible BY CONSTRUCTION: there is no
+  channel left to carry the lie. Note this CHANGES THE SIGNATURE, so drop the
+  old function rather than leaving an overload beside the new one — an overload
+  that still takes the id is the "RPC beside an open INSERT policy" mistake
+  wearing a different hat.
   The pattern is always the same: a value the client had no business asserting
   travelled from the app to the database unchecked, and the guard that should
   have caught it was somewhere else entirely (a policy about ownership, a
@@ -514,4 +566,5 @@ If you debug a toolchain/CI/platform trap that cost you more than one
 attempt, append it to the relevant section here in the same PR. This file is
 how sessions inherit each other's scars.
 
-_Last updated: 2026-07-27 · Covers everything learned SETUP-01 → F06 (incl. the F06 device-test round)._
+_Last updated: 2026-08-01 · Covers everything learned SETUP-01 → P03 plus the
+public-repo security pass (`create_slot_hold`, full-history secret audit)._

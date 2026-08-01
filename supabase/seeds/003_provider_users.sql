@@ -8,18 +8,40 @@
 --
 -- Providers sign in with EMAIL + PASSWORD (patients use phone OTP).
 --
--- ⚠ THE PASSWORD IS NOT IN THIS FILE, deliberately. A dev password committed
--- to the repo is still a hardcoded credential (CLAUDE.md §8) and secret
--- scanning flags it. Supply it at run time instead:
+-- ⚠ THE PASSWORD IS NOT IN THIS FILE, deliberately, and never will be. A dev
+-- password committed to the repo is still a hardcoded credential (CLAUDE.md §8)
+-- and secret scanning flags it. **THE REPOSITORY IS PUBLIC since 2026-07-29**,
+-- so this is no longer a scanner-appeasement rule: anything written here is
+-- world-readable the moment it is pushed, and deleting it later does NOT
+-- un-publish it — git history keeps every version. Removal ≠ rotation.
 --
---   psql "$DATABASE_URL" -v provider_password="'<the-password>'" --        -f supabase/seeds/003_provider_users.sql
+-- Supply it from the ENVIRONMENT at run time. The variable names are the
+-- documented contract; the values live only in the founder's password manager,
+-- the local `apps/web/.env.local`, and the GitHub repo secrets:
 --
--- Applying through the Supabase MCP/SQL editor instead? Replace
--- :provider_password with a quoted literal in your editor buffer only — never
--- save it back into this file.
+--   PROVIDER_TEST_EMAIL     — the dev receptionist account to sign in as
+--   PROVIDER_TEST_PASSWORD  — its password; ALSO what this seed hashes below
 --
--- The shared dev password lives with the team (1Password / founder), and is
--- mirrored into PROVIDER_TEST_PASSWORD for the Playwright suite.
+-- Run it (bash):
+--
+--   psql "$DATABASE_URL" \
+--     -v provider_password="'$PROVIDER_TEST_PASSWORD'" \
+--     -f supabase/seeds/003_provider_users.sql
+--
+-- PowerShell:
+--
+--   psql $env:DATABASE_URL `
+--     -v provider_password="'$env:PROVIDER_TEST_PASSWORD'" `
+--     -f supabase/seeds/003_provider_users.sql
+--
+-- Applying through the Supabase MCP / SQL editor instead? Substitute
+-- :provider_password in your editor buffer only — never save it back here, and
+-- never paste it into a commit message, a PR body or PROGRESS.md.
+--
+-- The same PROVIDER_TEST_* pair is what the Playwright dashboard suite reads
+-- (`playwright.config.ts` loads `apps/web/.env.local`; CI values win). The
+-- suite SKIPS rather than fails when they are unset, so a missing secret never
+-- masquerades as a broken feature.
 --
 -- WHY THE auth.users ROWS ARE HAND-WRITTEN: creating auth users normally goes
 -- through the Admin API with the service-role key, which is not available to

@@ -1,10 +1,28 @@
 # Gitleaks config — extends the default ruleset.
-# .env.example documents variable NAMES only (no real values) and is required
-# by SETUP-01 to be committed; the generic-api-key rule false-positives on
-# lines like `PAYTABS_SERVER_KEY=`.
+#
+# ⚠ THE REPOSITORY IS PUBLIC (2026-07-29). This file may only ever silence
+# DOCUMENTED PLACEHOLDERS — files whose whole purpose is to list variable NAMES
+# with empty values. It must never be used to wave through a real credential:
+# in a public repo a committed secret is world-readable immediately, and
+# deleting it later does not un-publish it. Removal ≠ rotation.
 [extend]
 useDefault = true
 
 [allowlist]
-description = "Documented placeholder env files — never contain real values"
-paths = ['''\.env\.example$''']
+description = "Documented env TEMPLATES — variable names only, never values"
+paths = [
+  # `.env.example` is required to be committed by SETUP-01 and documents
+  # variable NAMES only. The generic-api-key rule false-positives on lines like
+  # `PAYTABS_SERVER_KEY=` (empty value, trailing comment).
+  '''\.env\.example$''',
+
+  # SPEC-SETUP-01 EMBEDS that same template in a fenced code block, so it trips
+  # the identical false positive — but the path allowlist above never reached
+  # it. That is why the weekly scheduled FULL-HISTORY scan had been failing on
+  # two findings (`PAYMOB_HMAC_SECRET=` and `VONAGE_API_SECRET=`, commit
+  # 39de2d88, both empty placeholders) since the day it was added. A
+  # permanently red scanner is a scanner nobody reads — the same failure mode
+  # as a suite that skips itself. Matched without a directory prefix so it
+  # survives the docs/ → docs/specs/ move that is already in history.
+  '''(^|/)SPEC-SETUP-01-monorepo-scaffold\.md$''',
+]

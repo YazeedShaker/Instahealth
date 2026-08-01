@@ -21,7 +21,7 @@ function logDevError(context: string, error: unknown): void {
   }
 }
 
-export type HoldFailureReason = 'slot_taken' | 'error'
+export type HoldFailureReason = 'slot_taken' | 'not_authenticated' | 'error'
 
 export interface HoldResult {
   hold: ActiveHold | null
@@ -35,15 +35,24 @@ interface SlotHoldRpcResponse {
   expires_at?: string
 }
 
-/** Takes the 10-minute hold. The RPC itself releases the caller's previous
- * hold (one active hold per patient) — no client-side pre-release needed. */
-export async function acquireSlotHold(
-  slot: { id: string; slotDate: string; slotTime: string },
-  userId: string,
-): Promise<HoldResult> {
+/**
+ * Takes the 10-minute hold. The RPC itself releases the caller's previous
+ * hold (one active hold per patient) — no client-side pre-release needed.
+ *
+ * ⚠ The holder is NOT a parameter. `create_slot_hold` used to take
+ * `p_user_id` and never checked it against `auth.uid()`, so any caller — the
+ * anon key alone was enough — could delete a stranger's hold mid-checkout or
+ * attribute a hold to them. The server now derives the holder from the session
+ * (migration 20260801005955) and the parameter is GONE, which is what makes
+ * impersonation impossible rather than merely rejected.
+ */
+export async function acquireSlotHold(slot: {
+  id: string
+  slotDate: string
+  slotTime: string
+}): Promise<HoldResult> {
   const { data, error } = await supabase.rpc('create_slot_hold', {
     p_slot_id: slot.id,
-    p_user_id: userId,
   })
   if (error) {
     logDevError('create_slot_hold', error)
@@ -52,6 +61,12 @@ export async function acquireSlotHold(
 
   const response = data as unknown as SlotHoldRpcResponse
   if (!response.success || !response.hold_id || !response.expires_at) {
+    // `not_authenticated` is now reachable: the server reads the holder from
+    // the session, so an expired session fails here rather than silently
+    // holding for nobody. It is NOT a lost race and must not say it was one.
+    if (response.error === 'not_authenticated') {
+      return { hold: null, failure: 'not_authenticated' }
+    }
     // slot_full / slot_blocked / slot_not_found — someone else got there first.
     return { hold: null, failure: 'slot_taken' }
   }

@@ -1,12 +1,7 @@
 import { describe, expect, test } from 'vitest'
 
 import { otpRequestSchema, otpVerifySchema } from './auth.schema'
-import {
-  confirmBookingSchema,
-  createSlotHoldSchema,
-  serviceSelectionSchema,
-  slotChoiceSchema,
-} from './booking.schema'
+import { confirmBookingSchema, serviceSelectionSchema, slotChoiceSchema } from './booking.schema'
 import { coordinatesSchema, paginationSchema, uuidSchema } from './common.schema'
 import { errorMessages, getErrorMessage } from './messages'
 import { settlePaymentRequestSchema } from './payment.schema'
@@ -86,11 +81,16 @@ describe('booking schemas', () => {
     expect(firstMessage(result)).toBe('booking.services.mixedBranch')
   })
 
-  test('slot choice and hold payload validate uuids', () => {
+  test('slot choice — the whole hold payload — validates its uuid', () => {
     expect(slotChoiceSchema.parse({ slotId: BRANCH_ID }).slotId).toBe(BRANCH_ID)
-    expect(
-      firstMessage(createSlotHoldSchema.safeParse({ slotId: 'nope', userId: BRANCH_ID })),
-    ).toBe('common.uuid.invalid')
+    expect(firstMessage(slotChoiceSchema.safeParse({ slotId: 'nope' }))).toBe('common.uuid.invalid')
+  })
+
+  test('the hold payload carries NO user id — the server derives the holder', () => {
+    // Migration 20260801005955 dropped `p_user_id` from create_slot_hold. If a
+    // userId ever reappears in this schema, an identity the client controls has
+    // crept back into a hold — the exact shape ENGINEERING-WORKFLOW §5 forbids.
+    expect(Object.keys(slotChoiceSchema.shape)).toEqual(['slotId'])
   })
 
   test('confirm booking accepts valid method, rejects unknown method', () => {

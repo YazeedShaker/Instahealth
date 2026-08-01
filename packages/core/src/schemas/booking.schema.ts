@@ -30,15 +30,19 @@ export const serviceSelectionSchema = z
     },
   )
 
-/** Slot choice — the tap that starts a hold. */
+/**
+ * Slot choice — the tap that starts a hold, and the WHOLE payload of the
+ * `create_slot_hold` RPC.
+ *
+ * There is deliberately no `userId` here. A separate `createSlotHoldSchema`
+ * carrying one existed until migration 20260801005955, mirroring an RPC that
+ * took the holder's identity as an argument and never checked it. The server
+ * now derives the holder from `auth.uid()`, so the client has nothing to say
+ * about WHO holds — only WHICH slot. Same rule as `get_patient_bookings()`
+ * taking no user id (ENGINEERING-WORKFLOW §5).
+ */
 export const slotChoiceSchema = z.object({
   slotId: uuidSchema,
-})
-
-/** Payload for the `create_slot_hold` RPC. */
-export const createSlotHoldSchema = z.object({
-  slotId: uuidSchema,
-  userId: uuidSchema,
 })
 
 /** Payload for the `confirm_booking` RPC. Gateway fields only exist for gateway
@@ -54,5 +58,4 @@ export const confirmBookingSchema = z.object({
 
 export type ServiceSelection = z.infer<typeof serviceSelectionSchema>
 export type SlotChoice = z.infer<typeof slotChoiceSchema>
-export type CreateSlotHoldInput = z.infer<typeof createSlotHoldSchema>
 export type ConfirmBookingInput = z.infer<typeof confirmBookingSchema>
