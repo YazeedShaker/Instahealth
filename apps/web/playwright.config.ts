@@ -70,9 +70,17 @@ export default defineConfig({
     baseURL: 'http://localhost:3000',
   },
   webServer: {
-    command: 'pnpm dev',
+    // ⚠ `next dev` CANNOT show a whole class of Router-Cache bug this dashboard
+    // has now shipped twice — see ENGINEERING-WORKFLOW §9. Running the suite
+    // against a PRODUCTION build fixes that (and is faster: 1.1m vs 1.8m, no
+    // on-demand compilation). Verified green locally: `E2E_PROD=1 pnpm test:e2e`.
+    //
+    // NOT switched on for CI yet — deferred to the refactor branch with the
+    // shared-fixture-database work, so one infrastructure change lands at a time.
+    // Use E2E_PROD=1 locally whenever you touch navigation, caching or realtime.
+    command: process.env.E2E_PROD === '1' ? 'pnpm build && pnpm start' : 'pnpm dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
-    timeout: 180_000,
+    timeout: process.env.E2E_PROD === '1' ? 420_000 : 180_000,
   },
 })

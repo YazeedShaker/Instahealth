@@ -150,9 +150,22 @@ jobs:
       # Needs SUPABASE_DB_URL as a repo secret. Until it exists this step is
       # skipped and the FIXTURE TRIPWIRE test in dashboard.spec.ts fails loudly
       # instead — one clear red beats nine quiet skips either way.
+      # ⚠ NON-BLOCKING ON PURPOSE. Seeding is an optimisation; the FIXTURE
+      # TRIPWIRE in dashboard.spec.ts is the actual guard, and it names this step
+      # in its failure message. An unreachable database must not turn every PR
+      # red for a reason that has nothing to do with the change under review.
+      #
+      # ⚠ SUPABASE_DB_URL MUST BE THE POOLER URL, NOT THE DIRECT ONE. The direct
+      # host `db.<ref>.supabase.co` now resolves to IPv6 only, and GitHub runners
+      # have no IPv6 route — psql fails with "Network is unreachable". Use the
+      # Session pooler string from Supabase → Project Settings → Database
+      # (`aws-0-<region>.pooler.supabase.com`), which is IPv4.
       - name: Seed dashboard E2E fixtures
         if: ${{ env.SUPABASE_DB_URL != '' }}
-        run: psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/seeds/004_dashboard_e2e_fixtures.sql
+        continue-on-error: true
+        run: |
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/seeds/004_dashboard_e2e_fixtures.sql \
+            || echo "::warning::Fixture seeding failed — if this is 'Network is unreachable', SUPABASE_DB_URL is the DIRECT (IPv6-only) host; switch the secret to the Session pooler URL. The FIXTURE TRIPWIRE will report if the day has actually drained."
       - name: Run Playwright
         run: pnpm turbo test:e2e --filter=@instahealth/web
         env:

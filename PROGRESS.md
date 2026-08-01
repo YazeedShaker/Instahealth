@@ -74,6 +74,63 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 
 ## Shipped
 
+### 2026-08-01 · FIX — the desk saw stale actions after navigating back (founder report)
+
+**Take an action, go to another page, come back — and the action was offered
+again**, on a booking the database had already moved on. A hard refresh cleared
+it. Founder-reported after testing the pending spinners.
+
+**Root cause: `force-dynamic` only stops SERVER caching.** Next serves
+back/forward — and, in a PRODUCTION build, ordinary in-app navigation — from the
+**client Router Cache**. So the page remounted with the PRE-ACTION payload, and
+`useBranchBookings` deliberately skipped its first refetch (an optimisation that
+assumed the server payload was rendered just now). Nothing then corrected it:
+the realtime broadcast had already fired before navigating away, and the poll is
+60 seconds.
+
+**⚠ `next dev` cannot show this bug, which is the important part.** Measured
+before/after, sampling for 10 seconds after coming back:
+
+| build               | after coming back                                                           |
+| ------------------- | --------------------------------------------------------------------------- |
+| production, unfixed | **stale for the whole sample, 0 refetches** — only a hard reload cleared it |
+| production, fixed   | corrects in ~280ms                                                          |
+| `next dev`, either  | corrects in ~295ms — **the bug cannot occur**                               |
+
+Dev refetches the RSC payload on navigation, so the regression test passed with
+AND without the fix there. `E2E_PROD=1 pnpm test:e2e` runs the suite against a
+production build — proven to have teeth: with the fix reverted it fails
+`Expected "completed", Received "confirmed"` after 62 retries, while the same
+run under `pnpm dev` passes. The suite is also FASTER that way (1.1m vs 1.8m —
+no on-demand compilation) plus ~40s to build. Full suite green both ways:
+**37 passed, 0 skipped**.
+
+⚠ **CI still runs `pnpm dev`.** Switching it over is queued for the refactor
+branch (below) rather than bolted onto a bug fix — one piece of test
+infrastructure at a time. Until then those assertions are documentation plus a
+local guard, stated as such in the test.
+
+⚠ The production-build path also makes the long-standing **connection-dot**
+report (P01 follow-up) reproducible at last — it has been waiting on exactly
+this check. Not investigated here.
+
+**Also found: the CI fixture-seeding step never worked.** `SUPABASE_DB_URL` was
+set to the DIRECT host (`db.<ref>.supabase.co`), which now resolves to IPv6
+only, and GitHub runners have no IPv6 route — `psql` failed with «Network is
+unreachable» and took the whole E2E job with it. The step is now
+`continue-on-error` (seeding is an optimisation; the FIXTURE TRIPWIRE is the
+guard) and prints the diagnosis. **Founder action: change the secret to the
+Session pooler URL** (`aws-0-<region>.pooler.supabase.com`), which is IPv4.
+
+**The fix:** the client revalidates on mount. The server payload is still the
+instant first paint; it is simply no longer the final word — a payload is only
+trustworthy if it was rendered _just now_, and after a cached restore it was
+not. One query per page mount. Same law as the two bugs before it: the screen
+may not assert a state the server does not hold.
+
+The regression rides the booking the outcome test already consumes, so the
+FIXTURE TRIPWIRE count stays at 3 — no new fixture pressure.
+
 ### 2026-08-01 · SEC — `create_slot_hold` derives its caller + public-repo hygiene audit
 
 **The last open instance of the general law is closed.** `create_slot_hold`

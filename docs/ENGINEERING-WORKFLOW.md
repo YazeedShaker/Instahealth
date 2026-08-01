@@ -592,6 +592,39 @@ Two more, both found while capturing P02's screenshots:
   disease), `page.route()` the RPC and `await` a delay before `continue()`. The
   window becomes deterministic on a laptop, and the regression test lives beside
   the feature instead of depending on a runner's geography.
+- **⚠ `next dev` HIDES A WHOLE CLASS OF BUG — the web E2E runs against a
+  PRODUCTION BUILD.** After recording an outcome, coming back to Today repainted
+  the PRE-ACTION snapshot: the chip reverted to «مؤكد» and «وصل» reappeared on a
+  booking the database considered completed. Next serves back/forward — and, in
+  a production build, ordinary in-app navigation — from the **client Router
+  Cache**; `export const dynamic = 'force-dynamic'` only stops SERVER caching,
+  which is the trap, because the page looks correctly configured. Measured:
+
+  | build               | after coming back                                                                                  |
+  | ------------------- | -------------------------------------------------------------------------------------------------- |
+  | production, unfixed | stale for the full 10s sample, **0 refetches** — never self-corrects; only a hard reload clears it |
+  | production, fixed   | corrects in ~280ms                                                                                 |
+  | `next dev`, either  | corrects in ~295ms — **the bug cannot occur**, because dev refetches the RSC payload on navigation |
+
+  The dev row is the lesson: the same test passed with AND without the fix in
+  dev, so a state-only assertion is a guard with no teeth in the only place it
+  runs automatically. `E2E_PROD=1 pnpm test:e2e` runs the suite against a
+  production build and is FASTER that way (1.1m vs 1.8m — no on-demand
+  compilation) plus ~40s to build. **Use it whenever you touch navigation,
+  caching or realtime.** ⚠ CI still runs `pnpm dev`: switching it over is queued
+  for the refactor branch alongside the shared-fixture-database work, so that
+  one piece of test infrastructure changes at a time. Until then the
+  navigation-staleness assertions are documentation plus a local guard, and that
+  is stated in the test itself rather than left to be discovered.
+  ⚠ Counting the revalidation REQUEST was tried as an environment-independent
+  proxy and does not work — the focus listener satisfies it in dev even with the
+  fix removed. There is no dev-side substitute for running the real build.
+  **The fix itself: a server payload is only trustworthy if it was rendered
+  JUST NOW.** After any client-side navigation it may come from the cache, so
+  the client revalidates on mount — the payload stays the instant first paint
+  and stops being the final word. Same law as §1.4: the screen may not assert a
+  state the server does not hold.
+
 - **A suite that MUTATES its fixtures must reseed BEFORE it runs, not after.**
   `004_dashboard_e2e_fixtures.sql` RESETS the day, but nothing ran it in CI, so
   the day drained and nine tests began skipping — CI read "24 passed, 9 skipped"

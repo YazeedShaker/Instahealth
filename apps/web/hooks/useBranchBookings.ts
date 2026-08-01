@@ -238,15 +238,30 @@ export function useBranchBookings({
   const refreshRef = useRef(refresh)
   refreshRef.current = refresh
 
-  // Re-query whenever the desk narrows or pages the table. Skipped on the
-  // FIRST render because the server already delivered page one unfiltered —
-  // re-fetching it immediately would throw away the server-rendered paint.
-  const isFirstQuery = useRef(true)
+  // Re-query whenever the desk narrows or pages the table — AND once on mount.
+  //
+  // ⚠ REVALIDATE ON MOUNT. This effect used to skip its first run, on the
+  // reasoning that the server had just delivered page one and re-fetching it
+  // would waste a query. That reasoning holds only when the payload really was
+  // rendered just now — and after a BACK/FORWARD navigation it was not.
+  //
+  // Next restores back/forward from the client Router Cache unconditionally
+  // (`staleTimes` does not govern it, and `export const dynamic =
+  // 'force-dynamic'` only stops SERVER caching). So the desk marked a booking
+  // arrived, pressed Back, and the page remounted from the PRE-ACTION snapshot:
+  // the chip read «مؤكد» again and the «وصل» button came back — on a booking the
+  // database already considered arrived. Reproduced with `page.goBack()`;
+  // in-app nav links did not show it, which is why it looked intermittent.
+  //
+  // Pressing that stale button is at best a no-op (`unchanged: true`) and at
+  // worst an `illegal_transition` toast for something the desk did nothing
+  // wrong to cause. Same family as the swallowed-completion bug: THE SCREEN WAS
+  // ASSERTING A STATE THE SERVER DOES NOT HOLD (§1.4).
+  //
+  // The server payload is still the instant first paint — it is simply no longer
+  // trusted as the final word. One query per mount is the price of the desk
+  // never acting on a snapshot.
   useEffect(() => {
-    if (isFirstQuery.current) {
-      isFirstQuery.current = false
-      return
-    }
     void refreshRef.current()
   }, [appliedSearch, status, page])
 
