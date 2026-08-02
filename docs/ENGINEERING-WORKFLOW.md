@@ -233,6 +233,24 @@ detect` over the entire history. The weekly Monday scan is the full one, and
   `auth.role()`. And check the GRANT as well as the body: the same idiom was
   harmless in three sibling functions purely because they had no anon grant.
 
+- **⚠ THE SURFACE IS NOW ENUMERATED — `pnpm authz:check`.** The law below was
+  written down after the third instance and instances four, five and six shipped
+  anyway. Not for lack of knowing it: answering "can a client write this column?"
+  means cross-referencing RLS policies, function GRANTs and function bodies, and
+  Postgres defaults to open on the first two (`EXECUTE` to PUBLIC automatically;
+  an UPDATE policy is COLUMN-BLIND unless you say otherwise). Nobody holds three
+  mechanisms in their head, so nobody checked.
+  `supabase/authorization-surface.json` records every policy, grant, writable
+  column and SECURITY DEFINER flag; CI fails on DRIFT. A new policy cannot land
+  without appearing as a reviewable diff. Regenerate with `pnpm authz:write` and
+  **commit it** — the diff IS the review.
+  ⚠ It is a drift detector, not a judge: it proves nothing NEW slipped in, and
+  has no opinion on what is already there. What is already there is listed in
+  PROGRESS under Known risks, and it is worse than anyone assumed —
+  **seven client-reachable write policies across five tables, every one
+  column-blind.** It also cannot see INSIDE a function body; `cancel_booking`
+  writing `p_cancelled_by` verbatim would still slip past it. The
+  identity-parameter flag is the cheap partial defence there.
 - **⚠ THE GENERAL LAW, learned four times: any fact with MONEY, STATE or
   IDENTITY consequences is SERVER-DERIVED. Clients supply identities, never
   values.** The four instances, each found the same way:

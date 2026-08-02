@@ -83,6 +83,35 @@ jobs:
         uses: github/codeql-action/analyze@v3
 
   # ────────────────────────────────────────────────
+  # Authorization surface — who may read/write what, asserted rather than hoped
+  #
+  # Six security holes have shipped, every one the same shape: a value the client
+  # had no business asserting reached the database unchecked. The law against it
+  # is written down (ENGINEERING-WORKFLOW §5) and it kept happening, because
+  # answering "can a client write this column?" means cross-referencing RLS
+  # policies, function grants and function bodies — and Postgres defaults to
+  # open on the first two. This job enumerates the surface and fails on DRIFT, so
+  # a new policy or grant cannot land without showing up as a reviewable diff.
+  # ────────────────────────────────────────────────
+  authorization-surface:
+    name: Authorization Surface
+    runs-on: ubuntu-latest
+    env:
+      # Job-level: the `secrets` context is not available in a step `if`, and a
+      # step's own `env:` is not in scope for that step's own `if`.
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Check the authorization surface against the committed baseline
+        if: ${{ env.SUPABASE_DB_URL != '' }}
+        run: node scripts/check-authorization-surface.mjs
+      - name: Report when the check could not run
+        if: ${{ env.SUPABASE_DB_URL == '' }}
+        run: echo "::warning::SUPABASE_DB_URL is not set — the authorization surface was NOT verified."
+
+  # ────────────────────────────────────────────────
   # Custom check: service role key must never be in client code (web OR mobile)
   # ────────────────────────────────────────────────
   client-secret-guard:

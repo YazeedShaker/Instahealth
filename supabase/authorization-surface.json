@@ -1,0 +1,715 @@
+{
+  "tables": [
+    {
+      "table": "admin_users",
+      "rlsEnabled": true,
+      "rlsForced": false,
+      "writableColumns": {},
+      "policies": [
+        {
+          "policy": "admin_users: admin only",
+          "command": "ALL",
+          "roles": "PUBLIC",
+          "using": "(get_user_role() = 'admin'::text)",
+          "withCheck": "-"
+        }
+      ]
+    },
+    {
+      "table": "booking_services",
+      "rlsEnabled": true,
+      "rlsForced": false,
+      "writableColumns": {},
+      "policies": [
+        {
+          "policy": "booking_services: see if booking is accessible",
+          "command": "SELECT",
+          "roles": "PUBLIC",
+          "using": "(EXISTS ( SELECT 1\n   FROM bookings b\n  WHERE ((b.id = booking_services.booking_id) AND ((b.user_id = auth.uid()) OR (b.branch_id = ANY (get_provider_branch_ids())) OR (get_user_role() = 'admin'::text)))))",
+          "withCheck": "-"
+        }
+      ]
+    },
+    {
+      "table": "bookings",
+      "rlsEnabled": true,
+      "rlsForced": false,
+      "writableColumns": {
+        "anon": [
+          "arrived_at",
+          "booking_ref",
+          "branch_id",
+          "cancellation_reason",
+          "cancelled_at",
+          "cancelled_by",
+          "closed_by",
+          "commission_amount",
+          "commission_rate",
+          "completed_at",
+          "confirmed_at",
+          "created_at",
+          "id",
+          "no_show_at",
+          "patient_notes",
+          "payment_method",
+          "payment_status",
+          "paymob_order_id",
+          "slot_id",
+          "status",
+          "total_amount",
+          "updated_at",
+          "user_id"
+        ],
+        "authenticated": [
+          "arrived_at",
+          "booking_ref",
+          "branch_id",
+          "cancellation_reason",
+          "cancelled_at",
+          "cancelled_by",
+          "closed_by",
+          "commission_amount",
+          "commission_rate",
+          "completed_at",
+          "confirmed_at",
+          "created_at",
+          "id",
+          "no_show_at",
+          "patient_notes",
+          "payment_method",
+          "payment_status",
+          "paymob_order_id",
+          "slot_id",
+          "status",
+          "total_amount",
+          "updated_at",
+          "user_id"
+        ]
+      },
+      "policies": [
+        {
+          "policy": "bookings: admin full access",
+          "command": "ALL",
+          "roles": "PUBLIC",
+          "using": "(get_user_role() = 'admin'::text)",
+          "withCheck": "-"
+        },
+        {
+          "policy": "bookings: patient sees own",
+          "command": "SELECT",
+          "roles": "PUBLIC",
+          "using": "((user_id = auth.uid()) OR (branch_id = ANY (get_provider_branch_ids())) OR (get_user_role() = 'admin'::text))",
+          "withCheck": "-"
+        },
+        {
+          "policy": "bookings: provider updates status",
+          "command": "UPDATE",
+          "roles": "PUBLIC",
+          "using": "((branch_id = ANY (get_provider_branch_ids())) OR (get_user_role() = 'admin'::text))",
+          "withCheck": "-"
+        }
+      ]
+    },
+    {
+      "table": "branch_service_price_history",
+      "rlsEnabled": true,
+      "rlsForced": false,
+      "writableColumns": {},
+      "policies": [
+        {
+          "policy": "price history: branch staff read own",
+          "command": "SELECT",
+          "roles": "PUBLIC",
+          "using": "(EXISTS ( SELECT 1\n   FROM branch_services bs\n  WHERE ((bs.id = branch_service_price_history.branch_service_id) AND (COALESCE((bs.branch_id = ANY (get_provider_branch_ids())), false) OR (get_user_role() = 'admin'::text)))))",
+          "withCheck": "-"
+        }
+      ]
+    },
+    {
+      "table": "branch_services",
+      "rlsEnabled": true,
+      "rlsForced": false,
+      "writableColumns": {},
+      "policies": [
+        {
+          "policy": "branch_services: admin full access",
+          "command": "ALL",
+          "roles": "PUBLIC",
+          "using": "(get_user_role() = 'admin'::text)",
+          "withCheck": "-"
+        },
+        {
+          "policy": "branch_services: public read",
+          "command": "SELECT",
+          "roles": "PUBLIC",
+          "using": "true",
+          "withCheck": "-"
+        }
+      ]
+    },
+    {
+      "table": "branches",
+      "rlsEnabled": true,
+      "rlsForced": false,
+      "writableColumns": {
+        "anon": [
+          "address_ar",
+          "address_en",
+          "created_at",
+          "district",
+          "governorate",
+          "holiday_message_ar",
+          "holiday_mode",
+          "id",
+          "instahealth_slot_allocation",
+          "is_active",
+          "lat",
+          "lng",
+          "name_ar",
+          "name_en",
+          "operating_hours",
+          "phone",
+          "photos",
+          "provider_id",
+          "rating",
+          "review_count",
+          "slot_duration_minutes",
+          "updated_at",
+          "whatsapp"
+        ],
+        "authenticated": [
+          "address_ar",
+          "address_en",
+          "created_at",
+          "district",
+          "governorate",
+          "holiday_message_ar",
+          "holiday_mode",
+          "id",
+          "instahealth_slot_allocation",
+          "is_active",
+          "lat",
+          "lng",
+          "name_ar",
+          "name_en",
+          "operating_hours",
+          "phone",
+          "photos",
+          "provider_id",
+          "rating",
+          "review_count",
+          "slot_duration_minutes",
+          "updated_at",
+          "whatsapp"
+        ]
+      },
+      "policies": [
+        {
+          "policy": "branches: admin full access",
+          "command": "ALL",
+          "roles": "PUBLIC",
+          "using": "(get_user_role() = 'admin'::text)",
+          "withCheck": "-"
+        },
+        {
+          "policy": "branches: public read active",
+          "command": "SELECT",
+          "roles": "PUBLIC",
+          "using": "((is_active = true) OR (get_user_role() = ANY (ARRAY['admin'::text, 'provider'::text])))",
+          "withCheck": "-"
+        },
+        {
+          "policy": "branches: provider updates own branches",
+          "command": "UPDATE",
+          "roles": "PUBLIC",
+          "using": "((id = ANY (get_provider_branch_ids())) OR (get_user_role() = 'admin'::text))",
+          "withCheck": "-"
+        }
+      ]
+    },
+    {
+      "table": "notifications",
+      "rlsEnabled": true,
+      "rlsForced": false,
+      "writableColumns": {},
+      "policies": [
+        {
+          "policy": "notifications: admin full access",
+          "command": "ALL",
+          "roles": "PUBLIC",
+          "using": "(get_user_role() = 'admin'::text)",
+          "withCheck": "-"
+        },
+        {
+          "policy": "notifications: user sees own",
+          "command": "SELECT",
+          "roles": "PUBLIC",
+          "using": "((user_id = auth.uid()) OR (get_user_role() = 'admin'::text))",
+          "withCheck": "-"
+        }
+      ]
+    },
+    {
+      "table": "payments",
+      "rlsEnabled": true,
+      "rlsForced": false,
+      "writableColumns": {},
+      "policies": [
+        {
+          "policy": "payments: admin full access",
+          "command": "ALL",
+          "roles": "PUBLIC",
+          "using": "(get_user_role() = 'admin'::text)",
+          "withCheck": "-"
+        },
+        {
+          "policy": "payments: patient sees own",
+          "command": "SELECT",
+          "roles": "PUBLIC",
+          "using": "((EXISTS ( SELECT 1\n   FROM bookings b\n  WHERE ((b.id = payments.booking_id) AND (b.user_id = auth.uid())))) OR (get_user_role() = 'admin'::text))",
+          "withCheck": "-"
+        }
+      ]
+    },
+    {
+      "table": "provider_users",
+      "rlsEnabled": true,
+      "rlsForced": false,
+      "writableColumns": {},
+      "policies": [
+        {
+          "policy": "provider_users: admin full access",
+          "command": "ALL",
+          "roles": "PUBLIC",
+          "using": "(get_user_role() = 'admin'::text)",
+          "withCheck": "-"
+        },
+        {
+          "policy": "provider_users: see own record",
+          "command": "SELECT",
+          "roles": "PUBLIC",
+          "using": "((auth_user_id = auth.uid()) OR (get_user_role() = 'admin'::text))",
+          "withCheck": "-"
+        }
+      ]
+    },
+    {
+      "table": "providers",
+      "rlsEnabled": true,
+      "rlsForced": false,
+      "writableColumns": {},
+      "policies": [
+        {
+          "policy": "providers: admin full access",
+          "command": "ALL",
+          "roles": "PUBLIC",
+          "using": "(get_user_role() = 'admin'::text)",
+          "withCheck": "-"
+        },
+        {
+          "policy": "providers: public read active",
+          "command": "SELECT",
+          "roles": "PUBLIC",
+          "using": "((is_active = true) OR (get_user_role() = 'admin'::text))",
+          "withCheck": "-"
+        }
+      ]
+    },
+    {
+      "table": "reviews",
+      "rlsEnabled": true,
+      "rlsForced": false,
+      "writableColumns": {
+        "anon": [
+          "booking_id",
+          "branch_id",
+          "comment",
+          "created_at",
+          "id",
+          "is_flagged",
+          "is_verified",
+          "rating",
+          "updated_at",
+          "user_id"
+        ],
+        "authenticated": [
+          "booking_id",
+          "branch_id",
+          "comment",
+          "created_at",
+          "id",
+          "is_flagged",
+          "is_verified",
+          "rating",
+          "updated_at",
+          "user_id"
+        ]
+      },
+      "policies": [
+        {
+          "policy": "reviews: patient inserts own",
+          "command": "INSERT",
+          "roles": "PUBLIC",
+          "using": "-",
+          "withCheck": "((user_id = auth.uid()) AND (EXISTS ( SELECT 1\n   FROM bookings b\n  WHERE ((b.id = reviews.booking_id) AND (b.user_id = auth.uid()) AND ((b.status)::text = 'completed'::text)))))"
+        },
+        {
+          "policy": "reviews: public read unflagged",
+          "command": "SELECT",
+          "roles": "PUBLIC",
+          "using": "((is_flagged = false) OR (get_user_role() = 'admin'::text))",
+          "withCheck": "-"
+        },
+        {
+          "policy": "reviews: patient updates own",
+          "command": "UPDATE",
+          "roles": "PUBLIC",
+          "using": "((user_id = auth.uid()) OR (get_user_role() = 'admin'::text))",
+          "withCheck": "-"
+        }
+      ]
+    },
+    {
+      "table": "service_categories",
+      "rlsEnabled": true,
+      "rlsForced": false,
+      "writableColumns": {},
+      "policies": [
+        {
+          "policy": "categories: admin full access",
+          "command": "ALL",
+          "roles": "PUBLIC",
+          "using": "(get_user_role() = 'admin'::text)",
+          "withCheck": "-"
+        },
+        {
+          "policy": "categories: public read active",
+          "command": "SELECT",
+          "roles": "PUBLIC",
+          "using": "((is_active = true) OR (get_user_role() = 'admin'::text))",
+          "withCheck": "-"
+        }
+      ]
+    },
+    {
+      "table": "services",
+      "rlsEnabled": true,
+      "rlsForced": false,
+      "writableColumns": {},
+      "policies": [
+        {
+          "policy": "services: admin full access",
+          "command": "ALL",
+          "roles": "PUBLIC",
+          "using": "(get_user_role() = 'admin'::text)",
+          "withCheck": "-"
+        },
+        {
+          "policy": "services: public read active",
+          "command": "SELECT",
+          "roles": "PUBLIC",
+          "using": "((is_active = true) OR (get_user_role() = 'admin'::text))",
+          "withCheck": "-"
+        }
+      ]
+    },
+    {
+      "table": "slot_holds",
+      "rlsEnabled": true,
+      "rlsForced": false,
+      "writableColumns": {},
+      "policies": [
+        {
+          "policy": "slot_holds: patient deletes own",
+          "command": "DELETE",
+          "roles": "PUBLIC",
+          "using": "((user_id = auth.uid()) OR (get_user_role() = 'admin'::text))",
+          "withCheck": "-"
+        },
+        {
+          "policy": "slot_holds: patient own",
+          "command": "SELECT",
+          "roles": "PUBLIC",
+          "using": "((user_id = auth.uid()) OR (get_user_role() = 'admin'::text))",
+          "withCheck": "-"
+        }
+      ]
+    },
+    {
+      "table": "slots",
+      "rlsEnabled": true,
+      "rlsForced": false,
+      "writableColumns": {
+        "anon": [
+          "booked_count",
+          "branch_id",
+          "capacity",
+          "created_at",
+          "id",
+          "is_blocked",
+          "slot_date",
+          "slot_time"
+        ],
+        "authenticated": [
+          "booked_count",
+          "branch_id",
+          "capacity",
+          "created_at",
+          "id",
+          "is_blocked",
+          "slot_date",
+          "slot_time"
+        ]
+      },
+      "policies": [
+        {
+          "policy": "slots: admin full access",
+          "command": "ALL",
+          "roles": "PUBLIC",
+          "using": "(get_user_role() = 'admin'::text)",
+          "withCheck": "-"
+        },
+        {
+          "policy": "slots: patient sees available only",
+          "command": "SELECT",
+          "roles": "PUBLIC",
+          "using": "(((is_blocked = false) AND (booked_count < capacity)) OR (branch_id = ANY (get_provider_branch_ids())) OR (get_user_role() = 'admin'::text))",
+          "withCheck": "-"
+        },
+        {
+          "policy": "slots: provider updates own",
+          "command": "UPDATE",
+          "roles": "PUBLIC",
+          "using": "((branch_id = ANY (get_provider_branch_ids())) OR (get_user_role() = 'admin'::text))",
+          "withCheck": "-"
+        }
+      ]
+    },
+    {
+      "table": "users",
+      "rlsEnabled": true,
+      "rlsForced": false,
+      "writableColumns": {
+        "anon": [
+          "created_at",
+          "date_of_birth",
+          "email",
+          "gender",
+          "id",
+          "name_ar",
+          "name_en",
+          "phone",
+          "preferred_language",
+          "sms_reminders",
+          "updated_at"
+        ],
+        "authenticated": [
+          "created_at",
+          "date_of_birth",
+          "email",
+          "gender",
+          "id",
+          "name_ar",
+          "name_en",
+          "phone",
+          "preferred_language",
+          "sms_reminders",
+          "updated_at"
+        ]
+      },
+      "policies": [
+        {
+          "policy": "users: admin full access",
+          "command": "ALL",
+          "roles": "PUBLIC",
+          "using": "(get_user_role() = 'admin'::text)",
+          "withCheck": "-"
+        },
+        {
+          "policy": "users: patient inserts own row",
+          "command": "INSERT",
+          "roles": "PUBLIC",
+          "using": "-",
+          "withCheck": "(id = auth.uid())"
+        },
+        {
+          "policy": "users: patient sees own row",
+          "command": "SELECT",
+          "roles": "PUBLIC",
+          "using": "((id = auth.uid()) OR (get_user_role() = 'admin'::text))",
+          "withCheck": "-"
+        },
+        {
+          "policy": "users: patient updates own row",
+          "command": "UPDATE",
+          "roles": "PUBLIC",
+          "using": "(id = auth.uid())",
+          "withCheck": "-"
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "signature": "auto_close_stale_bookings()",
+      "securityDefiner": true,
+      "config": "search_path=public",
+      "executeGrants": "postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
+      "signature": "broadcast_branch_booking_change()",
+      "securityDefiner": true,
+      "config": "search_path=public",
+      "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
+      "signature": "broadcast_slot_hold_change()",
+      "securityDefiner": true,
+      "config": "-",
+      "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
+      "signature": "cancel_booking(uuid,text,character varying)",
+      "securityDefiner": true,
+      "config": "search_path=public",
+      "executeGrants": "authenticated,postgres,service_role",
+      "takesIdentityParameter": true
+    },
+    {
+      "signature": "cleanup_expired_holds()",
+      "securityDefiner": true,
+      "config": "-",
+      "executeGrants": "postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
+      "signature": "confirm_booking(uuid,character varying,character varying,character varying,jsonb)",
+      "securityDefiner": true,
+      "config": "-",
+      "executeGrants": "postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
+      "signature": "create_pending_booking(uuid,uuid[],text)",
+      "securityDefiner": true,
+      "config": "search_path=public",
+      "executeGrants": "authenticated,postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
+      "signature": "create_slot_hold(uuid)",
+      "securityDefiner": true,
+      "config": "search_path=public",
+      "executeGrants": "authenticated,postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
+      "signature": "enforce_slot_hold_capacity()",
+      "securityDefiner": false,
+      "config": "-",
+      "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
+      "signature": "generate_branch_slots(uuid,date,date)",
+      "securityDefiner": true,
+      "config": "-",
+      "executeGrants": "postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
+      "signature": "get_branch_bookings_for_date(uuid,date,text,text,integer,integer)",
+      "securityDefiner": true,
+      "config": "search_path=public",
+      "executeGrants": "authenticated,postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
+      "signature": "get_branch_services_for_editor(uuid)",
+      "securityDefiner": true,
+      "config": "search_path=public",
+      "executeGrants": "authenticated,postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
+      "signature": "get_branch_slots(uuid,date,date)",
+      "securityDefiner": true,
+      "config": "-",
+      "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
+      "signature": "get_patient_bookings()",
+      "securityDefiner": true,
+      "config": "search_path=public",
+      "executeGrants": "authenticated,postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
+      "signature": "get_provider_branch_ids()",
+      "securityDefiner": true,
+      "config": "-",
+      "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
+      "signature": "get_user_role()",
+      "securityDefiner": true,
+      "config": "-",
+      "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
+      "signature": "handle_new_user()",
+      "securityDefiner": true,
+      "config": "search_path=public",
+      "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
+      "signature": "is_internal_caller()",
+      "securityDefiner": false,
+      "config": "search_path=public",
+      "executeGrants": "authenticated,postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
+      "signature": "mark_booking_outcome(uuid,character varying)",
+      "securityDefiner": true,
+      "config": "search_path=public",
+      "executeGrants": "authenticated,postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
+      "signature": "recalculate_branch_rating()",
+      "securityDefiner": false,
+      "config": "-",
+      "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
+      "signature": "set_booking_ref()",
+      "securityDefiner": false,
+      "config": "-",
+      "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
+      "signature": "set_updated_at()",
+      "securityDefiner": false,
+      "config": "-",
+      "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
+      "signature": "update_branch_service(uuid,integer,boolean)",
+      "securityDefiner": true,
+      "config": "search_path=public",
+      "executeGrants": "authenticated,postgres,service_role",
+      "takesIdentityParameter": false
+    }
+  ]
+}

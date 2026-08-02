@@ -318,6 +318,19 @@ This is an Arabic-first product. Get this wrong and the whole app feels broken t
   `service_role` alone (migration 20260727111326); the ONLY caller is the
   `settle-payment` Edge Function. Clients have no grant on it and no INSERT
   policy on `payments` — a booking cannot be confirmed from the app.
+- **⚠ THE WRITE-PATH RULE — clients do not write domain tables directly.** Every write with
+  money, state or identity consequences goes through a SECURITY DEFINER function that DERIVES
+  those values from `auth.uid()` and the caller's real membership (`create_pending_booking`,
+  `update_branch_service`, `mark_booking_outcome`, `create_slot_hold`). It follows that a domain
+  table should have **NO client INSERT/UPDATE policy at all** — an RLS policy beside an RPC is
+  decoration, and worse, an RLS policy scopes ROWS while saying nothing about COLUMNS.
+  **A column-blind UPDATE policy is the single most repeated mistake in this schema.**
+- **The authorization surface is enumerated and asserted.** `pnpm authz:check` (and the
+  Authorization Surface CI job) diffs every policy, grant, writable column and SECURITY DEFINER
+  flag against `supabase/authorization-surface.json`. Adding a policy or grant without recording
+  it fails CI. Regenerate deliberately with `pnpm authz:write`, and expect the diff to be read in
+  review — that file is the answer to "who may write this?", which used to require
+  cross-referencing three disconnected mechanisms.
 - **Slot holds are taken as the CALLER, never as a named user.** `create_slot_hold(p_slot_id)`
   derives the holder from `auth.uid()` inside the function and is granted to `authenticated` +
   `service_role` only (migration 20260801005955). It used to take `p_user_id` and carry an anon
