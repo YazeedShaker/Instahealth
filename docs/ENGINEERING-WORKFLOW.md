@@ -70,6 +70,24 @@ pnpm turbo build --force  # web build + mobile Metro export (iOS+Android)
 pnpm audit --audit-level=high
 ```
 
+- **⚠ THE FULL SEQUENCE IS THE MERGE GATE, NOT THE EDIT GATE.** Running all of
+  it after every small edit costs ~5 minutes a go and was measured at roughly
+  40 minutes of pure ceremony across three PRs in one day. While ITERATING, run
+  only what the change can break:
+
+  ```
+  pnpm turbo lint typecheck --filter=@instahealth/web   # touched one app
+  pnpm turbo test:unit --filter=@instahealth/core       # touched core
+  pnpm format                                           # touched anything
+  ```
+
+  Then run the FULL sequence once, before pushing. The rule that matters is
+  "never discover red in CI", and one complete pass before the push satisfies it
+  — twenty partial passes during the edit do not make it truer.
+  ⚠ `pnpm format` still comes first in the full pass: Prettier is its own CI gate
+  and it rewrites files, so running it after `format:check` invalidates the check
+  you just did.
+
 - `--max-warnings=0` and `--coverage` are baked INTO workspace scripts.
   **Never** invoke `pnpm turbo X -- --flag` — pnpm swallows the `--` and turbo
   errors out (this broke CI on day one; the scripts pattern is the fix).
@@ -141,6 +159,16 @@ detect` over the entire history. The weekly Monday scan is the full one, and
   block — but a permanently red scanner would have hidden a real one just as
   well. Same family as the skipped suite in §9: **check the scanners nothing is
   waiting on.** Fixed by widening `.gitleaks.toml`'s placeholder allowlist.
+- **⚠ ONE E2E RUN AT A TIME, REPO-WIDE.** Workflow-level `concurrency` is keyed
+  on `github.ref`, which cancels superseded runs of the SAME branch and does
+  nothing across branches — but the E2E job seeds and then CONSUMES a shared dev
+  database. A push to main and a PR run overlapped and ate each other's
+  fixtures: main's E2E ran 13:32:59–13:36:29 while a PR's started 13:37:50 and
+  found ONE actionable booking where four had just been seeded. The job now
+  carries its own `concurrency: e2e-web-shared-dev-database` with
+  `cancel-in-progress: false`, so runs QUEUE — cancelling main's verification
+  because a PR arrived would be exactly backwards. **The durable fix is a
+  per-run database**; this is the cheap version that removes the collisions.
 - **Secret scanners have a MERGE-COMMIT blind spot.** gitleaks runs
   `git log -p -U0 --full-history --all`, and `git log -p` emits **no diff for a
   merge commit** — so conflict-resolution content, which can differ from BOTH
@@ -308,6 +336,41 @@ detect` over the entire history. The weekly Monday scan is the full one, and
   schema is service-owned). Retry after a minute; it self-heals.
 
 ## 6 · Mobile (Expo) specifics
+
+- **⚠ NODE VERSION: use 20 (`.nvmrc`). The toolchain does not agree with itself,
+  so this is a real constraint, not a preference.**
+
+  | consumer                | wants                    | evidence                                                               |
+  | ----------------------- | ------------------------ | ---------------------------------------------------------------------- |
+  | Expo CLI 54             | **breaks on 24**         | `expo start` dies with `TypeError: Body is unusable`                   |
+  | `@supabase/supabase-js` | declares `node >=22.0.0` | throws `native WebSocket not found` when a client is built in Node ≤21 |
+  | CI                      | runs 20                  | build, unit and E2E all green                                          |
+
+  On Node 24, `expo start` fails inside Expo's cached-fetch wrapper: it reads the
+  response body to write its disk cache, then hands the SAME consumed `Response`
+  back for `.json()`, which Node 24's undici forbids. It only bites on a cache
+  MISS, so it works until the `~/.expo` TTL expires — and the stack trace names
+  undici and never mentions Node. Escape hatch if you are stuck on 24:
+  `EXPO_NO_CACHE=1 npx expo start` (that flag makes `createCachedFetch` return
+  the unwrapped fetch, so the double read never happens).
+
+  Conversely, any **Node script that constructs a Supabase client** — the
+  `verify_*.mjs` proofs — needs 22+. Run those with an explicit binary rather
+  than switching the whole shell:
+  `~/AppData/Roaming/nvm/v24.x.x/node.exe scripts/whatever.mjs`.
+
+  **`engines` is `>=20 <23` and deliberately NOT enforced** (`engine-strict`
+  stays off). Turning it on would fail `pnpm install` outright, because
+  `@supabase/supabase-js` declares `>=22` and CI plus Expo both need 20. Node 22
+  is the likely single answer to both and is worth testing when the SDK upgrade
+  lands; until someone verifies Expo on 22, 20 is the version we know works.
+
+- **Switching Node invalidates Metro's cache — expect one noisy start.**
+  `metro-file-map` persists via `v8.serialize()`, whose format is
+  V8-version-specific, so after any Node change you get
+  `Error while reading cache… Unable to deserialize cloned data… falling back to
+a full crawl`. It is benign and self-healing. To silence it, delete
+  `%TEMP%/metro-cache` and `%TEMP%/metro-file-map-*` with the dev server stopped.
 
 - **Pinned to Expo SDK 54 on purpose** — the App Store's Expo Go build is
   54-only and it's the founder's only test device path until the Apple
@@ -626,14 +689,12 @@ Two more, both found while capturing P02's screenshots:
 
   The dev row is the lesson: the same test passed with AND without the fix in
   dev, so a state-only assertion is a guard with no teeth in the only place it
-  runs automatically. `E2E_PROD=1 pnpm test:e2e` runs the suite against a
-  production build and is FASTER that way (1.1m vs 1.8m — no on-demand
-  compilation) plus ~40s to build. **Use it whenever you touch navigation,
-  caching or realtime.** ⚠ CI still runs `pnpm dev`: switching it over is queued
-  for the refactor branch alongside the shared-fixture-database work, so that
-  one piece of test infrastructure changes at a time. Until then the
-  navigation-staleness assertions are documentation plus a local guard, and that
-  is stated in the test itself rather than left to be discovered.
+  runs automatically. **CI therefore builds and starts the real thing**
+  (`playwright.config.ts`); locally the default stays `pnpm dev` for a fast
+  authoring loop, with `E2E_PROD=1 pnpm test:e2e` to opt in. It is FASTER that
+  way (1.1m vs 1.8m — no on-demand compilation) plus ~40s to build, so the change
+  costs nothing. **Use the flag locally whenever you touch navigation, caching or
+  realtime.**
   ⚠ Counting the revalidation REQUEST was tried as an environment-independent
   proxy and does not work — the focus listener satisfies it in dev even with the
   fix removed. There is no dev-side substitute for running the real build.

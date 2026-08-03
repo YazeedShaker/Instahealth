@@ -36,6 +36,11 @@ function loadEnvLocal(): void {
 
 loadEnvLocal()
 
+/** CI always uses the real build; locally it is opt-in. Defined once so the
+ * COMMAND and its TIMEOUT can never disagree — a dev-length budget against a
+ * cold `next build` would read as a hung server rather than a short budget. */
+const USE_PRODUCTION_BUILD = process.env.CI !== undefined || process.env.E2E_PROD === '1'
+
 export default defineConfig({
   testDir: './e2e',
   // Fidelity captures are a LOCAL AUTHORING TOOL, not a test suite — their own
@@ -70,17 +75,35 @@ export default defineConfig({
     baseURL: 'http://localhost:3000',
   },
   webServer: {
-    // ⚠ `next dev` CANNOT show a whole class of Router-Cache bug this dashboard
-    // has now shipped twice — see ENGINEERING-WORKFLOW §9. Running the suite
-    // against a PRODUCTION build fixes that (and is faster: 1.1m vs 1.8m, no
-    // on-demand compilation). Verified green locally: `E2E_PROD=1 pnpm test:e2e`.
+    // ⚠ CI RUNS AGAINST A PRODUCTION BUILD, because `next dev` CANNOT show a
+    // whole class of Router-Cache bug this dashboard has already shipped twice.
     //
-    // NOT switched on for CI yet — deferred to the refactor branch with the
-    // shared-fixture-database work, so one infrastructure change lands at a time.
-    // Use E2E_PROD=1 locally whenever you touch navigation, caching or realtime.
-    command: process.env.E2E_PROD === '1' ? 'pnpm build && pnpm start' : 'pnpm dev',
+    // The concrete case: after recording an outcome, coming back to Today
+    // repainted the PRE-ACTION snapshot — the chip reverted and «وصل» reappeared
+    // on a booking the database considered completed. Next serves back/forward
+    // (and, in a production build, ordinary in-app navigation) from the client
+    // Router Cache; `export const dynamic = 'force-dynamic'` only stops SERVER
+    // caching, which is the trap — the page looks correctly configured.
+    //
+    // Measured, sampling 10s after coming back:
+    //   production, unfixed → stale the whole sample, ZERO refetches
+    //   production, fixed   → corrects in ~280ms
+    //   `next dev`, either  → corrects in ~295ms; the bug CANNOT occur
+    //
+    // That last row is why this matters: the regression test passed with AND
+    // without the fix under `pnpm dev`, i.e. a guard with no teeth in the only
+    // place it runs automatically. Proven the other way too — `E2E_PROD=1` with
+    // the fix reverted fails `Expected "completed", Received "confirmed"`.
+    //
+    // Cost is negative: the suite is FASTER against the build (1.1m vs 1.8m — no
+    // on-demand compilation), plus ~40s to build.
+    //
+    // Locally the default stays `pnpm dev` for a fast authoring loop; opt in with
+    // `E2E_PROD=1 pnpm test:e2e` when touching navigation, caching or realtime.
+    command: USE_PRODUCTION_BUILD ? 'pnpm build && pnpm start' : 'pnpm dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
-    timeout: process.env.E2E_PROD === '1' ? 420_000 : 180_000,
+    // A cold `next build` on a runner needs materially more than a dev boot.
+    timeout: USE_PRODUCTION_BUILD ? 420_000 : 180_000,
   },
 })
