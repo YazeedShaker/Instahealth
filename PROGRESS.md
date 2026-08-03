@@ -75,6 +75,59 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 
 ## Shipped
 
+### 2026-08-03 · REFACTOR 2/N — the client write surface is closed
+
+The sweep found seven client-reachable write policies across five tables, every
+one column-blind. All seven are now dealt with, and the surface the tool records
+shrank accordingly: **25 standing review items → 16, with zero COLUMN-BLIND
+WRITE warnings left.**
+
+**Five had no consumer at all.** Searching every write call in `apps/`,
+`packages/` and `supabase/functions/` turned up nothing writing `bookings`,
+`slots`, `branches` or `reviews` from a client — every real write already goes
+through a SECURITY DEFINER function (`mark_booking_outcome`, `cancel_booking`,
+`confirm_booking`, `create_pending_booking`, `update_branch_service`,
+`generate_branch_slots`) or through an Edge Function on the service role, which
+bypasses RLS entirely. So they were dropped outright rather than replaced. When
+P05 needs to edit a branch profile and F09 needs to write a review, each gets a
+writer function in the `update_branch_service` shape.
+
+**Two are load-bearing and were narrowed instead.** `users` INSERT/UPDATE back
+`ensureProfile` (which creates the patient row on first sign-in — there is
+deliberately no trigger for phone signups) and `updateProfileName`. RLS cannot
+restrict columns, so the fix is column GRANTs: a patient may INSERT `id, phone`
+and UPDATE `name_ar, name_en, date_of_birth, gender, preferred_language,
+sms_reminders` — and nothing else. **`phone` is deliberately INSERT-only**: it is
+the OTP identity, so changing it is an auth operation, not a profile edit. `anon`
+lost its write grants on `users` entirely.
+
+**⚠ A near-miss worth recording.** The first search for consumers grepped for
+`.from('users')` and `.update(` on the SAME line, found nothing, and would have
+concluded "drop everything" — which would have broken sign-in. The calls are
+chained across lines. **Verify a consumer before removing its door**, and use a
+multiline search when the codebase chains.
+
+**Verified against the LIVE dev DB — 9 Node checks, all with the anon key:**
+a partner can no longer rewrite its own branch (rating, allocation) · nor mark
+its own booking paid or zero the commission · nor inflate its own slot capacity ·
+a patient can no longer insert a review directly (`42501`) nor un-flag/self-verify
+one · **a patient CAN still set their own name** · but not their phone (`42501`) ·
+never another patient's row · and the first-sign-in INSERT grant survives, refused
+only by the primary key (`23505`) rather than by permission.
+
+**Two bugs in the checker itself, both found by using it:**
+
+- The inventory OR'd INSERT and UPDATE grants, so `users.phone` read as
+  _writable_ when it is INSERT-only. On a security baseline that distinction is
+  the entire point, so the two are now recorded separately.
+- Separating them then broke the COLUMN-BLIND warning **silently** — `review()`
+  expected a flat array and the new shape is `{insert, update}`, so the warning
+  stopped firing for every table at once. Exactly the failure mode the tool
+  exists to prevent, in the tool. Fixed, plus a `columnCount` per table so it can
+  distinguish a BLANKET grant (every column — the dangerous shape) from a SCOPED
+  one, and re-proved by simulating the closed `branches` hole coming back:
+  `COLUMN-BLIND WRITE branches · authenticated · UPDATE — 23/23 columns`, exit 1.
+
 ### 2026-08-02 · REFACTOR 1/N — the authorization surface is enumerated and asserted
 
 **Six security holes had shipped, all the same shape**, and the law against them
@@ -1929,12 +1982,16 @@ _Next entry after SETUP-02._
   the holder comes from `auth.uid()`. It was worse than this entry described: the grant
   reached `anon`, and the body's `DELETE … WHERE user_id = p_user_id` meant a caller could
   destroy a stranger's hold, not merely create one in their name.
-- **⚠⚠⚠ SEVEN CLIENT-REACHABLE WRITE POLICIES, ACROSS FIVE TABLES, EVERY ONE
-  COLUMN-BLIND.** The `branches` hole below was not the exception — it was the
-  first one anyone looked for. The authorization-surface sweep (2026-08-02)
-  enumerated the rest. Supabase grants every column to `anon`/`authenticated` by
-  default and RLS is the only gate, so wherever a write policy matches, **all
-  columns are writable**:
+- ✅ ~~SEVEN CLIENT-REACHABLE WRITE POLICIES, ACROSS FIVE TABLES, EVERY ONE
+  COLUMN-BLIND~~ — **CLOSED 2026-08-03** (migration `20260803160517`). Five had
+  no consumer at all and were dropped; the two load-bearing `users` policies were
+  kept and narrowed by column GRANT. Proven with 9 Node checks. Kept below for
+  the record, because the SHAPE is what matters:
+
+  The `branches` hole was not the exception — it was the first one anyone looked
+  for. The authorization-surface sweep (2026-08-02) enumerated the rest. Supabase
+  grants every column to `anon`/`authenticated` by default and RLS is the only
+  gate, so wherever a write policy matched, **all columns were writable**:
 
   | table      | policy                           | who          | what that lets them set                                                 |
   | ---------- | -------------------------------- | ------------ | ----------------------------------------------------------------------- |
@@ -1953,10 +2010,14 @@ _Next entry after SETUP-02._
   must close before partner staff get real accounts, and certainly before PayTabs
   goes live.**
 
-  The fix is the write-path rule (CLAUDE.md §8): delete the client write policies
-  and route each through a SECURITY DEFINER function that derives the values, in
-  the `update_branch_service` shape. Founder has chosen the **writer-function**
-  route over a column whitelist. Queued as the next PR.
+  **How it closed:** four of the five tables needed nothing at all — a search of
+  every write call in `apps/`, `packages/` and `supabase/functions/` found NO
+  client writes to `bookings`, `slots`, `branches` or `reviews`. Every real write
+  already went through a SECURITY DEFINER function or an Edge Function on the
+  service role, which bypasses RLS. Those policies were pure attack surface, so
+  they were dropped outright. When P05 needs to edit a branch profile and F09
+  needs to write a review, each gets a writer function in the
+  `update_branch_service` shape — the write-path rule, now in CLAUDE.md §8.
 
 - **⚠⚠ `branches` HAS A COLUMN-BLIND UPDATE POLICY — the fifth instance of the
   §5 general law, and the first with MARKETPLACE-INTEGRITY consequences.**

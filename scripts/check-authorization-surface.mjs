@@ -154,13 +154,26 @@ function review(surface) {
     const writers = (table.policies ?? []).filter((p) =>
       ['INSERT', 'UPDATE', 'ALL'].includes(p.command),
     )
-    for (const policy of writers) {
-      const cols = table.writableColumns?.authenticated
-      if (Array.isArray(cols) && cols.length > 0) {
+    if (writers.length === 0) continue
+    // ⚠ Reads the {insert:[…], update:[…]} shape. An earlier version expected a
+    // flat array, so when the inventory started separating INSERT from UPDATE
+    // this warning silently stopped firing ENTIRELY — a guard that quietly does
+    // nothing, which is the failure mode this whole tool exists to prevent.
+    for (const [role, privileges] of Object.entries(table.writableColumns ?? {})) {
+      for (const command of ['insert', 'update']) {
+        const cols = privileges?.[command]
+        if (!Array.isArray(cols) || cols.length === 0) continue
+        // BLANKET = the grant covers every column, so the RLS policy is the only
+        // gate and it scopes ROWS, never COLUMNS. That is the branches.rating
+        // shape. A SCOPED grant is the intended end state and is only listed.
+        const blanket = cols.length === table.columnCount
         notes.push(
-          `COLUMN-BLIND WRITE  ${table.table} · "${policy.policy}" (${policy.command})\n` +
-            `    authenticated may write ${cols.length} column(s): ${cols.join(', ')}\n` +
-            '    An RLS policy scopes ROWS, never COLUMNS. This is the branches.rating shape.',
+          `${blanket ? 'COLUMN-BLIND WRITE ' : 'scoped write        '} ${table.table} · ${role} · ${command.toUpperCase()}\n` +
+            `    ${cols.length}/${table.columnCount} columns: ${cols.join(', ')}` +
+            (blanket
+              ? '\n    Every column is writable — an RLS policy scopes ROWS, never COLUMNS.\n' +
+                '    Narrow it with column GRANTs, or route the write through a function.'
+              : ''),
         )
       }
     }

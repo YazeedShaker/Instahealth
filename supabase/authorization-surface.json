@@ -4,6 +4,7 @@
       "table": "admin_users",
       "rlsEnabled": true,
       "rlsForced": false,
+      "columnCount": 4,
       "writableColumns": {},
       "policies": [
         {
@@ -19,6 +20,7 @@
       "table": "booking_services",
       "rlsEnabled": true,
       "rlsForced": false,
+      "columnCount": 5,
       "writableColumns": {},
       "policies": [
         {
@@ -34,58 +36,8 @@
       "table": "bookings",
       "rlsEnabled": true,
       "rlsForced": false,
-      "writableColumns": {
-        "anon": [
-          "arrived_at",
-          "booking_ref",
-          "branch_id",
-          "cancellation_reason",
-          "cancelled_at",
-          "cancelled_by",
-          "closed_by",
-          "commission_amount",
-          "commission_rate",
-          "completed_at",
-          "confirmed_at",
-          "created_at",
-          "id",
-          "no_show_at",
-          "patient_notes",
-          "payment_method",
-          "payment_status",
-          "paymob_order_id",
-          "slot_id",
-          "status",
-          "total_amount",
-          "updated_at",
-          "user_id"
-        ],
-        "authenticated": [
-          "arrived_at",
-          "booking_ref",
-          "branch_id",
-          "cancellation_reason",
-          "cancelled_at",
-          "cancelled_by",
-          "closed_by",
-          "commission_amount",
-          "commission_rate",
-          "completed_at",
-          "confirmed_at",
-          "created_at",
-          "id",
-          "no_show_at",
-          "patient_notes",
-          "payment_method",
-          "payment_status",
-          "paymob_order_id",
-          "slot_id",
-          "status",
-          "total_amount",
-          "updated_at",
-          "user_id"
-        ]
-      },
+      "columnCount": 23,
+      "writableColumns": {},
       "policies": [
         {
           "policy": "bookings: admin full access",
@@ -100,13 +52,6 @@
           "roles": "PUBLIC",
           "using": "((user_id = auth.uid()) OR (branch_id = ANY (get_provider_branch_ids())) OR (get_user_role() = 'admin'::text))",
           "withCheck": "-"
-        },
-        {
-          "policy": "bookings: provider updates status",
-          "command": "UPDATE",
-          "roles": "PUBLIC",
-          "using": "((branch_id = ANY (get_provider_branch_ids())) OR (get_user_role() = 'admin'::text))",
-          "withCheck": "-"
         }
       ]
     },
@@ -114,6 +59,7 @@
       "table": "branch_service_price_history",
       "rlsEnabled": true,
       "rlsForced": false,
+      "columnCount": 8,
       "writableColumns": {},
       "policies": [
         {
@@ -129,6 +75,7 @@
       "table": "branch_services",
       "rlsEnabled": true,
       "rlsForced": false,
+      "columnCount": 10,
       "writableColumns": {},
       "policies": [
         {
@@ -151,58 +98,8 @@
       "table": "branches",
       "rlsEnabled": true,
       "rlsForced": false,
-      "writableColumns": {
-        "anon": [
-          "address_ar",
-          "address_en",
-          "created_at",
-          "district",
-          "governorate",
-          "holiday_message_ar",
-          "holiday_mode",
-          "id",
-          "instahealth_slot_allocation",
-          "is_active",
-          "lat",
-          "lng",
-          "name_ar",
-          "name_en",
-          "operating_hours",
-          "phone",
-          "photos",
-          "provider_id",
-          "rating",
-          "review_count",
-          "slot_duration_minutes",
-          "updated_at",
-          "whatsapp"
-        ],
-        "authenticated": [
-          "address_ar",
-          "address_en",
-          "created_at",
-          "district",
-          "governorate",
-          "holiday_message_ar",
-          "holiday_mode",
-          "id",
-          "instahealth_slot_allocation",
-          "is_active",
-          "lat",
-          "lng",
-          "name_ar",
-          "name_en",
-          "operating_hours",
-          "phone",
-          "photos",
-          "provider_id",
-          "rating",
-          "review_count",
-          "slot_duration_minutes",
-          "updated_at",
-          "whatsapp"
-        ]
-      },
+      "columnCount": 23,
+      "writableColumns": {},
       "policies": [
         {
           "policy": "branches: admin full access",
@@ -217,13 +114,6 @@
           "roles": "PUBLIC",
           "using": "((is_active = true) OR (get_user_role() = ANY (ARRAY['admin'::text, 'provider'::text])))",
           "withCheck": "-"
-        },
-        {
-          "policy": "branches: provider updates own branches",
-          "command": "UPDATE",
-          "roles": "PUBLIC",
-          "using": "((id = ANY (get_provider_branch_ids())) OR (get_user_role() = 'admin'::text))",
-          "withCheck": "-"
         }
       ]
     },
@@ -231,6 +121,7 @@
       "table": "notifications",
       "rlsEnabled": true,
       "rlsForced": false,
+      "columnCount": 11,
       "writableColumns": {},
       "policies": [
         {
@@ -253,6 +144,7 @@
       "table": "payments",
       "rlsEnabled": true,
       "rlsForced": false,
+      "columnCount": 13,
       "writableColumns": {},
       "policies": [
         {
@@ -275,6 +167,7 @@
       "table": "provider_users",
       "rlsEnabled": true,
       "rlsForced": false,
+      "columnCount": 7,
       "writableColumns": {},
       "policies": [
         {
@@ -297,6 +190,7 @@
       "table": "providers",
       "rlsEnabled": true,
       "rlsForced": false,
+      "columnCount": 14,
       "writableColumns": {},
       "policies": [
         {
@@ -319,52 +213,14 @@
       "table": "reviews",
       "rlsEnabled": true,
       "rlsForced": false,
-      "writableColumns": {
-        "anon": [
-          "booking_id",
-          "branch_id",
-          "comment",
-          "created_at",
-          "id",
-          "is_flagged",
-          "is_verified",
-          "rating",
-          "updated_at",
-          "user_id"
-        ],
-        "authenticated": [
-          "booking_id",
-          "branch_id",
-          "comment",
-          "created_at",
-          "id",
-          "is_flagged",
-          "is_verified",
-          "rating",
-          "updated_at",
-          "user_id"
-        ]
-      },
+      "columnCount": 10,
+      "writableColumns": {},
       "policies": [
-        {
-          "policy": "reviews: patient inserts own",
-          "command": "INSERT",
-          "roles": "PUBLIC",
-          "using": "-",
-          "withCheck": "((user_id = auth.uid()) AND (EXISTS ( SELECT 1\n   FROM bookings b\n  WHERE ((b.id = reviews.booking_id) AND (b.user_id = auth.uid()) AND ((b.status)::text = 'completed'::text)))))"
-        },
         {
           "policy": "reviews: public read unflagged",
           "command": "SELECT",
           "roles": "PUBLIC",
           "using": "((is_flagged = false) OR (get_user_role() = 'admin'::text))",
-          "withCheck": "-"
-        },
-        {
-          "policy": "reviews: patient updates own",
-          "command": "UPDATE",
-          "roles": "PUBLIC",
-          "using": "((user_id = auth.uid()) OR (get_user_role() = 'admin'::text))",
           "withCheck": "-"
         }
       ]
@@ -373,6 +229,7 @@
       "table": "service_categories",
       "rlsEnabled": true,
       "rlsForced": false,
+      "columnCount": 9,
       "writableColumns": {},
       "policies": [
         {
@@ -395,6 +252,7 @@
       "table": "services",
       "rlsEnabled": true,
       "rlsForced": false,
+      "columnCount": 12,
       "writableColumns": {},
       "policies": [
         {
@@ -417,6 +275,7 @@
       "table": "slot_holds",
       "rlsEnabled": true,
       "rlsForced": false,
+      "columnCount": 5,
       "writableColumns": {},
       "policies": [
         {
@@ -439,28 +298,8 @@
       "table": "slots",
       "rlsEnabled": true,
       "rlsForced": false,
-      "writableColumns": {
-        "anon": [
-          "booked_count",
-          "branch_id",
-          "capacity",
-          "created_at",
-          "id",
-          "is_blocked",
-          "slot_date",
-          "slot_time"
-        ],
-        "authenticated": [
-          "booked_count",
-          "branch_id",
-          "capacity",
-          "created_at",
-          "id",
-          "is_blocked",
-          "slot_date",
-          "slot_time"
-        ]
-      },
+      "columnCount": 8,
+      "writableColumns": {},
       "policies": [
         {
           "policy": "slots: admin full access",
@@ -475,13 +314,6 @@
           "roles": "PUBLIC",
           "using": "(((is_blocked = false) AND (booked_count < capacity)) OR (branch_id = ANY (get_provider_branch_ids())) OR (get_user_role() = 'admin'::text))",
           "withCheck": "-"
-        },
-        {
-          "policy": "slots: provider updates own",
-          "command": "UPDATE",
-          "roles": "PUBLIC",
-          "using": "((branch_id = ANY (get_provider_branch_ids())) OR (get_user_role() = 'admin'::text))",
-          "withCheck": "-"
         }
       ]
     },
@@ -489,33 +321,22 @@
       "table": "users",
       "rlsEnabled": true,
       "rlsForced": false,
+      "columnCount": 11,
       "writableColumns": {
-        "anon": [
-          "created_at",
-          "date_of_birth",
-          "email",
-          "gender",
-          "id",
-          "name_ar",
-          "name_en",
-          "phone",
-          "preferred_language",
-          "sms_reminders",
-          "updated_at"
-        ],
-        "authenticated": [
-          "created_at",
-          "date_of_birth",
-          "email",
-          "gender",
-          "id",
-          "name_ar",
-          "name_en",
-          "phone",
-          "preferred_language",
-          "sms_reminders",
-          "updated_at"
-        ]
+        "authenticated": {
+          "insert": [
+            "id",
+            "phone"
+          ],
+          "update": [
+            "date_of_birth",
+            "gender",
+            "name_ar",
+            "name_en",
+            "preferred_language",
+            "sms_reminders"
+          ]
+        }
       },
       "policies": [
         {
