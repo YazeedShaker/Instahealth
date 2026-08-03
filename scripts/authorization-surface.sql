@@ -50,6 +50,12 @@ tables AS (
   SELECT c.relname AS table_name,
          c.relrowsecurity AS rls_enabled,
          c.relforcerowsecurity AS rls_forced,
+         -- Needed to tell a SCOPED grant from a BLANKET one: a write grant
+         -- covering every column is the column-blind shape, and without the
+         -- total there is nothing to compare a list length against.
+         (SELECT count(*) FROM pg_attribute a
+           WHERE a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped)
+           AS column_count,
          COALESCE(
            (SELECT jsonb_agg(jsonb_build_object(
                      'policy', p.policy_name, 'command', p.command,
@@ -79,18 +85,32 @@ tables AS (
                    AND p.command IN ('INSERT', 'UPDATE', 'ALL')
                    AND p.using_expr <> '(get_user_role() = ''admin''::text)'
               )
+         -- ⚠ INSERT and UPDATE are recorded SEPARATELY. A first version OR'd
+         -- them, which made `users.phone` read as writable when it is in fact
+         -- INSERT-only — set once at first sign-in and never editable after,
+         -- because it is the OTP identity. On a security baseline that
+         -- difference is the whole point, so it must not be flattened.
          THEN COALESCE(
-           (SELECT jsonb_object_agg(role_name, cols)
+           (SELECT jsonb_object_agg(role_name, privs)
               FROM (
                 SELECT g.role_name,
-                       jsonb_agg(a.attname ORDER BY a.attname) AS cols
+                       jsonb_strip_nulls(jsonb_build_object(
+                         'insert', (SELECT jsonb_agg(a.attname ORDER BY a.attname)
+                                      FROM pg_attribute a
+                                     WHERE a.attrelid = c.oid AND a.attnum > 0
+                                       AND NOT a.attisdropped
+                                       AND has_column_privilege(g.role_name, c.oid,
+                                                                a.attnum, 'INSERT')),
+                         'update', (SELECT jsonb_agg(a.attname ORDER BY a.attname)
+                                      FROM pg_attribute a
+                                     WHERE a.attrelid = c.oid AND a.attnum > 0
+                                       AND NOT a.attisdropped
+                                       AND has_column_privilege(g.role_name, c.oid,
+                                                                a.attnum, 'UPDATE'))
+                       )) AS privs
                   FROM (VALUES ('anon'), ('authenticated')) AS g(role_name)
-                  JOIN pg_attribute a
-                    ON a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped
-                 WHERE has_column_privilege(g.role_name, c.oid, a.attnum, 'UPDATE')
-                    OR has_column_privilege(g.role_name, c.oid, a.attnum, 'INSERT')
-                 GROUP BY g.role_name
-              ) writable),
+              ) writable
+             WHERE privs <> '{}'::jsonb),
            '{}'::jsonb)
          ELSE '{}'::jsonb END AS writable_columns
     FROM pg_class c
@@ -141,6 +161,7 @@ SELECT jsonb_pretty(jsonb_build_object(
                       'table', t.table_name,
                       'rlsEnabled', t.rls_enabled,
                       'rlsForced', t.rls_forced,
+                      'columnCount', t.column_count,
                       'writableColumns', t.writable_columns,
                       'policies', t.policies) ORDER BY t.table_name)
                FROM tables t),
