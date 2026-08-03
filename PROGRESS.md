@@ -75,6 +75,62 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 
 ## Shipped
 
+### 2026-08-02 · REFACTOR 1/N — the authorization surface is enumerated and asserted
+
+**Six security holes had shipped, all the same shape**, and the law against them
+was already written down. That is the interesting part: §5 has said
+"any fact with money, state or identity consequences is SERVER-DERIVED" since
+instance three, and instances four, five and six shipped anyway.
+
+Not for lack of knowing it. Answering _"can a client write this column?"_ means
+cross-referencing **three disconnected mechanisms** — RLS policies, function
+`GRANT`s and function bodies — and **Postgres defaults to open on the first
+two**: `EXECUTE` goes to PUBLIC automatically, and an UPDATE policy is
+COLUMN-BLIND unless you say otherwise. Nobody holds three mechanisms in their
+head, so nobody checked. Detection was per-feature and post-hoc: each hole was
+found by whoever happened to be building the feature that touched it.
+
+**So the surface is now enumerated, checked in and asserted.**
+`scripts/authorization-surface.sql` reads the catalog; `pnpm authz:check` diffs
+it against `supabase/authorization-surface.json`; the **Authorization Surface**
+CI job fails on drift. A new policy or grant cannot land without appearing as a
+reviewable diff — which turns "audit every policy before merge" from something a
+reviewer must remember into something they cannot miss.
+
+Design notes worth keeping:
+
+- **The comparison is SEMANTIC, over parsed JSON** — psql formatting differences
+  between machines never surface as false drift.
+- **Arrays are keyed by IDENTITY, not index.** Indexing by position meant
+  inserting one function shifted every later entry and produced a wall of false
+  drift that buried the real change. Now it reads
+  `functions[confirm_booking(…)].executeGrants  from: postgres,service_role  to: PUBLIC,anon,…`.
+- **`--from-file` runs the whole pipeline without a database**, because `psql` is
+  not on every dev machine and shipping unrunnable logic to CI is how you find
+  red there instead of here. Verified both ways: clean against the baseline, and
+  red against three simulated regressions (a new INSERT policy on `payments`, a
+  PUBLIC grant regained by `confirm_booking`, a new function taking an identity
+  parameter).
+- **An identity-parameter flag** on SECURITY DEFINER functions — the cheap
+  partial defence for the one thing a catalog query cannot see. ⚠ First version
+  reported `get_branch_bookings_for_date` as taking one; `proargnames` also holds
+  the OUTPUT column names of a RETURNS TABLE function, and those legitimately
+  include `cancelled_by`. Restricted to the first `pronargs` entries.
+- **The admin-only exclusion matches EXACTLY.** A first attempt used
+  `NOT LIKE '%admin%'`, which silently dropped every provider policy — they all
+  carry `OR get_user_role() = 'admin'` as an escape hatch — and reported the
+  schema as far safer than it is. That near-miss is the argument for the tool:
+  the same eyeballing error is what let six holes through.
+
+**⚠ WHAT THE SWEEP FOUND — it is worse than assumed.** Not one bad table but
+**seven client-reachable write policies across five tables, every one
+column-blind**: a partner can mark their own bookings `paid` or zero the
+commission, raise their own slot `capacity`, or set their own `rating`; a patient
+can clear `is_flagged` on their own moderated review. Full table in Known risks.
+**This PR fixes none of them** — it is a drift detector, not a judge, and its
+baseline records reality as found. Closing them is the next PR, by the
+writer-function route.
+
 ### 2026-08-01 · P04 — Slot allocation view (web, read-only)
 
 The desk can now see the branch's daily slot picture: every generated time, what
@@ -1873,6 +1929,35 @@ _Next entry after SETUP-02._
   the holder comes from `auth.uid()`. It was worse than this entry described: the grant
   reached `anon`, and the body's `DELETE … WHERE user_id = p_user_id` meant a caller could
   destroy a stranger's hold, not merely create one in their name.
+- **⚠⚠⚠ SEVEN CLIENT-REACHABLE WRITE POLICIES, ACROSS FIVE TABLES, EVERY ONE
+  COLUMN-BLIND.** The `branches` hole below was not the exception — it was the
+  first one anyone looked for. The authorization-surface sweep (2026-08-02)
+  enumerated the rest. Supabase grants every column to `anon`/`authenticated` by
+  default and RLS is the only gate, so wherever a write policy matches, **all
+  columns are writable**:
+
+  | table      | policy                           | who          | what that lets them set                                                 |
+  | ---------- | -------------------------------- | ------------ | ----------------------------------------------------------------------- |
+  | `bookings` | provider updates status          | branch staff | ⚠ `total_amount`, `payment_status`, `commission_amount/rate`, `user_id` |
+  | `slots`    | provider updates own             | branch staff | ⚠ `capacity`, `booked_count`, `is_blocked`                              |
+  | `branches` | provider updates own branches    | branch staff | ⚠ `rating`, `review_count`, `instahealth_slot_allocation`, `is_active`  |
+  | `reviews`  | patient updates own              | patient      | ⚠ `is_flagged`, `is_verified`, `rating`                                 |
+  | `reviews`  | patient inserts own              | patient      | same at insert (WITH CHECK does gate booking ownership + completed)     |
+  | `users`    | patient updates own row / insert | patient      | `phone`, `email` (own row only — `id = auth.uid()` holds)               |
+
+  **The three worst are new information:** a partner can mark their own bookings
+  `paid` or zero the commission on them; a partner can raise their own `capacity`
+  and manufacture allocation the agreement never granted; a patient can clear
+  `is_flagged` on their own moderated review. None is exploited — the only
+  provider accounts are our two dev logins — but the ordering matters: **these
+  must close before partner staff get real accounts, and certainly before PayTabs
+  goes live.**
+
+  The fix is the write-path rule (CLAUDE.md §8): delete the client write policies
+  and route each through a SECURITY DEFINER function that derives the values, in
+  the `update_branch_service` shape. Founder has chosen the **writer-function**
+  route over a column whitelist. Queued as the next PR.
+
 - **⚠⚠ `branches` HAS A COLUMN-BLIND UPDATE POLICY — the fifth instance of the
   §5 general law, and the first with MARKETPLACE-INTEGRITY consequences.**
   Found during P04 while verifying the spec's RLS claim.
