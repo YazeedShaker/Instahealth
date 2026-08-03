@@ -1,6 +1,7 @@
 'use client'
 
 import type { BookingOutcome, BranchBooking } from '@instahealth/core'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
@@ -14,6 +15,37 @@ import { createClient } from '../lib/supabase/client'
 // rather than copied, because the spec's consistency rule ("one row component,
 // one outcome-action module, one cancellable-predicate") only holds if the
 // realtime and mutation plumbing is shared too.
+//
+// ─────────────────────────────────────────────────────────────────────────────
+// READS ARE OWNED BY TANSTACK QUERY. Three bugs shipped from this file, all of
+// them in hand-rolled read orchestration:
+//
+//   · an out-of-order refetch painted over a newer state (P02 follow-up)
+//   · a read that started BEFORE a write was still "newest" by sequence number,
+//     so its pre-write answer painted, the action button reverted, and the
+//     desk's next click sent the wrong outcome — a cash completion silently
+//     lost (#27)
+//   · a cached RSC payload repainted the pre-action snapshot on back-navigation,
+//     because the first refetch was deliberately skipped (#28)
+//
+// Each was fixed with more bookkeeping: a monotonic `requestSeq`, an
+// invalidate-reads-on-write bump, a mount revalidation. That bookkeeping IS a
+// cache library, written badly. TanStack Query was already a dependency and
+// already provider-mounted (`app/providers.tsx`) and simply unused. So the
+// sequence counter, the manual poll, the focus listener and the mount
+// revalidation are gone — replaced by a query key and four options.
+//
+// ⚠ WHAT DELIBERATELY DID NOT MOVE, and why:
+//   · PENDING spans the write AND its confirming refetch. `mutation.isPending`
+//     covers only the mutationFn, so the button would re-enable while the
+//     confirming read was still in flight — exactly the window #27 closed.
+//   · NO OPTIMISTIC STATUS. An optimistic outcome is indistinguishable on screen
+//     from a saved one, which is what made #27 invisible. The row shows an
+//     outcome only once the server agrees.
+//   · The realtime broadcast → DEBOUNCED invalidation. The payload carries no
+//     date, so any branch event invalidates the viewed scope and the database
+//     answers.
+// ─────────────────────────────────────────────────────────────────────────────
 
 const POLL_MS = 60_000
 
@@ -59,6 +91,11 @@ export const BOOKINGS_PAGE_SIZE = 25
  * short enough that it never feels laggy. */
 const SEARCH_DEBOUNCE_MS = 300
 
+interface BookingsPage {
+  bookings: BranchBooking[]
+  total: number
+}
+
 export function useBranchBookings({
   branchId,
   isoDate,
@@ -77,9 +114,9 @@ export function useBranchBookings({
    * would be noise. */
   trackArrivals: boolean
 }): BranchBookingsState {
-  const [bookings, setBookings] = useState<BranchBooking[]>(initialBookings)
-  const [total, setTotal] = useState(initialTotal)
-  const [loadFailed, setLoadFailed] = useState(initialLoadFailed)
+  const queryClient = useQueryClient()
+  const supabase = useMemo(() => createClient(), [])
+
   const [isConnected, setIsConnected] = useState(false)
   const [pendingIds, setPendingIds] = useState<ReadonlySet<string>>(new Set())
   const [newIds, setNewIds] = useState<ReadonlySet<string>>(new Set())
@@ -92,11 +129,6 @@ export function useBranchBookings({
   const [appliedSearch, setAppliedSearch] = useState('')
   const [status, setStatusRaw] = useState<string | null>(null)
   const [page, setPage] = useState(0)
-  const [isQuerying, setIsQuerying] = useState(false)
-
-  const supabase = useMemo(() => createClient(), [])
-  // Kept in a ref so the realtime callback never closes over a stale list.
-  const knownIds = useRef<Set<string>>(new Set(initialBookings.map((booking) => booking.id)))
 
   useEffect(() => {
     const timer = setTimeout(() => setAppliedSearch(search), SEARCH_DEBOUNCE_MS)
@@ -111,117 +143,92 @@ export function useBranchBookings({
   }, [])
   useEffect(() => setPage(0), [appliedSearch])
 
-  // Switching DAYS re-seeds everything from the server payload for the new date.
-  //
-  // ⚠ Keyed on `isoDate` ALONE, deliberately. Keying it on `initialBookings`
-  // too — which looks more correct, and which ESLint asks for — meant any RSC
-  // re-render handed down a new array identity and reset the table to the
-  // UNFILTERED server payload, while the filter chip still showed as active.
-  // The desk would be looking at rows its own filter excludes. Caught by the
-  // status-filter E2E, which saw a non-matching row reappear mid-assertion.
-  //
-  // The server payload is only ever page one, unfiltered — it is the right
-  // answer on a date change and the wrong answer at every other moment,
-  // because by then the client's query state is the truth.
+  // Switching DAYS clears the desk's filters — they belong to the day they were
+  // typed on. The DATA needs no help: `isoDate` is part of the query key, so a
+  // new day is a different question and gets its own answer.
   const seededDate = useRef(isoDate)
   useEffect(() => {
     if (seededDate.current === isoDate) return
     seededDate.current = isoDate
-    setBookings(initialBookings)
-    setTotal(initialTotal)
-    setLoadFailed(initialLoadFailed)
-    knownIds.current = new Set(initialBookings.map((booking) => booking.id))
     setNewIds(new Set())
     setSearch('')
     setAppliedSearch('')
     setStatusRaw(null)
     setPage(0)
-    // The payload props are READ here but deliberately not TRACKED — tracking
-    // them is the bug described above.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isoDate])
 
-  // ⚠ Refetches can land OUT OF ORDER, and the last response to arrive wins the
-  // screen unless something stops it. The concrete failure: marking a booking
-  // arrived fires a realtime broadcast, whose debounced refetch can be in
-  // flight while the NEXT action (completed) is being saved. That older
-  // response returns `arrived` and paints over the newer state, and the row sits
-  // there looking un-saved even though the database took the write. It survived
-  // local runs and failed in CI, because the window is latency.
-  //
-  // A monotonic sequence makes the newest request the only one allowed to
-  // paint. Cheaper and more honest than trying to order the callers.
-  const requestSeq = useRef(0)
+  // ⚠ The server payload answers ONE question: the unfiltered first page of the
+  // day it was rendered for. Seeding a filtered or paged key with it would put
+  // rows on screen that the desk's own filter excludes — the bug the old
+  // `seededDate` guard existed to prevent, now impossible because the key
+  // ENCODES the question rather than the component remembering it.
+  const isUnfilteredFirstPage = appliedSearch === '' && status === null && page === 0
+  const seedApplies = isUnfilteredFirstPage && seededDate.current === isoDate
 
-  /**
-   * Invalidate every READ currently in flight.
-   *
-   * ⚠ THE BUG THIS EXISTS FOR (proven with a network timeline, not guessed):
-   * the sequence guard above only ordered reads against each other. A read that
-   * started BEFORE a write was still the newest request by sequence number, so
-   * when it landed — carrying pre-write data — it painted, and the row silently
-   * regressed to the state it held a second earlier:
-   *
-   *   4139  refetch START                       (queries the DB: still 'confirmed')
-   *   4341  RPC mark_booking_outcome 'arrived'
-   *   5327  refetch END  → ['confirmed', …]     ← STALE response paints
-   *   5454  RPC END      → status 'arrived'     (the database HAD taken the write)
-   *   5784  RPC mark_booking_outcome 'arrived'  ← the desk's next click, wrong outcome
-   *
-   * Because the action button's identity is derived from `booking.status`
-   * (`action-arrived-…` vs `action-completed-…`), that regression rewrote the
-   * button back to «وصل» — so the receptionist's click on «تمت الخدمة» sent
-   * `arrived` a second time. The server answered `unchanged: true`, which is a
-   * SUCCESS, so there was no error, no toast and no rollback: the completion
-   * simply never happened. For a CASH booking that is the payment event
-   * (DECISION-commission-attachment), so the money was never recorded.
-   *
-   * A write therefore invalidates reads too — anything already in flight was
-   * asked a question whose answer is now out of date.
-   */
-  const invalidateInFlightReads = useCallback(() => {
-    requestSeq.current += 1
-  }, [])
+  // Memoised because `refresh` closes over it: a fresh array every render would
+  // rebuild that callback every render for no reason. The key IS the question
+  // being asked — anything absent from it is not part of the question, so it
+  // must not invalidate the answer.
+  const queryKey = useMemo(
+    () => ['branch-bookings', branchId, isoDate, appliedSearch, status, page] as const,
+    [branchId, isoDate, appliedSearch, status, page],
+  )
 
-  /**
-   * In-flight writes, keyed by booking id — a REF, not state, because the guard
-   * has to hold synchronously. `pendingIds` cannot do this job: a second click
-   * arriving before React re-renders reads the OLD set and sails through, which
-   * is how a double-click became two writes.
-   */
-  const writesInFlight = useRef<Set<string>>(new Set())
-
-  const refresh = useCallback(async () => {
-    const seq = requestSeq.current + 1
-    requestSeq.current = seq
-    setIsQuerying(true)
-    try {
-      const result = await fetchBranchBookings(supabase, branchId, isoDate, {
+  const query = useQuery<BookingsPage>({
+    queryKey,
+    queryFn: () =>
+      fetchBranchBookings(supabase, branchId, isoDate, {
         search: appliedSearch,
         status,
         limit: BOOKINGS_PAGE_SIZE,
         offset: page * BOOKINGS_PAGE_SIZE,
-      })
-      // A newer request started while this one was in flight — its answer is
-      // the current one, so drop this stale payload on the floor.
-      if (seq !== requestSeq.current) return
-      // Only rows the desk has never seen count as arrivals. Under a filter
-      // that would otherwise flag every match as "new" the moment it is typed.
-      const arrivals =
-        trackArrivals && appliedSearch === '' && status === null
-          ? result.bookings.filter((row) => !knownIds.current.has(row.id)).map((row) => row.id)
-          : []
-      for (const row of result.bookings) knownIds.current.add(row.id)
-      setBookings(result.bookings)
-      setTotal(result.total)
-      setLoadFailed(false)
-      if (arrivals.length > 0) setNewIds((prev) => new Set([...prev, ...arrivals]))
-    } catch {
-      if (seq === requestSeq.current) setLoadFailed(true)
-    } finally {
-      if (seq === requestSeq.current) setIsQuerying(false)
-    }
-  }, [supabase, branchId, isoDate, trackArrivals, appliedSearch, status, page])
+      }),
+    initialData: seedApplies ? { bookings: initialBookings, total: initialTotal } : undefined,
+    // ⚠ ZERO — NOT the provider's 60s default. `app/providers.tsx` sets
+    // `staleTime: 60_000` globally, which would let a mount reuse a cached page
+    // without refetching and reinstate #28 exactly: come back to Today and the
+    // pre-action snapshot repaints. A desk screen has no use for stale data.
+    staleTime: 0,
+    // Stated twice on purpose: 'always' refetches even when the entry looks
+    // fresh, which is what makes back/forward navigation correct — Next serves
+    // those from its Router Cache, so the payload can be arbitrarily old.
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchInterval: POLL_MS,
+    // Keep the previous page on screen while a narrower one loads, so the table
+    // is NARROWED rather than replaced by a flash of empty.
+    placeholderData: (previous) => previous,
+    retry: 1,
+  })
+
+  const bookings = query.data?.bookings ?? []
+  const total = query.data?.total ?? 0
+  // A failed FIRST load is a broken screen. A failed refetch over rows already
+  // on display is not, and must not blank the desk.
+  const loadFailed = query.data === undefined ? initialLoadFailed || query.isError : false
+
+  /** Force the viewed scope to re-ask the database, and RESOLVE once it has —
+   * the awaited-ness is load-bearing for the pending window below. */
+  const refresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey, refetchType: 'active' })
+  }, [queryClient, queryKey])
+
+  const refreshRef = useRef(refresh)
+  refreshRef.current = refresh
+
+  // ── arrivals ──────────────────────────────────────────────────────────────
+  // Only rows the desk has never seen count as new. Tracked on the unfiltered
+  // view only: under a filter, every match would flag as "new" the moment it is
+  // typed.
+  const knownIds = useRef<Set<string>>(new Set(initialBookings.map((row) => row.id)))
+  useEffect(() => {
+    if (!trackArrivals || !isUnfilteredFirstPage || query.data === undefined) return
+    const arrivals = query.data.bookings
+      .filter((row) => !knownIds.current.has(row.id))
+      .map((row) => row.id)
+    for (const row of query.data.bookings) knownIds.current.add(row.id)
+    if (arrivals.length > 0) setNewIds((prev) => new Set([...prev, ...arrivals]))
+  }, [query.data, trackArrivals, isUnfilteredFirstPage])
 
   // ── realtime ──────────────────────────────────────────────────────────────
   // Broadcast on a private per-branch topic, NOT postgres_changes — the payload
@@ -229,42 +236,9 @@ export function useBranchBookings({
   // nothing can leak a row the desk should not see.
   //
   // The payload is `{booking_id, op, status}` and carries NO DATE, so it cannot
-  // tell us whether the changed booking belongs to the day on screen. We
-  // therefore refetch the VIEWED date on any branch event and let the database
-  // answer: if the change was for another day, the query returns the same rows
-  // and nothing moves. Filtering client-side would need a date the event does
-  // not have. (Upgrade path, if event volume ever makes this heavy: add the
-  // date to the broadcast payload.)
-  const refreshRef = useRef(refresh)
-  refreshRef.current = refresh
-
-  // Re-query whenever the desk narrows or pages the table — AND once on mount.
-  //
-  // ⚠ REVALIDATE ON MOUNT. This effect used to skip its first run, on the
-  // reasoning that the server had just delivered page one and re-fetching it
-  // would waste a query. That reasoning holds only when the payload really was
-  // rendered just now — and after a BACK/FORWARD navigation it was not.
-  //
-  // Next restores back/forward from the client Router Cache unconditionally
-  // (`staleTimes` does not govern it, and `export const dynamic =
-  // 'force-dynamic'` only stops SERVER caching). So the desk marked a booking
-  // arrived, pressed Back, and the page remounted from the PRE-ACTION snapshot:
-  // the chip read «مؤكد» again and the «وصل» button came back — on a booking the
-  // database already considered arrived. Reproduced with `page.goBack()`;
-  // in-app nav links did not show it, which is why it looked intermittent.
-  //
-  // Pressing that stale button is at best a no-op (`unchanged: true`) and at
-  // worst an `illegal_transition` toast for something the desk did nothing
-  // wrong to cause. Same family as the swallowed-completion bug: THE SCREEN WAS
-  // ASSERTING A STATE THE SERVER DOES NOT HOLD (§1.4).
-  //
-  // The server payload is still the instant first paint — it is simply no longer
-  // trusted as the final word. One query per mount is the price of the desk
-  // never acting on a snapshot.
-  useEffect(() => {
-    void refreshRef.current()
-  }, [appliedSearch, status, page])
-
+  // say whether the changed booking belongs to the day on screen. Any branch
+  // event therefore invalidates the VIEWED scope and the database answers.
+  // (Upgrade path if event volume ever makes this heavy: add the date.)
   useEffect(() => {
     let cancelled = false
     let debounceTimer: ReturnType<typeof setTimeout> | null = null
@@ -282,9 +256,9 @@ export function useBranchBookings({
             if (!cancelled) void refreshRef.current()
           }, REFRESH_DEBOUNCE_MS)
         })
-        .subscribe((status) => {
+        .subscribe((state) => {
           if (cancelled) return
-          setIsConnected(status === 'SUBSCRIBED')
+          setIsConnected(state === 'SUBSCRIBED')
         })
     }
     void setup()
@@ -296,74 +270,58 @@ export function useBranchBookings({
     }
   }, [supabase, branchId])
 
-  // Fallbacks: refetch on focus and a slow poll for when the socket drops.
-  // Neither is the primary path — they are the quiet safety net.
-  useEffect(() => {
-    const onFocus = () => void refreshRef.current()
-    window.addEventListener('focus', onFocus)
-    const interval = setInterval(() => void refreshRef.current(), POLL_MS)
-    return () => {
-      window.removeEventListener('focus', onFocus)
-      clearInterval(interval)
-    }
-  }, [])
-
   useEffect(() => {
     if (toastAr === null) return
     const timer = setTimeout(() => setToastAr(null), 5000)
     return () => clearTimeout(timer)
   }, [toastAr])
 
+  // ── writes ────────────────────────────────────────────────────────────────
   /**
-   * Hold a booking PENDING across the whole write-then-read cycle.
-   *
-   * The pending flag is lowered only after the confirming refetch has painted,
-   * not when the write resolves. That gap was the window: the button re-enabled
-   * while a stale read was still in flight, so the desk could click an action
-   * the screen was about to contradict. While pending, the row's action buttons
-   * are disabled, which means there is no moment where a stale action is
-   * clickable — the handler cannot be raced because it cannot be reached.
+   * In-flight writes, keyed by booking id — a REF, not state, because the guard
+   * has to hold synchronously. `pendingIds` cannot do this job: a second click
+   * arriving before React re-renders reads the OLD set and sails through, which
+   * is how a double-click became two writes.
    */
-  const withPending = useCallback(
-    async (bookingId: string, work: () => Promise<void>): Promise<void> => {
-      if (writesInFlight.current.has(bookingId)) return
-      writesInFlight.current.add(bookingId)
-      setPendingIds((prev) => new Set([...prev, bookingId]))
-      // Any read already in flight was asked before this write — its answer is
-      // stale by construction and must never paint.
-      invalidateInFlightReads()
-      try {
-        await work()
-        // Re-read INSIDE the pending window: on success to pick up server-side
-        // effects (a cash completion also flips the payment state), on failure
-        // to resync. AWAITED, so this is the newest sequence and therefore the
-        // one that paints.
-        await refresh()
-      } finally {
-        writesInFlight.current.delete(bookingId)
-        setPendingIds((prev) => {
-          const next = new Set(prev)
-          next.delete(bookingId)
-          return next
-        })
-      }
-    },
-    [refresh, invalidateInFlightReads],
-  )
+  const writesInFlight = useRef<Set<string>>(new Set())
+
+  /**
+   * Hold a booking PENDING across the whole write-then-confirm cycle.
+   *
+   * ⚠ NOT `useMutation`'s `isPending`, which covers only the mutationFn. The
+   * flag is lowered after the CONFIRMING REFETCH has painted, not when the write
+   * resolves — that gap was the window in which the desk could click an action
+   * the screen was about to contradict, and it cost a cash payment (#27). While
+   * pending the row's buttons are disabled, so a stale action cannot be reached.
+   */
+  const withPending = useCallback(async (bookingId: string, work: () => Promise<void>) => {
+    if (writesInFlight.current.has(bookingId)) return
+    writesInFlight.current.add(bookingId)
+    setPendingIds((prev) => new Set([...prev, bookingId]))
+    try {
+      await work()
+      // Re-read INSIDE the pending window: on success to pick up server-side
+      // effects (a cash completion also flips the payment state), on failure to
+      // resync. AWAITED, so the row is released only once the screen shows what
+      // the database holds.
+      await refreshRef.current()
+    } finally {
+      writesInFlight.current.delete(bookingId)
+      setPendingIds((prev) => {
+        const next = new Set(prev)
+        next.delete(bookingId)
+        return next
+      })
+    }
+  }, [])
 
   /**
    * Record an outcome. THE ROW SHOWS NO OUTCOME UNTIL THE SERVER CONFIRMS IT.
    *
-   * There used to be an optimistic `setBookings(status = outcome)` here, on the
-   * reasoning that a busy desk feels a 300ms wait. It is exactly what made the
-   * failure invisible: an optimistic status is indistinguishable on screen from
-   * a saved one, so when a stale read painted over it the row fell back to its
-   * previous state with nothing to indicate anything had been lost.
-   *
-   * Per the standing display-predicate law (ENGINEERING-WORKFLOW §1.4), a state
-   * with money consequences is shown only once the server has agreed to it. The
-   * feedback the desk gets in the meantime is a PENDING affordance on the
-   * button — honest about the fact that the write is still in the air.
+   * There is deliberately no optimistic update. An optimistic status is
+   * indistinguishable on screen from a saved one, which is exactly what made the
+   * swallowed completion invisible; the feedback in the meantime is the pending
+   * affordance on the button (ENGINEERING-WORKFLOW §1.4).
    */
   const markOutcome = useCallback(
     async (bookingId: string, outcome: BookingOutcome) => {
@@ -391,10 +349,6 @@ export function useBranchBookings({
   const cancelOnBehalf = useCallback(
     async (bookingId: string, reasonAr: string): Promise<boolean> => {
       let succeeded = false
-      // Same guarantees as an outcome: reads in flight are invalidated, the row
-      // stays pending until the confirming refetch has painted (which is also
-      // what re-derives the fill indicator, since cancelling frees the slot),
-      // and a second click while the first is in the air is a no-op.
       await withPending(bookingId, async () => {
         const result = await cancelBookingOnBehalf(supabase, bookingId, reasonAr)
         succeeded = result.kind === 'ok'
@@ -437,6 +391,9 @@ export function useBranchBookings({
     setPage,
     pageSize: BOOKINGS_PAGE_SIZE,
     total,
-    isQuerying,
+    // TanStack's own in-flight flag, which now also covers the poll, the focus
+    // refetch and the realtime-triggered invalidation — all of which used to be
+    // invisible to the toolbar's "narrowing…" affordance.
+    isQuerying: query.isFetching,
   }
 }
