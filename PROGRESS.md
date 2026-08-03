@@ -75,6 +75,58 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 
 ## Shipped
 
+### 2026-08-03 · REFACTOR 4/4 — `useBranchBookings` reads move to TanStack Query
+
+The last refactor item, and the only one that touches app code.
+
+**Three bugs shipped from this one file, all in hand-rolled read orchestration:**
+an out-of-order refetch painting over a newer state (P02 follow-up); a read that
+started BEFORE a write still counting as "newest" by sequence number, so its
+pre-write answer painted, the action button reverted, and the desk's next click
+sent the wrong outcome — **a cash completion silently lost** (#27); and a cached
+RSC payload repainting the pre-action snapshot on back-navigation (#28).
+
+Each was fixed with more bookkeeping: a monotonic `requestSeq`, an
+invalidate-reads-on-write bump, a mount revalidation. **That bookkeeping is a
+cache library, written badly** — and TanStack Query was already a dependency and
+already provider-mounted in `app/providers.tsx`, simply unused. So the sequence
+counter, the manual poll, the focus listener and the mount revalidation are gone,
+replaced by a query key and four options. The file went 442 → ~400 lines, most of
+the remainder being the reasoning.
+
+**⚠ THE TRAP, caught before it shipped:** `providers.tsx` sets a global
+`staleTime: 60_000`. Inheriting that would let a mount reuse a cached page
+without refetching — **reinstating #28 exactly**. The query sets `staleTime: 0`
+and `refetchOnMount: 'always'`, and says why in both places.
+
+**What deliberately did NOT move:**
+
+- **Pending spans the write AND its confirming refetch.** `useMutation`'s
+  `isPending` covers only the mutationFn, so the button would re-enable while the
+  confirming read was still in flight — precisely the window #27 closed. Still an
+  explicit set, still lowered only after the refetch paints.
+- **No optimistic status.** An optimistic outcome is indistinguishable on screen
+  from a saved one, which is what made #27 invisible.
+- **The realtime broadcast → debounced invalidation**, because the payload
+  carries no date.
+
+**What got structurally better rather than just moved:** the server payload can
+no longer seed the wrong question. `initialData` applies only to the unfiltered
+first page of the rendered day — the query KEY encodes the question, so the old
+`seededDate` guard against "filtered view resets to the unfiltered payload" is
+not merely fixed but unrepresentable.
+
+**Verified: 42/42 Playwright against a PRODUCTION build**, which is where the #27
+and #28 regression guards actually have teeth. Core 341, mobile 88, tokens 25.
+
+**⚠ Unrelated but blocking: a new `brace-expansion` advisory
+(GHSA-rgw5-rvv9-x895) landed mid-PR** and was failing `pnpm audit` on any branch.
+Per §4's fix order, resolved by pnpm overrides rather than an ignore — and these
+are PATCH bumps within each major, not the v5 jump that broke minimatch before.
+⚠ The advisory has **three** affected ranges (`<1.1.18`, `>=2.0.0 <2.1.4`,
+`>=4.0.0 <5.0.9`); the first attempt read only the first table and fixed two of
+them, leaving the audit red. Read every range.
+
 ### 2026-08-03 · REFACTOR 3/N — CI and test infrastructure
 
 Four changes that between them remove the recurring taxes of the last few days.

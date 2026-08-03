@@ -531,6 +531,21 @@ a full crawl`. It is benign and self-healing. To silence it, delete
 - **Anon key only in `apps/web`.** The service-role key bypasses RLS and every
   SECURITY DEFINER membership check the provider features rely on; it belongs in
   Edge Function secrets, not in a Next.js app (CLAUDE.md §8).
+- **⚠ SERVER DATA IS TANSTACK QUERY'S JOB — hand-rolled caching is how three
+  bugs shipped.** `useBranchBookings` grew a monotonic request sequence, an
+  invalidate-reads-on-write bump and a mount revalidation, one per incident.
+  That is a cache library, written badly. TanStack Query was already a
+  dependency and already provider-mounted and simply unused. If you find
+  yourself ordering responses by hand, you are rewriting it — stop and use it.
+  ⚠ **But override the global `staleTime`.** `app/providers.tsx` sets
+  `staleTime: 60_000`, which for a desk screen means a mount can reuse a cached
+  page without refetching — reinstating the back-navigation staleness bug
+  exactly. Any live operational query wants `staleTime: 0` +
+  `refetchOnMount: 'always'`.
+  ⚠ **And do NOT move pending onto `useMutation`.** `isPending` covers the
+  mutationFn only, so the control re-enables while the CONFIRMING read is still
+  in flight — the window that cost a cash payment. Pending must span the write
+  and its confirming refetch.
 - **A shared exhaustive `Record` is a free cross-app safety net.** Adding
   `arrived` to core's `BOOKING_STATUSES` made `tsc` fail the MOBILE status badge
   until it was handled — the patient app would otherwise have rendered a blank
