@@ -75,6 +75,63 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 
 ## Shipped
 
+### 2026-08-03 · REFACTOR 3/N — CI and test infrastructure
+
+Four changes that between them remove the recurring taxes of the last few days.
+
+**1 · Fixture seeding blocks again.** It was `continue-on-error` while
+`SUPABASE_DB_URL` pointed at the direct (IPv6-only) host and could never connect
+— correct then, because an unreachable database must not turn every PR red for a
+reason unrelated to the change under review. The secret is now the Session pooler
+URL and seeding works, so the tolerance is gone: a seed that silently fails is a
+scanner nobody is waiting on, and the FIXTURE TRIPWIRE would report the drained
+day pointing at the wrong cause. The error message still names the IPv6 trap,
+because that is the failure that will recur if the secret is ever re-pasted.
+
+**2 · One E2E run at a time, repo-wide.** Workflow-level `concurrency` is keyed
+on `github.ref` — it cancels superseded runs of the SAME branch and does nothing
+across branches. But this job seeds and then CONSUMES a shared dev database, so a
+push to main and a PR run overlapped and ate each other's fixtures: measured
+2026-08-01, main's E2E ran 13:32:59–13:36:29 while a PR's started 13:37:50 and
+found ONE actionable booking where four had just been seeded. The job now carries
+`concurrency: e2e-web-shared-dev-database` with **`cancel-in-progress: false`** so
+runs QUEUE — cancelling main's verification because a PR arrived would be exactly
+backwards — plus `timeout-minutes: 30` so a wedged run cannot hold the queue.
+⚠ The durable fix is a per-run database; this is the cheap version that removes
+the collisions.
+
+**3 · CI runs the E2E against a PRODUCTION build.** `next dev` cannot show the
+Router-Cache class of bug this dashboard has shipped twice — the navigation
+regression test passed with AND without its fix under `pnpm dev`. Cost is
+negative: the suite is FASTER against the build (1.1m vs 1.8m, no on-demand
+compilation) plus ~40s to build. Locally the default stays `pnpm dev`; opt in
+with `E2E_PROD=1`. One constant now drives both the command and its timeout, so
+they cannot disagree — a dev-length budget against a cold `next build` would read
+as a hung server rather than a short budget.
+
+**4 · Tiered gates (§3).** The full sequence is the MERGE gate, not the EDIT
+gate. Running all of it after every small edit measured ~40 minutes of pure
+ceremony across three PRs in one day. Iterate with the filtered subset, then one
+complete pass before pushing — "never discover red in CI" is satisfied by one
+pass, not twenty.
+
+**⚠ Node: the toolchain does not agree with itself, and it is now written down.**
+
+| consumer                | wants                    |
+| ----------------------- | ------------------------ |
+| Expo CLI 54             | **breaks on 24**         |
+| `@supabase/supabase-js` | declares `node >=22.0.0` |
+| CI                      | runs 20, all green       |
+
+`.nvmrc` stays **20** because that is the version proven to work for Expo and CI.
+`engines` is now `>=20 <23` but **deliberately NOT enforced** — turning on
+`engine-strict` would fail `pnpm install` outright, because supabase-js declares
+`>=22` while CI and Expo both need 20. Node 22 is the likely single answer and is
+worth testing when the SDK upgrade lands. Verification scripts that construct a
+Supabase client need 22+ and are run with an explicit binary rather than by
+switching the shell. Also recorded: switching Node invalidates Metro's
+`v8.serialize()` cache, so expect one noisy "falling back to a full crawl" start.
+
 ### 2026-08-03 · REFACTOR 2/N — the client write surface is closed
 
 The sweep found seven client-reachable write policies across five tables, every
