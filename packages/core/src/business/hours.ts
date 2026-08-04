@@ -112,6 +112,34 @@ export function formatDayHoursAr(day: BranchDayHours): string {
   return `${formatTimeShortAr(day.open)} – ${formatTimeShortAr(day.close)}`
 }
 
+/** Compact one-line weekly summary for the dashboard's locked profile card
+ * («ساعات العمل» row, Branch Details handoff). Groups CONSECUTIVE days (in
+ * Egypt's Saturday-first order) sharing identical hours:
+ *   uniform week            → "٨ص – ١٠م" (or "مفتوح ٢٤ ساعة")
+ *   Sat–Thu X, Fri Y        → "السبت – الخميس: X · الجمعة: Y"
+ * A single-line value cannot honestly flatten a varied week, so grouping is
+ * what keeps the compact rendering truthful. */
+export function formatWeeklyHoursSummaryAr(hours: BranchHours): string {
+  const runs: Array<{ from: DayKey; to: DayKey; label: string }> = []
+  for (const day of WEEK_DAY_ORDER) {
+    const label = formatDayHoursAr(hours[day])
+    const last = runs[runs.length - 1]
+    if (last !== undefined && last.label === label) {
+      last.to = day
+    } else {
+      runs.push({ from: day, to: day, label })
+    }
+  }
+  if (runs.length === 1) return runs[0]!.label
+  return runs
+    .map((run) =>
+      run.from === run.to
+        ? `${DAY_LABELS_AR[run.from]}: ${run.label}`
+        : `${DAY_LABELS_AR[run.from]} – ${DAY_LABELS_AR[run.to]}: ${run.label}`,
+    )
+    .join(' · ')
+}
+
 export interface OpenStatus {
   isOpen: boolean
   /** "١٠م" — today's closing time for the "مفتوح حتى …" chip; null for 24/7 branches. */

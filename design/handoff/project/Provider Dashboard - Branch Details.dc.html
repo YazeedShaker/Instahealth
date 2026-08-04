@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/effects.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/themes.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/base.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/styles.css">
+  <script src="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/_ds_bundle.js"></script>
+  <style>
+    body { margin: 0; background: var(--ih-neutral-100); font-family: 'Cairo', 'Atkinson Hyperlegible', sans-serif; }
+    a { color: var(--ih-primary-600); } a:hover { color: var(--ih-primary-700); }
+    input:focus, textarea:focus { outline: none; border-color: var(--ih-primary-400) !important; }
+    @keyframes ih-toast-in { 0% { opacity: 0; transform: translateX(-50%) translateY(-10px); } 100% { opacity: 1; transform: translateX(-50%) translateY(0); } }
+    @media (prefers-reduced-motion: reduce) { .ih-toast { animation: none !important; } }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 40px; align-items: center; padding: 40px 32px;">
+
+  <!-- ═══ Branch details — saved toast ═══ -->
+  <div data-screen-label="بيانات الفرع — تم الحفظ">
+    <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 768 }}" url="partners.instahealth.eg/branch" hint-size="1366px,768px">
+      <div dir="rtl" style="position: relative; display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden;">
+        <div style="flex-shrink: 0; display: flex; align-self: stretch; background: var(--ih-surface-sidebar);">
+          <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.SidebarNav" brand="بوابة الشركاء" items="{{ navItems }}" active="{{ 4 }}" style="{{ sidebarStyle }}" hint-size="220px,100%"></x-import>
+        </div>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); box-shadow: var(--ih-shadow-sm); padding: 12px 24px; display: flex; align-items: center; gap: 20px; min-height: 56px; box-sizing: border-box;">
+            <div style="display: flex; flex-direction: column; gap: 1px;">
+              <div style="font-size: 16px; font-weight: 800; color: var(--ih-neutral-800);">بيانات الفرع</div>
+              <div style="font-size: 12.5px; color: var(--ih-neutral-500);">معامل سريدار — فرع التجمع الخامس</div>
+            </div>
+            <div style="flex: 1;"></div>
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding-right: 16px; border-right: 1px solid var(--ih-neutral-200); white-space: nowrap;">
+              <div style="width: 32px; height: 32px; border-radius: 999px; background: var(--ih-primary-50); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--ih-primary-700);">إ</div>
+              <div style="display: flex; flex-direction: column;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-700);">إدارة الفرع</span>
+                <span style="font-size: 11px; color: var(--ih-neutral-500); cursor: pointer; text-decoration: underline;">تسجيل خروج</span>
+              </div>
+            </div>
+          </div>
+          <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 16px 24px 24px; display: flex; gap: 16px; align-items: flex-start;">
+            <!-- editable card -->
+            <div style="flex: 1; min-width: 0; background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); overflow: hidden;">
+              <div style="padding: 16px 20px; border-bottom: 1px solid var(--ih-neutral-200); display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                  <div style="font-size: 15px; font-weight: 700; color: var(--ih-neutral-800);">بيانات التواصل والعنوان</div>
+                  <div style="font-size: 12px; color: var(--ih-neutral-600);">آخر تحديث: {{ lastUpdated }}</div>
+                </div>
+                <span style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ih-primary-700); background: var(--ih-primary-50); border: 1px solid var(--ih-primary-400); border-radius: 999px; padding: 5px 12px; white-space: nowrap;">✎ قابلة للتعديل</span>
+              </div>
+              <div style="padding: 18px 20px; display: flex; flex-direction: column; gap: 18px;">
+                <div style="display: flex; align-items: center; gap: 10px; background: var(--ih-info-bg); border: 1px solid rgba(2,128,144,0.25); border-radius: 8px; padding: 10px 14px;">
+                  <span style="font-size: 14px; flex-shrink: 0;" aria-hidden="true">ℹ</span>
+                  <span style="font-size: 12.5px; color: var(--ih-primary-800); line-height: 1.6;">رقم الهاتف والعنوان يظهران للمرضى في التطبيق فوراً بعد الحفظ.</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 18px;">
+                  <div style="display: flex; flex-direction: column; gap: 7px;">
+                    <label style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-700);">هاتف الفرع</label>
+                    <div style="display: flex; align-items: stretch; gap: 8px;">
+                      <div style="flex-shrink: 0; display: flex; align-items: center; gap: 6px; padding: 0 12px; min-height: 44px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; background: var(--ih-neutral-50); font-size: 13.5px; font-weight: 700; color: var(--ih-neutral-700); white-space: nowrap;"><span>🇪🇬</span><span dir="ltr">+20</span></div>
+                      <input dir="ltr" inputmode="tel" value="{{ phone }}" onInput="{{ onPhone }}" placeholder="2 2XXX XXXX" style="flex: 1; min-width: 0; box-sizing: border-box; min-height: 44px; padding: 0 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 14.5px; letter-spacing: 0.03em; color: var(--ih-neutral-800); background: var(--ih-neutral-0); text-align: left; transition: border-color 180ms;">
+                    </div>
+                    <span style="font-size: 12px; color: var(--ih-neutral-600);">الرقم الأرضي أو الخط الساخن للفرع</span>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 7px;">
+                    <label style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-700);">واتساب <span style="font-weight: 500; color: var(--ih-neutral-500);">(اختياري)</span></label>
+                    <div style="display: flex; align-items: stretch; gap: 8px;">
+                      <div style="flex-shrink: 0; display: flex; align-items: center; gap: 6px; padding: 0 12px; min-height: 44px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; background: var(--ih-neutral-50); font-size: 13.5px; font-weight: 700; color: var(--ih-neutral-700); white-space: nowrap;"><span>🇪🇬</span><span dir="ltr">+20</span></div>
+                      <input dir="ltr" inputmode="tel" value="{{ whatsapp }}" onInput="{{ onWhatsapp }}" placeholder="10 XXXX XXXX" style="flex: 1; min-width: 0; box-sizing: border-box; min-height: 44px; padding: 0 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 14.5px; letter-spacing: 0.03em; color: var(--ih-neutral-800); background: var(--ih-neutral-0); text-align: left; transition: border-color 180ms;">
+                    </div>
+                    <span style="font-size: 12px; color: var(--ih-neutral-600);">رقم محمول — يظهر كزر مراسلة للمرضى</span>
+                  </div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 7px;">
+                  <label style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-700);">العنوان بالعربية</label>
+                  <textarea rows="2" onInput="{{ onAddrAr }}" style="width: 100%; box-sizing: border-box; padding: 11px 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; font-family: 'Cairo', sans-serif; font-size: 14.5px; line-height: 1.6; color: var(--ih-neutral-800); background: var(--ih-neutral-0); resize: none; transition: border-color 180ms;">شارع التسعين الشمالي، أمام مول كايرو فستيفال، التجمع الخامس، القاهرة الجديدة</textarea>
+                  <span style="font-size: 12px; color: var(--ih-neutral-600);">اكتب علامة مميزة قريبة — تساعد المرضى في الوصول</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 7px;">
+                  <label style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-700);">العنوان بالإنجليزية <span style="font-weight: 500; color: var(--ih-neutral-500);">(اختياري)</span></label>
+                  <textarea dir="ltr" rows="2" onInput="{{ onAddrEn }}" placeholder="North 90th Street, opposite Cairo Festival City, Fifth Settlement, New Cairo" style="width: 100%; box-sizing: border-box; padding: 11px 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 14px; line-height: 1.55; color: var(--ih-neutral-800); background: var(--ih-neutral-0); resize: none; text-align: left; transition: border-color 180ms;">North 90th Street, opposite Cairo Festival City, Fifth Settlement, New Cairo</textarea>
+                </div>
+              </div>
+              <div style="padding: 14px 20px; border-top: 1px solid var(--ih-neutral-200); background: var(--ih-neutral-50); display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                <span style="font-size: 12px; color: var(--ih-neutral-600);">التعديلات غير المحفوظة تُفقد عند مغادرة الصفحة.</span>
+                <div style="flex-shrink: 0; display: flex; gap: 8px;">
+                  <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="md" variant="ghost" hint-size="70px,40px"><span style="white-space: nowrap; color: var(--ih-neutral-600);">تراجع</span></x-import>
+                  <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="md" hint-size="120px,40px"><span style="white-space: nowrap;">حفظ التغييرات</span></x-import>
+                </div>
+              </div>
+            </div>
+            <!-- locked card -->
+            <div style="width: 380px; flex-shrink: 0; background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); overflow: hidden;">
+              <div style="padding: 16px 20px; border-bottom: 1px solid var(--ih-neutral-200); display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                  <div style="font-size: 15px; font-weight: 700; color: var(--ih-neutral-800);">تديرها إنستاهيلث</div>
+                  <div style="font-size: 12px; color: var(--ih-neutral-600);">بيانات متفق عليها في العقد</div>
+                </div>
+                <span style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ih-neutral-600); background: var(--ih-neutral-50); border: 1px solid var(--ih-neutral-200); border-radius: 999px; padding: 5px 12px; white-space: nowrap;">🔒 للعرض فقط</span>
+              </div>
+              <div style="padding: 4px 20px 8px;">
+                <sc-for list="{{ managedRows }}" as="m" hint-placeholder-count="5">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--ih-neutral-100);">
+                    <span style="font-size: 12.5px; color: var(--ih-neutral-600); flex-shrink: 0;">{{ m.label }}</span>
+                    <sc-if value="{{ m.isStatus }}" hint-placeholder-val="{{ false }}">
+                      <span style="display: inline-flex; align-items: center; gap: 4px; border-radius: 9999px; padding: 0.25rem 0.75rem; font-size: 0.75rem; font-weight: 600; white-space: nowrap; background: var(--ih-success-bg); color: #028090;">● نشط</span>
+                    </sc-if>
+                    <sc-if value="{{ m.isText }}" hint-placeholder-val="{{ true }}">
+                      <span style="font-size: 13.5px; font-weight: 700; color: var(--ih-neutral-800); text-align: left; unicode-bidi: isolate;">{{ m.value }}</span>
+                    </sc-if>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="padding: 14px 20px; background: var(--ih-neutral-50); border-top: 1px solid var(--ih-neutral-200); display: flex; flex-direction: column; gap: 4px;">
+                <span style="font-size: 12.5px; color: var(--ih-neutral-700); line-height: 1.6;">لتعديل هذه البيانات تواصل مع إنستاهيلث</span>
+                <a href="mailto:partners@instahealth.eg" dir="ltr" style="font-size: 12.5px; font-weight: 700; text-decoration: none; text-align: right;">partners@instahealth.eg</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- saved toast -->
+        <div class="ih-toast" role="status" style="position: absolute; top: 84px; left: 50%; transform: translateX(-50%); z-index: 50; display: flex; align-items: center; gap: 10px; background: var(--ih-neutral-800); border-radius: 12px; padding: 12px 18px; box-shadow: 0 12px 32px rgba(2,20,27,0.28); animation: ih-toast-in 350ms cubic-bezier(0.22,1,0.36,1);">
+          <span style="width: 22px; height: 22px; border-radius: 999px; background: var(--ih-primary-400); display: flex; align-items: center; justify-content: center; font-size: 12px; color: #fff; flex-shrink: 0;" aria-hidden="true">✓</span>
+          <span style="font-size: 13.5px; font-weight: 600; color: #fff; white-space: nowrap;">تم حفظ بيانات الفرع — ظهرت للمرضى الآن</span>
+        </div>
+      </div>
+    </x-import>
+  </div>
+
+  <!-- ═══ Branch details — phone validation error ═══ -->
+  <div data-screen-label="بيانات الفرع — خطأ في الرقم">
+    <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 768 }}" url="partners.instahealth.eg/branch" hint-size="1366px,768px">
+      <div dir="rtl" style="position: relative; display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden;">
+        <div style="flex-shrink: 0; display: flex; align-self: stretch; background: var(--ih-surface-sidebar);">
+          <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.SidebarNav" brand="بوابة الشركاء" items="{{ navItems }}" active="{{ 4 }}" style="{{ sidebarStyle }}" hint-size="220px,100%"></x-import>
+        </div>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); box-shadow: var(--ih-shadow-sm); padding: 12px 24px; display: flex; align-items: center; gap: 20px; min-height: 56px; box-sizing: border-box;">
+            <div style="display: flex; flex-direction: column; gap: 1px;">
+              <div style="font-size: 16px; font-weight: 800; color: var(--ih-neutral-800);">بيانات الفرع</div>
+              <div style="font-size: 12.5px; color: var(--ih-neutral-500);">معامل سريدار — فرع التجمع الخامس</div>
+            </div>
+            <div style="flex: 1;"></div>
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding-right: 16px; border-right: 1px solid var(--ih-neutral-200); white-space: nowrap;">
+              <div style="width: 32px; height: 32px; border-radius: 999px; background: var(--ih-primary-50); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--ih-primary-700);">إ</div>
+              <div style="display: flex; flex-direction: column;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-700);">إدارة الفرع</span>
+                <span style="font-size: 11px; color: var(--ih-neutral-500); cursor: pointer; text-decoration: underline;">تسجيل خروج</span>
+              </div>
+            </div>
+          </div>
+          <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 16px 24px 24px; display: flex; gap: 16px; align-items: flex-start;">
+            <div style="flex: 1; min-width: 0; background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); overflow: hidden;">
+              <div style="padding: 16px 20px; border-bottom: 1px solid var(--ih-neutral-200); display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                  <div style="font-size: 15px; font-weight: 700; color: var(--ih-neutral-800);">بيانات التواصل والعنوان</div>
+                  <div style="font-size: 12px; color: var(--ih-neutral-600);">آخر تحديث: قبل ٣ أسابيع</div>
+                </div>
+                <span style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ih-primary-700); background: var(--ih-primary-50); border: 1px solid var(--ih-primary-400); border-radius: 999px; padding: 5px 12px; white-space: nowrap;">✎ قابلة للتعديل</span>
+              </div>
+              <div style="padding: 18px 20px; display: flex; flex-direction: column; gap: 18px;">
+                <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Alert" type="error" hint-size="100%,60px">لم نتمكن من الحفظ — رقم الهاتف غير مكتمل. صحّح الرقم وحاول مرة أخرى.</x-import>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 18px;">
+                  <div style="display: flex; flex-direction: column; gap: 7px;">
+                    <label style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-700);">هاتف الفرع</label>
+                    <div style="display: flex; align-items: stretch; gap: 8px;">
+                      <div style="flex-shrink: 0; display: flex; align-items: center; gap: 6px; padding: 0 12px; min-height: 44px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; background: var(--ih-neutral-50); font-size: 13.5px; font-weight: 700; color: var(--ih-neutral-700); white-space: nowrap;"><span>🇪🇬</span><span dir="ltr">+20</span></div>
+                      <input dir="ltr" inputmode="tel" value="2 2735" placeholder="2 2XXX XXXX" aria-invalid="true" style="flex: 1; min-width: 0; box-sizing: border-box; min-height: 44px; padding: 0 12px; border: 1.5px solid var(--ih-error); border-radius: 8px; background: var(--ih-error-bg); font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 14.5px; letter-spacing: 0.03em; color: var(--ih-neutral-800); text-align: left;">
+                    </div>
+                    <span style="display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #991B1B; white-space: nowrap;"><span aria-hidden="true">⚠</span> الرقم يجب أن يكون ٨ أرقام بعد كود المحافظة — مثال: <span dir="ltr" style="unicode-bidi: isolate;">2 2735 4416</span></span>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 7px;">
+                    <label style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-700);">واتساب <span style="font-weight: 500; color: var(--ih-neutral-500);">(اختياري)</span></label>
+                    <div style="display: flex; align-items: stretch; gap: 8px;">
+                      <div style="flex-shrink: 0; display: flex; align-items: center; gap: 6px; padding: 0 12px; min-height: 44px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; background: var(--ih-neutral-50); font-size: 13.5px; font-weight: 700; color: var(--ih-neutral-700); white-space: nowrap;"><span>🇪🇬</span><span dir="ltr">+20</span></div>
+                      <input dir="ltr" inputmode="tel" value="10 2244 8890" placeholder="10 XXXX XXXX" style="flex: 1; min-width: 0; box-sizing: border-box; min-height: 44px; padding: 0 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 14.5px; letter-spacing: 0.03em; color: var(--ih-neutral-800); background: var(--ih-neutral-0); text-align: left;">
+                    </div>
+                    <span style="font-size: 12px; color: var(--ih-neutral-600);">رقم محمول — يظهر كزر مراسلة للمرضى</span>
+                  </div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 7px;">
+                  <label style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-700);">العنوان بالعربية</label>
+                  <textarea rows="2" style="width: 100%; box-sizing: border-box; padding: 11px 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; font-family: 'Cairo', sans-serif; font-size: 14.5px; line-height: 1.6; color: var(--ih-neutral-800); background: var(--ih-neutral-0); resize: none;">شارع التسعين الشمالي، أمام مول كايرو فستيفال، التجمع الخامس، القاهرة الجديدة</textarea>
+                  <span style="font-size: 12px; color: var(--ih-neutral-600);">اكتب علامة مميزة قريبة — تساعد المرضى في الوصول</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 7px;">
+                  <label style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-700);">العنوان بالإنجليزية <span style="font-weight: 500; color: var(--ih-neutral-500);">(اختياري)</span></label>
+                  <textarea dir="ltr" rows="2" placeholder="North 90th Street, opposite Cairo Festival City, Fifth Settlement, New Cairo" style="width: 100%; box-sizing: border-box; padding: 11px 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 14px; line-height: 1.55; color: var(--ih-neutral-800); background: var(--ih-neutral-0); resize: none; text-align: left;">North 90th Street, opposite Cairo Festival City, Fifth Settlement, New Cairo</textarea>
+                </div>
+              </div>
+              <div style="padding: 14px 20px; border-top: 1px solid var(--ih-neutral-200); background: var(--ih-neutral-50); display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                <span style="font-size: 12px; color: var(--ih-neutral-600);">التعديلات غير المحفوظة تُفقد عند مغادرة الصفحة.</span>
+                <div style="flex-shrink: 0; display: flex; gap: 8px;">
+                  <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="md" variant="ghost" hint-size="70px,40px"><span style="white-space: nowrap; color: var(--ih-neutral-600);">تراجع</span></x-import>
+                  <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="md" disabled="{{ true }}" hint-size="120px,40px"><span style="white-space: nowrap;">حفظ التغييرات</span></x-import>
+                </div>
+              </div>
+            </div>
+            <div style="width: 380px; flex-shrink: 0; background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); overflow: hidden;">
+              <div style="padding: 16px 20px; border-bottom: 1px solid var(--ih-neutral-200); display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                  <div style="font-size: 15px; font-weight: 700; color: var(--ih-neutral-800);">تديرها إنستاهيلث</div>
+                  <div style="font-size: 12px; color: var(--ih-neutral-600);">بيانات متفق عليها في العقد</div>
+                </div>
+                <span style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ih-neutral-600); background: var(--ih-neutral-50); border: 1px solid var(--ih-neutral-200); border-radius: 999px; padding: 5px 12px; white-space: nowrap;">🔒 للعرض فقط</span>
+              </div>
+              <div style="padding: 4px 20px 8px;">
+                <sc-for list="{{ managedRows }}" as="m" hint-placeholder-count="5">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--ih-neutral-100);">
+                    <span style="font-size: 12.5px; color: var(--ih-neutral-600); flex-shrink: 0;">{{ m.label }}</span>
+                    <sc-if value="{{ m.isStatus }}" hint-placeholder-val="{{ false }}">
+                      <span style="display: inline-flex; align-items: center; gap: 4px; border-radius: 9999px; padding: 0.25rem 0.75rem; font-size: 0.75rem; font-weight: 600; white-space: nowrap; background: var(--ih-success-bg); color: #028090;">● نشط</span>
+                    </sc-if>
+                    <sc-if value="{{ m.isText }}" hint-placeholder-val="{{ true }}">
+                      <span style="font-size: 13.5px; font-weight: 700; color: var(--ih-neutral-800); text-align: left; unicode-bidi: isolate;">{{ m.value }}</span>
+                    </sc-if>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="padding: 14px 20px; background: var(--ih-neutral-50); border-top: 1px solid var(--ih-neutral-200); display: flex; flex-direction: column; gap: 4px;">
+                <span style="font-size: 12.5px; color: var(--ih-neutral-700); line-height: 1.6;">لتعديل هذه البيانات تواصل مع إنستاهيلث</span>
+                <a href="mailto:partners@instahealth.eg" dir="ltr" style="font-size: 12.5px; font-weight: 700; text-decoration: none; text-align: right;">partners@instahealth.eg</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </x-import>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1460, &quot;height&quot;: 1620}}">
+class Component extends DCLogic {
+  state = { phone: "2 2735 4416", whatsapp: "10 2244 8890", dirty: false };
+  renderVals() {
+    return {
+      navItems: [
+        { icon: "📋", label: "اليوم" },
+        { icon: "📅", label: "الأيام القادمة" },
+        { icon: "💰", label: "الخدمات والأسعار" },
+        { icon: "🕐", label: "المواعيد المتاحة" },
+        { icon: "🏥", label: "بيانات الفرع" },
+      ],
+      sidebarStyle: { height: "100%", alignSelf: "stretch", flexShrink: 0, boxSizing: "border-box" },
+      lastUpdated: this.state.dirty ? "الآن" : "قبل ٣ أسابيع",
+      phone: this.state.phone,
+      whatsapp: this.state.whatsapp,
+      onPhone: (e) => this.setState({ phone: e.target.value, dirty: true }),
+      onWhatsapp: (e) => this.setState({ whatsapp: e.target.value, dirty: true }),
+      onAddrAr: () => this.setState({ dirty: true }),
+      onAddrEn: () => this.setState({ dirty: true }),
+      managedRows: [
+        { label: "اسم الفرع", value: "معامل سريدار — فرع التجمع الخامس", isText: true },
+        { label: "المنطقة", value: "التجمع الخامس، القاهرة الجديدة", isText: true },
+        { label: "ساعات العمل", value: "١٢:٣٠م — ٤:٣٠م", isText: true },
+        { label: "عدد المواعيد اليومية", value: "٨ مواعيد · كل ٣٠ دقيقة", isText: true },
+        { label: "حالة الفرع", isStatus: true },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

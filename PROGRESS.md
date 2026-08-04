@@ -77,6 +77,51 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 
 ## Shipped
 
+### 2026-08-04 · P05 REBUILD — branch profile UI to the Branch Details handoff + the no-eye rule
+
+P05 shipped in the morning WITHOUT a design handoff — assembled from the
+dashboard idiom by judgment — and the founder's re-export the same day
+(`Provider Dashboard - Branch Details.dc.html`) showed how far judgment had
+drifted: wrong card anatomy, no +20 phone treatment, alert-instead-of-toast.
+Rebuilt to the handoff exactly, **behavior unchanged** (field split, schema
+mirror, `update_branch_profile`, pending-spans-refetch all as shipped).
+
+**Everything new went through the CONTRACT, not the page** — five extensions to
+`packages/design-tokens/src/components.ts`, each transcribed from the handoff:
+`CHIP_MD`+`CHIP_TONES` (the bordered card-header chips), `TOAST` (the dark
+saved-toast — no Toast exists in `_ds`; this handoff is the spec's source),
+`BRANCH_STATUS_BADGES` («● نشط» + holiday/inactive siblings),
+`INPUT_AFFIX`/`INPUT_HELP`/`INPUT_ERROR` (the +20 box, helpers, error tint),
+`CARD_SECTIONS` (header/body/footer bands). Web shells: `ui/Chip`, `ui/Toast`,
+`BranchStatusBadge`.
+
+**The +20 national treatment is display-only.** The DB keeps storing the
+0-leading local form ("02-27354416") and hotlines verbatim ("15276") — core's
+`branchPhoneToNational` / `nationalToBranchPhone` map at the UI edge, tested
+both directions including the hotline pass-through and Arabic-digit folding.
+The server contract did not move. New `formatWeeklyHoursSummaryAr` renders the
+locked card's one-line hours row by grouping consecutive same-hours days —
+compact like the design without flattening a varied week into a lie.
+
+**Two deliberate deviations, both §3a "contract wins over prototype":** inputs
+are the contract's 48px (the mockup hand-draws 44), and the design's
+«٨ مواعيد · كل ٣٠ دقيقة» drops its «كل ٣٠ دقيقة» segment —
+`slot_duration_minutes` stopped describing grid spacing at the capacity
+rewrite, and P04 already refused to render it as spacing.
+
+**⚠ THE PROCESS RULE this cost is now §9 law:** no new screen without either a
+design handoff for it, or an explicit spec instruction to compose strictly
+from the component contract — "build it by eye" is banned as a category, and a
+missing component means EXTEND THE CONTRACT, never the page. Also recorded in
+EXPORT.md: the naming trap that caused this ("Provider Profile" is the PATIENT
+screen; the dashboard screen is "Branch Details"), plus the 2026-08-04 export
+log entry (Branch Details + Search — F03's design has arrived).
+
+**Verified:** 4/4 Playwright against a PRODUCTION build (round-trip now in
+national form; invalid input disables save per the design), captures at
+1366×768 in `docs/design-briefs/p05-fidelity/` read against the bundle
+side-by-side, core 380 tests, coverage bar held. Fixture tripwire untouched.
+
 ### 2026-08-04 · P05 — Branch profile «بيانات الفرع» (web)
 
 The last dashboard surface: the desk can now SEE the branch's own record and

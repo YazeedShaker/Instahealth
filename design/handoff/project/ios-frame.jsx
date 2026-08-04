@@ -201,7 +201,7 @@ function IOSList({ header, children, dark = false }) {
 // ─────────────────────────────────────────────────────────────
 function IOSDevice({
   children, width = 402, height = 874, dark = false,
-  title, keyboard = false,
+  title, keyboard = false, arabic = false, suggestions,
 }) {
   return (
     // data-om-starter: inert presence marker — Claude Design's starter-usage
@@ -226,7 +226,7 @@ function IOSDevice({
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         {title !== undefined && <IOSNavBar title={title} dark={dark} />}
         <div style={{ flex: 1, overflow: 'auto' }}>{children}</div>
-        {keyboard && <IOSKeyboard dark={dark} />}
+        {keyboard && <IOSKeyboard dark={dark} arabic={arabic} suggestions={suggestions} />}
       </div>
       {/* home indicator — always on top */}
       <div style={{
@@ -246,7 +246,7 @@ function IOSDevice({
 // ─────────────────────────────────────────────────────────────
 // Keyboard — iOS 26 liquid glass
 // ─────────────────────────────────────────────────────────────
-function IOSKeyboard({ dark = false }) {
+function IOSKeyboard({ dark = false, arabic = false, suggestions }) {
   const glyph = dark ? 'rgba(255,255,255,0.7)' : '#595959';
   const sugg = dark ? 'rgba(255,255,255,0.6)' : '#333';
   const keyBg = dark ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.85)';
@@ -265,13 +265,13 @@ function IOSKeyboard({ dark = false }) {
       background: ret ? '#08f' : keyBg,
       boxShadow: '0 1px 0 rgba(0,0,0,0.075)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontFamily: '-apple-system, "SF Compact", system-ui',
+      fontFamily: arabic ? "'Cairo', -apple-system, system-ui" : '-apple-system, "SF Compact", system-ui',
       fontSize: fs, fontWeight: 458, color: ret ? '#fff' : glyph,
     }}>{content}</div>
   );
 
   const row = (keys, pad = 0) => (
-    <div style={{ display: 'flex', gap: 6.5, justifyContent: 'center', padding: `0 ${pad}px` }}>
+    <div style={{ display: 'flex', flexDirection: arabic ? 'row-reverse' : 'row', gap: 6.5, justifyContent: 'center', padding: `0 ${pad}px` }}>
       {keys.map(l => key(l, { flex: true, k: l }))}
     </div>
   );
@@ -305,15 +305,16 @@ function IOSKeyboard({ dark = false }) {
       <div style={{
         display: 'flex', gap: 20, alignItems: 'center',
         padding: '8px 22px 13px', width: '100%', boxSizing: 'border-box',
+        flexDirection: arabic ? 'row-reverse' : 'row',
         position: 'relative',
       }}>
-        {['"The"', 'the', 'to'].map((w, i) => (
+        {(suggestions || (arabic ? ['سكر', 'سكري', 'السكر'] : ['"The"', 'the', 'to'])).map((w, i) => (
           <React.Fragment key={i}>
             {i > 0 && <div style={{ width: 1, height: 25, background: '#ccc', opacity: 0.3 }} />}
             <div style={{
               flex: 1, textAlign: 'center',
-              fontFamily: '-apple-system, system-ui', fontSize: 17,
-              color: sugg, letterSpacing: -0.43, lineHeight: '22px',
+              fontFamily: arabic ? "'Cairo', system-ui" : '-apple-system, system-ui', fontSize: 17,
+              color: sugg, letterSpacing: arabic ? 0 : -0.43, lineHeight: '22px',
             }}>{w}</div>
           </React.Fragment>
         ))}
@@ -325,19 +326,19 @@ function IOSKeyboard({ dark = false }) {
         padding: '0 6.5px', width: '100%', boxSizing: 'border-box',
         position: 'relative',
       }}>
-        {row(['q','w','e','r','t','y','u','i','o','p'])}
-        {row(['a','s','d','f','g','h','j','k','l'], 20)}
-        <div style={{ display: 'flex', gap: 14.25, alignItems: 'center' }}>
-          {key(icons.shift, { w: 45, k: 'shift' })}
-          <div style={{ display: 'flex', gap: 6.5, flex: 1 }}>
-            {['z','x','c','v','b','n','m'].map(l => key(l, { flex: true, k: l }))}
+        {row(arabic ? ['ض','ص','ث','ق','ف','غ','ع','ه','خ','ح','ج'] : ['q','w','e','r','t','y','u','i','o','p'], arabic ? 0 : 0)}
+        {row(arabic ? ['ش','س','ي','ب','ل','ا','ت','ن','م','ك','ط'] : ['a','s','d','f','g','h','j','k','l'], arabic ? 0 : 20)}
+        <div style={{ display: 'flex', flexDirection: arabic ? 'row-reverse' : 'row', gap: arabic ? 6.5 : 14.25, alignItems: 'center' }}>
+          {arabic ? key('١٢٣', { w: 45, fs: 15, k: 'nums' }) : key(icons.shift, { w: 45, k: 'shift' })}
+          <div style={{ display: 'flex', flexDirection: arabic ? 'row-reverse' : 'row', gap: 6.5, flex: 1 }}>
+            {(arabic ? ['ئ','ء','ؤ','ر','لا','ى','ة','و','ز','ظ'] : ['z','x','c','v','b','n','m']).map(l => key(l, { flex: true, fs: arabic ? 19 : 25, k: l }))}
           </div>
           {key(icons.del, { w: 45, k: 'del' })}
         </div>
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          {key('ABC', { w: 92.25, fs: 18, k: 'abc' })}
-          {key('', { flex: true, k: 'space' })}
-          {key(icons.ret, { w: 92.25, ret: true, k: 'ret' })}
+        <div style={{ display: 'flex', flexDirection: arabic ? 'row-reverse' : 'row', gap: 6, alignItems: 'center' }}>
+          {key(arabic ? 'ABC' : 'ABC', { w: 92.25, fs: 18, k: 'abc' })}
+          {key(arabic ? 'مسافة' : '', { flex: true, fs: arabic ? 15 : 25, k: 'space' })}
+          {arabic ? key('بحث', { w: 92.25, fs: 15, ret: true, k: 'ret' }) : key(icons.ret, { w: 92.25, ret: true, k: 'ret' })}
         </div>
       </div>
 
