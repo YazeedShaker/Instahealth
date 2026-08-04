@@ -66,7 +66,9 @@ visual contract. Then specs → Claude Code.
       surface is now live; P06 has no defined scope left — new dashboard asks go through
       a fresh spec.
 - [x] **F07** — ✅ DONE. Mobile: My Bookings list, detail & cancel (see Shipped)
-- [ ] **F08–F09** — Mobile: reviews, profile
+- [x] **PROF-01** — ✅ DONE. Mobile: profile tab + account deletion (see Shipped)
+- [ ] **F08** — Mobile: reviews (needs a review writer function — the
+      `update_branch_profile` shape)
 - [ ] **A01–A06** — Web: admin panel
 - [ ] **006_practitioners.sql + doctor booking** — after labs/scans proven
 
@@ -76,6 +78,67 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 ---
 
 ## Shipped
+
+### 2026-08-04 · PROF-01 — Profile tab + account deletion (mobile)
+
+The حسابي tab becomes real — and the App Store's mandatory account deletion
+ships with honest data semantics. The screen is deliberately thin; **the
+substance is the deletion**.
+
+**Ratified semantics: ANONYMIZE, DON'T DESTROY.** Bookings, payments and
+notifications rows STAY — commission history and partner invoicing are the
+standing money law, and a deleted patient must not erase what a partner is
+owed. The PERSON is scrubbed: the users row becomes a tombstone
+(«مستخدم محذوف», PII nulled, phone → `del-<16 hex>`), then the auth user is
+deleted so every session dies and the real number is freed.
+
+**⚠ The ordering IS the safety argument**, stated in the function: cancel
+future bookings → release holds → **anonymize** → auth-delete. Auth-delete
+first would mean a crash mid-scrub leaves PII with no login able to retry —
+orphaned data only an admin could reach. Anonymize-first inverts the failure:
+a crash leaves a live login whose data is already scrubbed, and the patient's
+retry finishes the job. Cancellation goes through the REAL `cancel_booking`
+path, so slots are released and the desk sees `cancelled_by = 'patient'` with
+reason «حذف الحساب» — nothing bespoke.
+
+**A schema fix was required first** (migration `20260804183716`):
+`users.id` carried `REFERENCES auth.users ON DELETE CASCADE`, which made the
+semantics impossible — CASCADE destroys the tombstone, while NO ACTION would
+block the auth deletion (bookings/reviews/notifications reference users). The
+FK is DROPPED, not weakened; creation-side integrity is untouched because the
+only insert path is the RLS policy `id = auth.uid()`.
+
+**⚠ Two live-data findings, both caught by verifying rather than reasoning:**
+`users.phone` is `varchar(20)`, so the first tombstone format
+(`deleted-<uuid>`) blew the column — the failure ALSO proved the ordering
+holds, since nothing was half-deleted and the retry completed cleanly. And
+signup does have a `handle_new_user` trigger, so a re-registered number gets a
+clean auto-created row — the first assertion assumed the F01 client-insert
+path and was wrong about the app's own behaviour.
+
+**Verified: 7 Node checks + 4 server-side assertions against the LIVE dev DB** —
+deletion succeeds · the old session stops resolving · a repeat call with the
+dead token gets **401** (an unverifiable caller must never learn whether an
+account existed) · the number re-registers as a DIFFERENT user id with a clean
+row carrying the freed number and no inherited name · the tombstone is
+scrubbed · the future booking is `cancelled` by `patient` with its slot
+released (`booked_count` 0) · **the completed cash booking and its payments row
+are untouched at 450 EGP** · zero auth rows remain. Synthetic fixtures removed
+afterwards.
+
+**Composed strictly from existing anatomies** (this spec is the sanctioned
+exception to the no-build-by-eye rule — every element names its source): the
+identity card and rows follow the branch-profile list idiom, the name editor
+is F01's name screen verbatim over the same RLS-scoped `updateProfileName`,
+the confirm sheet is `CancelBookingSheet`'s anatomy generalised, and the
+type-to-confirm gate is P03's price-editor pattern. **Logout now has ONE home**
+(`features/auth/logout.ts`) — the profile placeholder's copy is gone.
+
+**⚠ FOUNDER ACTIONS / store-prep, both flagged in Known risks below:**
+① the patient-support contact is UNSET (`PATIENT_SUPPORT` is all-null in core,
+so «تواصل معنا» HIDES — empty means absent, never a fake number); ② store
+submission needs a live **privacy policy + terms URL** — those rows render
+disabled «قريباً» until the URLs exist.
 
 ### 2026-08-04 · F03 — Search (mobile): live catalog search with Arabic normalization
 
@@ -2238,6 +2301,14 @@ _Next entry after SETUP-02._
   design shows بطاقة / فوري / نقداً, but PayTabs Egypt supports neither Fawry nor
   Vodafone Cash (its methods are creditcard/aman/meezaqr/valu). Resolving this
   needs a design revision AND a migration to `bookings_payment_method_check`.
+- **⚠ STORE-PREP (PROF-01): the app cannot be submitted without a live PRIVACY
+  POLICY and TERMS URL.** Apple and Google both require a reachable privacy
+  policy; the profile rows render disabled «قريباً» until the URLs exist. Not a
+  code task — a founder/legal one, and it blocks submission, not development.
+- **⚠ The patient-support contact is UNSET.** `PATIENT_SUPPORT` in core is
+  all-null, so «تواصل معنا» hides itself rather than showing a number nobody
+  answers. Supply a WhatsApp number (preferred), a phone, or an email and the
+  row appears with no code change beyond the constant.
 - **⚠ The confirmation SMS has never been delivered to a real handset.** Every
   dev/CI run uses the static test numbers, which are deliberately skipped. The
   founder's real-number check is the only proof the Arabic Unicode message
