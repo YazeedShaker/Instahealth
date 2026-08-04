@@ -1003,6 +1003,11 @@ export type Database = {
         Args: { p_booking_id: string; p_outcome: string }
         Returns: Json
       }
+      normalize_arabic: { Args: { p_text: string }; Returns: string }
+      search_catalog: {
+        Args: { p_category_slug?: string; p_query: string }
+        Returns: Json
+      }
       update_branch_profile: {
         Args: {
           p_address_ar: string
