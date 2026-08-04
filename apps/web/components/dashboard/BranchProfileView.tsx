@@ -289,10 +289,16 @@ export function BranchProfileView({
         </div>
       </header>
 
-      {/* position:relative so the contract Toast can anchor top-center. */}
-      <main
-        className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-4"
-        style={{ position: 'relative' }}
+      {/* Non-scrolling relative wrapper: the Toast anchors to the VISIBLE
+          bottom of the content area, not to a scroll position. */}
+      <div
+        style={{
+          position: 'relative',
+          flex: 1,
+          minHeight: 0,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
       >
         {toastAr !== null ? (
           <Toast testId="profile-saved" onDismiss={dismissToast}>
@@ -300,217 +306,221 @@ export function BranchProfileView({
           </Toast>
         ) : null}
 
-        {profile === null ? (
-          <div className="flex flex-col items-center gap-3 rounded-xl border border-ih-neutral-200 bg-white p-10 text-center">
-            <div className="text-sm text-ih-neutral-700">
-              {initialLoadFailed || query.isError
-                ? 'تعذّر تحميل بيانات الفرع — تحقق من الاتصال وحاول مرة أخرى.'
-                : 'جارٍ التحميل…'}
+        <main className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-4">
+          {profile === null ? (
+            <div className="flex flex-col items-center gap-3 rounded-xl border border-ih-neutral-200 bg-white p-10 text-center">
+              <div className="text-sm text-ih-neutral-700">
+                {initialLoadFailed || query.isError
+                  ? 'تعذّر تحميل بيانات الفرع — تحقق من الاتصال وحاول مرة أخرى.'
+                  : 'جارٍ التحميل…'}
+              </div>
+              <Button variant="outline" onClick={() => void query.refetch()}>
+                إعادة المحاولة
+              </Button>
             </div>
-            <Button variant="outline" onClick={() => void query.refetch()}>
-              إعادة المحاولة
-            </Button>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-            {/* ── editable card ─────────────────────────────────────────── */}
-            <Card padding={0} style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-              <SectionHeader
-                title="بيانات التواصل والعنوان"
-                subtitle={
-                  <span
-                    data-testid="profile-updated"
-                    style={updatedLabel === null ? { color: '#92600A' } : undefined}
-                  >
-                    {updatedLabel === null ? 'لم يُحدَّث بعد' : `آخر تحديث: ${updatedLabel}`}
-                  </span>
-                }
-                chip={<Chip tone="outlinedPrimary">✎ قابلة للتعديل</Chip>}
-              />
-
-              <div
-                style={{
-                  padding: `${CARD_SECTIONS.bodyPaddingY}px ${CARD_SECTIONS.bodyPaddingX}px`,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 18,
-                }}
-              >
-                {errorAr !== null ? (
-                  <Alert type="error" testId="profile-error">
-                    {errorAr}
-                  </Alert>
-                ) : (
-                  <div
-                    data-testid="profile-notice"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 10,
-                      background: 'var(--ih-info-bg)',
-                      border: '1px solid rgba(2,128,144,0.25)',
-                      borderRadius: 8,
-                      padding: '10px 14px',
-                    }}
-                  >
-                    <span style={{ fontSize: 14, flexShrink: 0 }} aria-hidden="true">
-                      ℹ
-                    </span>
+          ) : (
+            <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+              {/* ── editable card ─────────────────────────────────────────── */}
+              <Card padding={0} style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                <SectionHeader
+                  title="بيانات التواصل والعنوان"
+                  subtitle={
                     <span
-                      style={{ fontSize: 12.5, color: 'var(--ih-primary-800)', lineHeight: 1.6 }}
+                      data-testid="profile-updated"
+                      style={updatedLabel === null ? { color: '#92600A' } : undefined}
                     >
-                      رقم الهاتف والعنوان يظهران للمرضى في التطبيق فوراً بعد الحفظ.
+                      {updatedLabel === null ? 'لم يُحدَّث بعد' : `آخر تحديث: ${updatedLabel}`}
                     </span>
-                  </div>
-                )}
+                  }
+                  chip={<Chip tone="outlinedPrimary">✎ قابلة للتعديل</Chip>}
+                />
 
-                <PhoneField
-                  id="profile-phone"
-                  label="هاتف الفرع"
-                  placeholder="2 2XXX XXXX"
-                  value={values?.phone ?? ''}
-                  disabled={pending}
-                  error={fieldError('phone')}
-                  helper="الرقم الأرضي أو الخط الساخن للفرع"
-                  onChange={(value) => setField('phone', value)}
-                />
-                <PhoneField
-                  id="profile-whatsapp"
-                  label="واتساب"
-                  optional
-                  placeholder="10 XXXX XXXX"
-                  value={values?.whatsapp ?? ''}
-                  disabled={pending}
-                  error={fieldError('whatsapp')}
-                  helper="رقم محمول — يظهر كزر مراسلة للمرضى"
-                  onChange={(value) => setField('whatsapp', value)}
-                />
-                <TextAreaField
-                  id="profile-address-ar"
-                  label="العنوان بالعربية"
-                  value={values?.addressAr ?? ''}
-                  disabled={pending}
-                  error={fieldError('addressAr')}
-                  helper="اكتب علامة مميزة قريبة — تساعد المرضى في الوصول"
-                  onChange={(value) => setField('addressAr', value)}
-                />
-                <TextAreaField
-                  id="profile-address-en"
-                  label="العنوان بالإنجليزية"
-                  optional
-                  ltr
-                  placeholder="North 90th Street, opposite Cairo Festival City, Fifth Settlement, New Cairo"
-                  value={values?.addressEn ?? ''}
-                  disabled={pending}
-                  error={fieldError('addressEn')}
-                  onChange={(value) => setField('addressEn', value)}
-                />
-              </div>
+                <div
+                  style={{
+                    padding: `${CARD_SECTIONS.bodyPaddingY}px ${CARD_SECTIONS.bodyPaddingX}px`,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 18,
+                  }}
+                >
+                  {errorAr !== null ? (
+                    <Alert type="error" testId="profile-error">
+                      {errorAr}
+                    </Alert>
+                  ) : (
+                    <div
+                      data-testid="profile-notice"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 10,
+                        background: 'var(--ih-info-bg)',
+                        border: '1px solid rgba(2,128,144,0.25)',
+                        borderRadius: 8,
+                        padding: '10px 14px',
+                      }}
+                    >
+                      <span style={{ fontSize: 14, flexShrink: 0 }} aria-hidden="true">
+                        ℹ
+                      </span>
+                      <span
+                        style={{ fontSize: 12.5, color: 'var(--ih-primary-800)', lineHeight: 1.6 }}
+                      >
+                        رقم الهاتف والعنوان يظهران للمرضى في التطبيق فوراً بعد الحفظ.
+                      </span>
+                    </div>
+                  )}
 
-              <div
-                style={{
-                  padding: `${CARD_SECTIONS.footerPaddingY}px ${CARD_SECTIONS.footerPaddingX}px`,
-                  borderTop: `1px solid ${resolveTokenCss(CARD_SECTIONS.dividerColor)}`,
-                  background: resolveTokenCss(CARD_SECTIONS.footerBackground),
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 12,
-                }}
-              >
-                <span style={{ fontSize: 12, color: 'var(--ih-neutral-600)' }}>
-                  التعديلات غير المحفوظة تُفقد عند مغادرة الصفحة.
-                </span>
-                <div style={{ flexShrink: 0, display: 'flex', gap: 8 }}>
-                  <Button
-                    variant="ghost"
-                    onClick={handleCancel}
-                    disabled={!dirty || pending}
-                    style={{ color: 'var(--ih-neutral-600)' }}
-                  >
-                    تراجع
-                  </Button>
-                  <Button
-                    data-testid="profile-save"
-                    disabled={!canSave}
-                    loading={pending}
-                    onClick={() => void handleSave()}
-                  >
-                    حفظ التغييرات
-                  </Button>
+                  <PhoneField
+                    id="profile-phone"
+                    label="هاتف الفرع"
+                    placeholder="2 2XXX XXXX"
+                    value={values?.phone ?? ''}
+                    disabled={pending}
+                    error={fieldError('phone')}
+                    helper="الرقم الأرضي أو الخط الساخن للفرع"
+                    onChange={(value) => setField('phone', value)}
+                  />
+                  <PhoneField
+                    id="profile-whatsapp"
+                    label="واتساب"
+                    optional
+                    placeholder="10 XXXX XXXX"
+                    value={values?.whatsapp ?? ''}
+                    disabled={pending}
+                    error={fieldError('whatsapp')}
+                    helper="رقم محمول — يظهر كزر مراسلة للمرضى"
+                    onChange={(value) => setField('whatsapp', value)}
+                  />
+                  <TextAreaField
+                    id="profile-address-ar"
+                    label="العنوان بالعربية"
+                    value={values?.addressAr ?? ''}
+                    disabled={pending}
+                    error={fieldError('addressAr')}
+                    helper="اكتب علامة مميزة قريبة — تساعد المرضى في الوصول"
+                    onChange={(value) => setField('addressAr', value)}
+                  />
+                  <TextAreaField
+                    id="profile-address-en"
+                    label="العنوان بالإنجليزية"
+                    optional
+                    ltr
+                    placeholder="North 90th Street, opposite Cairo Festival City, Fifth Settlement, New Cairo"
+                    value={values?.addressEn ?? ''}
+                    disabled={pending}
+                    error={fieldError('addressEn')}
+                    onChange={(value) => setField('addressEn', value)}
+                  />
                 </div>
-              </div>
-            </Card>
 
-            {/* ── locked card ───────────────────────────────────────────────
+                <div
+                  style={{
+                    padding: `${CARD_SECTIONS.footerPaddingY}px ${CARD_SECTIONS.footerPaddingX}px`,
+                    borderTop: `1px solid ${resolveTokenCss(CARD_SECTIONS.dividerColor)}`,
+                    background: resolveTokenCss(CARD_SECTIONS.footerBackground),
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                  }}
+                >
+                  <span style={{ fontSize: 12, color: 'var(--ih-neutral-600)' }}>
+                    التعديلات غير المحفوظة تُفقد عند مغادرة الصفحة.
+                  </span>
+                  <div style={{ flexShrink: 0, display: 'flex', gap: 8 }}>
+                    <Button
+                      variant="ghost"
+                      onClick={handleCancel}
+                      disabled={!dirty || pending}
+                      style={{ color: 'var(--ih-neutral-600)' }}
+                    >
+                      تراجع
+                    </Button>
+                    <Button
+                      data-testid="profile-save"
+                      disabled={!canSave}
+                      loading={pending}
+                      onClick={() => void handleSave()}
+                    >
+                      حفظ التغييرات
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+
+              {/* ── locked card ───────────────────────────────────────────────
                 Read-only BY DECISION and, since REFACTOR 2/N, by construction:
                 no client write path to these columns exists
                 (DECISION-slot-allocation-ownership, migration 20260803160517).
                 Zero operable controls below. */}
-            <Card
-              padding={0}
-              style={{ width: 380, flexShrink: 0, overflow: 'hidden' }}
-              testId="profile-gated"
-            >
-              <SectionHeader
-                title="تديرها إنستاهيلث"
-                subtitle="بيانات متفق عليها في العقد"
-                chip={<Chip tone="outlinedNeutral">🔒 للعرض فقط</Chip>}
-              />
-              <div style={{ padding: '4px 20px 8px' }}>
-                <ManagedRow label="اسم الفرع" value={profile.nameAr} />
-                <ManagedRow
-                  label="المنطقة"
-                  value={[profile.district, profile.governorate].filter(Boolean).join('، ') || '—'}
+              <Card
+                padding={0}
+                style={{ width: 380, flexShrink: 0, overflow: 'hidden' }}
+                testId="profile-gated"
+              >
+                <SectionHeader
+                  title="تديرها إنستاهيلث"
+                  subtitle="بيانات متفق عليها في العقد"
+                  chip={<Chip tone="outlinedNeutral">🔒 للعرض فقط</Chip>}
                 />
-                <ManagedRow
-                  label="ساعات العمل"
-                  value={hours === null ? '—' : formatWeeklyHoursSummaryAr(hours)}
-                />
-                {/* The handoff appends «· كل ٣٠ دقيقة» from slot_duration_minutes.
+                <div style={{ padding: '4px 20px 8px' }}>
+                  <ManagedRow label="اسم الفرع" value={profile.nameAr} />
+                  <ManagedRow
+                    label="المنطقة"
+                    value={
+                      [profile.district, profile.governorate].filter(Boolean).join('، ') || '—'
+                    }
+                  />
+                  <ManagedRow
+                    label="ساعات العمل"
+                    value={hours === null ? '—' : formatWeeklyHoursSummaryAr(hours)}
+                  />
+                  {/* The handoff appends «· كل ٣٠ دقيقة» from slot_duration_minutes.
                     Deliberately OMITTED: since the capacity rewrite that column no
                     longer describes the grid spacing (PROGRESS Known risks), and
                     P04 already refused to render it as spacing. */}
-                <ManagedRow
-                  label="عدد المواعيد اليومية"
-                  value={`${toArabicDigits(String(profile.slotAllocation))} مواعيد يومياً`}
-                />
-                <ManagedRow
-                  label="حالة الفرع"
-                  value={<BranchStatusBadge status={branchStatus(profile)} />}
-                />
-              </div>
-              <div
-                style={{
-                  padding: `${CARD_SECTIONS.footerPaddingY}px ${CARD_SECTIONS.footerPaddingX}px`,
-                  background: resolveTokenCss(CARD_SECTIONS.footerBackground),
-                  borderTop: `1px solid ${resolveTokenCss(CARD_SECTIONS.dividerColor)}`,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 4,
-                }}
-              >
-                <span style={{ fontSize: 12.5, color: 'var(--ih-neutral-700)', lineHeight: 1.6 }}>
-                  لتعديل هذه البيانات تواصل مع إنستاهيلث
-                </span>
-                <a
-                  data-testid="profile-support"
-                  href="mailto:partners@instahealth.eg"
-                  dir="ltr"
+                  <ManagedRow
+                    label="عدد المواعيد اليومية"
+                    value={`${toArabicDigits(String(profile.slotAllocation))} مواعيد يومياً`}
+                  />
+                  <ManagedRow
+                    label="حالة الفرع"
+                    value={<BranchStatusBadge status={branchStatus(profile)} />}
+                  />
+                </div>
+                <div
                   style={{
-                    fontSize: 12.5,
-                    fontWeight: 700,
-                    textDecoration: 'none',
-                    textAlign: 'right',
+                    padding: `${CARD_SECTIONS.footerPaddingY}px ${CARD_SECTIONS.footerPaddingX}px`,
+                    background: resolveTokenCss(CARD_SECTIONS.footerBackground),
+                    borderTop: `1px solid ${resolveTokenCss(CARD_SECTIONS.dividerColor)}`,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 4,
                   }}
                 >
-                  partners@instahealth.eg
-                </a>
-              </div>
-            </Card>
-          </div>
-        )}
-      </main>
+                  <span style={{ fontSize: 12.5, color: 'var(--ih-neutral-700)', lineHeight: 1.6 }}>
+                    لتعديل هذه البيانات تواصل مع إنستاهيلث
+                  </span>
+                  <a
+                    data-testid="profile-support"
+                    href="mailto:partners@instahealth.eg"
+                    dir="ltr"
+                    style={{
+                      fontSize: 12.5,
+                      fontWeight: 700,
+                      textDecoration: 'none',
+                      textAlign: 'right',
+                    }}
+                  >
+                    partners@instahealth.eg
+                  </a>
+                </div>
+              </Card>
+            </div>
+          )}
+        </main>
+      </div>
     </>
   )
 }

@@ -5,7 +5,11 @@ import { useEffect } from 'react'
 
 // Thin shell over the shared contract — the transient confirmation from the
 // Branch Details handoff. Success auto-dismisses (PRODUCT §6); positioning is
-// top-center over the content area, so the PARENT must be position:relative.
+// BOTTOM-center over the content area (founder decision 2026-08-04, overriding
+// the handoff's top placement). ⚠ The parent must be a NON-SCROLLING
+// position:relative wrapper AROUND the scroll area — anchored inside the
+// scroller itself, a bottom toast scrolls away with the content the moment
+// the user has scrolled (and they have: the save button sits at the foot).
 export function Toast({
   children,
   onDismiss,
@@ -27,7 +31,7 @@ export function Toast({
       data-testid={testId}
       style={{
         position: 'absolute',
-        top: 84,
+        bottom: TOAST.offsetBottom,
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 50,
