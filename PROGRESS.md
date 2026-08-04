@@ -113,9 +113,10 @@ against the live DB before shipping is the whole lesson of §1.3, again.
 (`branch_service_price_history`, `update_branch_service`,
 `get_branch_services_for_editor`) — the 2026-08-01 "one-line diff" regeneration
 was evidently hand-edited, and the gap passed CI because
-`apps/web/lib/services/branch-services.ts` types its client
+`apps/web/lib/services/branch-services.ts` typed its client
 `SupabaseClient<any, any, any>`. The file is now the generator's full output
-again; re-typing that client is queued as a follow-up.
+again, and that client is re-typed to `SupabaseClient<Database>` in the same
+PR — the `any` escape hatch and its eslint-disable block are gone.
 
 **No design-bundle screen exists for this surface** — the bundle's "Provider
 Profile" is the PATIENT branch screen (F04) despite its name, and the DESIGN-02

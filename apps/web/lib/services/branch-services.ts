@@ -1,3 +1,4 @@
+import type { Database } from '@instahealth/core'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 // Reads and writes for the prices editor.
@@ -21,46 +22,36 @@ export interface BranchServiceRow {
   lastChangedAt: string | null
 }
 
-interface EditorRpcRow {
-  branch_service_id: string
-  service_id: string
-  name_ar: string | null
-  name_en: string | null
-  category_slug: string | null
-  category_name_ar: string | null
-  price: number | null
-  is_available: boolean | null
-  preparation_notes_ar: string | null
-  last_changed_at: string | null
-}
+type Client = SupabaseClient<Database>
+type EditorRpcRow =
+  Database['public']['Functions']['get_branch_services_for_editor']['Returns'][number]
 
 function toRow(row: EditorRpcRow): BranchServiceRow {
   return {
     branchServiceId: row.branch_service_id,
     serviceId: row.service_id,
-    nameAr: row.name_ar ?? '',
-    nameEn: row.name_en ?? '',
-    categorySlug: row.category_slug ?? '',
-    categoryNameAr: row.category_name_ar ?? '',
-    priceEgp: Number(row.price ?? 0),
+    nameAr: row.name_ar,
+    nameEn: row.name_en,
+    categorySlug: row.category_slug,
+    categoryNameAr: row.category_name_ar,
+    priceEgp: Number(row.price),
     isAvailable: row.is_available === true,
-    preparationNotesAr: row.preparation_notes_ar,
-    lastChangedAt: row.last_changed_at,
+    // The generator types RETURNS TABLE columns non-nullable, but both of
+    // these are NULL at runtime for never-edited / no-prep rows.
+    preparationNotesAr: (row.preparation_notes_ar as string | null) ?? null,
+    lastChangedAt: (row.last_changed_at as string | null) ?? null,
   }
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any -- the dashboard's Supabase
-   client is created untyped, so rpc() resolves to `any`; row shapes are
-   narrowed by hand above. */
 export async function fetchBranchServices(
-  supabase: SupabaseClient<any, any, any>,
+  supabase: Client,
   branchId: string,
 ): Promise<BranchServiceRow[]> {
   const { data, error } = await supabase.rpc('get_branch_services_for_editor', {
     p_branch_id: branchId,
   })
   if (error) throw error
-  return ((data ?? []) as EditorRpcRow[]).map(toRow)
+  return (data ?? []).map(toRow)
 }
 
 export type UpdateServiceResult =
@@ -81,7 +72,7 @@ export type UpdateServiceResult =
  * call is the one that counts.
  */
 export async function updateBranchService(
-  supabase: SupabaseClient<any, any, any>,
+  supabase: Client,
   branchServiceId: string,
   priceEgp: number,
   isAvailable: boolean,
@@ -93,6 +84,8 @@ export async function updateBranchService(
   })
   if (error) return { kind: 'error' }
 
+  // The RPC returns Json; narrowing to the function's documented result shape
+  // is still a cast — Json permits property access on nothing.
   const result = data as {
     success?: boolean
     unchanged?: boolean
@@ -114,4 +107,3 @@ export async function updateBranchService(
   if (typeof result?.error === 'string') return { kind: 'rejected', reason: result.error }
   return { kind: 'error' }
 }
-/* eslint-enable @typescript-eslint/no-explicit-any */
