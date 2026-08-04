@@ -521,10 +521,24 @@
       "takesIdentityParameter": false
     },
     {
+      "signature": "normalize_arabic(text)",
+      "securityDefiner": false,
+      "config": "search_path=public",
+      "executeGrants": "authenticated,postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
       "signature": "recalculate_branch_rating()",
       "securityDefiner": false,
       "config": "-",
       "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
+      "signature": "search_catalog(text,text)",
+      "securityDefiner": false,
+      "config": "search_path=public",
+      "executeGrants": "authenticated,postgres,service_role",
       "takesIdentityParameter": false
     },
     {

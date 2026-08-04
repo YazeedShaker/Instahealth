@@ -1,0 +1,52 @@
+# Maestro E2E — F03 global search. Uses the static test session (+201000000001)
+# and the seeded catalog: «صوره دم» (taa-marbuta keyboard variant) must find
+# «صورة دم كاملة (CBC)» — the normalization is the feature under test.
+# Execution wiring is SETUP-02's remaining scope; keep the flow correct regardless.
+appId: com.instahealth.app
+---
+- launchApp
+
+# ── to the search tab ────────────────────────────────────────────────────────
+- tapOn: 'البحث'
+- assertVisible:
+    id: 'search-input'
+- assertVisible: 'ابحث بالفئة'
+
+# ── hamza/taa-marbuta variant finds the seeded lab test ─────────────────────
+- tapOn:
+    id: 'search-input'
+- inputText: 'صوره دم'
+- assertVisible: 'صورة دم كاملة (CBC)'
+- assertVisible: 'تبدأ من'
+
+# ── service row → inline branch list → branch profile, service preselected ──
+- tapOn: 'صورة دم كاملة (CBC)'
+- assertVisible: 'أقرب موعد'
+- tapOn: 'ساريدار.*'
+- assertVisible: 'اختر الخدمات'
+# The preselected service is already in the sticky total (count > zero).
+- assertNotVisible: 'لم تختر بعد'
+
+# ── recents persist across an app restart ───────────────────────────────────
+- tapOn: 'البحث'
+- stopApp
+- launchApp
+- tapOn: 'البحث'
+- assertVisible: 'أبحاثك السابقة'
+- assertVisible: 'صوره دم'
+
+# ── gibberish → the calm empty state with category browse ───────────────────
+- tapOn:
+    id: 'search-input'
+- inputText: 'ززززز'
+- assertVisible:
+    id: 'search-empty'
+- assertVisible: 'تصفّح الفئات'
+
+# ── category chip → filtered results without typing ─────────────────────────
+- tapOn:
+    id: 'search-clear'
+- tapOn:
+    id: 'search-category-scans'
+- assertVisible: 'خدمات'
+- assertVisible: 'موجات صوتية على البطن'

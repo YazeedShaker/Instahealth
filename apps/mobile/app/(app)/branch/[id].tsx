@@ -1,6 +1,6 @@
 import { computeDistanceKm, groupServicesByCategory, summarizeSelection } from '@instahealth/core'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ScrollView, Text, View } from 'react-native'
 
 import { BranchErrorState } from '../../../components/branch/BranchErrorState'
@@ -21,7 +21,7 @@ import { useUserLocation } from '../../../features/home/useUserLocation'
 // Tab bar stays visible (DECISION-navigation-safe-areas §1: browsing is a
 // destination); the sticky CTA sits above it.
 export default function BranchProfileScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>()
+  const { id, preselect } = useLocalSearchParams<{ id: string; preselect?: string }>()
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -49,6 +49,29 @@ export default function BranchProfileScreen() {
       openBranch(branch.id, branch.nameAr)
     }
   }, [branch, registeredBranchId, openBranch])
+
+  // Search hand-off (F03): `?preselect=<branchServiceId>` selects that service
+  // once the branch is loaded AND registered — registration must win first or
+  // openBranch's reset would immediately wipe the selection. Consumed exactly
+  // once per param value via ref: this is a hand-off, not a subscription — the
+  // patient can still deselect freely afterwards.
+  const consumedPreselectRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (
+      typeof preselect !== 'string' ||
+      preselect.length === 0 ||
+      branch === null ||
+      registeredBranchId !== branch.id ||
+      consumedPreselectRef.current === preselect
+    ) {
+      return
+    }
+    consumedPreselectRef.current = preselect
+    const target = branch.services.find((service) => service.branchServiceId === preselect)
+    if (target !== undefined && !selectedServices.some((selected) => selected.id === target.id)) {
+      toggleService(target)
+    }
+  }, [preselect, branch, registeredBranchId, selectedServices, toggleService])
 
   const groups = useMemo(() => (branch ? groupServicesByCategory(branch.services) : []), [branch])
   const selectedServiceIds = useMemo(

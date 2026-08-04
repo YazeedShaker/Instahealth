@@ -21,7 +21,7 @@ Keep **Current status** and **Next up** accurate at all times.
 
 ## Current status
 
-**Phase:** 🎉 **MILESTONE ONE — the loop is closed.** Patient books on mobile (F01→F07) → the branch desk sees it, records the outcome, opens the detail drawer, cancels on the patient's behalf, manages its own prices, reads its slot picture and maintains its own contact details (P01–P05 — every sidebar surface is live). The four shipped identity/money holes are all closed and the repo passed a full-history secret audit (2026-08-01). Next: F08–F09 reviews & profile (needs the review writer function), F03 search, A-series admin; PayTabs test credentials now exist
+**Phase:** 🎉 **MILESTONE ONE — the loop is closed.** Patient books on mobile (F01→F07) → the branch desk sees it, records the outcome, opens the detail drawer, cancels on the patient's behalf, manages its own prices, reads its slot picture and maintains its own contact details (P01–P05 — every sidebar surface is live). The four shipped identity/money holes are all closed and the repo passed a full-history secret audit (2026-08-01). Next: F08–F09 reviews & profile (needs the review writer function), A-series admin; PayTabs test credentials now exist
 ⚠ **Two founder decisions are open and blocking nothing yet: the LICENSE / IP posture and whether vulnerability detail belongs in a public PROGRESS.** Both in Known risks.
 **Milestone target:** Labs + Scans booking working end-to-end at Town Hospital & Saridar Labs
 **Environment:** Supabase `instahealth-dev` live (Frankfurt). Design system published in Claude Design.
@@ -55,7 +55,7 @@ visual contract. Then specs → Claude Code.
 - [x] **F01** — ✅ DONE. Mobile: patient auth (phone OTP via Vonage) — see Shipped
 - [x] **F02** — ✅ DONE. Mobile: Home & Discovery + launch-partner seed + users-row trigger (see Shipped)
 - [x] **F04** — ✅ DONE. Mobile: branch profile & service selection (see Shipped)
-- [ ] **F03** — Mobile: search (rides on F04's branch route)
+- [x] **F03** — ✅ DONE. Mobile: search with Arabic normalization (see Shipped)
 - [x] **F05** — ✅ DONE. Mobile: slot picker + 10-min hold + review + pending booking (see Shipped)
 - [x] **F06** — ✅ DONE. Mobile: payment (mock provider) + settle-payment + confirmation + SMS (see Shipped)
 - [x] **P01** — ✅ DONE. Web: provider auth, shell & Today view — **MILESTONE ONE, loop closed** (see Shipped)
@@ -76,6 +76,59 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 ---
 
 ## Shipped
+
+### 2026-08-04 · F03 — Search (mobile): live catalog search with Arabic normalization
+
+The البحث tab is real: live search across services AND providers per the
+Search handoff, ending in the existing branch-profile flow — «سونار» territory
+covered by the spec's core promise: search → preselected service in two taps.
+
+**Arabic normalization is the substantive part, mirrored in two places:**
+core's `normalizeArabicQuery` (the unit-tested authority) and SQL
+`normalize_arabic()` (migration `20260804174655`), same PR — hamza seats →
+bare alif, ى→ي, ة→ه, diacritics/tatweel stripped, Arabic-Indic digits folded.
+«صوره دم» finds «صورة دم كاملة»; «اشعه» finds «أشعة». **No generated columns
+or indexes yet, documented choice**: the catalog is ~26 services / ~24
+branches, a normalized scan is microseconds; expression indexes come when
+scale demands them. No fuzzy matching (SPEC-F03) — note: the seed spells
+Saridar «ساريدار», so the plausible «سريدار» misspelling does NOT match; that
+is a fuzzy-tier gap for later, found by probing live data with the wrong
+spelling first.
+
+**`search_catalog()` is SECURITY INVOKER on purpose** — everything it reads is
+public under RLS, so it adds zero definer surface; grants to `authenticated` +
+`service_role` only (the app always has an OTP session; the anon key gets
+`42501`). The active-law predicates are copied from Home's `useHomeBranches`
+verbatim — active service+category+branch+provider, available offering, and
+deliberately NO `holiday_mode` filter because Home has none (no parallel
+definitions; if holiday filtering ever lands it lands in both). LIKE input is
+escaped (`%`/`_` inert — the P02 lesson applied at birth). Services with zero
+active offerings are dropped server-side: «متوفر في ٠ فرع» cannot render.
+
+**The screen reuses, not re-invents:** «مراكز» renders Home's `ProviderCard`
+over Home's own query data (the RPC only decides WHICH branches matched);
+distances via `sortBranchesForDisplay`; the accordion's «أقرب موعد» via the
+same batched `useFirstAvailableSlots` hook (fires only on expand). The
+service→branch hand-off is `?preselect=<branchServiceId>` consumed exactly
+once by the branch profile AFTER registration (registration resets the
+selection, so ordering matters — it is in the effect's guard). Recent
+searches are AsyncStorage-only (max 8, hamza-insensitive dedupe in core,
+tested); «أكثر بحثاً» is a curated core constant, labelled as such — SPEC-F03
+forbids server-side history.
+
+**Verified: 12 Node checks against the LIVE dev DB (patient session)** — anon
+refused · taa-marbuta and hamza variants hit · «متوفر في N فرع» equals an
+independent client-side count (23 — one Saridar branch is inactive, and the
+two agreeing is the point) · min price is the cheapest offering, branches
+cheapest-first · wildcard and single-char inert · category browse pure ·
+no dead-end services. Plus a REVERSIBLE exclusion proof: toggling one
+offering unavailable dropped it from results (1→0→1, restored). Core 394
+tests; Maestro flow `search-flow.test.yaml` covers variant-spelling search →
+preselect hand-off → recents-across-restart → empty state → category chips
+(execution wiring still SETUP-02's scope).
+
+**For F08/F09:** the `?preselect=` param + consumed-ref pattern is the
+template for any deep-link that mutates a store owned by the target screen.
 
 ### 2026-08-04 · P05 REBUILD — branch profile UI to the Branch Details handoff + the no-eye rule
 
