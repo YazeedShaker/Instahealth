@@ -126,18 +126,22 @@ not optional. We chose **Atkinson Hyperlegible** (Braille Institute font) specif
 
 The booking flow is the heart of the product. It must feel effortless.
 
-1. **Discovery** — patient sees nearby providers on a map + list. Distance, rating, open/closed,
-   first available slot shown upfront.
+1. **Discovery** — patient sees nearby providers as a LIST: distance, rating, open/closed,
+   first available slot shown upfront. A map view is post-MVP — the shipped home (F02) is
+   list-first and no map has been built; add it only with its own spec and design pass.
 2. **Branch profile** — services with clear EGP prices, preparation notes (fasting etc.), reviews.
 3. **Select services** — checkbox list, running total always visible.
 4. **Pick slot** — calendar (14–30 days), available times. Selecting starts a **10-minute hold**
    with a visible countdown. This urgency is honest, not manufactured — the slot really is held.
 5. **Details** — name pre-filled, phone confirmed, optional notes.
-6. **Pay** — card, Fawry (reference code), or cash-at-branch. Order summary before paying.
-   Payments run through **PayTabs** (decision changed from Paymob). Until the merchant account
-   exists, a mock provider settles the booking through the real server-side path and every
-   payment screen carries a visible "وضع تجريبي" badge — the patient must never believe money
-   moved when it did not.
+6. **Pay** — **card** (via PayTabs — test credentials exist, integration pending) or
+   **cash-at-branch**. Fawry is REMOVED from this list pending the payment-method lineup
+   decision: PayTabs Egypt supports neither Fawry nor Vodafone Cash, so the approved design's
+   بطاقة / فوري / نقداً lineup cannot ship as drawn — see PROGRESS «Known risks: ⚠ Final
+   payment-method lineup is an OPEN PRODUCT DECISION». Order summary before paying. Until the
+   real integration lands, a mock provider settles the booking through the real server-side
+   path and every payment screen carries a visible "وضع تجريبي" badge — the patient must never
+   believe money moved when it did not.
 7. **Confirmation** — booking ref (`IH-2026-XXXXX`), all details, preparation reminder, SMS sent,
    add-to-calendar. This screen must feel like relief and certainty.
 
@@ -161,9 +165,12 @@ prominently at selection, confirmation, and in the reminder SMS. Use the cream a
 ## 9. Dark mode
 
 - **Patient app:** light theme default. Dark mode is a nice-to-have (Phase 2+), not MVP.
-- **Provider dashboard & admin:** dark theme is the default (they stare at it all day; easier on eyes).
-- Both themes defined in tokens. Never hardcode theme colors — use semantic tokens
-  (`--ih-bg`, `--ih-surface`, `--ih-text-primary`) that flip with theme.
+- **Provider dashboard & admin: LIGHT theme, as shipped.** The DESIGN-02 pass and every
+  built P-series screen (P01–P05) are light; the original "dark by default" intent is
+  DEFERRED — revisit only with a real design pass, not as a token flip on shipped screens.
+  (Amended 2026-08-04 to match built reality; the dashboard was never built dark.)
+- Never hardcode theme colors — use semantic tokens (`--ih-bg`, `--ih-surface`,
+  `--ih-text-primary`) so a future theme remains a token change, not a rewrite.
 
 ---
 
@@ -196,4 +203,4 @@ prominently at selection, confirmation, and in the reminder SMS. Use the cream a
 
 ---
 
-_Last updated: July 2026 · This document evolves with the product. Update it when a design decision is made so the reasoning is never lost._
+_Last updated: 2026-08-04 · This document evolves with the product. Update it when a design decision is made so the reasoning is never lost._
