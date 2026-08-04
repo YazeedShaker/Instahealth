@@ -79,3 +79,12 @@ PROGRESS as an open risk and as the fifth instance of ENGINEERING-WORKFLOW §5's
 general law — a value with commercial consequences that the client can assert.
 The fix is a column-scoped policy (or a SECURITY DEFINER writer for the handful
 of fields a branch legitimately maintains), and it belongs in its own PR.
+
+> **CLOSED 2026-08-03 / completed 2026-08-04.** REFACTOR 2/N (migration
+> `20260803160517`) DROPPED the column-blind policy outright — it had no
+> consumer. P05 (migration `20260804121655`) then restored the legitimate half
+> as the SECURITY DEFINER writer this section predicted:
+> `update_branch_profile` covers phone/whatsapp/address only, derives the
+> branch from the caller, and audits to `branch_profile_history`. Allocation,
+> hours, pin, rating and `is_active` have NO client write path of any kind —
+> the product rule above is now enforced by construction.

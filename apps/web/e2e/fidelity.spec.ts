@@ -219,3 +219,32 @@ test('capture: prices editor with the type-to-confirm dialog', async ({ page }) 
     fullPage: false,
   })
 })
+
+// ── P05 captures ───────────────────────────────────────────────────────────
+// ⚠ NO design-bundle screen exists for this surface — the bundle's "Provider
+// Profile" is the PATIENT branch screen (F04). These captures document the
+// built screen against the design-system contract; SPEC-P05 records the gap.
+
+const P05_SHOT_DIR = '../../docs/design-briefs/p05-fidelity'
+
+test('capture: branch profile', async ({ page }) => {
+  test.skip(!HAS_CREDS, 'PROVIDER_TEST_EMAIL / PROVIDER_TEST_PASSWORD not set')
+  await signInAndGo(page, '/dashboard/profile')
+  await expect(page.getByTestId('profile-phone')).toBeVisible({ timeout: 60_000 })
+  await expect(page.getByTestId('profile-gated')).toBeVisible()
+  await hideDevOverlay(page)
+  await page.evaluate(() => document.fonts.ready)
+  await page.screenshot({ path: `${P05_SHOT_DIR}/profile-build.png`, fullPage: false })
+})
+
+test('capture: branch profile with an inline validation error', async ({ page }) => {
+  test.skip(!HAS_CREDS, 'PROVIDER_TEST_EMAIL / PROVIDER_TEST_PASSWORD not set')
+  await signInAndGo(page, '/dashboard/profile')
+  await expect(page.getByTestId('profile-phone')).toBeVisible({ timeout: 60_000 })
+  await page.getByTestId('profile-whatsapp').fill('02-25787202')
+  await page.getByTestId('profile-save').click()
+  await expect(page.getByRole('alert').filter({ hasText: 'واتساب' })).toBeVisible()
+  await hideDevOverlay(page)
+  await page.evaluate(() => document.fonts.ready)
+  await page.screenshot({ path: `${P05_SHOT_DIR}/profile-error-build.png`, fullPage: false })
+})

@@ -174,6 +174,82 @@ export type Database = {
           },
         ]
       }
+      branch_profile_history: {
+        Row: {
+          branch_id: string
+          changed_at: string
+          changed_by: string | null
+          id: string
+          new_values: Json
+          old_values: Json
+        }
+        Insert: {
+          branch_id: string
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_values: Json
+          old_values: Json
+        }
+        Update: {
+          branch_id?: string
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_values?: Json
+          old_values?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "branch_profile_history_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      branch_service_price_history: {
+        Row: {
+          branch_service_id: string
+          changed_at: string
+          changed_by: string | null
+          id: string
+          new_is_available: boolean
+          new_price: number
+          old_is_available: boolean | null
+          old_price: number | null
+        }
+        Insert: {
+          branch_service_id: string
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_is_available: boolean
+          new_price: number
+          old_is_available?: boolean | null
+          old_price?: number | null
+        }
+        Update: {
+          branch_service_id?: string
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_is_available?: boolean
+          new_price?: number
+          old_is_available?: boolean | null
+          old_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "branch_service_price_history_branch_service_id_fkey"
+            columns: ["branch_service_id"]
+            isOneToOne: false
+            referencedRelation: "branch_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       branch_services: {
         Row: {
           branch_id: string
@@ -869,6 +945,21 @@ export type Database = {
           total_count: number
         }[]
       }
+      get_branch_services_for_editor: {
+        Args: { p_branch_id: string }
+        Returns: {
+          branch_service_id: string
+          category_name_ar: string
+          category_slug: string
+          is_available: boolean
+          last_changed_at: string
+          name_ar: string
+          name_en: string
+          preparation_notes_ar: string
+          price: number
+          service_id: string
+        }[]
+      }
       get_branch_slots: {
         Args: { p_branch_id: string; p_from?: string; p_to?: string }
         Returns: {
@@ -910,6 +1001,23 @@ export type Database = {
       is_internal_caller: { Args: never; Returns: boolean }
       mark_booking_outcome: {
         Args: { p_booking_id: string; p_outcome: string }
+        Returns: Json
+      }
+      update_branch_profile: {
+        Args: {
+          p_address_ar: string
+          p_address_en: string
+          p_phone: string
+          p_whatsapp: string
+        }
+        Returns: Json
+      }
+      update_branch_service: {
+        Args: {
+          p_branch_service_id: string
+          p_is_available: boolean
+          p_price_egp: number
+        }
         Returns: Json
       }
     }

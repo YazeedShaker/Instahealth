@@ -21,7 +21,7 @@ Keep **Current status** and **Next up** accurate at all times.
 
 ## Current status
 
-**Phase:** 🎉 **MILESTONE ONE — the loop is closed.** Patient books on mobile (F01→F07) → the branch desk sees it, records the outcome, opens the detail drawer, cancels on the patient's behalf and manages its own prices (P01–P03). The four shipped identity/money holes are all closed and the repo passed a full-history secret audit (2026-08-01). Next: P04–P06 dashboard; F03 Search and F08–F09 still open
+**Phase:** 🎉 **MILESTONE ONE — the loop is closed.** Patient books on mobile (F01→F07) → the branch desk sees it, records the outcome, opens the detail drawer, cancels on the patient's behalf, manages its own prices, reads its slot picture and maintains its own contact details (P01–P05 — every sidebar surface is live). The four shipped identity/money holes are all closed and the repo passed a full-history secret audit (2026-08-01). Next: F08–F09 reviews & profile (needs the review writer function), F03 search, A-series admin; PayTabs test credentials now exist
 ⚠ **Two founder decisions are open and blocking nothing yet: the LICENSE / IP posture and whether vulnerability detail belongs in a public PROGRESS.** Both in Known risks.
 **Milestone target:** Labs + Scans booking working end-to-end at Town Hospital & Saridar Labs
 **Environment:** Supabase `instahealth-dev` live (Frankfurt). Design system published in Claude Design.
@@ -62,7 +62,9 @@ visual contract. Then specs → Claude Code.
 - [x] **P02** — ✅ DONE. Web: booking detail drawer + cancel-on-behalf + upcoming days (see Shipped)
 - [x] **P03** — ✅ DONE. Web: services & prices editor with audit trail (see Shipped)
 - [x] **P04** — ✅ DONE. Web: slot allocation view, read-only (see Shipped)
-- [ ] **P05–P06** — Web: branch profile, remaining dashboard surfaces
+- [x] **P05** — ✅ DONE. Web: branch profile «بيانات الفرع» (see Shipped). Every sidebar
+      surface is now live; P06 has no defined scope left — new dashboard asks go through
+      a fresh spec.
 - [x] **F07** — ✅ DONE. Mobile: My Bookings list, detail & cancel (see Shipped)
 - [ ] **F08–F09** — Mobile: reviews, profile
 - [ ] **A01–A06** — Web: admin panel
@@ -74,6 +76,71 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 ---
 
 ## Shipped
+
+### 2026-08-04 · P05 — Branch profile «بيانات الفرع» (web)
+
+The last dashboard surface: the desk can now SEE the branch's own record and
+fix the half of it a branch legitimately maintains — contact and address —
+through the first writer function built after REFACTOR 2/N closed the client
+write surface.
+
+**The field split is the decision in SPEC-P05.** Editable via
+`update_branch_profile` (migration `20260804121655`): `phone`, `whatsapp`,
+`address_ar`, `address_en`. Everything else renders read-only under the P04
+gated treatment: name and pin are marketplace identity, **operating hours are a
+commercial term** (the working window drives slot generation —
+DECISION-slot-allocation-ownership), and **`holiday_mode` is deliberately NOT a
+desk toggle** — today the flag only gates nightly generation, so flipping it on
+would leave ~30 days of already-materialised slots bookable. A toggle claiming
+«الفرع في إجازة» while patients keep booking is a lie; an honest holiday
+feature (blocking existing slots, handling their bookings) is its own spec.
+
+**The writer takes NO branch id** — the branch derives from the caller's
+membership, the `create_slot_hold` law applied at birth instead of retrofitted.
+Audit trail `branch_profile_history` records a jsonb diff of ONLY the changed
+keys (changes, not clicks), append-only, readable by the owning branch's staff.
+**No new UPDATE policy on `branches`** — the surface diff in
+`authorization-surface.json` is +1 function, +1 SELECT-only table, nothing else.
+
+**⚠ Verification caught the validation being wrong about Egypt.** The first
+phone rule accepted only 0-leading landlines/mobiles — and Town's REAL seeded
+number is `15276`, a short-code hotline (same shape as the design's own «دعم
+الشركاء ١٦٧٢٣»). The Node run failed against live data and the rule now
+accepts 4–5-digit 1-leading short codes, server and core mirror both. Verify
+against the live DB before shipping is the whole lesson of §1.3, again.
+
+**⚠ Found stale: the checked-in `database.ts` was MISSING P03's types**
+(`branch_service_price_history`, `update_branch_service`,
+`get_branch_services_for_editor`) — the 2026-08-01 "one-line diff" regeneration
+was evidently hand-edited, and the gap passed CI because
+`apps/web/lib/services/branch-services.ts` typed its client
+`SupabaseClient<any, any, any>`. The file is now the generator's full output
+again, and that client is re-typed to `SupabaseClient<Database>` in the same
+PR — the `any` escape hatch and its eslint-disable block are gone.
+
+**No design-bundle screen exists for this surface** — the bundle's "Provider
+Profile" is the PATIENT branch screen (F04) despite its name, and the DESIGN-02
+brief ends at screen 6. Built from the design-system contract and the P01–P04
+idiom; captures in `docs/design-briefs/p05-fidelity/` document the built
+screen. Flagged for a future design pass.
+
+**Verified: 24 Node checks against the LIVE dev DB (anon key), all passing** —
+anon refused by the grant (42501) · a patient gets `branch_not_found` and reads
+zero history rows · seven server-side validation refusals incl. both 501-char
+addresses · refusals write no history · probe save stores phone as entered and
+whatsapp normalized to local `01X` form · the audit row carries ONLY the
+changed keys with `changed_by` = the caller · identical save is `unchanged`
+with no audit row · **a raw `branches` UPDATE still returns 0 rows** ·
+restore leaves the dev DB as found. Playwright: 4 new profile tests green
+against a PRODUCTION build (`E2E_PROD=1`), incl. a save→reload→restore
+round-trip; fixture tripwire count unchanged (no booking fixtures consumed).
+Core 370 tests, coverage bar held.
+
+**For P06/A-series:** `update_branch_profile` + `branch_profile_history` are
+the second instance of the writer-function pattern; the jsonb-diff audit shape
+is the one to reuse for multi-field editors. Governorates are seeded in English
+(«Cairo») and render as-is in the gated card — a data-cleanup nit for A-series
+onboarding.
 
 ### 2026-08-03 · REFACTOR 4/4 — `useBranchBookings` reads move to TanStack Query
 
@@ -2078,14 +2145,17 @@ _Next entry after SETUP-02._
   founder's real-number check is the only proof the Arabic Unicode message
   actually arrives.
 
-- **⚠ `generate-slots` nightly cron still not scheduled — and the public repo raised the
-  stakes.** The capacity-model fix regenerated a full 30-day window, but nothing extends it
-  nightly, so the bookable horizon shrinks by one day per day. It has been unscheduled since
-  2026-07-26. Two reasons this is now more than a launch chore: the shrinkage is **silent**
-  (the picker simply shows fewer days — it looks like low supply, not a broken cron), and the
-  gap is **documented in public** by this very file. Wire the Edge Function schedule; the
-  sibling crons (`cleanup-expired-holds`, `generate-slot-window`, `auto_close_stale_bookings`)
-  are the working template.
+- ✅ ~~`generate-slots` nightly cron still not scheduled~~ — **STALE ENTRY, closed 2026-08-04
+  after verification against the live DB.** The horizon never shrank: pg_cron job
+  `generate-slot-window` (jobid 2, `10 0 * * *`) has existed since migration
+  `20260726193258` — the very "since 2026-07-26" date this entry cited — and does the
+  nightly extension in set-based SQL, which is why it was listed above as a _sibling_ cron
+  while being declared missing. Verified: every run through 2026-08-04 `succeeded` in
+  `cron.job_run_details`, and `max(slot_date)` = today + 30. The separate `generate-slots`
+  EDGE FUNCTION remains unscheduled and redundant — retire it or note it as the pg_cron
+  job's spare. The durable lesson: this file said "unscheduled" for nine days while the
+  database said otherwise; **verify a risk entry against the live system before repeating
+  it** (§1.3 applies to PROGRESS itself).
 - ✅ ~~`create_slot_hold(p_slot_id, p_user_id)` doesn't verify `p_user_id = auth.uid()`~~ —
   **CLOSED 2026-08-01** (migration `20260801005955`). The parameter is gone, not guarded;
   the holder comes from `auth.uid()`. It was worse than this entry described: the grant

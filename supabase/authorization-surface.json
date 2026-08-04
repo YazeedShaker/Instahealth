@@ -56,6 +56,22 @@
       ]
     },
     {
+      "table": "branch_profile_history",
+      "rlsEnabled": true,
+      "rlsForced": false,
+      "columnCount": 6,
+      "writableColumns": {},
+      "policies": [
+        {
+          "policy": "profile history: branch staff read own",
+          "command": "SELECT",
+          "roles": "PUBLIC",
+          "using": "(COALESCE((branch_id = ANY (get_provider_branch_ids())), false) OR (get_user_role() = 'admin'::text))",
+          "withCheck": "-"
+        }
+      ]
+    },
+    {
       "table": "branch_service_price_history",
       "rlsEnabled": true,
       "rlsForced": false,
@@ -523,6 +539,13 @@
       "securityDefiner": false,
       "config": "-",
       "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
+      "signature": "update_branch_profile(text,text,text,text)",
+      "securityDefiner": true,
+      "config": "search_path=public",
+      "executeGrants": "authenticated,postgres,service_role",
       "takesIdentityParameter": false
     },
     {
