@@ -23,3 +23,19 @@ export const OTP_RESEND_SECONDS = 60
  * with this list (the Edge Function mirrors it).
  */
 export const STATIC_TEST_PHONES = ['+201000000001', '+201000000002'] as const
+
+/**
+ * Patient-facing support channels (PROF-01 «تواصل معنا»).
+ * ⚠ ALL NULL — the founder has not supplied the real patient-support contact
+ * yet (flagged in PROGRESS). NULL means the profile row HIDES: empty means
+ * absent, never a fake number the desk cannot answer.
+ */
+export const PATIENT_SUPPORT: {
+  readonly whatsapp: string | null
+  readonly phone: string | null
+  readonly email: string | null
+} = {
+  whatsapp: null,
+  phone: null,
+  email: null,
+}

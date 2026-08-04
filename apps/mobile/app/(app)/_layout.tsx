@@ -58,6 +58,15 @@ export default function AppLayout() {
       {/* Branch profile — a browsing DESTINATION: not a tab button, but the
           tab bar stays visible (DECISION-navigation-safe-areas §1). */}
       <Tabs.Screen name="branch/[id]" options={{ href: null }} />
+      {/* Profile sub-screens (PROF-01). Tab bar HIDDEN: both are focused
+          single-purpose tasks with their own back affordance — editing a name
+          and deleting an account are commitments, not browsing, so the same
+          rule that hides it for the booking flow applies. */}
+      <Tabs.Screen name="edit-name" options={{ href: null, tabBarStyle: { display: 'none' } }} />
+      <Tabs.Screen
+        name="delete-account"
+        options={{ href: null, tabBarStyle: { display: 'none' } }}
+      />
       {/* Booking flow (nested stack) — commitment funnel: tab bar HIDDEN for
           all steps, exit via back only.
           NO `popToTopOnBlur`: bottom-tabs dispatches POP_TO_TOP when the blur

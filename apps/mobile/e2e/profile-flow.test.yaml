@@ -1,0 +1,83 @@
+# Maestro E2E — PROF-01 profile tab: name edit, logout, and the full account
+# deletion + re-registration cycle.
+#
+# ⚠ USES +201000000002 (the SECOND static test number) on purpose: this flow
+# DELETES the account it signs into, and 001 is the number every other flow
+# depends on. After deletion the number re-registers as a fresh user, which is
+# itself the last assertion.
+appId: com.instahealth.app
+---
+- launchApp
+
+# ── name edit persists across a restart ─────────────────────────────────────
+- tapOn: 'حسابي'
+- assertVisible:
+    id: 'profile-identity'
+- tapOn:
+    id: 'profile-identity'
+- tapOn:
+    id: 'edit-name-input'
+- eraseText: 30
+- inputText: 'اسم محدث'
+- tapOn:
+    id: 'edit-name-save'
+- assertVisible: 'اسم محدث'
+- stopApp
+- launchApp
+- tapOn: 'حسابي'
+- assertVisible: 'اسم محدث'
+
+# ── the disabled placeholders are present but inert ────────────────────────
+- assertVisible:
+    id: 'profile-language'
+- assertVisible: 'قريباً'
+
+# ── logout → welcome, then back in ─────────────────────────────────────────
+- tapOn:
+    id: 'profile-logout'
+- assertVisible:
+    id: 'logout-sheet'
+- tapOn:
+    id: 'logout-sheet-confirm'
+- assertVisible: 'خدمتك الطبية أونلاين — احجز في دقائق'
+
+- tapOn:
+    id: 'welcome-start'
+- tapOn:
+    id: 'phone-input'
+- inputText: '01000000002'
+- tapOn:
+    id: 'phone-next'
+- tapOn:
+    id: 'otp-input'
+- inputText: '123456'
+
+# ── delete the account: consequences → type-to-confirm → welcome ───────────
+- tapOn: 'حسابي'
+- tapOn:
+    id: 'profile-delete'
+- assertVisible: 'قبل أن تكمل، هذا ما سيحدث:'
+- assertVisible: 'لا يمكن التراجع عن هذا الإجراء.'
+# The destructive button stays inert until the confirm word is typed.
+- tapOn:
+    id: 'delete-account-confirm'
+- assertVisible: 'حذف حسابي نهائياً'
+- tapOn:
+    id: 'delete-confirm-input'
+- inputText: 'حذف'
+- tapOn:
+    id: 'delete-account-confirm'
+- assertVisible: 'خدمتك الطبية أونلاين — احجز في دقائق'
+
+# ── the freed number registers again as a FRESH account (no old name) ──────
+- tapOn:
+    id: 'welcome-start'
+- tapOn:
+    id: 'phone-input'
+- inputText: '01000000002'
+- tapOn:
+    id: 'phone-next'
+- tapOn:
+    id: 'otp-input'
+- inputText: '123456'
+- assertVisible: 'ما هو اسمك؟'
