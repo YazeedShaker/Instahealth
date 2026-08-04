@@ -56,13 +56,15 @@ export const errorMessages = {
     ar: 'أدخل رقم هاتف الفرع',
     en: 'Enter the branch phone number',
   },
+  // Copy matches the Branch Details handoff: the fields render as +20 + the
+  // NATIONAL part, so examples are national ("2 2735 4416"), not 0-leading.
   'branchProfile.phone.invalid': {
-    ar: 'أدخل رقم هاتف مصرياً صحيحاً — أرضي أو موبايل (مثال: 02-25787202)',
-    en: 'Enter a valid Egyptian phone number — landline or mobile (e.g. 02-25787202)',
+    ar: 'أدخل رقماً صحيحاً — أرضي أو خط ساخن (مثال: 2 2735 4416)',
+    en: 'Enter a valid number — landline or hotline (e.g. 2 2735 4416)',
   },
   'branchProfile.whatsapp.invalid': {
-    ar: 'أدخل رقم واتساب موبايل مصرياً صحيحاً (مثال: 01012345678)',
-    en: 'Enter a valid Egyptian mobile WhatsApp number (e.g. 01012345678)',
+    ar: 'أدخل رقم موبايل صحيحاً (مثال: 10 2244 8890)',
+    en: 'Enter a valid mobile number (e.g. 10 2244 8890)',
   },
   'branchProfile.addressAr.required': {
     ar: 'أدخل عنوان الفرع بالعربية',

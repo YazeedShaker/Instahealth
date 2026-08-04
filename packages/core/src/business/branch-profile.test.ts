@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 
 import {
   BRANCH_ADDRESS_MAX_LENGTH,
+  branchPhoneToNational,
   getProfileErrorAr,
+  nationalToBranchPhone,
   normalizeBranchPhone,
   normalizeBranchWhatsapp,
 } from './branch-profile'
@@ -80,6 +82,42 @@ describe('normalizeBranchWhatsapp', () => {
 
   it('rejects a non-Egyptian mobile prefix', () => {
     expect(normalizeBranchWhatsapp('01312345678')).toBeNull()
+  })
+})
+
+describe('national (+20) display mapping', () => {
+  it('strips the leading 0 for display and restores it on compose', () => {
+    expect(branchPhoneToNational('02-27354416')).toBe('2-27354416')
+    expect(nationalToBranchPhone('2-27354416')).toBe('02-27354416')
+  })
+
+  it('round-trips a spaced national landline', () => {
+    expect(nationalToBranchPhone('2 2735 4416')).toBe('02 2735 4416')
+    expect(branchPhoneToNational('02 2735 4416')).toBe('2 2735 4416')
+  })
+
+  it('passes hotlines through verbatim in both directions', () => {
+    expect(branchPhoneToNational('15276')).toBe('15276')
+    expect(nationalToBranchPhone('15276')).toBe('15276')
+  })
+
+  it('does not double a 0 the desk already typed', () => {
+    expect(nationalToBranchPhone('02-27354416')).toBe('02-27354416')
+  })
+
+  it('composes a national mobile back to the 0-leading form', () => {
+    expect(nationalToBranchPhone('10 2244 8890')).toBe('010 2244 8890')
+    expect(branchPhoneToNational('01022448890')).toBe('1022448890')
+  })
+
+  it('folds Arabic-Indic digits while composing', () => {
+    expect(nationalToBranchPhone('٢ ٢٧٣٥ ٤٤١٦')).toBe('02 2735 4416')
+  })
+
+  it('the composed form always satisfies the validator when the input was sane', () => {
+    for (const national of ['2 2735 4416', '10 2244 8890', '15276', '48-9101827']) {
+      expect(normalizeBranchPhone(nationalToBranchPhone(national))).not.toBeNull()
+    }
   })
 })
 

@@ -592,6 +592,19 @@ Why this is a rule: P01's first dashboard build was written from the `.dc.html`
 by eye, looked plausible in an accessibility tree, and was visibly wrong the
 moment the founder opened it. Reading markup is not seeing a screen.
 
+- **⚠ NO SCREEN WITHOUT A DESIGN SOURCE — "build it by eye" is banned as a
+  category.** A new screen ships only when EITHER a design handoff exists for
+  it in `design/handoff/`, OR its spec explicitly instructs composing it
+  strictly from the existing component contract
+  (`packages/design-tokens/src/components.ts`) with no invented visuals.
+  P05 shipped without either — its screen was assembled from the dashboard
+  idiom by judgment, drifted from what the founder wanted, and was REBUILT
+  wholesale when the real handoff arrived (2026-08-04) — the rework the rule
+  exists to prevent. Corollary: when a design needs a component or variant the
+  contract lacks, EXTEND THE CONTRACT (transcribing from the handoff), never
+  the page — a one-off style on a page is invisible to the next screen and
+  drifts exactly like a hand-copied value (§3a).
+
 Two failure modes it catches, both from that build:
 
 - **Hand-copied values drift.** Implement design-system components from the

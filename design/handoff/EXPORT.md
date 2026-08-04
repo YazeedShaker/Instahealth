@@ -1,6 +1,6 @@
 # Design handoff — latest export
 
-**Export date:** 2026-07-28 · **Source:** Claude Design, project "InstaHealth"
+**Export date:** 2026-08-04 · **Source:** Claude Design, project "InstaHealth"
 
 ## What this is
 
@@ -23,13 +23,18 @@ Update the log below when you replace it.
 Extracted or generated brand assets (logo files prepared for the apps) live in
 `design/brand/`, not here — those are ours, this is Claude Design's.
 
-## Screens in this export (12)
+## Screens in this export (14)
 
-**Patient app** — Onboarding Flow · Home Screen · Provider Profile · Booking
-Flow · Booking Confirmation · My Bookings
+**Patient app** — Onboarding Flow · Home Screen · Search · Provider Profile ·
+Booking Flow · Booking Confirmation · My Bookings
 
 **Provider dashboard** — Login · Today · Booking Detail · Upcoming Days ·
-Prices Editor · Slot Allocation
+Prices Editor · Slot Allocation · Branch Details
+
+⚠ Naming trap: **"Provider Profile" is the PATIENT-app branch screen** (F04 —
+iOS frames, booking CTA). The dashboard's بيانات الفرع screen is
+**"Provider Dashboard - Branch Details"**. P05 was first built against the
+wrong assumption that no design existed; the names are why.
 
 ## How to consume it
 
@@ -42,6 +47,7 @@ P01's first dashboard build drifted from the design.
 
 ## Export log
 
-| Date       | Change                                                                                                                                                                                                                                                                                         |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-07-28 | Consolidated to a single `design/handoff/` bundle. Replaced the split `design/mobile/` (a stale 6-screen subset) and `design/dashboard/` (the full 12-screen export) — the six shared screens were byte-identical, so nothing was lost. Adds the six Provider Dashboard screens for DESIGN-02. |
+| Date       | Change                                                                                                                                                                                                                                                                                                                                       |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-07-28 | Consolidated to a single `design/handoff/` bundle. Replaced the split `design/mobile/` (a stale 6-screen subset) and `design/dashboard/` (the full 12-screen export) — the six shared screens were byte-identical, so nothing was lost. Adds the six Provider Dashboard screens for DESIGN-02.                                               |
+| 2026-08-04 | Whole-project re-export (founder). Adds **Provider Dashboard - Branch Details** (the P05 بيانات الفرع screen — P05's UI was rebuilt to it the same day) and **Search** (F03's screen, not yet built). Introduces the +20 national phone treatment, the card-header chips, and the saved-toast — all transcribed into the component contract. |

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/effects.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/themes.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/base.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/styles.css">
+  <script src="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/_ds_bundle.js"></script>
+  <style>
+    body { margin: 0; background: var(--ih-neutral-100); font-family: 'Cairo', 'Atkinson Hyperlegible', sans-serif; }
+    a { color: var(--ih-primary-600); } a:hover { color: var(--ih-primary-700); }
+    input:focus { outline: none; }
+  </style>
+</helmet>
+<div style="display: flex; gap: 48px; justify-content: center; align-items: flex-start; padding: 48px 32px; flex-wrap: wrap;">
+
+  <!-- ═══ 1 · Empty / initial ═══ -->
+  <div data-screen-label="البحث — البداية">
+    <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" keyboard="{{ true }}" arabic="{{ true }}" suggestions="{{ suggInitial }}" hint-size="390px,844px">
+      <div dir="rtl" style="display: flex; flex-direction: column; height: 100%; background: var(--ih-neutral-50); padding-top: 62px; box-sizing: border-box;">
+        <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); padding: 8px 20px 14px; display: flex; flex-direction: column; gap: 12px;">
+          <h1 style="margin: 0; font-family: 'Cairo', sans-serif; font-size: 22px; font-weight: 800; color: var(--ih-neutral-800);">البحث</h1>
+          <div style="display: flex; align-items: center; gap: 10px; background: var(--ih-neutral-0); border: 1.5px solid var(--ih-primary-400); border-radius: 12px; padding: 0 14px; min-height: 52px; box-shadow: var(--ih-glow-sm, 0 0 0 3px rgba(2,195,154,0.15));">
+            <span style="font-size: 17px; opacity: 0.7;" aria-hidden="true">🔍</span>
+            <span style="flex: 1; font-size: 15px; color: var(--ih-neutral-500);">ابحث عن تحليل، أشعة، أو طبيب…</span>
+            <span style="width: 1.5px; height: 22px; background: var(--ih-primary-400);"></span>
+          </div>
+        </div>
+        <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 20px;">
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="font-size: 13px; font-weight: 700; color: var(--ih-neutral-500);">ابحث بالفئة</div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <sc-for list="{{ categoryChips }}" as="c" hint-placeholder-count="3">
+                <div style="display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 14px; border-radius: 999px; background: var(--ih-primary-50); border: 1px solid var(--ih-primary-100); cursor: pointer;">
+                  <span style="font-size: 15px;" aria-hidden="true">{{ c.icon }}</span>
+                  <span style="font-size: 13.5px; font-weight: 700; color: var(--ih-primary-700);">{{ c.label }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-bottom: 6px;">
+              <div style="font-size: 13px; font-weight: 700; color: var(--ih-neutral-500);">أبحاثك السابقة</div>
+              <span style="font-size: 12.5px; font-weight: 600; color: var(--ih-primary-600); cursor: pointer;">مسح الكل</span>
+            </div>
+            <sc-for list="{{ recents }}" as="r" hint-placeholder-count="4">
+              <div style="display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 4px 0; border-bottom: 1px solid var(--ih-neutral-200); cursor: pointer;">
+                <span style="font-size: 14px; color: var(--ih-neutral-400); flex-shrink: 0;" aria-hidden="true">🕐</span>
+                <span style="flex: 1; font-size: 14.5px; color: var(--ih-neutral-800);">{{ r }}</span>
+                <span style="font-size: 12px; color: var(--ih-neutral-400); flex-shrink: 0;" aria-hidden="true">✕</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </x-import>
+  </div>
+
+  <!-- ═══ 2 · Results ═══ -->
+  <div data-screen-label="البحث — النتائج">
+    <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" keyboard="{{ true }}" arabic="{{ true }}" suggestions="{{ suggResults }}" hint-size="390px,844px">
+      <div dir="rtl" style="display: flex; flex-direction: column; height: 100%; background: var(--ih-neutral-50); padding-top: 62px; box-sizing: border-box;">
+        <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); padding: 8px 20px 14px; display: flex; flex-direction: column; gap: 12px;">
+          <h1 style="margin: 0; font-family: 'Cairo', sans-serif; font-size: 22px; font-weight: 800; color: var(--ih-neutral-800);">البحث</h1>
+          <div style="display: flex; align-items: center; gap: 10px; background: var(--ih-neutral-0); border: 1.5px solid var(--ih-primary-400); border-radius: 12px; padding: 0 14px; min-height: 52px; box-shadow: var(--ih-glow-sm, 0 0 0 3px rgba(2,195,154,0.15));">
+            <span style="font-size: 17px; opacity: 0.7;" aria-hidden="true">🔍</span>
+            <span style="flex: 1; font-size: 15px; font-weight: 600; color: var(--ih-neutral-800);">سكر</span>
+            <span style="width: 22px; height: 22px; border-radius: 999px; background: var(--ih-neutral-100); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--ih-neutral-500); cursor: pointer;" aria-label="مسح البحث">✕</span>
+          </div>
+        </div>
+        <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 14px 20px 20px; display: flex; flex-direction: column; gap: 18px;">
+          <!-- خدمات -->
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; align-items: baseline; gap: 8px;">
+              <h2 style="margin: 0; font-family: 'Cairo', sans-serif; font-size: 15px; font-weight: 700; color: var(--ih-neutral-800);">خدمات</h2>
+              <span style="font-size: 12px; color: var(--ih-neutral-500);">{{ serviceCount }} نتيجة</span>
+            </div>
+            <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); overflow: hidden; flex-shrink: 0;">
+              <sc-for list="{{ serviceResults }}" as="s" hint-placeholder-count="3">
+                <div data-idx="{{ $index }}" onClick="{{ onToggleService }}" style="border-bottom: 1px solid var(--ih-neutral-100); cursor: pointer;">
+                  <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; min-height: 44px; background: {{ s.rowBg }};">
+                    <div style="width: 38px; height: 38px; border-radius: 10px; background: var(--ih-primary-50); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;" aria-hidden="true">{{ s.icon }}</div>
+                    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;">
+                      <div style="font-size: 14.5px; font-weight: 600; color: var(--ih-neutral-800);">{{ s.name }}</div>
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 12.5px; color: var(--ih-neutral-600);">متوفر في {{ s.branches }} فرع</span>
+                        <sc-if value="{{ s.prep }}" hint-placeholder-val="{{ false }}">
+                          <span style="font-size: 12px; font-weight: 700; color: var(--ih-primary-800); background: var(--ih-accent-200); border: 1px solid var(--ih-accent-400); border-radius: 999px; padding: 2px 8px; white-space: nowrap;">⚠ صيام</span>
+                        </sc-if>
+                      </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0;">
+                      <span dir="ltr" style="font-size: 13px; font-weight: 700; color: var(--ih-neutral-800); white-space: nowrap;">{{ s.fromPrice }}</span>
+                      <span style="font-size: 12px; color: var(--ih-neutral-600);">تبدأ من</span>
+                    </div>
+                    <span style="font-size: 12px; color: var(--ih-neutral-600); flex-shrink: 0; transform: {{ s.chevron }}; transition: transform 180ms;" aria-hidden="true">▼</span>
+                  </div>
+                  <sc-if value="{{ s.open }}" hint-placeholder-val="{{ true }}">
+                    <div style="background: var(--ih-neutral-50); border-top: 1px solid var(--ih-neutral-200); padding: 4px 14px 8px;">
+                      <sc-for list="{{ s.branchList }}" as="b" hint-placeholder-count="2">
+                        <div style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 6px 0;">
+                          <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--ih-primary-400); flex-shrink: 0;"></span>
+                          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px;">
+                            <span style="font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-800);">{{ b.name }}</span>
+                            <span style="font-size: 12px; color: var(--ih-neutral-600);">📍 {{ b.distance }} كم · أقرب موعد <span style="unicode-bidi: isolate; white-space: nowrap;">{{ b.slot }}</span></span>
+                          </div>
+                          <span dir="ltr" style="font-size: 13px; font-weight: 700; color: var(--ih-primary-700); white-space: nowrap;">{{ b.price }}</span>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <!-- مراكز — the Home provider card, unchanged -->
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; align-items: baseline; gap: 8px;">
+              <h2 style="margin: 0; font-family: 'Cairo', sans-serif; font-size: 15px; font-weight: 700; color: var(--ih-neutral-800);">مراكز</h2>
+              <span style="font-size: 12px; color: var(--ih-neutral-500);">{{ providerCount }} نتيجة</span>
+            </div>
+            <sc-for list="{{ providers }}" as="p" hint-placeholder-count="2">
+              <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Card" padding="16px" hint-size="100%,150px">
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                  <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <div style="width: 44px; height: 44px; border-radius: 12px; background: var(--ih-primary-50); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;" aria-hidden="true">{{ p.icon }}</div>
+                      <div style="display: flex; flex-direction: column; gap: 2px;">
+                        <div style="font-size: 16px; font-weight: 700; color: var(--ih-neutral-800);">{{ p.name }}</div>
+                        <div style="display: inline-flex;"><span style="font-size: 11px; font-weight: 600; color: var(--ih-primary-600); background: var(--ih-primary-50); border-radius: 999px; padding: 2px 10px;">{{ p.type }}</span></div>
+                      </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
+                      <span style="color: #D97706; font-size: 14px;" aria-hidden="true">★</span>
+                      <span style="font-size: 14px; font-weight: 700; color: var(--ih-neutral-800);">{{ p.rating }}</span>
+                      <span style="font-size: 12px; color: var(--ih-neutral-500);">({{ p.reviews }} تقييم)</span>
+                    </div>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 14px; font-size: 13px; color: var(--ih-neutral-600); flex-wrap: wrap;">
+                    <span>📍 {{ p.distance }} كم</span>
+                    <span style="display: inline-flex; align-items: center; gap: 5px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: var(--ih-success); display: inline-block;"></span> مفتوح حتى {{ p.openUntil }}</span>
+                  </div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px solid var(--ih-neutral-100); padding-top: 10px;">
+                    <div style="font-size: 13px; color: var(--ih-neutral-600);">أقرب موعد: <span style="font-weight: 700; color: var(--ih-primary-700);">{{ p.slot }}</span></div>
+                    <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" hint-size="72px,36px">احجز</x-import>
+                  </div>
+                </div>
+              </x-import>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </x-import>
+  </div>
+
+  <!-- ═══ 3 · No results ═══ -->
+  <div data-screen-label="البحث — لا نتائج">
+    <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" keyboard="{{ true }}" arabic="{{ true }}" suggestions="{{ suggNone }}" hint-size="390px,844px">
+      <div dir="rtl" style="display: flex; flex-direction: column; height: 100%; background: var(--ih-neutral-50); padding-top: 62px; box-sizing: border-box;">
+        <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); padding: 8px 20px 14px; display: flex; flex-direction: column; gap: 12px;">
+          <h1 style="margin: 0; font-family: 'Cairo', sans-serif; font-size: 22px; font-weight: 800; color: var(--ih-neutral-800);">البحث</h1>
+          <div style="display: flex; align-items: center; gap: 10px; background: var(--ih-neutral-0); border: 1.5px solid var(--ih-primary-400); border-radius: 12px; padding: 0 14px; min-height: 52px; box-shadow: var(--ih-glow-sm, 0 0 0 3px rgba(2,195,154,0.15));">
+            <span style="font-size: 17px; opacity: 0.7;" aria-hidden="true">🔍</span>
+            <span style="flex: 1; font-size: 15px; font-weight: 600; color: var(--ih-neutral-800);">رنين مغناطيسي للقلب</span>
+            <span style="width: 22px; height: 22px; border-radius: 999px; background: var(--ih-neutral-100); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--ih-neutral-500); cursor: pointer;" aria-label="مسح البحث">✕</span>
+          </div>
+        </div>
+        <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 18px 20px 16px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center;">
+          <div style="width: 64px; height: 64px; border-radius: 999px; background: var(--ih-primary-50); display: flex; align-items: center; justify-content: center; font-size: 27px; flex-shrink: 0;" aria-hidden="true">🔍</div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="font-size: 17px; font-weight: 700; color: var(--ih-neutral-800);">لا توجد نتائج لهذا البحث</div>
+            <p style="margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--ih-neutral-600); text-wrap: pretty;">تأكد من كتابة الاسم، أو تصفّح الفئات — غالباً ستجد الخدمة تحت اسم آخر.</p>
+          </div>
+          <div style="width: 100%; display: flex; flex-direction: column; gap: 10px;">
+            <div style="font-size: 12.5px; font-weight: 700; color: var(--ih-neutral-500); text-align: right;">تصفّح الفئات</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+              <sc-for list="{{ categoryChips }}" as="c" hint-placeholder-count="3">
+                <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); padding: 14px 8px 12px; display: flex; flex-direction: column; align-items: center; gap: 7px; cursor: pointer;">
+                  <div style="width: 42px; height: 42px; border-radius: 11px; background: var(--ih-primary-50); display: flex; align-items: center; justify-content: center; font-size: 21px;" aria-hidden="true">{{ c.icon }}</div>
+                  <div style="font-size: 13px; font-weight: 700; color: var(--ih-neutral-800);">{{ c.label }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="width: 100%; display: flex; flex-direction: column; gap: 8px; align-items: stretch;">
+            <div style="font-size: 12.5px; font-weight: 700; color: var(--ih-neutral-500); text-align: right;">أكثر بحثاً</div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <sc-for list="{{ popular }}" as="p" hint-placeholder-count="3">
+                <span style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 999px; background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); font-size: 13px; font-weight: 600; color: var(--ih-neutral-700); cursor: pointer;">{{ p }}</span>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+    </x-import>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1420, &quot;height&quot;: 980}}">
+class Component extends DCLogic {
+  state = { openService: 0 };
+  SERVICES = [
+    { icon: "🧪", name: "سكر صائم", branches: 12, fromPrice: "45 EGP", prep: true, branchList: [
+      { name: "معامل سريدار — التجمع الخامس", distance: "١.٤", slot: "اليوم ٢:٠٠م", price: "45 EGP" },
+      { name: "مستشفى تاون — التجمع الخامس", distance: "٢.١", slot: "اليوم ٤:٣٠م", price: "50 EGP" },
+      { name: "معامل الرحمة — الرحاب", distance: "٣.٨", slot: "غداً ٩:٠٠ص", price: "40 EGP" },
+    ]},
+    { icon: "🧪", name: "سكر تراكمي (HbA1c)", branches: 9, fromPrice: "160 EGP", branchList: [
+      { name: "معامل سريدار — التجمع الخامس", distance: "١.٤", slot: "اليوم ٢:٣٠م", price: "160 EGP" },
+      { name: "مستشفى تاون — التجمع الخامس", distance: "٢.١", slot: "غداً ١١:٣٠ص", price: "185 EGP" },
+    ]},
+    { icon: "🧪", name: "منحنى تحمل السكر", branches: 5, fromPrice: "220 EGP", prep: true, branchList: [
+      { name: "معامل سريدار — التجمع الخامس", distance: "١.٤", slot: "غداً ٩:٣٠ص", price: "220 EGP" },
+    ]},
+  ];
+  toAr(s) { return String(s).replace(/[0-9]/g, c => "٠١٢٣٤٥٦٧٨٩"[+c]); }
+  renderVals() {
+    const open = this.state.openService;
+    return {
+      suggInitial: ["تحاليل", "أشعة", "فيتامين"],
+      suggResults: ["سكر", "سكري", "السكر"],
+      suggNone: ["رنين", "مغناطيسي", "القلب"],
+      categoryChips: [
+        { icon: "🧪", label: "تحاليل" },
+        { icon: "🩻", label: "أشعة" },
+        { icon: "🩺", label: "أطباء" },
+      ],
+      recents: ["صورة دم كاملة", "فيتامين د", "معامل سريدار", "أشعة على الصدر"],
+      serviceCount: this.toAr(this.SERVICES.length),
+      serviceResults: this.SERVICES.map((s, i) => ({
+        ...s,
+        branches: this.toAr(s.branches),
+        open: i === open,
+        rowBg: i === open ? "var(--ih-primary-50)" : "var(--ih-neutral-0)",
+        chevron: i === open ? "rotate(180deg)" : "rotate(0deg)",
+      })),
+      onToggleService: (e) => {
+        const i = +e.currentTarget.dataset.idx;
+        this.setState(s => ({ openService: s.openService === i ? null : i }));
+      },
+      providerCount: "٢",
+      providers: [
+        { icon: "🔬", name: "معامل سريدار", type: "معمل تحاليل", rating: "٤.٦", reviews: "١٨٩", distance: "١.٤", openUntil: "٩م", slot: "اليوم ٢:٠٠م" },
+        { icon: "🏥", name: "مستشفى تاون", type: "مستشفى", rating: "٤.٨", reviews: "٢٤٣", distance: "٢.١", openUntil: "١٠م", slot: "اليوم ٤:٣٠م" },
+      ],
+      popular: ["صورة دم كاملة", "فيتامين د", "أشعة سينية", "وظائف كلى"],
+    };
+  }
+}
+</script>
+</body>
+</html>

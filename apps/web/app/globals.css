@@ -154,3 +154,21 @@ body {
 [data-print='title'] {
   display: none;
 }
+
+/* Toast slide-in (component contract TOAST — Branch Details handoff). */
+@keyframes ih-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ih-toast {
+    animation: none !important;
+  }
+}

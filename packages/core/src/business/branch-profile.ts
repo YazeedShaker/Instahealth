@@ -42,6 +42,41 @@ export function normalizeBranchWhatsapp(input: string): string | null {
   return `0${normalized.slice(3)}`
 }
 
+// ── National (+20) display mapping ─────────────────────────────────────────
+// The Branch Details design renders phone fields as a 🇪🇬 +20 prefix box plus
+// the NATIONAL part ("2 2735 4416"), while the database stores the 0-leading
+// local form ("02-27354416") and hotlines verbatim ("15276"). These two map
+// between the forms at the UI edge; the stored/server contract is unchanged.
+
+/** True when the digits are a short-code hotline (4–5 digits, 1-leading) —
+ * hotlines have no meaningful +20 national form and pass through verbatim. */
+function isHotlineDigits(digits: string): boolean {
+  return /^1[0-9]{3,4}$/.test(digits)
+}
+
+/** Stored form → what the input beside the +20 box shows.
+ * "02-27354416" → "2-27354416" · "01012345678" → "1012345678" ·
+ * "15276" → "15276" (hotline, verbatim). */
+export function branchPhoneToNational(stored: string): string {
+  const cleaned = stored.trim()
+  const digits = cleaned.replace(/[\s-]/g, '')
+  if (isHotlineDigits(digits)) return cleaned
+  return cleaned.startsWith('0') ? cleaned.slice(1) : cleaned
+}
+
+/** What the desk typed beside +20 → the stored/server 0-leading form.
+ * Folds Arabic-Indic digits; keeps the desk's separators. A 1-leading run of
+ * 4–5 digits is a hotline and passes verbatim; anything else not already
+ * 0-leading gets the 0 back. Validation stays with normalizeBranchPhone —
+ * this only recomposes the canonical shape. */
+export function nationalToBranchPhone(input: string): string {
+  const cleaned = convertArabicDigits(input.trim())
+  if (cleaned.length === 0) return cleaned
+  const digits = cleaned.replace(/[\s-]/g, '')
+  if (isHotlineDigits(digits) || digits.startsWith('0')) return cleaned
+  return `0${cleaned}`
+}
+
 /** Server refusal → Arabic copy for the profile form (getPriceErrorAr's shape). */
 export function getProfileErrorAr(reason: string): string {
   switch (reason) {

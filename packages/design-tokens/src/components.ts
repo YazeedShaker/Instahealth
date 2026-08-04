@@ -289,6 +289,103 @@ export const CHIP_BASE = {
   defaultColor: 'primary.700',
 } as const
 
+/** The larger BORDERED chip the Branch Details handoff introduces for card
+ * headers («✎ قابلة للتعديل» / «🔒 للعرض فقط»). Transcribed from
+ * `Provider Dashboard - Branch Details.dc.html` — the `_ds` Chip.jsx stays
+ * borderless and small; this is a size+tone extension, not a replacement. */
+export type ChipTone = 'outlinedPrimary' | 'outlinedNeutral'
+
+export interface ChipToneSpec {
+  background: TokenRef
+  color: TokenRef
+  borderColor: TokenRef
+}
+
+export const CHIP_MD = {
+  paddingY: 5,
+  paddingX: 12,
+  borderRadius: 9999,
+  fontSize: 12,
+  fontWeight: 600,
+  gap: 6,
+  borderWidth: 1,
+} as const
+
+export const CHIP_TONES: Record<ChipTone, ChipToneSpec> = {
+  outlinedPrimary: { background: 'primary.50', color: 'primary.700', borderColor: 'primary.400' },
+  outlinedNeutral: { background: 'neutral.50', color: 'neutral.600', borderColor: 'neutral.200' },
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+
+/** Transient confirmation, top-center over the content area. Transcribed from
+ * the Branch Details handoff (`تم حفظ بيانات الفرع — ظهرت للمرضى الآن`) — no
+ * Toast exists in the `_ds` bundle, so this handoff IS the spec's source.
+ * Success auto-dismisses (PRODUCT §6); the icon disc carries the ✓. */
+export const TOAST = {
+  background: 'neutral.800',
+  color: '#FFFFFF',
+  borderRadius: 12,
+  paddingY: 12,
+  paddingX: 18,
+  fontSize: 13.5,
+  fontWeight: 600,
+  gap: 10,
+  iconSize: 22,
+  iconBackground: 'primary.400',
+  /** Literal in the handoff — a deep tinted drop, not a token. */
+  shadow: '0 12px 32px rgba(2,20,27,0.28)',
+  /** Slide-in duration; respect prefers-reduced-motion. */
+  animationMs: 350,
+  autoDismissMs: 4000,
+} as const
+
+// ── BranchStatusBadge ──────────────────────────────────────────────────────
+
+/** Branch operational state for the dashboard's locked profile card. The
+ * handoff draws only `active` («● نشط», success tint on cerulean — the same
+ * deliberate non-green pairing as `confirmed` above); `holiday` and `inactive`
+ * follow the established warning/neutral pairings. Uses STATUS_BADGE_BASE
+ * metrics. */
+export type BranchStatusKey = 'active' | 'holiday' | 'inactive'
+
+export const BRANCH_STATUS_BADGES: Record<BranchStatusKey, StatusBadgeSpec> = {
+  active: {
+    background: 'semantic.successBg',
+    color: '#028090',
+    labelAr: 'نشط',
+    labelEn: 'Active',
+  },
+  holiday: {
+    background: 'semantic.warningBg',
+    color: '#92600A',
+    labelAr: 'في إجازة',
+    labelEn: 'On holiday',
+  },
+  inactive: {
+    background: 'neutral.100',
+    color: '#991B1B',
+    labelAr: 'موقوف',
+    labelEn: 'Suspended',
+  },
+}
+
+// ── Card sections ──────────────────────────────────────────────────────────
+
+/** Header/footer bands for sectioned cards (Branch Details editable + locked
+ * cards; the P02 drawer draws the same anatomy). Divider uses the card border
+ * color; the footer sits on the neutral-50 band. */
+export const CARD_SECTIONS = {
+  headerPaddingY: 16,
+  headerPaddingX: 20,
+  bodyPaddingY: 18,
+  bodyPaddingX: 20,
+  footerPaddingY: 14,
+  footerPaddingX: 20,
+  dividerColor: 'border.base',
+  footerBackground: 'neutral.50',
+} as const
+
 // ── Input ──────────────────────────────────────────────────────────────────
 
 export const INPUT_BASE = {
@@ -305,4 +402,33 @@ export const INPUT_BASE = {
   labelFontWeight: 600,
   labelColor: 'neutral.700',
   gap: 7,
+} as const
+
+/** The static prefix box beside an input (the Branch Details «🇪🇬 +20» country
+ * box). Height/border/radius track INPUT_BASE so the pair always aligns —
+ * the handoff hand-draws 44px inputs, but the system Input is 48 and the
+ * CONTRACT wins over a prototype rendering (CLAUDE.md §3a). */
+export const INPUT_AFFIX = {
+  paddingX: 12,
+  fontSize: 13.5,
+  fontWeight: 700,
+  color: 'neutral.700',
+  background: 'neutral.50',
+  gap: 6,
+} as const
+
+/** Helper + error text under a field (Branch Details handoff). Error pairs
+ * the AA `#991B1B` from the Alert spec with a leading ⚠, never color alone. */
+export const INPUT_HELP = {
+  fontSize: 12,
+  color: 'neutral.600',
+  errorColor: '#991B1B',
+  errorFontWeight: 600,
+  gap: 7,
+} as const
+
+/** Error state on the field itself. */
+export const INPUT_ERROR = {
+  borderColor: 'semantic.error',
+  background: 'semantic.errorBg',
 } as const

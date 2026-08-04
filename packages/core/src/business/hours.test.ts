@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest'
 import {
   DAY_LABELS_AR,
   formatDayHoursAr,
+  formatWeeklyHoursSummaryAr,
   getCairoDayKey,
   getOpenStatus,
   isBranchOpenNow,
@@ -157,5 +158,22 @@ describe('week schedule constants', () => {
       'الخميس',
       'الجمعة',
     ])
+  })
+})
+
+describe('formatWeeklyHoursSummaryAr', () => {
+  test('a uniform 24/7 week collapses to one value', () => {
+    expect(formatWeeklyHoursSummaryAr(ALWAYS_OPEN)).toBe('مفتوح ٢٤ ساعة')
+  })
+
+  test('the Saridar pattern groups Sat–Thu and calls Friday out', () => {
+    expect(formatWeeklyHoursSummaryAr(SARIDAR_HOURS)).toBe(
+      'السبت – الخميس: ٨ص – ١٠م · الجمعة: ٩ص – ٥م',
+    )
+  })
+
+  test('a closed Friday renders as its own run', () => {
+    const closedFriday = { ...SARIDAR_HOURS, fri: { open: null, close: null, closed: true } }
+    expect(formatWeeklyHoursSummaryAr(closedFriday)).toBe('السبت – الخميس: ٨ص – ١٠م · الجمعة: مغلق')
   })
 })
