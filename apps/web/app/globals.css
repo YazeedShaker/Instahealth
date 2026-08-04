@@ -155,11 +155,13 @@ body {
   display: none;
 }
 
-/* Toast slide-in (component contract TOAST — Branch Details handoff). */
+/* Toast slide-in (component contract TOAST). Rises from BELOW — the toast is
+   bottom-anchored (founder decision 2026-08-04 overriding the handoff's top
+   placement). */
 @keyframes ih-toast-in {
   from {
     opacity: 0;
-    transform: translateX(-50%) translateY(-10px);
+    transform: translateX(-50%) translateY(10px);
   }
   to {
     opacity: 1;

@@ -40,8 +40,17 @@ async function openProfile(page: import('@playwright/test').Page) {
 
 async function saveAndExpectToast(page: import('@playwright/test').Page) {
   await page.getByTestId('profile-save').click()
-  // The design's saved feedback is the contract Toast, which auto-dismisses.
-  await expect(page.getByTestId('profile-saved')).toBeVisible({ timeout: 30_000 })
+  // The saved feedback is the contract Toast, which auto-dismisses. It anchors
+  // to the BOTTOM of the content area (founder decision 2026-08-04) and must
+  // stay in the lower half of the viewport regardless of scroll position.
+  const toast = page.getByTestId('profile-saved')
+  await expect(toast).toBeVisible({ timeout: 30_000 })
+  const box = await toast.boundingBox()
+  const viewport = page.viewportSize()
+  if (box !== null && viewport !== null) {
+    expect(box.y).toBeGreaterThan(viewport.height / 2)
+    expect(box.y + box.height).toBeLessThanOrEqual(viewport.height)
+  }
 }
 
 test.describe('provider dashboard — branch profile (P05, Branch Details design)', () => {

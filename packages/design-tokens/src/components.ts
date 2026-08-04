@@ -318,11 +318,16 @@ export const CHIP_TONES: Record<ChipTone, ChipToneSpec> = {
 
 // ── Toast ──────────────────────────────────────────────────────────────────
 
-/** Transient confirmation, top-center over the content area. Transcribed from
- * the Branch Details handoff (`تم حفظ بيانات الفرع — ظهرت للمرضى الآن`) — no
- * Toast exists in the `_ds` bundle, so this handoff IS the spec's source.
- * Success auto-dismisses (PRODUCT §6); the icon disc carries the ✓. */
+/** Transient confirmation, BOTTOM-center over the content area. Styling
+ * transcribed from the Branch Details handoff (`تم حفظ بيانات الفرع — ظهرت
+ * للمرضى الآن`) — no Toast exists in the `_ds` bundle, so that handoff IS the
+ * spec's source. ⚠ PLACEMENT deviates from the handoff on purpose: the mockup
+ * draws it top-center, the founder chose bottom (2026-08-04) — §1.5, founder
+ * wins and the bundle is flagged for revision. Success auto-dismisses
+ * (PRODUCT §6); the icon disc carries the ✓. */
 export const TOAST = {
+  /** Distance from the BOTTOM edge of the containing area. */
+  offsetBottom: 24,
   background: 'neutral.800',
   color: '#FFFFFF',
   borderRadius: 12,
