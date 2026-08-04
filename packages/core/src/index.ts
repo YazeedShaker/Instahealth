@@ -24,6 +24,7 @@ export * from './business/payment-paytabs'
 export * from './business/bookings'
 export * from './business/provider-bookings'
 export * from './business/service-pricing'
+export * from './business/branch-profile'
 export * from './business/sms'
 
 // Schemas
@@ -34,6 +35,7 @@ export * from './schemas/auth.schema'
 export * from './schemas/booking.schema'
 export * from './schemas/payment.schema'
 export * from './schemas/review.schema'
+export * from './schemas/branchProfile.schema'
 
 // Constants
 export * from './constants'

@@ -52,6 +52,26 @@ export const errorMessages = {
     ar: 'مرجع عملية الدفع طويل جداً',
     en: 'Payment reference is too long',
   },
+  'branchProfile.phone.required': {
+    ar: 'أدخل رقم هاتف الفرع',
+    en: 'Enter the branch phone number',
+  },
+  'branchProfile.phone.invalid': {
+    ar: 'أدخل رقم هاتف مصرياً صحيحاً — أرضي أو موبايل (مثال: 02-25787202)',
+    en: 'Enter a valid Egyptian phone number — landline or mobile (e.g. 02-25787202)',
+  },
+  'branchProfile.whatsapp.invalid': {
+    ar: 'أدخل رقم واتساب موبايل مصرياً صحيحاً (مثال: 01012345678)',
+    en: 'Enter a valid Egyptian mobile WhatsApp number (e.g. 01012345678)',
+  },
+  'branchProfile.addressAr.required': {
+    ar: 'أدخل عنوان الفرع بالعربية',
+    en: 'Enter the branch address in Arabic',
+  },
+  'branchProfile.address.tooLong': {
+    ar: 'العنوان طويل جداً (الحد الأقصى ٥٠٠ حرف)',
+    en: 'Address is too long (max 500 characters)',
+  },
   'common.uuid.invalid': {
     ar: 'معرّف غير صالح',
     en: 'Invalid identifier',

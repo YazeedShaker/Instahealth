@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest'
 
 import { otpRequestSchema, otpVerifySchema } from './auth.schema'
 import { confirmBookingSchema, serviceSelectionSchema, slotChoiceSchema } from './booking.schema'
+import { branchProfileSchema } from './branchProfile.schema'
 import { coordinatesSchema, paginationSchema, uuidSchema } from './common.schema'
 import { errorMessages, getErrorMessage } from './messages'
 import { settlePaymentRequestSchema } from './payment.schema'
@@ -222,5 +223,79 @@ describe('settlePaymentRequestSchema', () => {
         settlePaymentRequestSchema.safeParse({ ...valid, providerRef: 'x'.repeat(256) }),
       ),
     ).toBe('payment.providerRefTooLong')
+  })
+})
+
+describe('branchProfileSchema', () => {
+  const valid = {
+    phone: '02-25787202',
+    whatsapp: '+20 101 234 5678',
+    addressAr: '  ١٢ شارع التسعين، التجمع الخامس ',
+    addressEn: '',
+  }
+
+  test('valid input normalizes: phone kept as typed, whatsapp folded to local, empties to null', () => {
+    expect(branchProfileSchema.parse(valid)).toEqual({
+      phone: '02-25787202',
+      whatsapp: '01012345678',
+      addressAr: '١٢ شارع التسعين، التجمع الخامس',
+      addressEn: null,
+    })
+  })
+
+  test('whatsapp and addressEn may be omitted entirely', () => {
+    expect(branchProfileSchema.parse({ phone: '01012345678', addressAr: 'العنوان' })).toEqual({
+      phone: '01012345678',
+      whatsapp: null,
+      addressAr: 'العنوان',
+      addressEn: null,
+    })
+  })
+
+  test('a present English address is kept, trimmed', () => {
+    expect(
+      branchProfileSchema.parse({ ...valid, addressEn: '  12 90th St, Fifth Settlement ' })
+        .addressEn,
+    ).toBe('12 90th St, Fifth Settlement')
+  })
+
+  test('an invalid phone yields branchProfile.phone.invalid', () => {
+    // '12345' would PASS — five digits starting with 1 is a hotline (15276 is
+    // Town's real number). Eight 1-leading digits fit neither rule.
+    expect(firstMessage(branchProfileSchema.safeParse({ ...valid, phone: '12345678' }))).toBe(
+      'branchProfile.phone.invalid',
+    )
+  })
+
+  test('a short-code hotline is a valid branch phone', () => {
+    expect(branchProfileSchema.parse({ ...valid, phone: '15276' }).phone).toBe('15276')
+  })
+
+  test('an empty phone yields branchProfile.phone.required', () => {
+    expect(firstMessage(branchProfileSchema.safeParse({ ...valid, phone: '' }))).toBe(
+      'branchProfile.phone.required',
+    )
+  })
+
+  test('a landline whatsapp yields branchProfile.whatsapp.invalid', () => {
+    expect(firstMessage(branchProfileSchema.safeParse({ ...valid, whatsapp: '02-25787202' }))).toBe(
+      'branchProfile.whatsapp.invalid',
+    )
+  })
+
+  test('a whitespace-only Arabic address yields branchProfile.addressAr.required', () => {
+    expect(firstMessage(branchProfileSchema.safeParse({ ...valid, addressAr: '   ' }))).toBe(
+      'branchProfile.addressAr.required',
+    )
+  })
+
+  test('over-long addresses yield branchProfile.address.tooLong on either field', () => {
+    const long = 'ع'.repeat(501)
+    expect(firstMessage(branchProfileSchema.safeParse({ ...valid, addressAr: long }))).toBe(
+      'branchProfile.address.tooLong',
+    )
+    expect(
+      firstMessage(branchProfileSchema.safeParse({ ...valid, addressEn: 'x'.repeat(501) })),
+    ).toBe('branchProfile.address.tooLong')
   })
 })
