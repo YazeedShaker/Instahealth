@@ -36,26 +36,56 @@ export function TodayHeader({
         padding: '12px 24px',
         display: 'flex',
         alignItems: 'center',
-        gap: 20,
+        // WRAPS rather than clips. At 150% zoom on the 1366 floor the row of
+        // fixed controls needed 35px more than it had, and the shell's
+        // `overflow: hidden` cut the LAST item — the user block with its
+        // logout. An action being silently unreachable is the one outcome this
+        // header may not have, so it grows a second line instead.
+        flexWrap: 'wrap',
+        rowGap: 8,
+        columnGap: 16,
         minHeight: 56,
         boxSizing: 'border-box',
       }}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+      {/* A flex item's default `min-width: auto` refuses to shrink below its
+          text, which is what pushed this header 72px past its container at
+          150% zoom (measured). The name now truncates instead — but with a
+          FLOOR of 96px, not 0: unbounded shrinking left it at 37px, two glyphs
+          and an ellipsis, which identifies no branch at all. */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 96 }}>
         <div
           data-testid="branch-name"
-          style={{ fontSize: 16, fontWeight: 800, color: 'var(--ih-neutral-800)' }}
+          style={{
+            fontSize: 16,
+            fontWeight: 800,
+            color: 'var(--ih-neutral-800)',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
         >
           {branchNameAr}
         </div>
-        <div style={{ fontSize: 12.5, color: 'var(--ih-neutral-500)' }}>{dateLabel}</div>
+        <div
+          style={{
+            fontSize: 12.5,
+            color: 'var(--ih-neutral-500)',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {dateLabel}
+        </div>
       </div>
 
-      <div style={{ width: 1, height: 32, background: 'var(--ih-neutral-200)' }} />
+      <div style={{ width: 1, height: 32, flexShrink: 0, background: 'var(--ih-neutral-200)' }} />
 
       {/* Fill indicator — the number the whole business watches, so it gets
-          the pips as well as the digits. */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          the pips as well as the digits, and it does NOT shrink: this is the
+          one number the desk is here to read. */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
         <div style={{ display: 'flex', gap: 3 }}>
           {Array.from({ length: capacity }, (_, index) => (
             <div

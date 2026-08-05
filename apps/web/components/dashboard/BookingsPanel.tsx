@@ -139,35 +139,43 @@ export function BookingsPanel({
     <>
       {toolbarNode}
       <Card padding={0} style={{ overflow: 'hidden' }} testId="bookings-card">
-        <div
-          data-print="head"
-          className={`${
-            showActions ? BOOKINGS_GRID_WITH_ACTIONS : BOOKINGS_GRID_READ_ONLY
-          } border-b border-ih-neutral-200 bg-ih-neutral-50 px-4 py-2.5 text-[11.5px] font-bold text-ih-neutral-500`}
-        >
-          <div>الموعد</div>
-          <div>المريض</div>
-          <div>الخدمات</div>
-          <div>الدفع</div>
-          <div>الحالة</div>
-          {showActions ? <div>الإجراء</div> : null}
-          <div />
-        </div>
-        <div data-testid="bookings-list">
-          {bookings.map((booking) => (
-            <BookingRow
-              key={booking.id}
-              booking={booking}
-              cairoTodayIso={cairoTodayIso}
-              showActions={showActions}
-              isNew={newIds.has(booking.id)}
-              isPast={showActions && booking.slotTime.slice(0, 5) < nowHHMM}
-              isPending={pendingIds.has(booking.id)}
-              isSelected={booking.id === openId}
-              onMark={onMark}
-              onOpen={setOpenId}
-            />
-          ))}
+        {/* ⚠ THE REACHABILITY BACKSTOP. The Card clips (rounded corners), so
+            anything wider than it is silently CUT — under RTL that is the
+            action button. The columns above compress first; if a run of very
+            long service names still overflows the floors, this scrolls instead
+            of hiding. Nothing in this table may ever be unreachable. The head
+            and the list share the scroller so their columns stay aligned. */}
+        <div data-testid="bookings-scroller" style={{ overflowX: 'auto' }}>
+          <div
+            data-print="head"
+            className={`${
+              showActions ? BOOKINGS_GRID_WITH_ACTIONS : BOOKINGS_GRID_READ_ONLY
+            } border-b border-ih-neutral-200 bg-ih-neutral-50 px-4 py-2.5 text-[11.5px] font-bold text-ih-neutral-500`}
+          >
+            <div>الموعد</div>
+            <div>المريض</div>
+            <div>الخدمات</div>
+            <div>الدفع</div>
+            <div>الحالة</div>
+            {showActions ? <div>الإجراء</div> : null}
+            <div />
+          </div>
+          <div data-testid="bookings-list">
+            {bookings.map((booking) => (
+              <BookingRow
+                key={booking.id}
+                booking={booking}
+                cairoTodayIso={cairoTodayIso}
+                showActions={showActions}
+                isNew={newIds.has(booking.id)}
+                isPast={showActions && booking.slotTime.slice(0, 5) < nowHHMM}
+                isPending={pendingIds.has(booking.id)}
+                isSelected={booking.id === openId}
+                onMark={onMark}
+                onOpen={setOpenId}
+              />
+            ))}
+          </div>
         </div>
       </Card>
 

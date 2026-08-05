@@ -79,6 +79,71 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 
 ## Shipped
 
+### 2026-08-04 · VIEW-01 — dashboard viewport hardening (not responsiveness)
+
+The contract stays desktop-first (DESIGN-02, 1366×768 floor). What changed is
+behaviour at the EDGES of real desk life — 1024 office machines, half-snapped
+windows, projectors, and the one nobody designs for: **browser zoom**.
+
+**⚠ ZOOM IS A WIDTH PROBLEM, and it is why the obvious gate is wrong.** Chrome
+zoom shrinks the CSS viewport: 1366 @125% = 1093px, @150% = 911px. A naive
+`max-width: 1023px` "use a desktop" gate would therefore have told a
+receptionist on her ACTUAL office desktop, zoomed to 150% because she cannot
+read 12px text, to go find a computer. The gate is instead **two conditions**:
+a hard floor at 859px (below which no device can render the table, comfortably
+under the 911px that 150% zoom produces), OR **`max-width: 1023px` AND
+`pointer: coarse`** — a touch device that narrow is a phone, never a zoomed
+desk machine. `pointer: coarse` is also the only thing that catches a phone in
+LANDSCAPE (932px), which width alone cannot distinguish from a zoomed desktop.
+Pure CSS, so no hydration mismatch, no resize listener, no flash.
+
+**Four real breakages found by MEASURING, not reasoning** (the harness printed
+geometry at every viewport before a line was changed):
+
+① **The action button was clipped and unreachable at 1024** — the row's fixed
+grid needed 870px in a 751px card, and the card is `overflow: hidden`, so under
+RTL the cut edge is the LAST columns: the action and the chevron. A desk cannot
+mark a patient arrived on a screen that hides the button. Columns are now
+`minmax(floor, design)` and compress.
+② **The payment state was clipped** — the cash chip («💵 يدفع هنا ٢٥٠ EGP») is
+`whitespace-nowrap` at ~147px, and a compressing payment column put 147px of
+content in a 123px cell. That column is now a flat 150px: money the desk must
+collect is the one thing that may never be shortened.
+③ **The header cut the LOGOUT at 150% zoom** (763px of content in 691px). It
+wraps to a second line now instead of clipping, and the branch name truncates
+with a 96px floor — unbounded shrinking had left it at 37px.
+④ **Two-button rows truncated «لم يحضر»** (169px pair in a 149px track). The
+pair wraps.
+
+**⚠ The one a DOM check could never have caught, found by reading the
+screenshot (§9's whole point):** `minmax(0, 1fr)` on the services column looked
+safe and was not — grid fills every non-flexible track toward its MAX before an
+`fr` track gets anything, so at 1024 services resolved to **zero**: the summary
+vanished and its nowrap «⚠ تحضير» chip drew straight across the payment column.
+Overlap is invisible to `scrollWidth`. Fixed with an 88px floor plus
+`overflow-hidden` on the cell.
+
+**Also learned and written down:** an explicit floor in `minmax()` SUPPRESSES
+grid's automatic-minimum growth, so a track will not stretch to fit its content
+— which is why floors alone cannot guarantee reachability. `BookingsPanel` now
+wraps head+list in an `overflow-x: auto` scroller as the backstop: the row's
+honest min-content width is ~643px (nowrap chips and buttons), so at 911px it
+scrolls ~5px rather than hiding anything. The skeleton now IMPORTS the grid
+constant it used to duplicate, so the two cannot drift.
+
+**Three Playwright checks at fixed viewports** (`e2e/viewport.spec.ts`, no
+fixtures consumed): 1024→2560 with no unreachable clipping and the action +
+payment asserted inside the viewport; zoom 1093/911 with the header, the
+logout, and the drawer (open, fit, close) intact; and the gate — asserted to
+fire on phone portrait AND landscape while **never** firing on a zoomed
+desktop, which is the regression that would otherwise creep back in. Captures
+in `docs/design-briefs/view01-viewport/`.
+
+**Residual, accepted:** at exactly 1024 a row with both a long service name and
+a prep chip shows the name truncated hard («و…»). Both signals stay visible and
+the drawer carries full detail; widening beyond the 88px floor would cost the
+payment column, which is not a trade worth making.
+
 ### 2026-08-04 · CASH-01 — v1 payment lineup: cash only
 
 **A product decision, not a technical retreat.** Partners asked to collect at

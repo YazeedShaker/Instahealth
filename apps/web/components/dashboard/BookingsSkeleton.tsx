@@ -8,6 +8,8 @@
 // The skeleton MIRRORS the real layout (same grid, same row height, same
 // header) so nothing jumps when the data lands.
 
+import { BOOKINGS_GRID_WITH_ACTIONS } from './BookingRow'
+
 export function Shimmer({
   width,
   height = 12,
@@ -26,7 +28,11 @@ export function Shimmer({
   )
 }
 
-const GRID = 'grid grid-cols-[90px_200px_1fr_150px_118px_180px_44px] items-center gap-3'
+// The SAME grid the real table uses — imported, not re-typed. It was a
+// duplicated literal, which meant the skeleton's columns and the loaded rows'
+// columns could drift apart (and did, the moment the real grid learned to
+// compress): the table would visibly jump on hydration at narrow widths.
+const GRID = BOOKINGS_GRID_WITH_ACTIONS
 
 export function BookingsTableSkeleton({ rows = 5 }: { rows?: number }) {
   return (
