@@ -44,10 +44,59 @@ function PendingDots({ labelAr }: { labelAr: string }): React.ReactElement {
   )
 }
 
+// ⚠ EVERY COLUMN IS minmax(floor, design) — NOT a fixed width.
+//
+// The design's widths are the CEILING and they hold from ~1150px up, which is
+// the desktop contract (DESIGN-02, 1366×768 floor). Below that the columns
+// COMPRESS toward their floors instead of overflowing, because the card clips
+// (`overflow: hidden`, for its rounded corners) and under RTL the clipped edge
+// is the LAST columns — the action button and the chevron. Measured before
+// this change: at a 1024px viewport the row needed 870px in a 751px card, so
+// **the primary action was cut off and unreachable**. A desk cannot mark a
+// patient arrived on a screen that hides the button.
+//
+// Floors are the narrowest each cell stays readable at: a time («٢:٣٠م»), a
+// truncated name over its phone, a status chip, the action label, the chevron.
+//
+// ⚠ THE SERVICES COLUMN NEEDS A FLOOR TOO — `minmax(0, 1fr)` looks safe and is
+// not. Grid fills every non-flexible track toward its MAX before an `fr` track
+// gets anything, and at 1024px the other columns' maxima already exceed the
+// row, so services resolved to ZERO: its truncating summary vanished and its
+// nowrap «⚠ تحضير» chip spilled across the payment column. Caught by looking
+// at a screenshot, not by the DOM checks — overlap is invisible to
+// scrollWidth (ENGINEERING-WORKFLOW §9: read the capture).
+//
+// ⚠ THE NOWRAP COLUMNS ARE `auto`, NOT A PIXEL NUMBER — time, payment and
+// status all hold `whitespace-nowrap` content (the cash chip «💵 يدفع هنا ٢٥٠
+// EGP», the status pill, the time), so their tracks must be sized by that
+// CONTENT. An `auto` track falls back to min-content under pressure, which for
+// nowrap content is its full width: the chip can never be clipped, on any
+// platform.
+//
+// It was briefly a flat 150px, measured off this machine — and CI caught it:
+// the same chip renders **154px on Linux** where it is 147px on Windows, so
+// the payment amount clipped by 4px on the runner and nowhere locally. Font
+// metrics differ per platform; a hardcoded width is the "budget tuned to one
+// machine" disease (§9) wearing a layout hat. Let the content decide.
+//
+// Money the desk must collect is the one thing on this row that may never be
+// shortened, so these columns take their width first and the flexible ones
+// absorb the difference.
+// ⚠ THE FLOORS ARE NOT THE WHOLE STORY — a grid item's default `min-width:
+// auto` lets its CONTENT push a track past its `minmax()` floor. The action
+// button and the payment/status chips are `whitespace-nowrap`, so the row has
+// an honest min-content width of ~643px that no floor can talk it out of.
+// Measured: lowering these floors by 8px changed the row's width by nothing.
+//
+// That is the correct outcome rather than a limitation — getting narrower
+// would mean shortening an action label or an amount, which is precisely what
+// must not happen. So: the flexible columns compress down to ~1150px, and
+// below that the scroller in BookingsPanel keeps everything REACHABLE. At
+// 911px (the 1366 floor at 150% zoom) the row scrolls by ~5px; nothing hides.
 export const BOOKINGS_GRID_WITH_ACTIONS =
-  'grid grid-cols-[90px_200px_1fr_150px_118px_180px_44px] items-center gap-3'
+  'grid grid-cols-[auto_minmax(100px,200px)_minmax(88px,1fr)_auto_auto_minmax(124px,180px)_minmax(24px,44px)] items-center gap-3'
 export const BOOKINGS_GRID_READ_ONLY =
-  'grid grid-cols-[90px_200px_1fr_150px_118px_44px] items-center gap-3'
+  'grid grid-cols-[auto_minmax(100px,200px)_minmax(88px,1fr)_auto_auto_minmax(24px,44px)] items-center gap-3'
 
 export function BookingRow({
   booking,
@@ -165,7 +214,10 @@ export function BookingRow({
         ) : null}
       </div>
 
-      <div className="flex min-w-0 items-center gap-2">
+      {/* `overflow-hidden` belts the floor above: whatever the track resolves
+          to, the prep chip is clipped INSIDE this cell rather than drawn over
+          the payment column beside it. */}
+      <div className="flex min-w-0 items-center gap-2 overflow-hidden">
         <span className="truncate text-[13.5px] text-ih-neutral-700">
           {summarizeBookingServicesAr(booking.services)}
         </span>
@@ -224,7 +276,18 @@ export function BookingRow({
           silently (see useBranchBookings). `data-pending` gives the E2E a way to
           observe the cycle rather than time it. */}
       {showActions ? (
-        <div className="flex gap-1.5" data-print="hide" data-pending={isPending ? 'yes' : 'no'}>
+        /* ⚠ `flex-wrap`: a row can carry TWO buttons («تمت الخدمة» + «لم
+           يحضر»), which together need ~169px — more than the action track
+           resolves to on a 1024px screen (measured: 169 in 149, so «لم يحضر»
+           was cut in half). An explicit floor in `minmax()` suppresses the
+           grid's automatic-minimum growth, so the track does NOT stretch to
+           fit; the pair stacks instead. Both actions stay clickable, the row
+           just gets taller — compression, never a truncated action. */
+        <div
+          className="flex flex-wrap gap-1.5"
+          data-print="hide"
+          data-pending={isPending ? 'yes' : 'no'}
+        >
           {action !== null ? (
             <Button
               size="sm"

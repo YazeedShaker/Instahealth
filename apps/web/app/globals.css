@@ -174,3 +174,32 @@ body {
     animation: none !important;
   }
 }
+
+/* ── Dashboard viewport gate (VIEW-01) ───────────────────────────────────────
+   Below a usable width the dashboard shows DesktopOnlyNotice instead of a
+   clipped half-render. Pure CSS so there is no hydration mismatch, no resize
+   listener, and no flash of the wrong screen on first paint.
+
+   The two conditions and the reason the second one exists are documented on
+   the component. Short version: browser zoom shrinks the CSS viewport
+   (1366 @150% = 911px), so a width-only gate at 1024 would reject a real desk
+   machine whose user simply zoomed in. `pointer: coarse` is what separates a
+   phone from a zoomed desktop.
+
+   ⚠ These rules are UNLAYERED and therefore beat Tailwind's layered utilities
+   regardless of specificity (the tokens.css lesson, ENGINEERING-WORKFLOW §9) —
+   which is exactly why `display: none` here reliably overrides the shell's
+   `flex`. `!important` makes that intent explicit rather than incidental. */
+[data-too-narrow] {
+  display: none;
+}
+
+@media (max-width: 859px), (max-width: 1023px) and (pointer: coarse) {
+  [data-desk-only] {
+    display: none !important;
+  }
+
+  [data-too-narrow] {
+    display: flex !important;
+  }
+}

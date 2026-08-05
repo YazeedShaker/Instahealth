@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 
 import { getProviderContext } from '../../lib/auth/provider'
+import { DesktopOnlyNotice } from '../../components/dashboard/DesktopOnlyNotice'
 import { SidebarNav } from '../../components/dashboard/SidebarNav'
 
 // The ROLE gate. Middleware already answered "signed in?"; this answers "staff?"
@@ -17,9 +18,22 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (lookup.kind === 'notProvider') redirect('/login?rejected=1')
 
   return (
-    <div dir="rtl" data-print="page" className="flex h-screen overflow-hidden bg-ih-neutral-100">
-      <SidebarNav />
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">{children}</div>
-    </div>
+    <>
+      {/* The viewport gate (VIEW-01). Both branches are always RENDERED; CSS
+          picks one, so there is no hydration mismatch and no flash. The
+          children are still built either way — this is a display decision, not
+          a routing one, and a desk that widens its window sees the dashboard
+          immediately with no reload. */}
+      <DesktopOnlyNotice />
+      <div
+        dir="rtl"
+        data-desk-only=""
+        data-print="page"
+        className="flex h-screen overflow-hidden bg-ih-neutral-100"
+      >
+        <SidebarNav />
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">{children}</div>
+      </div>
+    </>
   )
 }

@@ -755,6 +755,26 @@ Two more, both found while capturing P02's screenshots:
   each other within one run. Residual: three workers share one mutable dev
   database, so a data-dependent skip can still race — the durable fixes are
   per-worker fixtures or `workers: 1`.
+- **⚠ BROWSER ZOOM IS A WIDTH PROBLEM — a viewport gate keyed on width alone
+  will insult a real user.** Chrome zoom shrinks the CSS viewport: the 1366
+  desktop floor reports 1093px at 125% and **911px at 150%**, which is a zoom
+  level office machines use constantly. A "too narrow → show the desktop
+  message" rule set at 1024 therefore fires on an actual desk machine. Pair the
+  width with **`pointer: coarse`** to mean "touch device", and keep any
+  width-only floor BELOW the narrowest legitimate zoom (VIEW-01 uses 859px).
+  The same media query is the only thing that catches a phone in LANDSCAPE
+  (up to 932px), which no width threshold can separate from a zoomed desktop.
+  Playwright cannot set zoom — assert at the CSS-equivalent viewport, which is
+  what the browser actually does, not an approximation.
+- **An explicit floor in `minmax()` turns OFF grid's automatic minimum.** With
+  `minmax(124px, 180px)` a track will NOT grow to fit an item wider than the
+  resolved size — the item just overflows and, inside an `overflow: hidden`
+  card, silently disappears. Corollaries learned in VIEW-01: `minmax(0, 1fr)`
+  can resolve to **zero**, because every non-flexible track fills toward its
+  MAX before an `fr` track gets anything; and a column whose content is
+  `whitespace-nowrap` and load-bearing (a payment amount, an action label)
+  should be FIXED, not compressible. Give a dense table an `overflow-x: auto`
+  wrapper as the backstop so nothing is ever unreachable.
 - **Read the screenshot you just captured.** The first P02 drawer capture looked
   fine in the accessibility tree but showed the scrim confined to `<main>`, with
   the sidebar and header undimmed — the design anchors both to the root shell.
