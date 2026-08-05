@@ -66,12 +66,21 @@ function PendingDots({ labelAr }: { labelAr: string }): React.ReactElement {
 // at a screenshot, not by the DOM checks — overlap is invisible to
 // scrollWidth (ENGINEERING-WORKFLOW §9: read the capture).
 //
-// ⚠ THE PAYMENT COLUMN NEVER COMPRESSES — it is a flat 150px. Its cash chip
-// («💵 يدفع هنا ٢٥٠ EGP») is `whitespace-nowrap` and measures ~147px, so any
-// floor below that CLIPS the amount the desk has to physically collect.
-// Measured at 1024px with a compressing payment column: 147px of content in a
-// 123px cell. Money the desk must collect is the one thing on this row that
-// may never be shortened, so it takes its width first and the flexible columns
+// ⚠ THE NOWRAP COLUMNS ARE `auto`, NOT A PIXEL NUMBER — time, payment and
+// status all hold `whitespace-nowrap` content (the cash chip «💵 يدفع هنا ٢٥٠
+// EGP», the status pill, the time), so their tracks must be sized by that
+// CONTENT. An `auto` track falls back to min-content under pressure, which for
+// nowrap content is its full width: the chip can never be clipped, on any
+// platform.
+//
+// It was briefly a flat 150px, measured off this machine — and CI caught it:
+// the same chip renders **154px on Linux** where it is 147px on Windows, so
+// the payment amount clipped by 4px on the runner and nowhere locally. Font
+// metrics differ per platform; a hardcoded width is the "budget tuned to one
+// machine" disease (§9) wearing a layout hat. Let the content decide.
+//
+// Money the desk must collect is the one thing on this row that may never be
+// shortened, so these columns take their width first and the flexible ones
 // absorb the difference.
 // ⚠ THE FLOORS ARE NOT THE WHOLE STORY — a grid item's default `min-width:
 // auto` lets its CONTENT push a track past its `minmax()` floor. The action
@@ -85,9 +94,9 @@ function PendingDots({ labelAr }: { labelAr: string }): React.ReactElement {
 // below that the scroller in BookingsPanel keeps everything REACHABLE. At
 // 911px (the 1366 floor at 150% zoom) the row scrolls by ~5px; nothing hides.
 export const BOOKINGS_GRID_WITH_ACTIONS =
-  'grid grid-cols-[minmax(52px,90px)_minmax(100px,200px)_minmax(88px,1fr)_150px_minmax(76px,118px)_minmax(124px,180px)_minmax(24px,44px)] items-center gap-3'
+  'grid grid-cols-[auto_minmax(100px,200px)_minmax(88px,1fr)_auto_auto_minmax(124px,180px)_minmax(24px,44px)] items-center gap-3'
 export const BOOKINGS_GRID_READ_ONLY =
-  'grid grid-cols-[minmax(52px,90px)_minmax(100px,200px)_minmax(88px,1fr)_150px_minmax(76px,118px)_minmax(24px,44px)] items-center gap-3'
+  'grid grid-cols-[auto_minmax(100px,200px)_minmax(88px,1fr)_auto_auto_minmax(24px,44px)] items-center gap-3'
 
 export function BookingRow({
   booking,
