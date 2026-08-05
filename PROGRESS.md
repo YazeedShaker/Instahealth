@@ -21,7 +21,7 @@ Keep **Current status** and **Next up** accurate at all times.
 
 ## Current status
 
-**Phase:** 🎉 **MILESTONE ONE — the loop is closed.** Patient books on mobile (F01→F07) → the branch desk sees it, records the outcome, opens the detail drawer, cancels on the patient's behalf, manages its own prices, reads its slot picture and maintains its own contact details (P01–P05 — every sidebar surface is live). The four shipped identity/money holes are all closed and the repo passed a full-history secret audit (2026-08-01). Next: F08–F09 reviews & profile (needs the review writer function), A-series admin; PayTabs test credentials now exist
+**Phase:** 🎉 **MILESTONE ONE — the loop is closed.** Patient books on mobile (F01→F07) → the branch desk sees it, records the outcome, opens the detail drawer, cancels on the patient's behalf, manages its own prices, reads its slot picture and maintains its own contact details (P01–P05 — every sidebar surface is live). The four shipped identity/money holes are all closed and the repo passed a full-history secret audit (2026-08-01). **V1 collects no money — cash at the branch** (2026-08-04 partner-trust decision), which retires the "payments are simulated" launch blocker outright. Next: F08 reviews (needs the review writer function), A-series admin; card via PayTabs returns post-market-proof
 ⚠ **Two founder decisions are open and blocking nothing yet: the LICENSE / IP posture and whether vulnerability detail belongs in a public PROGRESS.** Both in Known risks.
 **Milestone target:** Labs + Scans booking working end-to-end at Town Hospital & Saridar Labs
 **Environment:** Supabase `instahealth-dev` live (Frankfurt). Design system published in Claude Design.
@@ -78,6 +78,50 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 ---
 
 ## Shipped
+
+### 2026-08-04 · CASH-01 — v1 payment lineup: cash only
+
+**A product decision, not a technical retreat.** Partners asked to collect at
+the desk while trust is being built, so v1 takes no money in-app. The booking
+flow keeps all four steps; step 4 changed from a payment CHOICE to a cash
+CONFIRMATION with the total.
+
+**What went away, and why each one had to:** the method chooser (one method is
+not a choice — a radiogroup with nothing to control), the «وضع تجريبي» badge
+(it existed because prepaid was SIMULATED and the patient must never think money
+moved — **cash is real**, so badging it would invent a doubt the transaction
+doesn't deserve), the DEV simulate-failure toggle (it only ever affected prepaid
+methods — `isPrepaidMethod` guard — so under cash-only it was a control that
+could not fire), and `PaymentMethodRow` (git history is the archive; the future
+lineup can't reuse it anyway since Fawry can never ship).
+
+**What deliberately stayed:** the whole settlement architecture — the screen
+still asks a `PaymentProvider` for an outcome and posts it to `settle-payment`,
+which is still the only place `confirm_booking()` is reachable. The mock
+provider, the PayTabs stub, `PAYMENT_METHODS` (the DB constraint mirror) and
+every prepaid branch of the helpers stay tested. **Card returns by putting
+'card' back in `OFFERED_PAYMENT_METHODS` — one line.**
+
+**Copy swept for the one lie this creates:** «الإجمالي المدفوع» is false when
+nothing has been paid. New core `formatTotalLabelAr` renders «الإجمالي — يُدفع
+عند الوصول» for cash and the paid label for prepaid, so a historical card
+booking still reads correctly. `PAYMENT_METHOD_OPTIONS` keeps ALL rows as the
+label catalogue for exactly that reason; `OFFERED_PAYMENT_METHOD_OPTIONS` is the
+derived what-the-patient-sees list. The dashboard needed no change — «يدفع هنا»
+was already the cash case.
+
+**Verified: 14/14 Node checks on the LIVE dev DB, the whole loop end to end** —
+hold → pending booking (total SERVER-derived: 250 = catalogue 250) → cash
+settlement → booking `confirmed` with `payment_status='cash'` (money has NOT
+moved) → the desk sees the row as the cash case → mark arrived → mark completed
+succeeds → **completion flips the booking to `paid`, which IS the collection
+event** (DECISION-commission-attachment, unchanged). Core 397 tests; the lineup
+assertion (`OFFERED_PAYMENT_METHODS === ['cash']`) is the guard so re-adding a
+method must be a deliberate product act. Maestro flow rewritten: the badge's and
+chooser's ABSENCE is now asserted.
+
+⚠ Dev-data note: the two verification runs left two COMPLETED bookings on Town's
+2026-08-05 (tomorrow). Harmless — the dashboard E2E fixtures reseed TODAY.
 
 ### 2026-08-04 · PROF-01 — Profile tab + account deletion (mobile)
 
@@ -2292,15 +2336,18 @@ _Next entry after SETUP-02._
 
 ## Known risks / open items
 
-- **⚠ PAYMENTS ARE SIMULATED — PayTabs integration pending the legal entity.**
-  No merchant account, no credentials (not even test). `MockPaymentProvider`
-  settles bookings through the real server-side path; no money moves. **Launch
-  blocker.** Plug-in point + full TODO list:
-  `packages/core/src/business/payment-paytabs.ts`.
-- **⚠ Final payment-method lineup is an OPEN PRODUCT DECISION.** The approved
-  design shows بطاقة / فوري / نقداً, but PayTabs Egypt supports neither Fawry nor
-  Vodafone Cash (its methods are creditcard/aman/meezaqr/valu). Resolving this
-  needs a design revision AND a migration to `bookings_payment_method_check`.
+- ✅ ~~PAYMENTS ARE SIMULATED — launch blocker~~ and ~~final payment-method lineup
+  is an OPEN PRODUCT DECISION~~ — **BOTH CLOSED 2026-08-04 by deciding v1 collects
+  no money.** Cash-at-branch is the whole lineup, so there is nothing left to
+  simulate and nothing left to choose: the app is honest by construction rather
+  than by badge. **This un-blocks launch** — the previous blocker was "no
+  merchant account", and v1 needs none. Card via PayTabs returns
+  post-market-proof (test credentials + integration spec ready and parked in
+  `payment-paytabs.ts`; re-entry is one line, `OFFERED_PAYMENT_METHODS`).
+  ⚠ Two things a future session must not "restore": Fawry can never ship as the
+  design drew it (PayTabs Egypt has no Fawry, no Vodafone Cash), and re-offering
+  a prepaid method requires the «وضع تجريبي» badge to come BACK if it is still
+  simulated.
 - **⚠ STORE-PREP (PROF-01): the app cannot be submitted without a live PRIVACY
   POLICY and TERMS URL.** Apple and Google both require a reachable privacy
   policy; the profile rows render disabled «قريباً» until the URLs exist. Not a

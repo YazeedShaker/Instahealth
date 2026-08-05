@@ -20,19 +20,25 @@ export const PAYMENT_METHODS = ['card', 'fawry', 'vodafone_cash', 'orange_cash',
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number]
 
 /**
- * The lineup the approved step-4 design renders, in order.
+ * ⚠ V1 IS CASH ONLY — a PRODUCT decision (2026-08-04), not a technical limit.
+ * Partners asked to collect at the desk while trust is being built, so the app
+ * moves no money: the patient books, arrives, and pays the branch. That makes
+ * the amount on screen a QUOTE, never a charge.
  *
- * ⚠ PayTabs Egypt's real lineup DIFFERS from this list: it has no Fawry and no
- * Vodafone Cash. Its Egyptian methods are `creditcard`, `aman`, `meezaqr` and
- * `valu`. The final method lineup is an OPEN PRODUCT DECISION — we ship the
- * approved design's rows now (they map cleanly onto DB values) and revisit when
- * the PayTabs merchant profile exists. See `payment-paytabs.ts`.
+ * Everything else stays in code and stays tested — `PAYMENT_METHODS` (the DB
+ * constraint mirror), the prepaid branches of the helpers below, the mock
+ * provider and the PayTabs stub. Card returns post-market-proof by putting
+ * 'card' back in this ONE array; nothing else has to be rebuilt.
+ *
+ * ⚠ Fawry never ships as drawn: PayTabs Egypt has no Fawry and no Vodafone
+ * Cash (its methods are creditcard/aman/meezaqr/valu), so the approved design's
+ * بطاقة/فوري/نقداً lineup was never reachable. See `payment-paytabs.ts`.
  */
-export const OFFERED_PAYMENT_METHODS = [
-  'card',
-  'fawry',
-  'cash',
-] as const satisfies readonly PaymentMethod[]
+export const OFFERED_PAYMENT_METHODS = ['cash'] as const satisfies readonly PaymentMethod[]
+
+/** The single v1 method. Screens that no longer offer a CHOICE use this rather
+ * than re-deriving "the first offered one". */
+export const V1_PAYMENT_METHOD: PaymentMethod = 'cash'
 
 export interface PaymentMethodOption {
   method: PaymentMethod
@@ -41,7 +47,10 @@ export interface PaymentMethodOption {
   hintAr: string
 }
 
-/** Row copy straight from the approved design (`٤ · الدفع`). */
+/** Row copy for EVERY method, offered or not — the label catalogue. Kept whole
+ * on purpose: a booking already paid by card must still render «بطاقة» in its
+ * history long after card stopped being offered. What the patient may CHOOSE is
+ * `OFFERED_PAYMENT_METHOD_OPTIONS` below. */
 export const PAYMENT_METHOD_OPTIONS: readonly PaymentMethodOption[] = [
   { method: 'card', icon: '💳', labelAr: 'بطاقة', hintAr: 'فيزا أو ماستركارد — عبر PayTabs' },
   { method: 'fawry', icon: '🧾', labelAr: 'فوري', hintAr: 'ادفع بكود فوري من أقرب منفذ' },
@@ -49,9 +58,17 @@ export const PAYMENT_METHOD_OPTIONS: readonly PaymentMethodOption[] = [
     method: 'cash',
     icon: '💵',
     labelAr: 'الدفع نقداً عند الوصول',
-    hintAr: 'ادفع في المعمل مباشرة',
+    hintAr: 'تدفع في المركز مباشرة بعد الخدمة',
   },
 ]
+
+/** The rows the patient actually sees, derived so the lineup has ONE source of
+ * truth. Today it is a single row and the payment step renders a confirmation
+ * instead of a choice. */
+export const OFFERED_PAYMENT_METHOD_OPTIONS: readonly PaymentMethodOption[] =
+  PAYMENT_METHOD_OPTIONS.filter((option) =>
+    (OFFERED_PAYMENT_METHODS as readonly PaymentMethod[]).includes(option.method),
+  )
 
 export function isPaymentMethod(value: string): value is PaymentMethod {
   return (PAYMENT_METHODS as readonly string[]).includes(value)
@@ -85,6 +102,13 @@ export function formatPaymentMethodStatusAr(method: PaymentMethod): string {
 /** The step-4 CTA. Cash isn't a payment, so it doesn't say "ادفع". */
 export function formatPayCtaLabelAr(method: PaymentMethod, totalEgp: number): string {
   return isPrepaidMethod(method) ? `ادفع ${formatEgpDigitsAr(totalEgp)} EGP` : 'تأكيد الحجز'
+}
+
+/** The total's label on the confirmation and booking-detail screens. «الإجمالي
+ * المدفوع» is a LIE for cash — nothing has been paid yet — so cash gets a label
+ * that says when the money moves. (PRODUCT §1: trust before delight.) */
+export function formatTotalLabelAr(method: PaymentMethod): string {
+  return isPrepaidMethod(method) ? 'الإجمالي المدفوع' : 'الإجمالي — يُدفع عند الوصول'
 }
 
 // ── Provider abstraction ───────────────────────────────────────────────────
