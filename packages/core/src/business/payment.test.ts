@@ -4,6 +4,9 @@ import {
   MOCK_FAILURE_REASON,
   MOCK_PAYMENT_PROVIDER_ID,
   OFFERED_PAYMENT_METHODS,
+  OFFERED_PAYMENT_METHOD_OPTIONS,
+  V1_PAYMENT_METHOD,
+  formatTotalLabelAr,
   PAYMENT_METHODS,
   PAYMENT_METHOD_OPTIONS,
   createMockPaymentProvider,
@@ -31,9 +34,25 @@ function intent(overrides: Partial<PaymentIntent> = {}): PaymentIntent {
 }
 
 describe('payment method catalogue', () => {
-  it('offers exactly the three methods the approved design renders, in order', () => {
-    expect(OFFERED_PAYMENT_METHODS).toEqual(['card', 'fawry', 'cash'])
+  // ⚠ V1 IS CASH ONLY (partner-trust decision 2026-08-04). This assertion is
+  // the guard: putting a method back in the lineup is a PRODUCT decision, and
+  // it must not happen as a side effect of some other change.
+  it('offers CASH ONLY in v1', () => {
+    expect(OFFERED_PAYMENT_METHODS).toEqual(['cash'])
+    expect(OFFERED_PAYMENT_METHOD_OPTIONS.map((option) => option.method)).toEqual(['cash'])
+    expect(V1_PAYMENT_METHOD).toBe('cash')
+  })
+
+  it('keeps the FULL label catalogue so historical prepaid bookings still read correctly', () => {
     expect(PAYMENT_METHOD_OPTIONS.map((option) => option.method)).toEqual(['card', 'fawry', 'cash'])
+  })
+
+  it('offers no method the app tells the patient nothing is charged for', () => {
+    // The cash-only promise: every OFFERED method must be non-prepaid, or the
+    // «لا نطلب أي دفع داخل التطبيق» copy becomes a lie.
+    for (const method of OFFERED_PAYMENT_METHODS) {
+      expect(isPrepaidMethod(method)).toBe(false)
+    }
   })
 
   it('only offers methods the bookings.payment_method constraint accepts', () => {
@@ -77,6 +96,12 @@ describe('payment method catalogue', () => {
   it('asks for money on the CTA only when money actually moves', () => {
     expect(formatPayCtaLabelAr('card', 245)).toBe('ادفع ٢٤٥ EGP')
     expect(formatPayCtaLabelAr('cash', 245)).toBe('تأكيد الحجز')
+  })
+
+  it('never labels a cash total as already paid', () => {
+    expect(formatTotalLabelAr('card')).toBe('الإجمالي المدفوع')
+    expect(formatTotalLabelAr('cash')).toBe('الإجمالي — يُدفع عند الوصول')
+    expect(formatTotalLabelAr('cash')).not.toContain('المدفوع')
   })
 })
 

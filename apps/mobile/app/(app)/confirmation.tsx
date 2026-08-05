@@ -3,6 +3,7 @@ import {
   formatArabicDate,
   formatEgpDigitsAr,
   formatPaymentMethodStatusAr,
+  formatTotalLabelAr,
   formatTimeShortAr,
   toArabicDigits,
   toSelectedServices,
@@ -173,7 +174,7 @@ export default function ConfirmationScreen() {
             <View className="flex-row items-center justify-between gap-2.5 border-t border-ih-neutral-100 pt-3">
               <View className="gap-px">
                 <Text className="font-arabic-bold text-sm text-ih-neutral-800">
-                  الإجمالي المدفوع
+                  {formatTotalLabelAr(confirmation.method)}
                 </Text>
                 <Text
                   testID="confirmation-payment-method"

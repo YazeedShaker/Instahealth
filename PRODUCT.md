@@ -134,14 +134,17 @@ The booking flow is the heart of the product. It must feel effortless.
 4. **Pick slot** — calendar (14–30 days), available times. Selecting starts a **10-minute hold**
    with a visible countdown. This urgency is honest, not manufactured — the slot really is held.
 5. **Details** — name pre-filled, phone confirmed, optional notes.
-6. **Pay** — **card** (via PayTabs — test credentials exist, integration pending) or
-   **cash-at-branch**. Fawry is REMOVED from this list pending the payment-method lineup
-   decision: PayTabs Egypt supports neither Fawry nor Vodafone Cash, so the approved design's
-   بطاقة / فوري / نقداً lineup cannot ship as drawn — see PROGRESS «Known risks: ⚠ Final
-   payment-method lineup is an OPEN PRODUCT DECISION». Order summary before paying. Until the
-   real integration lands, a mock provider settles the booking through the real server-side
-   path and every payment screen carries a visible "وضع تجريبي" badge — the patient must never
-   believe money moved when it did not.
+6. **Confirm** — **⚠ V1 IS CASH ONLY: الدفع نقداً عند الوصول.** The app collects no money.
+   Decided 2026-08-04 on partner feedback: branches want to collect at the desk while trust is
+   being built, and a marketplace that holds nobody's money is far easier to say yes to. So the
+   step is a **confirmation with the total**, not a payment — no method chooser (there is one
+   method), and **no "وضع تجريبي" badge**, because nothing is simulated: the amount is a real
+   quote the branch really collects. Consequences the copy must respect everywhere: the total is
+   never «مدفوع» until the desk marks the visit complete, and no screen may imply in-app payment.
+   **Card via PayTabs returns post-market-proof** — test credentials exist and the integration
+   spec is written and parked (`packages/core/src/business/payment-paytabs.ts`); re-entry is one
+   line, `OFFERED_PAYMENT_METHODS`. Fawry can never ship as the design drew it: PayTabs Egypt
+   supports neither Fawry nor Vodafone Cash.
 7. **Confirmation** — booking ref (`IH-2026-XXXXX`), all details, preparation reminder, SMS sent,
    add-to-calendar. This screen must feel like relief and certainty.
 

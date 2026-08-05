@@ -62,41 +62,32 @@ appId: com.instahealth.app
 - assertVisible:
     id: 'hold-chip'
 
-# ══ F06 · Step 4 — payment ══
-# متابعة للدفع → the real payment screen: recap, methods, test-mode badge.
+# ══ F06 · Step 4 — confirm (CASH ONLY, v1) ══
+# متابعة → the confirm screen: recap + the cash statement. NO method chooser and
+# NO test-mode badge — v1 collects no money in-app, so nothing is simulated and
+# the amount is a quote the branch collects (partner-trust decision 2026-08-04).
 # The hold timer keeps running here (the booking is not committed yet).
 - tapOn:
     id: 'review-continue'
-- assertVisible: 'مراجعة الطلب والدفع'
+- assertVisible: 'مراجعة الطلب والتأكيد'
 - assertVisible:
     id: 'order-summary'
 - assertVisible:
+    id: 'payment-cash-notice'
+- assertVisible: 'الدفع نقداً عند الوصول'
+- assertVisible: 'لا نطلب أي دفع داخل التطبيق'
+# The badge and the chooser are GONE — their absence is the feature.
+- assertNotVisible:
     id: 'payment-test-mode-badge'
-- assertVisible:
+- assertNotVisible:
     id: 'payment-method-card'
-- assertVisible:
-    id: 'payment-method-fawry'
-- assertVisible:
-    id: 'payment-method-cash'
+- assertNotVisible: 'فوري'
 - assertVisible:
     id: 'hold-chip'
+# Cash isn't a payment, so the CTA doesn't say "ادفع".
+- assertVisible: 'تأكيد الحجز'
 
-# ── Failure path first: DEV toggle ON → pay → the design's failure state ──
-- tapOn:
-    id: 'payment-simulate-failure'
-- tapOn:
-    id: 'payment-pay'
-- assertVisible:
-    id: 'payment-error'
-- assertVisible: 'موعدك ما زال محجوزاً — لن تفقد مكانك'
-# The hold survived the decline — the patient has not lost their slot.
-- assertVisible:
-    id: 'hold-chip'
-- assertVisible: 'حاول مرة أخرى'
-
-# ── Retry with the toggle OFF → confirmation ──
-- tapOn:
-    id: 'payment-simulate-failure'
+# ── Confirm → confirmation ──
 - tapOn:
     id: 'payment-pay'
 
@@ -111,7 +102,10 @@ appId: com.instahealth.app
     id: 'confirmation-slot'
 - assertVisible:
     id: 'confirmation-total'
-- assertVisible: 'الإجمالي المدفوع'
+# Cash: the total is a QUOTE, so the label says when the money moves — it must
+# never read «الإجمالي المدفوع» when nothing has been paid.
+- assertVisible: 'الإجمالي — يُدفع عند الوصول'
+- assertVisible: 'نقداً · الدفع عند الوصول'
 # Fasting selection → the prep strip MUST appear here of all places
 - assertVisible:
     id: 'prep-strip'
@@ -134,6 +128,6 @@ appId: com.instahealth.app
 # a re-entered flow would carry state the exit watcher then "cleans up",
 # cancelling the booking that was just confirmed.
 - back
-- assertNotVisible: 'مراجعة الطلب والدفع'
+- assertNotVisible: 'مراجعة الطلب والتأكيد'
 - assertNotVisible: 'اختر الموعد المناسب'
 - assertNotVisible: 'تم تأكيد حجزك بنجاح'

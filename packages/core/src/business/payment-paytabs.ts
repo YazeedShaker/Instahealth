@@ -1,10 +1,17 @@
 // PayTabs provider — NOT IMPLEMENTED. Deliberately a documented stub.
 //
-// WHY: InstaHealth has no PayTabs merchant account yet; the legal entity is
-// still pending, so there are no credentials — not even test ones. Faking a
-// half-integration here would be worse than nothing, so this module throws a
-// specific, catchable error and lists EXACTLY what plugs in when the account
-// lands. `createMockPaymentProvider` is what actually ships (SPEC-F06).
+// ⚠ PARKED BY PRODUCT DECISION, NOT BY BLOCKER (2026-08-04). Test credentials
+// now exist and this integration spec is ready — but **v1 ships CASH ONLY**
+// because partners asked to collect at the desk while trust is being built.
+// Card returns post-market-proof. Nothing here is stale; it is waiting.
+// The re-entry point is one line: put 'card' back in
+// `OFFERED_PAYMENT_METHODS` (payment.ts), then implement below.
+//
+// ORIGINAL WHY (superseded — kept for the record): there was no merchant
+// account at all while the legal entity was pending. Faking a half-integration
+// here would be worse than nothing, so this module throws a specific, catchable
+// error and lists EXACTLY what plugs in. `createMockPaymentProvider` is what
+// actually ships (SPEC-F06).
 //
 // NOTE: the payment provider decision CHANGED from Paymob to PayTabs. Any
 // remaining "Paymob" reference in the codebase is stale.

@@ -306,14 +306,17 @@ This is an Arabic-first product. Get this wrong and the whole app feels broken t
 - **All input validated with Zod** at the boundary — API routes and server actions parse with a
   schema before touching the DB. Never trust client input.
 - **PayTabs IPN callbacks** must verify the signature before acting. No exceptions.
-  (Provider decision CHANGED from Paymob to PayTabs. **No PayTabs account or
-  credentials exist yet** — the legal entity is pending — so payments are
-  currently SIMULATED by `MockPaymentProvider`. The real integration plugs into
-  `packages/core/src/business/payment-paytabs.ts`, which documents exactly what
-  is needed. PayTabs Egypt's method lineup differs from the approved design's:
-  it has no Fawry and no Vodafone Cash — final lineup is an open product
-  decision.) The **PayTabs Server Key is server-only** — it lives in Supabase
-  Edge Function secrets and must never reach the Expo bundle.
+  (⚠ **V1 COLLECTS NO MONEY — cash at the branch only**, decided 2026-08-04 on
+  partner feedback; `OFFERED_PAYMENT_METHODS` is `['cash']` and the payment step
+  is a confirmation, not a charge. So there is nothing to simulate and no
+  «وضع تجريبي» badge: the total is a real quote the branch collects. Card via
+  PayTabs returns post-market-proof — test credentials exist and the integration
+  is specced and parked in `packages/core/src/business/payment-paytabs.ts`;
+  re-entry is one line. Provider decision CHANGED from Paymob to PayTabs;
+  PayTabs Egypt has no Fawry and no Vodafone Cash, so the design's بطاقة/فوري/
+  نقداً lineup can never ship as drawn.) The **PayTabs Server Key is
+  server-only** — it lives in Supabase Edge Function secrets and must never
+  reach the Expo bundle.
 - **Booking confirmation is server-only.** `confirm_booking()` is executable by
   `service_role` alone (migration 20260727111326); the ONLY caller is the
   `settle-payment` Edge Function. Clients have no grant on it and no INSERT
