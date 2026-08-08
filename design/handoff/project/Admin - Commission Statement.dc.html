@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/effects.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/themes.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/base.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/styles.css">
+  <script src="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/_ds_bundle.js"></script>
+  <style>
+    body { margin: 0; background: var(--ih-neutral-100); font-family: 'Cairo', 'Atkinson Hyperlegible', sans-serif; }
+    a { color: var(--ih-primary-600); } a:hover { color: var(--ih-primary-700); }
+    select:focus, input:focus { outline: none; border-color: var(--ih-primary-400) !important; }
+    @keyframes ih-fade-in { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes ih-dialog-in { from { opacity: 0; transform: translateY(8px) scale(0.99); } to { opacity: 1; transform: none; } }
+    @media (prefers-reduced-motion: reduce) { .ih-anim { animation: none !important; } }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 48px; align-items: center; padding: 40px 32px;">
+
+  <!-- ══════════ A · مسودة ══════════ -->
+  <div data-screen-label="كشف العمولة — مسودة">
+    <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; direction: rtl;">
+      <span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--ih-primary-800);">A</span>
+      <span style="font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-700);">كشف عمولة — مسودة، الحالة الافتراضية</span>
+      <span style="font-size: 11.5px; font-weight: 700; color: #92400E; background: var(--ih-warning-bg); border: 1px solid rgba(217,119,6,0.35); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">وسيلتان — حالة ما بعد عودة الدفع بالكارت، ليست واقع v1</span>
+    </div>
+    <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 768 }}" url="admin.instahealth.eg/commissions" hint-size="1366px,768px">
+      <div dir="rtl" style="--ih-surface-sidebar: #023449; position: relative; display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden;">
+        <div style="flex-shrink: 0; display: flex; align-self: stretch; background: #023449;">
+          <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.SidebarNav" brand="الإدارة" items="{{ navItems }}" active="{{ 2 }}" style="{{ sidebarStyle }}" hint-size="220px,100%"></x-import>
+        </div>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+
+          <!-- top bar -->
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); box-shadow: var(--ih-shadow-sm); padding: 10px 24px; display: flex; align-items: center; gap: 16px; min-height: 56px; box-sizing: border-box;">
+            <div style="display: flex; flex-direction: column; gap: 1px;">
+              <div style="font-size: 16px; font-weight: 800; color: var(--ih-neutral-800);">العمولات والفواتير</div>
+              <div style="font-size: 12px; color: var(--ih-neutral-500);">كشف شهري لكل شريك — كل رقم مسند إلى صفوف</div>
+            </div>
+            <span style="flex-shrink: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 4px 11px; white-space: nowrap;">لوحة الإدارة</span>
+            <div style="flex: 1;"></div>
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding-right: 16px; border-right: 1px solid var(--ih-neutral-200); white-space: nowrap;">
+              <div style="width: 32px; height: 32px; border-radius: 999px; background: #023449; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #FFFFFF;">م</div>
+              <div style="display: flex; flex-direction: column;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-700);">مؤسِّس</span>
+                <span style="font-size: 11px; color: var(--ih-neutral-500); cursor: pointer; text-decoration: underline;">تسجيل خروج</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- scope bar -->
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); padding: 12px 24px; display: flex; align-items: center; gap: 12px;">
+            <select style="flex-shrink: 0; min-width: 220px; min-height: 40px; padding: 0 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; background: var(--ih-neutral-0); font-family: 'Cairo', sans-serif; font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-800);">
+              <option>مختبرات النيل للتحاليل</option>
+              <option>معامل سريدار</option>
+              <option>مركز الشفاء للأشعة</option>
+            </select>
+            <select style="flex-shrink: 0; min-width: 150px; min-height: 40px; padding: 0 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; background: var(--ih-neutral-0); font-family: 'Cairo', sans-serif; font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-800);">
+              <option>يوليو ٢٠٢٦</option>
+              <option>يونيو ٢٠٢٦</option>
+              <option>مايو ٢٠٢٦</option>
+            </select>
+            <div style="min-width: 0; display: flex; flex-direction: column; gap: 1px; padding-right: 12px; border-right: 1px solid var(--ih-neutral-200);">
+              <span style="font-size: 13px; font-weight: 700; color: var(--ih-neutral-800); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">مختبرات النيل للتحاليل — يوليو ٢٠٢٦</span>
+              <span style="font-size: 11.5px; color: var(--ih-neutral-500); white-space: nowrap;">٣ فروع · ١ — ٣١ يوليو ٢٠٢٦</span>
+            </div>
+            <div style="flex: 1;"></div>
+            <span style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ih-neutral-700); background: var(--ih-neutral-100); border: 1px solid var(--ih-neutral-300); border-radius: 999px; padding: 5px 12px; white-space: nowrap;">● مسودة</span>
+            <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="outline" hint-size="130px,36px"><span style="white-space: nowrap;">تحديد كمُرسلة</span></x-import>
+            <div style="flex-shrink: 0; display: flex; gap: 8px; padding-right: 12px; border-right: 1px solid var(--ih-neutral-200);">
+              <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="ghost" hint-size="90px,36px"><span style="white-space: nowrap; color: var(--ih-primary-600);">⤓ CSV</span></x-import>
+              <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="ghost" hint-size="80px,36px"><span style="white-space: nowrap; color: var(--ih-primary-600);">⎙ طباعة</span></x-import>
+            </div>
+          </div>
+
+          <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 14px 24px 24px; display: flex; flex-direction: column; gap: 14px;">
+
+            <!-- issue stamp -->
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+              <span style="font-size: 12px; color: var(--ih-neutral-500);">لم تُصدر بعد — الأرقام تتغير مع أي حجز جديد حتى الإصدار</span>
+              <div style="flex: 1;"></div>
+              <span style="font-size: 12px; color: var(--ih-neutral-500);">أُرسلت في: —</span>
+              <span style="font-size: 12px; color: var(--ih-neutral-500);">تمت التسوية في: —</span>
+            </div>
+
+            <!-- summary -->
+            <div style="flex-shrink: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+              <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-top: 3px solid var(--ih-primary-400); border-radius: 12px; box-shadow: var(--ih-shadow-sm); padding: 14px 18px; display: flex; flex-direction: column; gap: 4px;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-600);">إجمالي المبيعات المحتسبة</span>
+                <span style="font-size: 26px; font-weight: 800; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">٤٬١٥٠ <span style="font-size: 14px; font-weight: 600; color: var(--ih-neutral-500);">ج.م</span></span>
+                <span style="font-size: 11.5px; color: var(--ih-primary-600); text-decoration: underline; cursor: pointer;">عرض الصفوف الثمانية</span>
+              </div>
+              <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-top: 3px solid var(--ih-primary-400); border-radius: 12px; box-shadow: var(--ih-shadow-sm); padding: 14px 18px; display: flex; flex-direction: column; gap: 4px;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-600);">حجوزات محتسبة</span>
+                <span style="font-size: 26px; font-weight: 800; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">٨ <span style="font-size: 14px; font-weight: 600; color: var(--ih-neutral-500);">من ١٠</span></span>
+                <span style="font-size: 11.5px; color: var(--ih-neutral-600);">٤ مدفوعة مقدماً · ٤ نقداً</span>
+              </div>
+              <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-top: 3px solid var(--ih-primary-600); border-radius: 12px; box-shadow: var(--ih-shadow-sm); padding: 14px 18px; display: flex; flex-direction: column; gap: 4px;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-primary-700);">العمولة المستحقة</span>
+                <span style="font-size: 30px; font-weight: 800; color: var(--ih-primary-700); font-variant-numeric: tabular-nums; line-height: 1.15;">٥٢١٫٤٠ <span style="font-size: 15px; font-weight: 600; color: var(--ih-primary-600);">ج.م</span></span>
+                <span style="font-size: 11.5px; color: var(--ih-neutral-600);">نسب سارية: ١٢٪ و ١٣٪ — إجمالي مركّب</span>
+              </div>
+            </div>
+
+            <!-- exclusion band -->
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 12px; background: var(--ih-warning-bg); border: 1px solid rgba(217,119,6,0.35); border-radius: 8px; padding: 11px 16px;">
+              <span style="flex-shrink: 0; font-size: 14px;" aria-hidden="true">⚠</span>
+              <div style="min-width: 0; display: flex; flex-direction: column; gap: 2px;">
+                <span style="font-size: 13px; font-weight: 700; color: #92400E;">٢ حجوزات أُغلقت تلقائياً — غير محتسبة (٧٢٠ ج.م)</span>
+                <span style="font-size: 11.5px; color: #92400E;">أغلقها النظام بعد مهلة الـ٢٤ ساعة دون تأكيد وصول — لا عمولة عليها، وليست جزءاً من أي رقم أعلاه</span>
+              </div>
+              <div style="flex: 1;"></div>
+              <span style="flex-shrink: 0; font-size: 12px; font-weight: 700; color: #92400E; text-decoration: underline; cursor: pointer; white-space: nowrap;">إظهار في الجدول</span>
+            </div>
+
+            <!-- table -->
+            <div style="flex-shrink: 0; background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); overflow: hidden;">
+              <div style="display: grid; grid-template-columns: 150px 96px 124px 128px 1fr 66px 116px; align-items: center; gap: 8px; padding: 10px 18px; background: var(--ih-neutral-50); border-bottom: 1px solid var(--ih-neutral-200); font-size: 11.5px; font-weight: 700; color: var(--ih-neutral-600);">
+                <span>المرجع</span><span>تاريخ الحجز</span><span>الطريقة</span><span>تاريخ الاستحقاق</span><span style="text-align: left;">المبلغ</span><span style="text-align: left;">النسبة</span><span style="text-align: left;">العمولة</span>
+              </div>
+              <sc-for list="{{ rowsCore }}" as="r" hint-placeholder-count="8">
+                <div style="display: grid; grid-template-columns: 150px 96px 124px 128px 1fr 66px 116px; align-items: center; gap: 8px; padding: 0 18px; min-height: 46px; border-bottom: 1px solid var(--ih-neutral-100); cursor: pointer; font-size: 13px; color: var(--ih-neutral-700);" style-hover="background: var(--ih-neutral-50);">
+                  <span dir="ltr" style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12.5px; font-weight: 700; color: var(--ih-primary-700); text-align: right; unicode-bidi: isolate;">{{ r.ref }}</span>
+                  <span style="font-variant-numeric: tabular-nums;">{{ r.date }}</span>
+                  <sc-if value="{{ r.prepaid }}" hint-placeholder-val="{{ true }}">
+                    <span style="justify-self: start; display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; color: var(--ih-primary-700); background: var(--ih-primary-50); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">مدفوع مقدماً</span>
+                  </sc-if>
+                  <sc-if value="{{ r.cash }}" hint-placeholder-val="{{ false }}">
+                    <span style="justify-self: start; display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; color: #92400E; background: var(--ih-accent-200); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">نقداً بالفرع</span>
+                  </sc-if>
+                  <div style="display: flex; flex-direction: column; gap: 0;">
+                    <span style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">{{ r.eventDate }}</span>
+                    <span style="font-size: 10.5px; color: var(--ih-neutral-500);">{{ r.eventKind }}</span>
+                  </div>
+                  <span style="text-align: left; font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">{{ r.amount }}</span>
+                  <span style="text-align: left; font-size: 12.5px; color: var(--ih-neutral-600); font-variant-numeric: tabular-nums;">{{ r.rate }}</span>
+                  <span style="text-align: left; font-size: 13.5px; font-weight: 700; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">{{ r.commission }}</span>
+                </div>
+              </sc-for>
+              <!-- subtotals -->
+              <div style="display: grid; grid-template-columns: 150px 96px 124px 128px 1fr 66px 116px; align-items: center; gap: 8px; padding: 0 18px; min-height: 40px; background: var(--ih-neutral-50); border-bottom: 1px solid var(--ih-neutral-200); font-size: 12.5px; color: var(--ih-neutral-600);">
+                <span style="grid-column: span 4; font-weight: 600;">مجموع المدفوع مقدماً — ٤ حجوزات</span>
+                <span style="text-align: left; font-weight: 600; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">٢٬٧٥٠</span>
+                <span></span>
+                <span style="text-align: left; font-weight: 700; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">٣٤٥٫٢٠</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 150px 96px 124px 128px 1fr 66px 116px; align-items: center; gap: 8px; padding: 0 18px; min-height: 40px; background: var(--ih-neutral-50); border-bottom: 1px solid var(--ih-neutral-200); font-size: 12.5px; color: var(--ih-neutral-600);">
+                <span style="grid-column: span 4; font-weight: 600;">مجموع النقدي بالفرع — ٤ حجوزات</span>
+                <span style="text-align: left; font-weight: 600; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">١٬٤٠٠</span>
+                <span></span>
+                <span style="text-align: left; font-weight: 700; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">١٧٦٫٢٠</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 150px 96px 124px 128px 1fr 66px 116px; align-items: center; gap: 8px; padding: 0 18px; min-height: 54px; background: var(--ih-primary-50); font-size: 13.5px;">
+                <span style="grid-column: span 4; font-weight: 800; color: var(--ih-primary-700);">الإجمالي المحتسب — ٨ حجوزات</span>
+                <span style="text-align: left; font-weight: 800; color: var(--ih-primary-700); font-variant-numeric: tabular-nums;">٤٬١٥٠</span>
+                <span></span>
+                <span style="text-align: left; font-size: 16px; font-weight: 800; color: var(--ih-primary-700); font-variant-numeric: tabular-nums;">٥٢١٫٤٠</span>
+              </div>
+            </div>
+            <span style="flex-shrink: 0; font-size: 11.5px; color: var(--ih-neutral-500); line-height: 1.7;">النسبة المعروضة في كل صف هي النسبة السارية في تاريخ استحقاقه — تاريخ الدفع للمدفوع مقدماً، وتاريخ إتمام الزيارة للنقدي. تغيّرت نسبة الاتفاق من ١٢٪ إلى ١٣٪ بأثر من ١٦ يوليو ٢٠٢٦، ولا تُطبَّق بأثر رجعي.</span>
+          </div>
+        </div>
+      </div>
+    </x-import>
+  </div>
+
+  <!-- ══════════ B · أُرسلت + تغيّرت البيانات ══════════ -->
+  <div data-screen-label="كشف العمولة — أُرسلت، تغيّرت البيانات">
+    <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; direction: rtl;">
+      <span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--ih-primary-800);">B</span>
+      <span style="font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-700);">أُرسلت · تغيّرت البيانات بعد الإصدار · الصفوف المستثناة معروضة</span>
+      <span style="font-size: 11.5px; font-weight: 700; color: #92400E; background: var(--ih-warning-bg); border: 1px solid rgba(217,119,6,0.35); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">وسيلتان — حالة ما بعد عودة الدفع بالكارت</span>
+    </div>
+    <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 768 }}" url="admin.instahealth.eg/commissions" hint-size="1366px,768px">
+      <div dir="rtl" style="--ih-surface-sidebar: #023449; position: relative; display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden;">
+        <div style="flex-shrink: 0; display: flex; align-self: stretch; background: #023449;">
+          <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.SidebarNav" brand="الإدارة" items="{{ navItems }}" active="{{ 2 }}" style="{{ sidebarStyle }}" hint-size="220px,100%"></x-import>
+        </div>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); box-shadow: var(--ih-shadow-sm); padding: 10px 24px; display: flex; align-items: center; gap: 16px; min-height: 56px; box-sizing: border-box;">
+            <div style="display: flex; flex-direction: column; gap: 1px;">
+              <div style="font-size: 16px; font-weight: 800; color: var(--ih-neutral-800);">العمولات والفواتير</div>
+              <div style="font-size: 12px; color: var(--ih-neutral-500);">كشف شهري لكل شريك — كل رقم مسند إلى صفوف</div>
+            </div>
+            <span style="flex-shrink: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 4px 11px; white-space: nowrap;">لوحة الإدارة</span>
+            <div style="flex: 1;"></div>
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding-right: 16px; border-right: 1px solid var(--ih-neutral-200); white-space: nowrap;">
+              <div style="width: 32px; height: 32px; border-radius: 999px; background: #023449; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #FFFFFF;">م</div>
+              <div style="display: flex; flex-direction: column;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-700);">مؤسِّس</span>
+                <span style="font-size: 11px; color: var(--ih-neutral-500); cursor: pointer; text-decoration: underline;">تسجيل خروج</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); padding: 12px 24px; display: flex; align-items: center; gap: 12px;">
+            <select style="flex-shrink: 0; min-width: 220px; min-height: 40px; padding: 0 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; background: var(--ih-neutral-0); font-family: 'Cairo', sans-serif; font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-800);">
+              <option>مختبرات النيل للتحاليل</option>
+            </select>
+            <select style="flex-shrink: 0; min-width: 150px; min-height: 40px; padding: 0 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; background: var(--ih-neutral-0); font-family: 'Cairo', sans-serif; font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-800);">
+              <option>يوليو ٢٠٢٦</option>
+            </select>
+            <div style="min-width: 0; display: flex; flex-direction: column; gap: 1px; padding-right: 12px; border-right: 1px solid var(--ih-neutral-200);">
+              <span style="font-size: 13px; font-weight: 700; color: var(--ih-neutral-800); white-space: nowrap;">مختبرات النيل للتحاليل — يوليو ٢٠٢٦</span>
+              <span style="font-size: 11.5px; color: var(--ih-neutral-500); white-space: nowrap;">٣ فروع · ١ — ٣١ يوليو ٢٠٢٦ · الإصدار ١</span>
+            </div>
+            <div style="flex: 1;"></div>
+            <span style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ih-primary-700); background: var(--ih-info-bg); border: 1px solid rgba(2,128,144,0.3); border-radius: 999px; padding: 5px 12px; white-space: nowrap;">✓ أُرسلت</span>
+            <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="outline" hint-size="140px,36px"><span style="white-space: nowrap;">تحديد كمُسوّاة</span></x-import>
+            <div style="flex-shrink: 0; display: flex; gap: 8px; padding-right: 12px; border-right: 1px solid var(--ih-neutral-200);">
+              <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="ghost" hint-size="90px,36px"><span style="white-space: nowrap; color: var(--ih-primary-600);">⤓ CSV</span></x-import>
+              <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="ghost" hint-size="80px,36px"><span style="white-space: nowrap; color: var(--ih-primary-600);">⎙ طباعة</span></x-import>
+            </div>
+          </div>
+
+          <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 14px 24px 24px; display: flex; flex-direction: column; gap: 14px;">
+
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+              <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-700);">أُصدرت في: <span style="font-weight: 700; color: var(--ih-neutral-800);">٢ أغسطس ٢٠٢٦ — ١٠:٤٠ ص</span></span>
+              <div style="flex: 1;"></div>
+              <span style="font-size: 12px; color: var(--ih-neutral-600);">أُرسلت في: <span style="font-weight: 700; color: var(--ih-neutral-800);">٢ أغسطس ٢٠٢٦ — ١١:١٥ ص</span></span>
+              <span style="font-size: 12px; color: var(--ih-neutral-500);">تمت التسوية في: —</span>
+            </div>
+
+            <!-- data-changed strip -->
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 12px; background: var(--ih-error-bg); border: 1px solid rgba(220,38,38,0.35); border-radius: 8px; padding: 12px 16px;">
+              <span style="flex-shrink: 0; font-size: 14px;" aria-hidden="true">⚠</span>
+              <div style="min-width: 0; display: flex; flex-direction: column; gap: 2px;">
+                <span style="font-size: 13px; font-weight: 700; color: #991B1B;">تغيّرت البيانات بعد الإصدار — الأرقام أدناه لا تطابق الكشف المُرسل</span>
+                <span style="font-size: 11.5px; color: #991B1B; line-height: 1.6;">حجز نقدي واحد أُتمّ في ١ أغسطس داخل مهلة الـ٢٤ ساعة ويعود ليوليو (‎+٥٢٫٠٠ ج.م عمولة). لا نعدّل كشفاً مُرسلاً — أصدر نسخة ٢ ليحصل الشريك على مستند مطابق.</span>
+              </div>
+              <div style="flex: 1;"></div>
+              <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="destructive" on-click="{{ openReissue }}" hint-size="130px,36px"><span style="white-space: nowrap;">إعادة إصدار</span></x-import>
+            </div>
+
+            <div style="flex-shrink: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+              <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-top: 3px solid var(--ih-primary-400); border-radius: 12px; box-shadow: var(--ih-shadow-sm); padding: 14px 18px; display: flex; flex-direction: column; gap: 4px;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-600);">إجمالي المبيعات المحتسبة</span>
+                <span style="font-size: 26px; font-weight: 800; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">٤٬٥٥٠ <span style="font-size: 14px; font-weight: 600; color: var(--ih-neutral-500);">ج.م</span></span>
+                <span style="font-size: 11.5px; color: #991B1B; font-weight: 600;">في الكشف المُرسل: ٤٬١٥٠</span>
+              </div>
+              <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-top: 3px solid var(--ih-primary-400); border-radius: 12px; box-shadow: var(--ih-shadow-sm); padding: 14px 18px; display: flex; flex-direction: column; gap: 4px;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-600);">حجوزات محتسبة</span>
+                <span style="font-size: 26px; font-weight: 800; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">٩ <span style="font-size: 14px; font-weight: 600; color: var(--ih-neutral-500);">من ١١</span></span>
+                <span style="font-size: 11.5px; color: var(--ih-neutral-600);">٤ مدفوعة مقدماً · ٥ نقداً</span>
+              </div>
+              <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-top: 3px solid var(--ih-primary-600); border-radius: 12px; box-shadow: var(--ih-shadow-sm); padding: 14px 18px; display: flex; flex-direction: column; gap: 4px;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-primary-700);">العمولة المستحقة</span>
+                <span style="font-size: 30px; font-weight: 800; color: var(--ih-primary-700); font-variant-numeric: tabular-nums; line-height: 1.15;">٥٧٣٫٤٠ <span style="font-size: 15px; font-weight: 600; color: var(--ih-primary-600);">ج.م</span></span>
+                <span style="font-size: 11.5px; color: #991B1B; font-weight: 600;">في الكشف المُرسل: ٥٢١٫٤٠</span>
+              </div>
+            </div>
+
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 12px; background: var(--ih-warning-bg); border: 1px solid rgba(217,119,6,0.35); border-radius: 8px; padding: 11px 16px;">
+              <span style="flex-shrink: 0; font-size: 14px;" aria-hidden="true">⚠</span>
+              <div style="min-width: 0; display: flex; flex-direction: column; gap: 2px;">
+                <span style="font-size: 13px; font-weight: 700; color: #92400E;">٢ حجوزات أُغلقت تلقائياً — غير محتسبة (٧٢٠ ج.م)</span>
+                <span style="font-size: 11.5px; color: #92400E;">معروضة في الجدول بخط مشطوب — تظهر للمراجعة ولا تدخل أي مجموع</span>
+              </div>
+              <div style="flex: 1;"></div>
+              <span style="flex-shrink: 0; font-size: 12px; font-weight: 700; color: #92400E; text-decoration: underline; cursor: pointer; white-space: nowrap;">إخفاء من الجدول</span>
+            </div>
+
+            <div style="flex-shrink: 0; background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); overflow: hidden;">
+              <div style="display: grid; grid-template-columns: 150px 96px 124px 128px 1fr 66px 116px; align-items: center; gap: 8px; padding: 10px 18px; background: var(--ih-neutral-50); border-bottom: 1px solid var(--ih-neutral-200); font-size: 11.5px; font-weight: 700; color: var(--ih-neutral-600);">
+                <span>المرجع</span><span>تاريخ الحجز</span><span>الطريقة</span><span>تاريخ الاستحقاق</span><span style="text-align: left;">المبلغ</span><span style="text-align: left;">النسبة</span><span style="text-align: left;">العمولة</span>
+              </div>
+              <sc-for list="{{ rowsAll }}" as="r" hint-placeholder-count="11">
+                <sc-if value="{{ r.excluded }}" hint-placeholder-val="{{ false }}">
+                  <div style="display: grid; grid-template-columns: 150px 96px 124px 128px 1fr 66px 116px; align-items: center; gap: 8px; padding: 0 18px; min-height: 46px; border-bottom: 1px solid var(--ih-neutral-100); background: var(--ih-neutral-50); font-size: 13px; color: var(--ih-neutral-500);">
+                    <span dir="ltr" style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12.5px; font-weight: 700; color: var(--ih-neutral-500); text-align: right; text-decoration: line-through; unicode-bidi: isolate;">{{ r.ref }}</span>
+                    <span style="font-variant-numeric: tabular-nums; text-decoration: line-through;">{{ r.date }}</span>
+                    <span style="grid-column: span 2; justify-self: start; display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; color: #92400E; background: var(--ih-warning-bg); border: 1px solid rgba(217,119,6,0.35); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">أُغلقت تلقائياً — غير محتسبة</span>
+                    <span style="text-align: left; font-size: 13.5px; font-variant-numeric: tabular-nums; text-decoration: line-through;">{{ r.amount }}</span>
+                    <span style="text-align: left;">—</span>
+                    <span style="text-align: left; font-size: 13.5px; font-weight: 700;">—</span>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ r.counted }}" hint-placeholder-val="{{ true }}">
+                  <div style="display: grid; grid-template-columns: 150px 96px 124px 128px 1fr 66px 116px; align-items: center; gap: 8px; padding: 0 18px; min-height: 46px; border-bottom: 1px solid var(--ih-neutral-100); cursor: pointer; font-size: 13px; color: var(--ih-neutral-700);" style-hover="background: var(--ih-neutral-50);">
+                    <span dir="ltr" style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12.5px; font-weight: 700; color: var(--ih-primary-700); text-align: right; unicode-bidi: isolate;">{{ r.ref }}</span>
+                    <span style="font-variant-numeric: tabular-nums;">{{ r.date }}</span>
+                    <sc-if value="{{ r.prepaid }}" hint-placeholder-val="{{ true }}">
+                      <span style="justify-self: start; display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; color: var(--ih-primary-700); background: var(--ih-primary-50); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">مدفوع مقدماً</span>
+                    </sc-if>
+                    <sc-if value="{{ r.cash }}" hint-placeholder-val="{{ false }}">
+                      <span style="justify-self: start; display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; color: #92400E; background: var(--ih-accent-200); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">نقداً بالفرع</span>
+                    </sc-if>
+                    <div style="display: flex; flex-direction: column; gap: 0;">
+                      <span style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">{{ r.eventDate }}</span>
+                      <span style="font-size: 10.5px; color: var(--ih-neutral-500);">{{ r.eventKind }}</span>
+                    </div>
+                    <span style="text-align: left; font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">{{ r.amount }}</span>
+                    <span style="text-align: left; font-size: 12.5px; color: var(--ih-neutral-600); font-variant-numeric: tabular-nums;">{{ r.rate }}</span>
+                    <span style="text-align: left; font-size: 13.5px; font-weight: 700; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">{{ r.commission }}</span>
+                  </div>
+                </sc-if>
+              </sc-for>
+              <div style="display: grid; grid-template-columns: 150px 96px 124px 128px 1fr 66px 116px; align-items: center; gap: 8px; padding: 0 18px; min-height: 40px; background: var(--ih-neutral-50); border-bottom: 1px solid var(--ih-neutral-200); font-size: 12.5px; color: var(--ih-neutral-600);">
+                <span style="grid-column: span 4; font-weight: 600;">مجموع المدفوع مقدماً — ٤ حجوزات</span>
+                <span style="text-align: left; font-weight: 600; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">٢٬٧٥٠</span>
+                <span></span>
+                <span style="text-align: left; font-weight: 700; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">٣٤٥٫٢٠</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 150px 96px 124px 128px 1fr 66px 116px; align-items: center; gap: 8px; padding: 0 18px; min-height: 40px; background: var(--ih-neutral-50); border-bottom: 1px solid var(--ih-neutral-200); font-size: 12.5px; color: var(--ih-neutral-600);">
+                <span style="grid-column: span 4; font-weight: 600;">مجموع النقدي بالفرع — ٥ حجوزات <span style="font-weight: 600; color: #991B1B;">(‎+١ متأخر)</span></span>
+                <span style="text-align: left; font-weight: 600; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">١٬٨٠٠</span>
+                <span></span>
+                <span style="text-align: left; font-weight: 700; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">٢٢٨٫٢٠</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 150px 96px 124px 128px 1fr 66px 116px; align-items: center; gap: 8px; padding: 0 18px; min-height: 54px; background: var(--ih-primary-50); font-size: 13.5px;">
+                <span style="grid-column: span 4; font-weight: 800; color: var(--ih-primary-700);">الإجمالي المحتسب — ٩ حجوزات <span style="font-weight: 600; color: var(--ih-neutral-600);">(٢ مستثناة غير محتسبة)</span></span>
+                <span style="text-align: left; font-weight: 800; color: var(--ih-primary-700); font-variant-numeric: tabular-nums;">٤٬٥٥٠</span>
+                <span></span>
+                <span style="text-align: left; font-size: 16px; font-weight: 800; color: var(--ih-primary-700); font-variant-numeric: tabular-nums;">٥٧٣٫٤٠</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- re-issue dialog -->
+        <sc-if value="{{ reissueOpen }}" hint-placeholder-val="{{ false }}">
+          <div class="ih-anim" style="position: absolute; inset: 0; z-index: 60; background: rgba(2,20,27,0.5); display: flex; align-items: center; justify-content: center; padding: 32px; animation: ih-fade-in 180ms linear;">
+            <div class="ih-anim" style="width: 520px; max-width: 100%; background: var(--ih-neutral-0); border-radius: 24px; box-shadow: 0 24px 60px rgba(2,20,27,0.35); overflow: hidden; animation: ih-dialog-in 250ms cubic-bezier(0.22,1,0.36,1);">
+              <div style="padding: 20px 24px 0; display: flex; flex-direction: column; gap: 8px;">
+                <span style="font-size: 17px; font-weight: 800; color: var(--ih-neutral-800);">إصدار النسخة ٢ من كشف يوليو؟</span>
+                <span style="font-size: 13px; color: var(--ih-neutral-600); line-height: 1.7;">تبقى النسخة ١ محفوظة ومعلّمة «مُلغاة بنسخة أحدث» — لن تُعدّل ولن تُحذف. تُصدر نسخة ٢ بتاريخ إصدار جديد وتعود حالة الإرسال إلى «مسودة» حتى ترسلها للشريك.</span>
+              </div>
+              <div style="margin: 16px 24px; border: 1px solid var(--ih-neutral-200); border-radius: 12px; overflow: hidden;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 16px; border-bottom: 1px solid var(--ih-neutral-100);">
+                  <span style="font-size: 12.5px; color: var(--ih-neutral-600);">النسخة ١ — أُرسلت ٢ أغسطس</span>
+                  <span style="font-size: 13.5px; font-weight: 700; color: var(--ih-neutral-500); font-variant-numeric: tabular-nums; text-decoration: line-through;">٥٢١٫٤٠ ج.م</span>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 16px; background: var(--ih-primary-50);">
+                  <span style="font-size: 12.5px; font-weight: 700; color: var(--ih-primary-700);">النسخة ٢ — ٩ حجوزات محتسبة</span>
+                  <span style="font-size: 15px; font-weight: 800; color: var(--ih-primary-700); font-variant-numeric: tabular-nums;">٥٧٣٫٤٠ ج.م</span>
+                </div>
+              </div>
+              <div style="padding: 0 24px 20px;">
+                <span style="font-size: 12px; color: var(--ih-neutral-600); line-height: 1.7;">أبلِغ الشريك بالنسخة الجديدة — الفرق ‎+٥٢٫٠٠ ج.م من حجز نقدي أُتمّ متأخراً (<span dir="ltr" style="font-family: 'Atkinson Hyperlegible', sans-serif; font-weight: 700; unicode-bidi: isolate;">IH-2026-05163</span>).</span>
+              </div>
+              <div style="padding: 14px 24px; background: var(--ih-neutral-50); border-top: 1px solid var(--ih-neutral-200); display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+                <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="md" variant="ghost" on-click="{{ closeReissue }}" hint-size="70px,40px"><span style="white-space: nowrap; color: var(--ih-neutral-600);">إلغاء</span></x-import>
+                <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="md" variant="destructive" on-click="{{ closeReissue }}" hint-size="170px,40px"><span style="white-space: nowrap;">إصدار النسخة ٢</span></x-import>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </x-import>
+  </div>
+
+  <!-- ══════════ C · تمت التسوية ══════════ -->
+  <div data-screen-label="كشف العمولة — تمت التسوية">
+    <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; direction: rtl;">
+      <span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--ih-primary-800);">C</span>
+      <span style="font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-700);">تمت التسوية · مغلقة نهائياً · الفرق اللاحق يُرحّل للشهر التالي</span>
+      <span style="font-size: 11.5px; font-weight: 700; color: #92400E; background: var(--ih-warning-bg); border: 1px solid rgba(217,119,6,0.35); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">وسيلتان — حالة ما بعد عودة الدفع بالكارت</span>
+    </div>
+    <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 700 }}" url="admin.instahealth.eg/commissions" hint-size="1366px,700px">
+      <div dir="rtl" style="--ih-surface-sidebar: #023449; position: relative; display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden;">
+        <div style="flex-shrink: 0; display: flex; align-self: stretch; background: #023449;">
+          <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.SidebarNav" brand="الإدارة" items="{{ navItems }}" active="{{ 2 }}" style="{{ sidebarStyle }}" hint-size="220px,100%"></x-import>
+        </div>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); box-shadow: var(--ih-shadow-sm); padding: 10px 24px; display: flex; align-items: center; gap: 16px; min-height: 56px; box-sizing: border-box;">
+            <div style="display: flex; flex-direction: column; gap: 1px;">
+              <div style="font-size: 16px; font-weight: 800; color: var(--ih-neutral-800);">العمولات والفواتير</div>
+              <div style="font-size: 12px; color: var(--ih-neutral-500);">كشف شهري لكل شريك — كل رقم مسند إلى صفوف</div>
+            </div>
+            <span style="flex-shrink: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 4px 11px; white-space: nowrap;">لوحة الإدارة</span>
+            <div style="flex: 1;"></div>
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding-right: 16px; border-right: 1px solid var(--ih-neutral-200); white-space: nowrap;">
+              <div style="width: 32px; height: 32px; border-radius: 999px; background: #023449; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #FFFFFF;">م</div>
+              <div style="display: flex; flex-direction: column;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-700);">مؤسِّس</span>
+                <span style="font-size: 11px; color: var(--ih-neutral-500); cursor: pointer; text-decoration: underline;">تسجيل خروج</span>
+              </div>
+            </div>
+          </div>
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); padding: 12px 24px; display: flex; align-items: center; gap: 12px;">
+            <select style="flex-shrink: 0; min-width: 220px; min-height: 40px; padding: 0 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; background: var(--ih-neutral-0); font-family: 'Cairo', sans-serif; font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-800);">
+              <option>مختبرات النيل للتحاليل</option>
+            </select>
+            <select style="flex-shrink: 0; min-width: 150px; min-height: 40px; padding: 0 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; background: var(--ih-neutral-0); font-family: 'Cairo', sans-serif; font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-800);">
+              <option>يوليو ٢٠٢٦</option>
+            </select>
+            <div style="min-width: 0; display: flex; flex-direction: column; gap: 1px; padding-right: 12px; border-right: 1px solid var(--ih-neutral-200);">
+              <span style="font-size: 13px; font-weight: 700; color: var(--ih-neutral-800); white-space: nowrap;">مختبرات النيل للتحاليل — يوليو ٢٠٢٦</span>
+              <span style="font-size: 11.5px; color: var(--ih-neutral-500); white-space: nowrap;">٣ فروع · الإصدار ٢ · مغلق</span>
+            </div>
+            <div style="flex: 1;"></div>
+            <span style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #FFFFFF; background: var(--ih-primary-600); border-radius: 999px; padding: 5px 13px; white-space: nowrap;">✓✓ تمت التسوية</span>
+            <span style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ih-neutral-500); background: var(--ih-neutral-100); border: 1px solid var(--ih-neutral-200); border-radius: 999px; padding: 5px 12px; white-space: nowrap;">🔒 لا تعديل بعد التسوية</span>
+            <div style="flex-shrink: 0; display: flex; gap: 8px; padding-right: 12px; border-right: 1px solid var(--ih-neutral-200);">
+              <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="ghost" hint-size="90px,36px"><span style="white-space: nowrap; color: var(--ih-primary-600);">⤓ CSV</span></x-import>
+              <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="ghost" hint-size="80px,36px"><span style="white-space: nowrap; color: var(--ih-primary-600);">⎙ طباعة</span></x-import>
+            </div>
+          </div>
+          <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 14px 24px 24px; display: flex; flex-direction: column; gap: 14px;">
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+              <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-700);">أُصدرت في: <span style="font-weight: 700; color: var(--ih-neutral-800);">٣ أغسطس ٢٠٢٦ — ٩:٢٠ ص</span></span>
+              <div style="flex: 1;"></div>
+              <span style="font-size: 12px; color: var(--ih-neutral-600);">أُرسلت في: <span style="font-weight: 700; color: var(--ih-neutral-800);">٣ أغسطس ٢٠٢٦ — ٩:٤٥ ص</span></span>
+              <span style="font-size: 12px; color: var(--ih-neutral-600);">تمت التسوية في: <span style="font-weight: 700; color: var(--ih-primary-700);">٧ أغسطس ٢٠٢٦ — ٢:١٠ م</span></span>
+            </div>
+            <!-- credit-forward note -->
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 12px; background: var(--ih-info-bg); border: 1px solid rgba(2,128,144,0.28); border-radius: 8px; padding: 12px 16px;">
+              <span style="flex-shrink: 0; font-size: 14px;" aria-hidden="true">ℹ</span>
+              <div style="min-width: 0; display: flex; flex-direction: column; gap: 2px;">
+                <span style="font-size: 13px; font-weight: 700; color: var(--ih-primary-800);">وصل تغيير بعد التسوية — يُرحّل إلى كشف أغسطس</span>
+                <span style="font-size: 11.5px; color: var(--ih-primary-800); line-height: 1.6;">حجز نقدي واحد أُتمّ في ٨ أغسطس ويعود ليوليو (‎+٣٩٫٠٠ ج.م). الكشف المُسوّى لا يُعاد إصداره ولا يُعدَّل — يظهر الفرق كسطر «مُرحّل من يوليو» في كشف أغسطس.</span>
+              </div>
+              <div style="flex: 1;"></div>
+              <span style="flex-shrink: 0; font-size: 12px; font-weight: 700; color: var(--ih-primary-700); text-decoration: underline; cursor: pointer; white-space: nowrap;">عرض كشف أغسطس</span>
+            </div>
+            <div style="flex-shrink: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+              <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-top: 3px solid var(--ih-primary-400); border-radius: 12px; box-shadow: var(--ih-shadow-sm); padding: 14px 18px; display: flex; flex-direction: column; gap: 4px;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-600);">إجمالي المبيعات المحتسبة</span>
+                <span style="font-size: 26px; font-weight: 800; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">٤٬٥٥٠ <span style="font-size: 14px; font-weight: 600; color: var(--ih-neutral-500);">ج.م</span></span>
+                <span style="font-size: 11.5px; color: var(--ih-neutral-600);">مغلق كما هو بتاريخ التسوية</span>
+              </div>
+              <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-top: 3px solid var(--ih-primary-400); border-radius: 12px; box-shadow: var(--ih-shadow-sm); padding: 14px 18px; display: flex; flex-direction: column; gap: 4px;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-600);">حجوزات محتسبة</span>
+                <span style="font-size: 26px; font-weight: 800; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">٩ <span style="font-size: 14px; font-weight: 600; color: var(--ih-neutral-500);">من ١١</span></span>
+                <span style="font-size: 11.5px; color: var(--ih-neutral-600);">٤ مدفوعة مقدماً · ٥ نقداً</span>
+              </div>
+              <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-top: 3px solid var(--ih-primary-600); border-radius: 12px; box-shadow: var(--ih-shadow-sm); padding: 14px 18px; display: flex; flex-direction: column; gap: 4px;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-primary-700);">العمولة المُسوّاة</span>
+                <span style="font-size: 30px; font-weight: 800; color: var(--ih-primary-700); font-variant-numeric: tabular-nums; line-height: 1.15;">٥٧٣٫٤٠ <span style="font-size: 15px; font-weight: 600; color: var(--ih-primary-600);">ج.م</span></span>
+                <span style="font-size: 11.5px; color: var(--ih-primary-600); font-weight: 600;">‎+٣٩٫٠٠ ج.م مُرحّلة إلى أغسطس</span>
+              </div>
+            </div>
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 12px; background: var(--ih-warning-bg); border: 1px solid rgba(217,119,6,0.35); border-radius: 8px; padding: 11px 16px;">
+              <span style="flex-shrink: 0; font-size: 14px;" aria-hidden="true">⚠</span>
+              <div style="min-width: 0; display: flex; flex-direction: column; gap: 2px;">
+                <span style="font-size: 13px; font-weight: 700; color: #92400E;">٢ حجوزات أُغلقت تلقائياً — غير محتسبة (٧٢٠ ج.م)</span>
+                <span style="font-size: 11.5px; color: #92400E;">أغلقها النظام بعد مهلة الـ٢٤ ساعة دون تأكيد وصول — لا عمولة عليها، وليست جزءاً من أي رقم أعلاه</span>
+              </div>
+              <div style="flex: 1;"></div>
+              <span style="flex-shrink: 0; font-size: 12px; font-weight: 700; color: #92400E; text-decoration: underline; cursor: pointer; white-space: nowrap;">إظهار في الجدول</span>
+            </div>
+            <div style="flex-shrink: 0; background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); overflow: hidden;">
+              <div style="display: grid; grid-template-columns: 150px 96px 124px 128px 1fr 66px 116px; align-items: center; gap: 8px; padding: 10px 18px; background: var(--ih-neutral-50); border-bottom: 1px solid var(--ih-neutral-200); font-size: 11.5px; font-weight: 700; color: var(--ih-neutral-600);">
+                <span>المرجع</span><span>تاريخ الحجز</span><span>الطريقة</span><span>تاريخ الاستحقاق</span><span style="text-align: left;">المبلغ</span><span style="text-align: left;">النسبة</span><span style="text-align: left;">العمولة</span>
+              </div>
+              <sc-for list="{{ rowsCounted }}" as="r" hint-placeholder-count="9">
+                <div style="display: grid; grid-template-columns: 150px 96px 124px 128px 1fr 66px 116px; align-items: center; gap: 8px; padding: 0 18px; min-height: 46px; border-bottom: 1px solid var(--ih-neutral-100); cursor: pointer; font-size: 13px; color: var(--ih-neutral-700);" style-hover="background: var(--ih-neutral-50);">
+                  <span dir="ltr" style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12.5px; font-weight: 700; color: var(--ih-primary-700); text-align: right; unicode-bidi: isolate;">{{ r.ref }}</span>
+                  <span style="font-variant-numeric: tabular-nums;">{{ r.date }}</span>
+                  <sc-if value="{{ r.prepaid }}" hint-placeholder-val="{{ true }}">
+                    <span style="justify-self: start; display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; color: var(--ih-primary-700); background: var(--ih-primary-50); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">مدفوع مقدماً</span>
+                  </sc-if>
+                  <sc-if value="{{ r.cash }}" hint-placeholder-val="{{ false }}">
+                    <span style="justify-self: start; display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; color: #92400E; background: var(--ih-accent-200); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">نقداً بالفرع</span>
+                  </sc-if>
+                  <div style="display: flex; flex-direction: column; gap: 0;">
+                    <span style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">{{ r.eventDate }}</span>
+                    <span style="font-size: 10.5px; color: var(--ih-neutral-500);">{{ r.eventKind }}</span>
+                  </div>
+                  <span style="text-align: left; font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">{{ r.amount }}</span>
+                  <span style="text-align: left; font-size: 12.5px; color: var(--ih-neutral-600); font-variant-numeric: tabular-nums;">{{ r.rate }}</span>
+                  <span style="text-align: left; font-size: 13.5px; font-weight: 700; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">{{ r.commission }}</span>
+                </div>
+              </sc-for>
+              <div style="display: grid; grid-template-columns: 150px 96px 124px 128px 1fr 66px 116px; align-items: center; gap: 8px; padding: 0 18px; min-height: 40px; background: var(--ih-neutral-50); border-bottom: 1px solid var(--ih-neutral-200); font-size: 12.5px; color: var(--ih-neutral-600);">
+                <span style="grid-column: span 4; font-weight: 600;">مجموع المدفوع مقدماً — ٤ حجوزات</span>
+                <span style="text-align: left; font-weight: 600; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">٢٬٧٥٠</span>
+                <span></span>
+                <span style="text-align: left; font-weight: 700; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">٣٤٥٫٢٠</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 150px 96px 124px 128px 1fr 66px 116px; align-items: center; gap: 8px; padding: 0 18px; min-height: 40px; background: var(--ih-neutral-50); border-bottom: 1px solid var(--ih-neutral-200); font-size: 12.5px; color: var(--ih-neutral-600);">
+                <span style="grid-column: span 4; font-weight: 600;">مجموع النقدي بالفرع — ٥ حجوزات</span>
+                <span style="text-align: left; font-weight: 600; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">١٬٨٠٠</span>
+                <span></span>
+                <span style="text-align: left; font-weight: 700; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">٢٢٨٫٢٠</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 150px 96px 124px 128px 1fr 66px 116px; align-items: center; gap: 8px; padding: 0 18px; min-height: 54px; background: var(--ih-primary-50); font-size: 13.5px;">
+                <span style="grid-column: span 4; font-weight: 800; color: var(--ih-primary-700);">الإجمالي المُسوّى — ٩ حجوزات</span>
+                <span style="text-align: left; font-weight: 800; color: var(--ih-primary-700); font-variant-numeric: tabular-nums;">٤٬٥٥٠</span>
+                <span></span>
+                <span style="text-align: left; font-size: 16px; font-weight: 800; color: var(--ih-primary-700); font-variant-numeric: tabular-nums;">٥٧٣٫٤٠</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </x-import>
+  </div>
+
+  <!-- ══════════ D · بعد إعادة الإصدار — النسخة ٢ ══════════ -->
+  <div data-screen-label="كشف العمولة — النسخة ٢ بعد إعادة الإصدار">
+    <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; direction: rtl;">
+      <span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--ih-primary-800);">D</span>
+      <span style="font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-700);">بعد إعادة الإصدار — النسخة ٢ حالية بختم إصدار جديد، والنسخة ١ ملغاة ومحفوظة</span>
+      <span style="font-size: 11.5px; font-weight: 700; color: #92400E; background: var(--ih-warning-bg); border: 1px solid rgba(217,119,6,0.35); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">وسيلتان — حالة ما بعد عودة الدفع بالكارت</span>
+    </div>
+    <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 620 }}" url="admin.instahealth.eg/commissions?v=2" hint-size="1366px,620px">
+      <div dir="rtl" style="--ih-surface-sidebar: #023449; position: relative; display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden;">
+        <div style="flex-shrink: 0; display: flex; align-self: stretch; background: #023449;">
+          <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.SidebarNav" brand="الإدارة" items="{{ navItems }}" active="{{ 2 }}" style="{{ sidebarStyle }}" hint-size="220px,100%"></x-import>
+        </div>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); box-shadow: var(--ih-shadow-sm); padding: 10px 24px; display: flex; align-items: center; gap: 16px; min-height: 56px; box-sizing: border-box;">
+            <div style="display: flex; flex-direction: column; gap: 1px;">
+              <div style="font-size: 16px; font-weight: 800; color: var(--ih-neutral-800);">العمولات والفواتير</div>
+              <div style="font-size: 12px; color: var(--ih-neutral-500);">كشف شهري لكل شريك — كل رقم مسند إلى صفوف</div>
+            </div>
+            <span style="flex-shrink: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 4px 11px; white-space: nowrap;">لوحة الإدارة</span>
+            <div style="flex: 1;"></div>
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding-right: 16px; border-right: 1px solid var(--ih-neutral-200); white-space: nowrap;">
+              <div style="width: 32px; height: 32px; border-radius: 999px; background: #023449; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #FFFFFF;">م</div>
+              <div style="display: flex; flex-direction: column;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-700);">مؤسِّس</span>
+                <span style="font-size: 11px; color: var(--ih-neutral-500); cursor: pointer; text-decoration: underline;">تسجيل خروج</span>
+              </div>
+            </div>
+          </div>
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); padding: 12px 24px; display: flex; align-items: center; gap: 12px;">
+            <select style="flex-shrink: 0; min-width: 200px; min-height: 40px; padding: 0 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; background: var(--ih-neutral-0); font-family: 'Cairo', sans-serif; font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-800);">
+              <option>مختبرات النيل للتحاليل</option>
+            </select>
+            <select style="flex-shrink: 0; min-width: 130px; min-height: 40px; padding: 0 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; background: var(--ih-neutral-0); font-family: 'Cairo', sans-serif; font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-800);">
+              <option>يوليو ٢٠٢٦</option>
+            </select>
+            <select style="flex-shrink: 0; min-width: 168px; min-height: 40px; padding: 0 12px; border: 1.5px solid var(--ih-primary-400); border-radius: 8px; background: var(--ih-primary-50); font-family: 'Cairo', sans-serif; font-size: 13px; font-weight: 700; color: var(--ih-primary-700);">
+              <option>الإصدار ٢ — الحالي</option>
+              <option>الإصدار ١ — ملغاة</option>
+            </select>
+            <div style="flex: 1;"></div>
+            <span style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ih-neutral-700); background: var(--ih-neutral-100); border: 1px solid var(--ih-neutral-300); border-radius: 999px; padding: 5px 12px; white-space: nowrap;">● مسودة</span>
+            <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="outline" hint-size="180px,36px"><span style="white-space: nowrap;">تحديد كمُرسلة — النسخة ٢</span></x-import>
+            <div style="flex-shrink: 0; display: flex; gap: 8px; padding-right: 12px; border-right: 1px solid var(--ih-neutral-200);">
+              <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="ghost" hint-size="90px,36px"><span style="white-space: nowrap; color: var(--ih-primary-600);">⤓ CSV</span></x-import>
+              <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="ghost" hint-size="80px,36px"><span style="white-space: nowrap; color: var(--ih-primary-600);">⎙ طباعة</span></x-import>
+            </div>
+          </div>
+          <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 14px 24px 24px; display: flex; flex-direction: column; gap: 14px;">
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+              <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-700);">أُصدرت في: <span style="font-weight: 700; color: var(--ih-neutral-800);">٣ أغسطس ٢٠٢٦ — ٩:٢٠ ص</span> <span style="font-weight: 600; color: var(--ih-neutral-500);">(النسخة ٢)</span></span>
+              <div style="flex: 1;"></div>
+              <span style="font-size: 12px; color: var(--ih-neutral-500);">أُرسلت في: —</span>
+              <span style="font-size: 12px; color: var(--ih-neutral-500);">تمت التسوية في: —</span>
+            </div>
+            <!-- superseded predecessor strip -->
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 12px; background: var(--ih-neutral-50); border: 1px solid var(--ih-neutral-300); border-radius: 8px; padding: 11px 16px;">
+              <span style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; color: var(--ih-neutral-600); background: var(--ih-neutral-200); border-radius: 999px; padding: 4px 11px; white-space: nowrap;">نسخة ملغاة</span>
+              <div style="min-width: 0; display: flex; flex-direction: column; gap: 2px;">
+                <span style="font-size: 12.5px; font-weight: 700; color: var(--ih-neutral-700);">النسخة ١ — أُصدرت ٢ أغسطس، أُرسلت ٢ أغسطس، ألغيت ٣ أغسطس</span>
+                <span style="font-size: 11.5px; color: var(--ih-neutral-600); line-height: 1.6;">محفوظة كما أُرسلت بقيمة <span style="font-weight: 700;">٥٢١٫٤٠ ج.م</span> — قابلة للعرض والتصدير للسجل، وغير قابلة للتعديل</span>
+              </div>
+              <div style="flex: 1;"></div>
+              <span style="flex-shrink: 0; font-size: 12px; font-weight: 700; color: var(--ih-primary-700); text-decoration: underline; cursor: pointer; white-space: nowrap;">عرض النسخة ١</span>
+            </div>
+            <div style="flex-shrink: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+              <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-top: 3px solid var(--ih-primary-400); border-radius: 12px; box-shadow: var(--ih-shadow-sm); padding: 14px 18px; display: flex; flex-direction: column; gap: 4px;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-600);">إجمالي المبيعات المحتسبة</span>
+                <span style="font-size: 26px; font-weight: 800; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">٤٬٥٥٠ <span style="font-size: 14px; font-weight: 600; color: var(--ih-neutral-500);">ج.م</span></span>
+                <span style="font-size: 11.5px; color: var(--ih-neutral-500);">النسخة ١: ٤٬١٥٠</span>
+              </div>
+              <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-top: 3px solid var(--ih-primary-400); border-radius: 12px; box-shadow: var(--ih-shadow-sm); padding: 14px 18px; display: flex; flex-direction: column; gap: 4px;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-600);">حجوزات محتسبة</span>
+                <span style="font-size: 26px; font-weight: 800; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">٩ <span style="font-size: 14px; font-weight: 600; color: var(--ih-neutral-500);">من ١١</span></span>
+                <span style="font-size: 11.5px; color: var(--ih-neutral-600);">‎+١ حجز نقدي أُتمّ متأخراً</span>
+              </div>
+              <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-top: 3px solid var(--ih-primary-600); border-radius: 12px; box-shadow: var(--ih-shadow-sm); padding: 14px 18px; display: flex; flex-direction: column; gap: 4px;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-primary-700);">العمولة المستحقة</span>
+                <span style="font-size: 30px; font-weight: 800; color: var(--ih-primary-700); font-variant-numeric: tabular-nums; line-height: 1.15;">٥٧٣٫٤٠ <span style="font-size: 15px; font-weight: 600; color: var(--ih-primary-600);">ج.م</span></span>
+                <span style="font-size: 11.5px; color: var(--ih-primary-600); font-weight: 600;">‎+٥٢٫٠٠ ج.م عن النسخة ١</span>
+              </div>
+            </div>
+            <div style="flex-shrink: 0; background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); overflow: hidden;">
+              <div style="display: grid; grid-template-columns: 150px 96px 124px 128px 1fr 66px 116px; align-items: center; gap: 8px; padding: 10px 18px; background: var(--ih-neutral-50); border-bottom: 1px solid var(--ih-neutral-200); font-size: 11.5px; font-weight: 700; color: var(--ih-neutral-600);">
+                <span>المرجع</span><span>تاريخ الحجز</span><span>الطريقة</span><span>تاريخ الاستحقاق</span><span style="text-align: left;">المبلغ</span><span style="text-align: left;">النسبة</span><span style="text-align: left;">العمولة</span>
+              </div>
+              <sc-for list="{{ rowsCounted }}" as="r" hint-placeholder-count="9">
+                <div style="display: grid; grid-template-columns: 150px 96px 124px 128px 1fr 66px 116px; align-items: center; gap: 8px; padding: 0 18px; min-height: 46px; border-bottom: 1px solid var(--ih-neutral-100); cursor: pointer; font-size: 13px; color: var(--ih-neutral-700);" style-hover="background: var(--ih-neutral-50);">
+                  <span dir="ltr" style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12.5px; font-weight: 700; color: var(--ih-primary-700); text-align: right; unicode-bidi: isolate;">{{ r.ref }}</span>
+                  <span style="font-variant-numeric: tabular-nums;">{{ r.date }}</span>
+                  <sc-if value="{{ r.prepaid }}" hint-placeholder-val="{{ true }}">
+                    <span style="justify-self: start; display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; color: var(--ih-primary-700); background: var(--ih-primary-50); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">مدفوع مقدماً</span>
+                  </sc-if>
+                  <sc-if value="{{ r.cash }}" hint-placeholder-val="{{ false }}">
+                    <span style="justify-self: start; display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; color: #92400E; background: var(--ih-accent-200); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">نقداً بالفرع</span>
+                  </sc-if>
+                  <div style="display: flex; flex-direction: column; gap: 0;">
+                    <span style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">{{ r.eventDate }}</span>
+                    <span style="font-size: 10.5px; color: var(--ih-neutral-500);">{{ r.eventKind }}</span>
+                  </div>
+                  <span style="text-align: left; font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">{{ r.amount }}</span>
+                  <span style="text-align: left; font-size: 12.5px; color: var(--ih-neutral-600); font-variant-numeric: tabular-nums;">{{ r.rate }}</span>
+                  <span style="text-align: left; font-size: 13.5px; font-weight: 700; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">{{ r.commission }}</span>
+                </div>
+              </sc-for>
+              <div style="display: grid; grid-template-columns: 150px 96px 124px 128px 1fr 66px 116px; align-items: center; gap: 8px; padding: 0 18px; min-height: 40px; background: var(--ih-neutral-50); border-bottom: 1px solid var(--ih-neutral-200); font-size: 12.5px; color: var(--ih-neutral-600);">
+                <span style="grid-column: span 4; font-weight: 600;">مجموع المدفوع مقدماً — ٤ حجوزات</span>
+                <span style="text-align: left; font-weight: 600; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">٢٬٧٥٠</span>
+                <span></span>
+                <span style="text-align: left; font-weight: 700; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">٣٤٥٫٢٠</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 150px 96px 124px 128px 1fr 66px 116px; align-items: center; gap: 8px; padding: 0 18px; min-height: 40px; background: var(--ih-neutral-50); border-bottom: 1px solid var(--ih-neutral-200); font-size: 12.5px; color: var(--ih-neutral-600);">
+                <span style="grid-column: span 4; font-weight: 600;">مجموع النقدي بالفرع — ٥ حجوزات</span>
+                <span style="text-align: left; font-weight: 600; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">١٬٨٠٠</span>
+                <span></span>
+                <span style="text-align: left; font-weight: 700; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">٢٢٨٫٢٠</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 150px 96px 124px 128px 1fr 66px 116px; align-items: center; gap: 8px; padding: 0 18px; min-height: 54px; background: var(--ih-primary-50); font-size: 13.5px;">
+                <span style="grid-column: span 4; font-weight: 800; color: var(--ih-primary-700);">الإجمالي المحتسب — ٩ حجوزات <span style="font-weight: 600; color: var(--ih-neutral-600);">(النسخة ٢)</span></span>
+                <span style="text-align: left; font-weight: 800; color: var(--ih-primary-700); font-variant-numeric: tabular-nums;">٤٬٥٥٠</span>
+                <span></span>
+                <span style="text-align: left; font-size: 16px; font-weight: 800; color: var(--ih-primary-700); font-variant-numeric: tabular-nums;">٥٧٣٫٤٠</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </x-import>
+  </div>
+
+  <!-- ══════════ E · نقدي فقط — واقع v1 ══════════ -->
+  <div data-screen-label="كشف العمولة — نقدي فقط (v1)">
+    <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; direction: rtl; flex-wrap: wrap;">
+      <span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--ih-primary-800);">E</span>
+      <span style="font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-700);">نقدي فقط — هذا شكل كل كشف حقيقي في v1</span>
+      <span style="font-size: 11.5px; font-weight: 700; color: var(--ih-primary-700); background: var(--ih-primary-50); border: 1px solid var(--ih-primary-400); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">واقع v1 — الدفع نقداً بالفرع فقط</span>
+      <span style="font-size: 12px; color: var(--ih-neutral-600);">سطر توزيع الوسائل يغيب بدلاً من أن يقول «٠ مدفوعة مقدماً»، وتُحذف مجاميع الوسائل لأن الوسيلة واحدة.</span>
+    </div>
+    <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 768 }}" url="admin.instahealth.eg/commissions" hint-size="1366px,768px">
+      <div dir="rtl" style="--ih-surface-sidebar: #023449; position: relative; display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden;">
+        <div style="flex-shrink: 0; display: flex; align-self: stretch; background: #023449;">
+          <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.SidebarNav" brand="الإدارة" items="{{ navItems }}" active="{{ 2 }}" style="{{ sidebarStyle }}" hint-size="220px,100%"></x-import>
+        </div>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); box-shadow: var(--ih-shadow-sm); padding: 10px 24px; display: flex; align-items: center; gap: 16px; min-height: 56px; box-sizing: border-box;">
+            <div style="display: flex; flex-direction: column; gap: 1px;">
+              <div style="font-size: 16px; font-weight: 800; color: var(--ih-neutral-800);">العمولات والفواتير</div>
+              <div style="font-size: 12px; color: var(--ih-neutral-500);">كشف شهري لكل شريك — كل رقم مسند إلى صفوف</div>
+            </div>
+            <span style="flex-shrink: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 4px 11px; white-space: nowrap;">لوحة الإدارة</span>
+            <div style="flex: 1;"></div>
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding-right: 16px; border-right: 1px solid var(--ih-neutral-200); white-space: nowrap;">
+              <div style="width: 32px; height: 32px; border-radius: 999px; background: #023449; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #FFFFFF;">م</div>
+              <div style="display: flex; flex-direction: column;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-700);">مؤسِّس</span>
+                <span style="font-size: 11px; color: var(--ih-neutral-500); cursor: pointer; text-decoration: underline;">تسجيل خروج</span>
+              </div>
+            </div>
+          </div>
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); padding: 12px 24px; display: flex; align-items: center; gap: 12px;">
+            <select style="flex-shrink: 0; min-width: 220px; min-height: 40px; padding: 0 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; background: var(--ih-neutral-0); font-family: 'Cairo', sans-serif; font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-800);">
+              <option>مختبرات النيل للتحاليل</option>
+              <option>معامل سريدار</option>
+              <option>مركز الشفاء للأشعة</option>
+            </select>
+            <select style="flex-shrink: 0; min-width: 150px; min-height: 40px; padding: 0 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; background: var(--ih-neutral-0); font-family: 'Cairo', sans-serif; font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-800);">
+              <option>يوليو ٢٠٢٦</option>
+              <option>يونيو ٢٠٢٦</option>
+            </select>
+            <div style="min-width: 0; display: flex; flex-direction: column; gap: 1px; padding-right: 12px; border-right: 1px solid var(--ih-neutral-200);">
+              <span style="font-size: 13px; font-weight: 700; color: var(--ih-neutral-800); white-space: nowrap;">مختبرات النيل للتحاليل — يوليو ٢٠٢٦</span>
+              <span style="font-size: 11.5px; color: var(--ih-neutral-500); white-space: nowrap;">٣ فروع · ١ — ٣١ يوليو ٢٠٢٦</span>
+            </div>
+            <div style="flex: 1;"></div>
+            <span style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ih-neutral-700); background: var(--ih-neutral-100); border: 1px solid var(--ih-neutral-300); border-radius: 999px; padding: 5px 12px; white-space: nowrap;">● مسودة</span>
+            <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="outline" hint-size="130px,36px"><span style="white-space: nowrap;">تحديد كمُرسلة</span></x-import>
+            <div style="flex-shrink: 0; display: flex; gap: 8px; padding-right: 12px; border-right: 1px solid var(--ih-neutral-200);">
+              <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="ghost" hint-size="90px,36px"><span style="white-space: nowrap; color: var(--ih-primary-600);">⤓ CSV</span></x-import>
+              <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="ghost" hint-size="80px,36px"><span style="white-space: nowrap; color: var(--ih-primary-600);">⎙ طباعة</span></x-import>
+            </div>
+          </div>
+          <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 14px 24px 24px; display: flex; flex-direction: column; gap: 14px;">
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+              <span style="font-size: 12px; color: var(--ih-neutral-500);">لم تُصدر بعد — الأرقام تتغير مع كل زيارة تُتَمّ حتى الإصدار</span>
+              <div style="flex: 1;"></div>
+              <span style="font-size: 12px; color: var(--ih-neutral-500);">أُرسلت في: —</span>
+              <span style="font-size: 12px; color: var(--ih-neutral-500);">تمت التسوية في: —</span>
+            </div>
+            <div style="flex-shrink: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+              <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-top: 3px solid var(--ih-primary-400); border-radius: 12px; box-shadow: var(--ih-shadow-sm); padding: 14px 18px; display: flex; flex-direction: column; gap: 4px;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-600);">إجمالي المبيعات المحتسبة</span>
+                <span style="font-size: 26px; font-weight: 800; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">٤٬١٥٠ <span style="font-size: 14px; font-weight: 600; color: var(--ih-neutral-500);">ج.م</span></span>
+                <span style="font-size: 11.5px; color: var(--ih-primary-600); text-decoration: underline; cursor: pointer;">عرض الصفوف الثمانية</span>
+              </div>
+              <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-top: 3px solid var(--ih-primary-400); border-radius: 12px; box-shadow: var(--ih-shadow-sm); padding: 14px 18px; display: flex; flex-direction: column; gap: 4px;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-600);">حجوزات محتسبة</span>
+                <span style="font-size: 26px; font-weight: 800; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">٨ <span style="font-size: 14px; font-weight: 600; color: var(--ih-neutral-500);">من ١٠</span></span>
+                <span style="font-size: 11.5px; color: var(--ih-neutral-600);">كلها نقداً بالفرع — العمولة تُستحق عند إتمام الزيارة</span>
+              </div>
+              <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-top: 3px solid var(--ih-primary-600); border-radius: 12px; box-shadow: var(--ih-shadow-sm); padding: 14px 18px; display: flex; flex-direction: column; gap: 4px;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-primary-700);">العمولة المستحقة</span>
+                <span style="font-size: 30px; font-weight: 800; color: var(--ih-primary-700); font-variant-numeric: tabular-nums; line-height: 1.15;">٥٢١٫٤٠ <span style="font-size: 15px; font-weight: 600; color: var(--ih-primary-600);">ج.م</span></span>
+                <span style="font-size: 11.5px; color: var(--ih-neutral-600);">نسب سارية: ١٢٪ و ١٣٪ — إجمالي مركّب</span>
+              </div>
+            </div>
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 12px; background: var(--ih-warning-bg); border: 1px solid rgba(217,119,6,0.35); border-radius: 8px; padding: 11px 16px;">
+              <span style="flex-shrink: 0; font-size: 14px;" aria-hidden="true">⚠</span>
+              <div style="min-width: 0; display: flex; flex-direction: column; gap: 2px;">
+                <span style="font-size: 13px; font-weight: 700; color: #92400E;">٢ حجوزات أُغلقت تلقائياً — غير محتسبة (٧٢٠ ج.م)</span>
+                <span style="font-size: 11.5px; color: #92400E;">معروضة في الجدول بخط مشطوب — لم يؤكّد الفرع وصول المريض خلال مهلة الـ٢٤ ساعة، فلا عمولة عليها</span>
+              </div>
+              <div style="flex: 1;"></div>
+              <span style="flex-shrink: 0; font-size: 12px; font-weight: 700; color: #92400E; text-decoration: underline; cursor: pointer; white-space: nowrap;">إخفاء من الجدول</span>
+            </div>
+            <div style="flex-shrink: 0; background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); overflow: hidden;">
+              <div style="display: grid; grid-template-columns: 150px 96px 124px 128px 1fr 66px 116px; align-items: center; gap: 8px; padding: 10px 18px; background: var(--ih-neutral-50); border-bottom: 1px solid var(--ih-neutral-200); font-size: 11.5px; font-weight: 700; color: var(--ih-neutral-600);">
+                <span>المرجع</span><span>تاريخ الحجز</span><span>الطريقة</span><span>تاريخ الاستحقاق</span><span style="text-align: left;">المبلغ</span><span style="text-align: left;">النسبة</span><span style="text-align: left;">العمولة</span>
+              </div>
+              <sc-for list="{{ rowsCashOnly }}" as="r" hint-placeholder-count="10">
+                <sc-if value="{{ r.excluded }}" hint-placeholder-val="{{ false }}">
+                  <div style="display: grid; grid-template-columns: 150px 96px 124px 128px 1fr 66px 116px; align-items: center; gap: 8px; padding: 0 18px; min-height: 46px; border-bottom: 1px solid var(--ih-neutral-100); background: var(--ih-neutral-50); font-size: 13px; color: var(--ih-neutral-500);">
+                    <span dir="ltr" style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12.5px; font-weight: 700; color: var(--ih-neutral-500); text-align: right; text-decoration: line-through; unicode-bidi: isolate;">{{ r.ref }}</span>
+                    <span style="font-variant-numeric: tabular-nums; text-decoration: line-through;">{{ r.date }}</span>
+                    <span style="grid-column: span 2; justify-self: start; display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; color: #92400E; background: var(--ih-warning-bg); border: 1px solid rgba(217,119,6,0.35); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">أُغلقت تلقائياً — غير محتسبة</span>
+                    <span style="text-align: left; font-size: 13.5px; font-variant-numeric: tabular-nums; text-decoration: line-through;">{{ r.amount }}</span>
+                    <span style="text-align: left;">—</span>
+                    <span style="text-align: left; font-size: 13.5px; font-weight: 700;">—</span>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ r.counted }}" hint-placeholder-val="{{ true }}">
+                  <div style="display: grid; grid-template-columns: 150px 96px 124px 128px 1fr 66px 116px; align-items: center; gap: 8px; padding: 0 18px; min-height: 46px; border-bottom: 1px solid var(--ih-neutral-100); cursor: pointer; font-size: 13px; color: var(--ih-neutral-700);" style-hover="background: var(--ih-neutral-50);">
+                    <span dir="ltr" style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12.5px; font-weight: 700; color: var(--ih-primary-700); text-align: right; unicode-bidi: isolate;">{{ r.ref }}</span>
+                    <span style="font-variant-numeric: tabular-nums;">{{ r.date }}</span>
+                    <span style="justify-self: start; display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; color: #92400E; background: var(--ih-accent-200); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">نقداً بالفرع</span>
+                    <div style="display: flex; flex-direction: column; gap: 0;">
+                      <span style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">{{ r.eventDate }}</span>
+                      <span style="font-size: 10.5px; color: var(--ih-neutral-500);">{{ r.eventKind }}</span>
+                    </div>
+                    <span style="text-align: left; font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">{{ r.amount }}</span>
+                    <span style="text-align: left; font-size: 12.5px; color: var(--ih-neutral-600); font-variant-numeric: tabular-nums;">{{ r.rate }}</span>
+                    <span style="text-align: left; font-size: 13.5px; font-weight: 700; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">{{ r.commission }}</span>
+                  </div>
+                </sc-if>
+              </sc-for>
+              <div style="display: grid; grid-template-columns: 150px 96px 124px 128px 1fr 66px 116px; align-items: center; gap: 8px; padding: 0 18px; min-height: 54px; background: var(--ih-primary-50); font-size: 13.5px;">
+                <span style="grid-column: span 4; font-weight: 800; color: var(--ih-primary-700);">الإجمالي المحتسب — ٨ حجوزات نقدية <span style="font-weight: 600; color: var(--ih-neutral-600);">(٢ مستثناة غير محتسبة)</span></span>
+                <span style="text-align: left; font-weight: 800; color: var(--ih-primary-700); font-variant-numeric: tabular-nums;">٤٬١٥٠</span>
+                <span></span>
+                <span style="text-align: left; font-size: 16px; font-weight: 800; color: var(--ih-primary-700); font-variant-numeric: tabular-nums;">٥٢١٫٤٠</span>
+              </div>
+            </div>
+            <span style="flex-shrink: 0; font-size: 11.5px; color: var(--ih-neutral-500); line-height: 1.7;">في v1 كل حجز يُدفع نقداً بالفرع، فتاريخ الاستحقاق هو دائماً تاريخ إتمام الزيارة. النسبة في كل صف هي السارية في ذلك التاريخ — تغيّرت من ١٢٪ إلى ١٣٪ بأثر من ١٦ يوليو ٢٠٢٦، ولا تُطبَّق بأثر رجعي. لا تظهر مجاميع فرعية للوسائل لأن الوسيلة واحدة.</span>
+          </div>
+        </div>
+      </div>
+    </x-import>
+  </div>
+
+  <!-- design annotation -->
+  <div dir="rtl" style="width: 1366px; max-width: 100%; box-sizing: border-box; background: var(--ih-neutral-0); border: 1.5px dashed var(--ih-neutral-300); border-radius: 12px; padding: 20px 24px; display: flex; flex-direction: column; gap: 10px; font-family: 'Cairo', sans-serif;">
+    <div style="display: flex; align-items: baseline; gap: 10px;">
+      <span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; color: var(--ih-neutral-500);">DESIGN NOTE</span>
+      <span style="font-size: 14.5px; font-weight: 800; color: var(--ih-neutral-800);">التصدير: الورق والشاشة يقولان الشيء نفسه</span>
+    </div>
+    <span style="font-size: 13px; color: var(--ih-neutral-700); line-height: 1.75;">كل تصدير — CSV أو طباعة — يحمل الترويسة نفسها التي تظهر على الشاشة: الشريك والشهر، رقم الإصدار وحالته (مسودة / أُرسلت / تمت التسوية)، وختم «أُصدرت في» بالتاريخ والوقت. وفي أسفل كل تصدير تُطبع حاشية الحجوزات المستثناة بنصها الكامل — عددها ومجموعها وسبب استثنائها («أُغلقت تلقائياً — غير محتسبة») — مع مراجعها، حتى لو كانت مخفية من الجدول على الشاشة. النسخة الملغاة تُصدَّر مع علامة «نسخة ملغاة» ظاهرة في الترويسة. المبدأ: لا يستطيع شريك أن يحمل في يده ورقة لا نعرف أي إصدار هي.</span>
+    <span style="font-size: 12.5px; color: var(--ih-neutral-600); line-height: 1.75;">في CSV تُكتب هذه الحقول كأسطر تعريف قبل رأس الجدول، والصفوف المستثناة تُدرج مع عمود <span dir="ltr" style="font-family: 'Atkinson Hyperlegible', sans-serif; unicode-bidi: isolate;">excluded_reason</span> وعمولة صفرية — لا حذف صامت.</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1460, &quot;height&quot;: 4050}}">
+const core = [
+  { day: 3, ref: "IH-2026-04812", date: "٣ يوليو", prepaid: true, eventDate: "٣ يوليو", eventKind: "تاريخ الدفع", amount: "٤٨٠", rate: "١٢٪", commission: "٥٧٫٦٠" },
+  { day: 5, ref: "IH-2026-04877", date: "٥ يوليو", cash: true, eventDate: "٦ يوليو", eventKind: "تاريخ الإتمام", amount: "٣٢٠", rate: "١٢٪", commission: "٣٨٫٤٠" },
+  { day: 9, ref: "IH-2026-04903", date: "٩ يوليو", prepaid: true, eventDate: "٩ يوليو", eventKind: "تاريخ الدفع", amount: "٧٥٠", rate: "١٢٪", commission: "٩٠٫٠٠" },
+  { day: 14, ref: "IH-2026-04960", date: "١٤ يوليو", cash: true, eventDate: "١٥ يوليو", eventKind: "تاريخ الإتمام", amount: "٢٦٠", rate: "١٢٪", commission: "٣١٫٢٠" },
+  { day: 17, ref: "IH-2026-05014", date: "١٧ يوليو", prepaid: true, eventDate: "١٧ يوليو", eventKind: "تاريخ الدفع", amount: "٦٢٠", rate: "١٣٪", commission: "٨٠٫٦٠" },
+  { day: 22, ref: "IH-2026-05088", date: "٢٢ يوليو", cash: true, eventDate: "٢٣ يوليو", eventKind: "تاريخ الإتمام", amount: "٤٤٠", rate: "١٣٪", commission: "٥٧٫٢٠" },
+  { day: 26, ref: "IH-2026-05121", date: "٢٦ يوليو", prepaid: true, eventDate: "٢٦ يوليو", eventKind: "تاريخ الدفع", amount: "٩٠٠", rate: "١٣٪", commission: "١١٧٫٠٠" },
+  { day: 30, ref: "IH-2026-05149", date: "٣٠ يوليو", cash: true, eventDate: "٣١ يوليو", eventKind: "تاريخ الإتمام", amount: "٣٨٠", rate: "١٣٪", commission: "٤٩٫٤٠" },
+];
+const late = { day: 31, ref: "IH-2026-05163", date: "٣١ يوليو", cash: true, eventDate: "١ أغسطس", eventKind: "أُتمّ داخل المهلة", amount: "٤٠٠", rate: "١٣٪", commission: "٥٢٫٠٠" };
+const excluded = [
+  { day: 11, ref: "IH-2026-04991", date: "١١ يوليو", amount: "٤٠٠", excluded: true },
+  { day: 24, ref: "IH-2026-05102", date: "٢٤ يوليو", amount: "٣٢٠", excluded: true },
+];
+
+const cashOnly = [
+  { day: 3, ref: "IH-2026-04812", date: "٣ يوليو", cash: true, eventDate: "٣ يوليو", eventKind: "تاريخ الإتمام", amount: "٤٨٠", rate: "١٢٪", commission: "٥٧٫٦٠" },
+  { day: 5, ref: "IH-2026-04877", date: "٥ يوليو", cash: true, eventDate: "٦ يوليو", eventKind: "تاريخ الإتمام", amount: "٣٢٠", rate: "١٢٪", commission: "٣٨٫٤٠" },
+  { day: 9, ref: "IH-2026-04903", date: "٩ يوليو", cash: true, eventDate: "١٠ يوليو", eventKind: "تاريخ الإتمام", amount: "٧٥٠", rate: "١٢٪", commission: "٩٠٫٠٠" },
+  { day: 11, ref: "IH-2026-04991", date: "١١ يوليو", amount: "٤٠٠", excluded: true },
+  { day: 14, ref: "IH-2026-04960", date: "١٤ يوليو", cash: true, eventDate: "١٥ يوليو", eventKind: "تاريخ الإتمام", amount: "٢٦٠", rate: "١٢٪", commission: "٣١٫٢٠" },
+  { day: 17, ref: "IH-2026-05014", date: "١٧ يوليو", cash: true, eventDate: "١٨ يوليو", eventKind: "تاريخ الإتمام", amount: "٦٢٠", rate: "١٣٪", commission: "٨٠٫٦٠" },
+  { day: 22, ref: "IH-2026-05088", date: "٢٢ يوليو", cash: true, eventDate: "٢٣ يوليو", eventKind: "تاريخ الإتمام", amount: "٤٤٠", rate: "١٣٪", commission: "٥٧٫٢٠" },
+  { day: 24, ref: "IH-2026-05102", date: "٢٤ يوليو", amount: "٣٢٠", excluded: true },
+  { day: 26, ref: "IH-2026-05121", date: "٢٦ يوليو", cash: true, eventDate: "٢٧ يوليو", eventKind: "تاريخ الإتمام", amount: "٩٠٠", rate: "١٣٪", commission: "١١٧٫٠٠" },
+  { day: 30, ref: "IH-2026-05149", date: "٣٠ يوليو", cash: true, eventDate: "٣١ يوليو", eventKind: "تاريخ الإتمام", amount: "٣٨٠", rate: "١٣٪", commission: "٤٩٫٤٠" },
+].map(r => ({ ...r, counted: !r.excluded }));
+
+class Component extends DCLogic {
+  state = { reissueOpen: true };
+  renderVals() {
+    const all = [...core, ...excluded, late]
+      .slice()
+      .sort((a, b) => a.day - b.day)
+      .map(r => ({ ...r, counted: !r.excluded }));
+    return {
+      navItems: [
+        { icon: "📊", label: "نظرة عامة" },
+        { icon: "📈", label: "التحليلات" },
+        { icon: "🧾", label: "العمولات والفواتير" },
+        { icon: "🏥", label: "المزودون والفروع" },
+        { icon: "🧪", label: "كتالوج الخدمات" },
+        { icon: "👤", label: "حسابات المزودين" },
+        { icon: "📋", label: "الحجوزات" },
+      ],
+      sidebarStyle: { height: "100%", alignSelf: "stretch", flexShrink: 0, boxSizing: "border-box" },
+      rowsCore: core.map(r => ({ ...r, counted: true })),
+      rowsAll: all,
+      rowsCounted: all.filter(r => r.counted),
+      rowsCashOnly: cashOnly,
+      reissueOpen: this.state.reissueOpen,
+      openReissue: () => this.setState({ reissueOpen: true }),
+      closeReissue: () => this.setState({ reissueOpen: false }),
+    };
+  }
+}
+</script>
+</body>
+</html>

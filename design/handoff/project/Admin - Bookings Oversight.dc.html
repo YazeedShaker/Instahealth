@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/effects.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/themes.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/base.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/styles.css">
+  <script src="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/_ds_bundle.js"></script>
+  <style>
+    body { margin: 0; background: var(--ih-neutral-100); font-family: 'Cairo', 'Atkinson Hyperlegible', sans-serif; }
+    a { color: var(--ih-primary-600); } a:hover { color: var(--ih-primary-700); }
+    select:focus, input:focus { outline: none; border-color: var(--ih-primary-400) !important; }
+    @keyframes ih-fade-in { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes ih-dialog-in { from { opacity: 0; transform: translateY(8px) scale(0.99); } to { opacity: 1; transform: none; } }
+    @keyframes ih-shimmer { 0% { opacity: 0.55; } 50% { opacity: 1; } 100% { opacity: 0.55; } }
+    @media (prefers-reduced-motion: reduce) { .ih-anim, .ih-skel { animation: none !important; } }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 48px; align-items: center; padding: 40px 32px;">
+
+  <!-- ══════════ A · القائمة والبحث ══════════ -->
+  <div data-screen-label="الحجوزات — البحث عبر الشبكة">
+    <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; direction: rtl; flex-wrap: wrap;">
+      <span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--ih-primary-800);">A</span>
+      <span style="font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-700);">الحجوزات — بحث واحد عبر كل المزودين: رقم الحجز، الهاتف، التاريخ، الحالة</span>
+    </div>
+    <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 720 }}" url="admin.instahealth.eg/bookings" hint-size="1366px,720px">
+      <div dir="rtl" style="--ih-surface-sidebar: #023449; position: relative; display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden;">
+        <div style="flex-shrink: 0; display: flex; align-self: stretch; background: #023449;">
+          <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.SidebarNav" brand="الإدارة" items="{{ navItems }}" active="{{ 6 }}" style="{{ sidebarStyle }}" hint-size="220px,100%"></x-import>
+        </div>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); box-shadow: var(--ih-shadow-sm); padding: 10px 24px; display: flex; align-items: center; gap: 16px; min-height: 56px; box-sizing: border-box;">
+            <div style="display: flex; flex-direction: column; gap: 1px;">
+              <div style="font-size: 16px; font-weight: 800; color: var(--ih-neutral-800);">الحجوزات</div>
+              <div style="font-size: 12px; color: var(--ih-neutral-500);">اليوم: ٣٤ حجزاً · ٢٨ مؤكد · ٤ مكتمل · ٢ ملغي</div>
+            </div>
+            <span style="flex-shrink: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 4px 11px; white-space: nowrap;">لوحة الإدارة</span>
+            <div style="flex: 1;"></div>
+            <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="outline" hint-size="150px,36px"><span style="white-space: nowrap;">تصدير النتائج</span></x-import>
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding-right: 16px; border-right: 1px solid var(--ih-neutral-200); white-space: nowrap;">
+              <div style="width: 32px; height: 32px; border-radius: 999px; background: #023449; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #FFFFFF;">م</div>
+              <div style="display: flex; flex-direction: column;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-700);">مؤسِّس</span>
+                <span style="font-size: 11px; color: var(--ih-neutral-500); cursor: pointer; text-decoration: underline;">تسجيل خروج</span>
+              </div>
+            </div>
+          </div>
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); padding: 12px 24px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <input placeholder="رقم الحجز (IH-2026-…) أو رقم هاتف المريض" style="flex: 1; min-width: 260px; box-sizing: border-box; min-height: 40px; padding: 0 14px; border: 1.5px solid var(--ih-primary-400); border-radius: 8px; font-family: 'Cairo', sans-serif; font-size: 13.5px; color: var(--ih-neutral-800); background: var(--ih-neutral-0);">
+            <select style="flex-shrink: 0; min-width: 160px; min-height: 40px; padding: 0 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; background: var(--ih-neutral-0); font-family: 'Cairo', sans-serif; font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-800);">
+              <option>كل المزودين</option>
+              <option>مختبرات النيل للتحاليل</option>
+              <option>معامل سريدار</option>
+              <option>صيدليات الحياة</option>
+            </select>
+            <select style="flex-shrink: 0; min-width: 130px; min-height: 40px; padding: 0 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; background: var(--ih-neutral-0); font-family: 'Cairo', sans-serif; font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-800);">
+              <option>كل الحالات</option>
+              <option>مؤكد</option>
+              <option>مكتمل</option>
+              <option>ملغي</option>
+              <option>لم يحضر</option>
+            </select>
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; background: var(--ih-neutral-0); box-sizing: border-box;">
+              <span style="font-size: 13px; color: var(--ih-neutral-500);" aria-hidden="true">📅</span>
+              <span style="font-size: 13px; font-weight: 600; color: var(--ih-neutral-800); white-space: nowrap;">٥ أغسطس ٢٠٢٦ — اليوم</span>
+              <span style="font-size: 11px; color: var(--ih-neutral-400);">▾</span>
+            </div>
+          </div>
+          <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 14px 24px 24px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 10px; background: var(--ih-info-bg); border: 1px solid rgba(2,128,144,0.25); border-radius: 8px; padding: 10px 14px;">
+              <span style="flex-shrink: 0; font-size: 14px;" aria-hidden="true">ℹ</span>
+              <span style="font-size: 12.5px; color: var(--ih-primary-800); line-height: 1.6;">هذه الشاشة للمتابعة وحل مشاكل المرضى — الشريك هو من يسجّل الوصول والإكمال. الإدارة تستطيع الإلغاء بالنيابة، ويُسجَّل الإلغاء باسمها لا باسم الشريك.</span>
+            </div>
+            <div style="flex-shrink: 0; background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); overflow: hidden;">
+              <div style="display: grid; grid-template-columns: 128px 1fr 190px 128px 96px 108px 118px; align-items: center; gap: 10px; padding: 9px 18px; background: var(--ih-neutral-50); border-bottom: 1px solid var(--ih-neutral-200); font-size: 11.5px; font-weight: 700; color: var(--ih-neutral-600);">
+                <span>رقم الحجز</span><span>المريض</span><span>المزود والفرع</span><span>الموعد</span><span>المبلغ</span><span>الدفع</span><span>الحالة</span>
+              </div>
+              <sc-for list="{{ bookings }}" as="b" hint-placeholder-count="8">
+                <div style="display: grid; grid-template-columns: 128px 1fr 190px 128px 96px 108px 118px; align-items: center; gap: 10px; padding: 0 18px; min-height: 46px; border-bottom: 1px solid var(--ih-neutral-100); cursor: pointer; font-size: 13px; color: var(--ih-neutral-700); background: {{ b.rowBg }};" style-hover="background: var(--ih-neutral-50);">
+                  <span dir="ltr" style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12px; font-weight: 700; color: var(--ih-primary-700); white-space: nowrap;">{{ b.ref }}</span>
+                  <div style="min-width: 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 13px; font-weight: 700; color: var(--ih-neutral-800); white-space: nowrap;">{{ b.patient }}</span>
+                    <span dir="ltr" style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 11.5px; color: var(--ih-neutral-500); white-space: nowrap;">{{ b.phone }}</span>
+                  </div>
+                  <span style="font-size: 12.5px; color: var(--ih-neutral-600); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ b.branch }}</span>
+                  <span style="font-size: 12.5px; color: var(--ih-neutral-700); font-variant-numeric: tabular-nums;">{{ b.when }}</span>
+                  <span style="font-weight: 700; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">{{ b.amount }}</span>
+                  <span style="font-size: 12px; color: var(--ih-neutral-600);">{{ b.pay }}</span>
+                  <sc-if value="{{ b.confirmed }}" hint-placeholder-val="{{ true }}">
+                    <span style="justify-self: start; font-size: 11.5px; font-weight: 600; color: #028090; background: var(--ih-success-bg); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">● مؤكد</span>
+                  </sc-if>
+                  <sc-if value="{{ b.done }}" hint-placeholder-val="{{ false }}">
+                    <span style="justify-self: start; font-size: 11.5px; font-weight: 600; color: var(--ih-primary-700); background: var(--ih-primary-50); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">✓ مكتمل</span>
+                  </sc-if>
+                  <sc-if value="{{ b.cancelledAdmin }}" hint-placeholder-val="{{ false }}">
+                    <span style="justify-self: start; font-size: 11.5px; font-weight: 700; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 3px 10px; white-space: nowrap;">✕ ألغته الإدارة</span>
+                  </sc-if>
+                  <sc-if value="{{ b.cancelledOther }}" hint-placeholder-val="{{ false }}">
+                    <span style="justify-self: start; font-size: 11.5px; font-weight: 600; color: var(--ih-neutral-600); background: var(--ih-neutral-100); border: 1px solid var(--ih-neutral-200); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">{{ b.cancelLabel }}</span>
+                  </sc-if>
+                  <sc-if value="{{ b.noShow }}" hint-placeholder-val="{{ false }}">
+                    <span style="justify-self: start; font-size: 11.5px; font-weight: 600; color: #92400E; background: var(--ih-warning-bg); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">◍ لم يحضر</span>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+              <span style="font-size: 11.5px; color: var(--ih-neutral-500); line-height: 1.7;">الإلغاء بالنيابة يُسجَّل بـ «ألغته الإدارة» — يظهر مميّزاً عن إلغاء المريض وإلغاء الفرع في كل السجلات والكشوف.</span>
+              <div style="flex: 1;"></div>
+              <span style="font-size: 11.5px; color: var(--ih-neutral-500);">الاسترداد الآلي وإعادة الجدولة من الإدارة — مؤجَّلان لما بعد v1.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </x-import>
+  </div>
+
+  <!-- ══════════ B · الدرج ══════════ -->
+  <div data-screen-label="الحجوزات — درج التفاصيل">
+    <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; direction: rtl; flex-wrap: wrap;">
+      <span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--ih-primary-800);">B</span>
+      <span style="font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-700);">درج تفاصيل الحجز — نفس درج بوابة الشركاء، بأزرار الإدارة</span>
+      <span style="font-size: 11.5px; font-weight: 700; color: var(--ih-primary-700); background: var(--ih-primary-50); border: 1px solid var(--ih-primary-400); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">لا «تسجيل وصول» هنا — الخدمة عند الشريك</span>
+      <span style="font-size: 11.5px; font-weight: 700; color: #92400E; background: var(--ih-warning-bg); border: 1px solid rgba(217,119,6,0.35); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">العمولة «متوقعة» حتى الإكمال — الدرج لا يخالف الكشف الذي يحيل إليه</span>
+    </div>
+    <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 768 }}" url="admin.instahealth.eg/bookings/IH-2026-04930" hint-size="1366px,768px">
+      <div dir="rtl" style="--ih-surface-sidebar: #023449; position: relative; display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden;">
+        <div style="flex-shrink: 0; display: flex; align-self: stretch; background: #023449;">
+          <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.SidebarNav" brand="الإدارة" items="{{ navItems }}" active="{{ 6 }}" style="{{ sidebarStyle }}" hint-size="220px,100%"></x-import>
+        </div>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); box-shadow: var(--ih-shadow-sm); padding: 10px 24px; display: flex; align-items: center; gap: 16px; min-height: 56px; box-sizing: border-box;">
+            <div style="font-size: 16px; font-weight: 800; color: var(--ih-neutral-800);">الحجوزات</div>
+            <span style="flex-shrink: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 4px 11px; white-space: nowrap;">لوحة الإدارة</span>
+            <div style="flex: 1;"></div>
+            <span style="font-size: 12px; color: var(--ih-neutral-500);">نتيجة بحث: <span dir="ltr" style="font-family: 'Atkinson Hyperlegible', sans-serif; font-weight: 700; color: var(--ih-neutral-700);">+20 12 3344 5566</span></span>
+          </div>
+          <div style="flex: 1; overflow: hidden; min-height: 0; padding: 14px 24px 24px;">
+            <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); overflow: hidden;">
+              <div style="display: grid; grid-template-columns: 128px 1fr 190px 128px 96px 108px 118px; align-items: center; gap: 10px; padding: 9px 18px; background: var(--ih-neutral-50); border-bottom: 1px solid var(--ih-neutral-200); font-size: 11.5px; font-weight: 700; color: var(--ih-neutral-600);">
+                <span>رقم الحجز</span><span>المريض</span><span>المزود والفرع</span><span>الموعد</span><span>المبلغ</span><span>الدفع</span><span>الحالة</span>
+              </div>
+              <sc-for list="{{ searchResults }}" as="b" hint-placeholder-count="3">
+                <div style="display: grid; grid-template-columns: 128px 1fr 190px 128px 96px 108px 118px; align-items: center; gap: 10px; padding: 0 18px; min-height: 46px; border-bottom: 1px solid var(--ih-neutral-100); font-size: 13px; color: var(--ih-neutral-700); background: {{ b.rowBg }};">
+                  <span dir="ltr" style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12px; font-weight: 700; color: var(--ih-primary-700); white-space: nowrap;">{{ b.ref }}</span>
+                  <div style="min-width: 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 13px; font-weight: 700; color: var(--ih-neutral-800); white-space: nowrap;">{{ b.patient }}</span>
+                    <span dir="ltr" style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 11.5px; color: var(--ih-neutral-500); white-space: nowrap;">{{ b.phone }}</span>
+                  </div>
+                  <span style="font-size: 12.5px; color: var(--ih-neutral-600); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ b.branch }}</span>
+                  <span style="font-size: 12.5px; color: var(--ih-neutral-700); font-variant-numeric: tabular-nums;">{{ b.when }}</span>
+                  <span style="font-weight: 700; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">{{ b.amount }}</span>
+                  <span style="font-size: 12px; color: var(--ih-neutral-600);">{{ b.pay }}</span>
+                  <sc-if value="{{ b.confirmed }}" hint-placeholder-val="{{ true }}">
+                    <span style="justify-self: start; font-size: 11.5px; font-weight: 600; color: #028090; background: var(--ih-success-bg); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">● مؤكد</span>
+                  </sc-if>
+                  <sc-if value="{{ b.done }}" hint-placeholder-val="{{ false }}">
+                    <span style="justify-self: start; font-size: 11.5px; font-weight: 600; color: var(--ih-primary-700); background: var(--ih-primary-50); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">✓ مكتمل</span>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+        <div style="position: absolute; inset: 0; background: rgba(2,20,27,0.35); z-index: 20;"></div>
+        <div role="dialog" aria-modal="true" aria-label="تفاصيل الحجز" style="position: absolute; top: 0; bottom: 0; left: 0; width: 440px; z-index: 30; background: var(--ih-neutral-0); border-radius: 0 16px 16px 0; box-shadow: -18px 0 48px rgba(5,102,141,0.18); display: flex; flex-direction: column; overflow: hidden;">
+          <div style="flex-shrink: 0; background: linear-gradient(135deg, var(--ih-primary-700), var(--ih-primary-500)); padding: 16px 20px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
+              <div style="display: flex; flex-direction: column; gap: 3px;">
+                <div style="font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.75);">رقم الحجز</div>
+                <div dir="ltr" style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 17px; font-weight: 700; letter-spacing: 0.05em; color: #fff; white-space: nowrap;">IH-2026-04930</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="display: inline-flex; align-items: center; border-radius: 9999px; padding: 0.25rem 0.75rem; font-size: 0.75rem; font-weight: 600; background: rgba(255,255,255,0.18); color: #fff; white-space: nowrap;">مؤكد</span>
+                <div style="width: 32px; height: 32px; border-radius: 999px; background: rgba(255,255,255,0.16); display: flex; align-items: center; justify-content: center; font-size: 13px; color: #fff; cursor: pointer;" aria-label="إغلاق">✕</div>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 14px; border-top: 1px solid rgba(255,255,255,0.16); padding-top: 12px;">
+              <div style="font-size: 22px; font-weight: 800; color: #fff; unicode-bidi: isolate;">٣:٢٠م</div>
+              <div style="font-size: 12.5px; color: rgba(255,255,255,0.85); line-height: 1.5;">الأربعاء ٥ أغسطس ٢٠٢٦<br>مختبرات النيل — فرع التجمع الخامس</div>
+            </div>
+          </div>
+          <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 14px 20px 18px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px; background: var(--ih-neutral-50); border: 1px solid var(--ih-neutral-200); border-radius: 12px; padding: 10px 12px; flex-shrink: 0;">
+              <div style="width: 42px; height: 42px; border-radius: 999px; background: var(--ih-primary-50); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: var(--ih-primary-700); flex-shrink: 0;">م</div>
+              <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;">
+                <div style="font-size: 15px; font-weight: 700; color: var(--ih-neutral-800);">منى عبد الرحمن</div>
+                <a href="tel:+201233445566" dir="ltr" style="font-size: 13px; font-weight: 600; text-decoration: none; text-align: right;">+20 12 3344 5566</a>
+              </div>
+              <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="outline" hint-size="80px,36px"><span style="white-space: nowrap;">📞 اتصال</span></x-import>
+            </div>
+            <div style="background: var(--ih-accent-200); border: 1px solid var(--ih-accent-400); border-radius: 12px; padding: 11px 12px; display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
+              <span style="font-size: 20px; flex-shrink: 0;" aria-hidden="true">💵</span>
+              <div style="flex: 1; display: flex; flex-direction: column; gap: 1px;">
+                <div style="font-size: 13.5px; font-weight: 800; color: var(--ih-primary-800);">تحصيل نقدي عند الفرع</div>
+                <div style="font-size: 11.5px; color: var(--ih-primary-700);">لا مبلغ مدفوع مسبقاً — الدفع الإلكتروني لم يُفعَّل بعد</div>
+              </div>
+              <div dir="ltr" style="font-family: 'Cairo', sans-serif; font-size: 19px; font-weight: 800; color: var(--ih-primary-800); white-space: nowrap;">380 EGP</div>
+            </div>
+            <div style="border: 1px solid var(--ih-neutral-200); border-radius: 12px; overflow: hidden; flex-shrink: 0;">
+              <div style="padding: 10px 14px; font-size: 12px; font-weight: 700; color: var(--ih-neutral-500); background: var(--ih-neutral-50); border-bottom: 1px solid var(--ih-neutral-200);">الخدمات المحجوزة</div>
+              <sc-for list="{{ drawerServices }}" as="s" hint-placeholder-count="2">
+                <div style="padding: 11px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--ih-neutral-100);">
+                  <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                    <span style="font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-800);">{{ s.name }}</span>
+                    <sc-if value="{{ s.prep }}" hint-placeholder-val="{{ false }}">
+                      <span style="flex-shrink: 0; font-size: 10.5px; font-weight: 700; color: var(--ih-primary-800); background: var(--ih-accent-200); border: 1px solid var(--ih-accent-400); border-radius: 999px; padding: 1px 8px; white-space: nowrap;">⚠ صيام</span>
+                    </sc-if>
+                  </div>
+                  <span dir="ltr" style="font-size: 13.5px; font-weight: 700; color: var(--ih-neutral-800); white-space: nowrap;">{{ s.price }} EGP</span>
+                </div>
+              </sc-for>
+              <div style="padding: 11px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--ih-neutral-50);">
+                <span style="font-size: 13.5px; font-weight: 700; color: var(--ih-neutral-800);">الإجمالي</span>
+                <span dir="ltr" style="font-size: 16px; font-weight: 800; color: var(--ih-primary-700); white-space: nowrap;">380 EGP</span>
+              </div>
+            </div>
+            <div style="border: 1px solid var(--ih-neutral-200); border-radius: 12px; overflow: hidden; flex-shrink: 0;">
+              <div style="padding: 10px 14px; font-size: 12px; font-weight: 700; color: var(--ih-neutral-500); background: var(--ih-neutral-50); border-bottom: 1px solid var(--ih-neutral-200);">ما تراه الإدارة فقط</div>
+              <div style="padding: 11px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--ih-neutral-100);">
+                <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                  <span style="font-size: 12.5px; color: var(--ih-neutral-700);">نسبة الاتفاق يوم الاستحقاق</span>
+                  <span style="flex-shrink: 0; font-size: 10.5px; font-weight: 700; color: #92400E; background: var(--ih-warning-bg); border: 1px solid rgba(217,119,6,0.35); border-radius: 999px; padding: 2px 8px; white-space: nowrap;">عمولة متوقعة</span>
+                </div>
+                <span style="font-size: 13px; font-weight: 700; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">١٣٪ · ٤٩.٤٠ ج.م</span>
+              </div>
+              <div style="padding: 11px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--ih-neutral-100); background: var(--ih-neutral-50);">
+                <div style="display: flex; flex-direction: column; gap: 3px; min-width: 0;">
+                  <span style="font-size: 11.5px; font-weight: 700; color: var(--ih-neutral-600);">الحالة نفسها بعد الإكمال — للمقارنة</span>
+                  <span style="font-size: 11px; color: var(--ih-neutral-500); line-height: 1.55;">تصبح عمولة فعلية عند «مكتمل» (وفي الدفع الإلكتروني: عند الدفع)، ولا تظهر أصلاً على حجز ملغي أو لم يحضر.</span>
+                </div>
+                <span style="flex-shrink: 0; font-size: 13px; font-weight: 700; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">١٣٪ · ٤٩.٤٠ ج.م</span>
+              </div>
+              <div style="padding: 11px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                <span style="font-size: 12.5px; color: var(--ih-neutral-700);">كشف الشهر</span>
+                <span style="font-size: 12.5px; font-weight: 700; color: var(--ih-primary-600); text-decoration: underline; cursor: pointer;">أغسطس ٢٠٢٦ — مسودة</span>
+              </div>
+            </div>
+            <div style="flex-shrink: 0;">
+              <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.PreparationNote" title="تجهيزات المريض" hint-size="100%,84px">سكر صائم: صيام ٨ ساعات على الأقل — أُرسل التنبيه للمريضة أمس ٨:٠٠م</x-import>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px; flex-shrink: 0;">
+              <div style="font-size: 12px; font-weight: 700; color: var(--ih-neutral-500);">سجل الإجراءات</div>
+              <div style="display: flex; flex-direction: column;">
+                <sc-for list="{{ drawerHistory }}" as="h" hint-placeholder-count="4">
+                  <div style="display: grid; grid-template-columns: 18px 1fr auto; align-items: start; gap: 10px; padding-bottom: 12px;">
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; padding-top: 3px;">
+                      <span style="width: 9px; height: 9px; border-radius: 50%; background: {{ h.dot }};"></span>
+                      <span style="width: 1px; flex: 1; min-height: 14px; background: var(--ih-neutral-200);"></span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                      <span style="font-size: 13px; font-weight: 600; color: var(--ih-neutral-800);">{{ h.label }}</span>
+                      <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                        <span style="font-size: 11.5px; color: var(--ih-neutral-500);">{{ h.by }}</span>
+                        <sc-if value="{{ h.adminTag }}" hint-placeholder-val="{{ false }}">
+                          <span style="font-size: 10.5px; font-weight: 700; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 2px 8px; white-space: nowrap;">الإدارة</span>
+                        </sc-if>
+                      </div>
+                    </div>
+                    <span style="font-size: 11.5px; color: var(--ih-neutral-500); white-space: nowrap; unicode-bidi: isolate;">{{ h.at }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+          <div style="flex-shrink: 0; border-top: 1px solid var(--ih-neutral-200); background: var(--ih-neutral-0); box-shadow: 0 -4px 12px rgba(5,102,141,0.06); padding: 14px 20px; display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="md" variant="outline" hint-size="140px,40px"><span style="white-space: nowrap;">نسخ رقم الحجز</span></x-import>
+              <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="md" variant="outline" hint-size="150px,40px"><span style="white-space: nowrap;">فتح كشف الشهر</span></x-import>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+              <span style="font-size: 11.5px; color: var(--ih-neutral-500); line-height: 1.6;">تسجيل الوصول والإكمال من الشريك.</span>
+              <span style="font-size: 12.5px; font-weight: 700; color: var(--ih-error); cursor: pointer; text-decoration: underline; white-space: nowrap;">إلغاء بالنيابة عن المريضة</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </x-import>
+  </div>
+
+  <!-- ══════════ C · الإلغاء بالنيابة ══════════ -->
+  <div data-screen-label="الحجوزات — تأكيد الإلغاء بالنيابة">
+    <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; direction: rtl; flex-wrap: wrap;">
+      <span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--ih-primary-800);">C</span>
+      <span style="font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-700);">الإلغاء بالنيابة — يُسجَّل «ألغته الإدارة» لا إلغاء مريض</span>
+    </div>
+    <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 620 }}" url="admin.instahealth.eg/bookings/IH-2026-04930" hint-size="1366px,620px">
+      <div dir="rtl" style="--ih-surface-sidebar: #023449; position: relative; display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden;">
+        <div style="flex-shrink: 0; display: flex; align-self: stretch; background: #023449;">
+          <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.SidebarNav" brand="الإدارة" items="{{ navItems }}" active="{{ 6 }}" style="{{ sidebarStyle }}" hint-size="220px,100%"></x-import>
+        </div>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); box-shadow: var(--ih-shadow-sm); padding: 10px 24px; display: flex; align-items: center; gap: 16px; min-height: 56px; box-sizing: border-box;">
+            <div style="font-size: 16px; font-weight: 800; color: var(--ih-neutral-800);">الحجوزات</div>
+            <span style="flex-shrink: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 4px 11px; white-space: nowrap;">لوحة الإدارة</span>
+          </div>
+          <div style="flex: 1; min-height: 0;"></div>
+        </div>
+        <div class="ih-anim" style="position: absolute; inset: 0; z-index: 60; background: rgba(2,20,27,0.5); display: flex; align-items: center; justify-content: center; padding: 32px; animation: ih-fade-in 180ms linear;">
+          <div class="ih-anim" style="width: 580px; max-width: 100%; background: var(--ih-neutral-0); border-radius: 24px; box-shadow: 0 24px 60px rgba(2,20,27,0.35); overflow: hidden; animation: ih-dialog-in 250ms cubic-bezier(0.22,1,0.36,1);">
+            <div style="padding: 20px 24px 0; display: flex; flex-direction: column; gap: 8px;">
+              <span style="font-size: 17px; font-weight: 800; color: var(--ih-neutral-800);">إلغاء حجز منى عبد الرحمن بالنيابة عنها</span>
+              <span style="font-size: 13px; color: var(--ih-neutral-600); line-height: 1.7;">يتحرر الموعد (٣:٢٠م اليوم) لمريض آخر فوراً، وتصل المريضة رسالة إلغاء، ويختفي الحجز من قائمة الفرع لهذا اليوم. اتصل بها قبل الإلغاء إن لم تكن هي من طلبه.</span>
+            </div>
+            <div style="margin: 16px 24px; border: 1px solid var(--ih-neutral-200); border-radius: 12px; overflow: hidden;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 16px; border-bottom: 1px solid var(--ih-neutral-100); background: #023449;">
+                <span style="font-size: 12.5px; font-weight: 700; color: #FFFFFF;">يُسجَّل في التاريخ باسم: ألغته الإدارة</span>
+                <span style="font-size: 11.5px; color: rgba(255,255,255,0.8);">مؤسِّس · اليوم</span>
+              </div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 16px; border-bottom: 1px solid var(--ih-neutral-100);">
+                <span style="font-size: 12.5px; color: var(--ih-neutral-700);">الموعد يتحرر للحجز</span>
+                <span style="font-size: 12.5px; font-weight: 700; color: var(--ih-neutral-800);">٣:٢٠م — بعد ساعتين</span>
+              </div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 16px; border-bottom: 1px solid var(--ih-neutral-100);">
+                <span style="font-size: 12.5px; color: var(--ih-neutral-700);">أثره على كشف أغسطس</span>
+                <span style="font-size: 12.5px; font-weight: 700; color: var(--ih-neutral-800);">لا عمولة على حجز ملغي</span>
+              </div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 16px; background: var(--ih-success-bg);">
+                <span style="font-size: 12.5px; font-weight: 700; color: #028090;">لا مبلغ لاسترداده</span>
+                <span style="font-size: 11.5px; color: #028090;">الحجز نقدي — لم يُدفع شيء</span>
+              </div>
+            </div>
+            <div style="padding: 0 24px 16px; display: flex; flex-direction: column; gap: 8px;">
+              <label style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-700);">سبب الإلغاء <span style="font-weight: 500; color: var(--ih-neutral-500);">(مطلوب — يظهر في السجل، لا يُرسل للمريضة)</span></label>
+              <select style="min-height: 44px; padding: 0 12px; border: 1.5px solid var(--ih-primary-400); border-radius: 8px; background: var(--ih-neutral-0); font-family: 'Cairo', sans-serif; font-size: 14px; font-weight: 600; color: var(--ih-neutral-800);">
+                <option>طلبت المريضة الإلغاء هاتفياً</option>
+                <option>الفرع لا يستطيع تنفيذ الخدمة اليوم</option>
+                <option>حجز مكرر لنفس المريضة</option>
+                <option>خطأ في البيانات</option>
+              </select>
+            </div>
+            <div style="padding: 0 24px 18px; display: flex; align-items: flex-start; gap: 10px;">
+              <span style="flex-shrink: 0; width: 20px; height: 20px; margin-top: 1px; border: 1.5px solid var(--ih-neutral-300); border-radius: 4px; background: var(--ih-neutral-0); cursor: pointer;"></span>
+              <span style="font-size: 12.5px; color: var(--ih-neutral-700); line-height: 1.6;">أفهم أن الإلغاء نهائي ولا يمكن التراجع عنه، وأن إعادة الحجز تتم بحجز جديد.</span>
+            </div>
+            <div style="padding: 14px 24px; background: var(--ih-neutral-50); border-top: 1px solid var(--ih-neutral-200); display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+              <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="md" variant="ghost" hint-size="120px,40px"><span style="white-space: nowrap; color: var(--ih-neutral-600);">تراجع</span></x-import>
+              <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="md" variant="destructive" hint-size="220px,40px"><span style="white-space: nowrap;">إلغاء الحجز وتحرير الموعد</span></x-import>
+            </div>
+          </div>
+        </div>
+      </div>
+    </x-import>
+  </div>
+
+  <!-- ══════════ D · تحميل ولا نتائج ══════════ -->
+  <div data-screen-label="الحجوزات — تحميل ولا نتائج">
+    <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; direction: rtl;">
+      <span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--ih-primary-800);">D</span>
+      <span style="font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-700);">تحميل، ولا نتائج لبحث برقم حجز غير موجود</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+      <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 500 }}" url="admin.instahealth.eg/bookings" hint-size="1366px,500px">
+        <div dir="rtl" style="--ih-surface-sidebar: #023449; display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden;">
+          <div style="flex-shrink: 0; display: flex; align-self: stretch; background: #023449;">
+            <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.SidebarNav" brand="الإدارة" items="{{ navItems }}" active="{{ 6 }}" style="{{ sidebarStyle }}" hint-size="220px,100%"></x-import>
+          </div>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+            <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); box-shadow: var(--ih-shadow-sm); padding: 10px 24px; display: flex; align-items: center; gap: 16px; min-height: 56px; box-sizing: border-box;">
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <div style="font-size: 16px; font-weight: 800; color: var(--ih-neutral-800);">الحجوزات</div>
+                <div class="ih-skel" style="width: 170px; height: 10px; border-radius: 4px; background: var(--ih-neutral-200); animation: ih-shimmer 1400ms ease-in-out infinite;"></div>
+              </div>
+              <span style="flex-shrink: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 4px 11px; white-space: nowrap;">لوحة الإدارة</span>
+            </div>
+            <div style="flex: 1; min-height: 0; padding: 16px 24px; display: flex; flex-direction: column;">
+              <div style="flex-shrink: 0; background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); overflow: hidden;">
+                <div style="display: grid; grid-template-columns: 128px 1fr 190px 128px 96px 108px 118px; align-items: center; gap: 10px; padding: 9px 18px; background: var(--ih-neutral-50); border-bottom: 1px solid var(--ih-neutral-200); font-size: 11.5px; font-weight: 700; color: var(--ih-neutral-600);">
+                  <span>رقم الحجز</span><span>المريض</span><span>المزود والفرع</span><span>الموعد</span><span>المبلغ</span><span>الدفع</span><span>الحالة</span>
+                </div>
+                <sc-for list="{{ skeletonRows }}" as="s" hint-placeholder-count="4">
+                  <div style="display: grid; grid-template-columns: 128px 1fr 190px 128px 96px 108px 118px; align-items: center; gap: 10px; padding: 0 18px; min-height: 46px; border-bottom: 1px solid var(--ih-neutral-100);">
+                    <div class="ih-skel" style="width: 100px; height: 12px; border-radius: 4px; background: var(--ih-neutral-200); animation: ih-shimmer 1400ms ease-in-out infinite;"></div>
+                    <div class="ih-skel" style="width: 200px; height: 12px; border-radius: 4px; background: var(--ih-neutral-200); animation: ih-shimmer 1400ms ease-in-out infinite;"></div>
+                    <div class="ih-skel" style="width: 150px; height: 12px; border-radius: 4px; background: var(--ih-neutral-200); animation: ih-shimmer 1400ms ease-in-out infinite;"></div>
+                    <div class="ih-skel" style="width: 90px; height: 12px; border-radius: 4px; background: var(--ih-neutral-200); animation: ih-shimmer 1400ms ease-in-out infinite;"></div>
+                    <div class="ih-skel" style="width: 60px; height: 12px; border-radius: 4px; background: var(--ih-neutral-200); animation: ih-shimmer 1400ms ease-in-out infinite;"></div>
+                    <div class="ih-skel" style="width: 70px; height: 12px; border-radius: 4px; background: var(--ih-neutral-200); animation: ih-shimmer 1400ms ease-in-out infinite;"></div>
+                    <div class="ih-skel" style="width: 74px; height: 18px; border-radius: 999px; background: var(--ih-neutral-200); animation: ih-shimmer 1400ms ease-in-out infinite;"></div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+      </x-import>
+      <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 560 }}" url="admin.instahealth.eg/bookings?q=IH-2026-99999" hint-size="1366px,560px">
+        <div dir="rtl" style="--ih-surface-sidebar: #023449; display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden;">
+          <div style="flex-shrink: 0; display: flex; align-self: stretch; background: #023449;">
+            <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.SidebarNav" brand="الإدارة" items="{{ navItems }}" active="{{ 6 }}" style="{{ sidebarStyle }}" hint-size="220px,100%"></x-import>
+          </div>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+            <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); box-shadow: var(--ih-shadow-sm); padding: 10px 24px; display: flex; align-items: center; gap: 16px; min-height: 56px; box-sizing: border-box;">
+              <div style="font-size: 16px; font-weight: 800; color: var(--ih-neutral-800);">الحجوزات</div>
+              <span style="flex-shrink: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 4px 11px; white-space: nowrap;">لوحة الإدارة</span>
+            </div>
+            <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); padding: 12px 24px; display: flex; align-items: center; gap: 10px;">
+              <input value="IH-2026-99999" dir="ltr" style="flex: 1; min-width: 260px; box-sizing: border-box; min-height: 40px; padding: 0 14px; border: 1.5px solid var(--ih-primary-400); border-radius: 8px; font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 13.5px; color: var(--ih-neutral-800); background: var(--ih-neutral-0); text-align: left;">
+            </div>
+            <div style="flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 24px;">
+              <div style="max-width: 500px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;">
+                <span style="font-size: 28px;" aria-hidden="true">🔍</span>
+                <span style="font-size: 17px; font-weight: 800; color: var(--ih-neutral-800);">لا حجز بهذا الرقم</span>
+                <span style="font-size: 13px; color: var(--ih-neutral-600); line-height: 1.7;">تأكّد من الرقم كما أرسلناه للمريض (IH-٢٠٢٦-٥ أرقام)، أو ابحث برقم هاتفه — الهاتف يجد كل حجوزاته حتى الملغاة.</span>
+                <div style="margin-top: 4px; display: flex; gap: 8px;">
+                  <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="md" hint-size="170px,40px"><span style="white-space: nowrap;">ابحث برقم الهاتف</span></x-import>
+                  <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="md" variant="outline" hint-size="150px,40px"><span style="white-space: nowrap;">حجوزات اليوم</span></x-import>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1460, &quot;height&quot;: 3300}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      navItems: [
+        { icon: "📊", label: "نظرة عامة" },
+        { icon: "📈", label: "التحليلات" },
+        { icon: "🧾", label: "العمولات والفواتير" },
+        { icon: "🏥", label: "المزودون والفروع" },
+        { icon: "🧪", label: "كتالوج الخدمات" },
+        { icon: "👤", label: "حسابات المزودين" },
+        { icon: "📋", label: "الحجوزات" },
+      ],
+      sidebarStyle: { height: "100%", alignSelf: "stretch", flexShrink: 0, boxSizing: "border-box" },
+      skeletonRows: [1, 2, 3, 4],
+      bookings: [
+        { ref: "IH-2026-04930", patient: "منى عبد الرحمن", phone: "+20 12 3344 5566", branch: "النيل — التجمع الخامس", when: "اليوم ٣:٢٠م", amount: "٣٨٠ ج.م", pay: "نقدي", confirmed: true, rowBg: "transparent" },
+        { ref: "IH-2026-04928", patient: "طارق سليم", phone: "+20 10 9988 7766", branch: "النيل — المهندسين", when: "اليوم ٢:٠٠م", amount: "١٦٥ ج.م", pay: "نقدي", confirmed: true, rowBg: "transparent" },
+        { ref: "IH-2026-04921", patient: "هالة فتحي", phone: "+20 11 2255 4477", branch: "سريدار — الدقي", when: "اليوم ١٢:٤٠م", amount: "٢٤٠ ج.م", pay: "نقدي", done: true, rowBg: "transparent" },
+        { ref: "IH-2026-04917", patient: "عمر خالد", phone: "+20 12 7766 1122", branch: "الحياة — المعادي", when: "اليوم ١١:٢٠ص", amount: "١٩٥ ج.م", pay: "نقدي", done: true, rowBg: "transparent" },
+        { ref: "IH-2026-04915", patient: "دينا مراد", phone: "+20 10 3344 9900", branch: "النيل — التجمع الخامس", when: "اليوم ١٠:٤٠ص", amount: "١٢٠ ج.م", pay: "نقدي", cancelledAdmin: true, rowBg: "rgba(2,52,73,0.045)" },
+        { ref: "IH-2026-04911", patient: "سيف الدين حسن", phone: "+20 11 8899 3344", branch: "سريدار — التجمع الخامس", when: "اليوم ١٠:٠٠ص", amount: "٢٣٠ ج.م", pay: "نقدي", cancelledOther: true, cancelLabel: "✕ ألغاه المريض", rowBg: "transparent" },
+        { ref: "IH-2026-04908", patient: "ياسمين عادل", phone: "+20 12 4455 6677", branch: "الحياة — الرحاب", when: "اليوم ٩:٣٠ص", amount: "١٩٥ ج.م", pay: "نقدي", cancelledOther: true, cancelLabel: "✕ ألغاه الفرع", rowBg: "transparent" },
+        { ref: "IH-2026-04902", patient: "محمود سامي", phone: "+20 10 1122 3344", branch: "النيل — المهندسين", when: "اليوم ٩:٠٠ص", amount: "٣٠٠ ج.م", pay: "نقدي", noShow: true, rowBg: "transparent" },
+      ],
+      searchResults: [
+        { ref: "IH-2026-04930", patient: "منى عبد الرحمن", phone: "+20 12 3344 5566", branch: "النيل — التجمع الخامس", when: "اليوم ٣:٢٠م", amount: "٣٨٠ ج.م", pay: "نقدي", confirmed: true, rowBg: "var(--ih-primary-50)" },
+        { ref: "IH-2026-04703", patient: "منى عبد الرحمن", phone: "+20 12 3344 5566", branch: "النيل — التجمع الخامس", when: "٢٢ يوليو ١:٠٠م", amount: "١٦٥ ج.م", pay: "نقدي", done: true, rowBg: "transparent" },
+        { ref: "IH-2026-04488", patient: "منى عبد الرحمن", phone: "+20 12 3344 5566", branch: "سريدار — الدقي", when: "٩ يوليو ١١:٤٠ص", amount: "٢٤٠ ج.م", pay: "نقدي", done: true, rowBg: "transparent" },
+      ],
+      drawerServices: [
+        { name: "سكر صائم", prep: true, price: "80" },
+        { name: "صورة دم كاملة", price: "150" },
+        { name: "فيتامين د (25-OH)", price: "150" },
+      ],
+      drawerHistory: [
+        { dot: "var(--ih-primary-400)", label: "أُرسل تنبيه التحضير للمريضة", by: "النظام — رسالة نصية", at: "أمس ٨:٠٠م" },
+        { dot: "var(--ih-primary-600)", label: "فتحت الإدارة الحجز للمراجعة", by: "مؤسِّس", adminTag: true, at: "اليوم ١:١٠م" },
+        { dot: "#028090", label: "تأكيد الحجز — حُجز الموعد", by: "منى عبد الرحمن — التطبيق", at: "٣ أغسطس ٧:٤٥م" },
+        { dot: "var(--ih-neutral-300)", label: "إنشاء الحجز", by: "منى عبد الرحمن — التطبيق", at: "٣ أغسطس ٧:٤٤م" },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>
