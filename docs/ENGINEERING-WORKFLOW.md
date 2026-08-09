@@ -813,6 +813,21 @@ Two more, both found while capturing P02's screenshots:
   will do on the very next render — and note that `next dev` will not save you,
   because the redirect is correct behaviour, not a bug.
 
+- **⚠ THE COROLLARY, WHICH COST A SECOND ATTEMPT: on that revalidation the page
+  must render the SAME COMPONENT TYPE, or React unmounts the old one and
+  destroys its state.** Making the acknowledgement server state stopped the
+  redirect, and the enroll page still returned `<AdminEnrollCard>` before the
+  action and `<AdminRecoveryCodesRecovery>` after it. Different element type at
+  the same position → the instance holding the eight one-time codes was thrown
+  away → the founder scanned a QR and was told the codes "were shown and not
+  confirmed", having seen them zero times. **In production, on the real
+  account.** The fix is one client component that takes the state as a PROP, so
+  the type never changes.
+  ⚠ **And the reason it shipped: I re-tested from the BROKEN state.** By then the
+  account already had codes pending, so the run exercised the regenerate path
+  and never re-ran a fresh enrollment. **Re-verify a fix from the state the bug
+  starts in, not the state the bug left behind** — reset the fixture first.
+
 - **Read the screenshot you just captured.** The first P02 drawer capture looked
   fine in the accessibility tree but showed the scrim confined to `<main>`, with
   the sidebar and header undimmed — the design anchors both to the root shell.
