@@ -21,7 +21,9 @@ Keep **Current status** and **Next up** accurate at all times.
 
 ## Current status
 
-**Phase:** 🎉 **MILESTONE ONE — the loop is closed.** Patient books on mobile (F01→F07) → the branch desk sees it, records the outcome, opens the detail drawer, cancels on the patient's behalf, manages its own prices, reads its slot picture and maintains its own contact details (P01–P05 — every sidebar surface is live). The four shipped identity/money holes are all closed and the repo passed a full-history secret audit (2026-08-01). **V1 collects no money — cash at the branch** (2026-08-04 partner-trust decision), which retires the "payments are simulated" launch blocker outright. Next: F08 reviews (needs the review writer function), A-series admin; card via PayTabs returns post-market-proof
+**Phase:** 🎉 **MILESTONE ONE — the loop is closed.** Patient books on mobile (F01→F07) → the branch desk sees it, records the outcome, opens the detail drawer, cancels on the patient's behalf, manages its own prices, reads its slot picture and maintains its own contact details (P01–P05 — every sidebar surface is live). The four shipped identity/money holes are all closed and the repo passed a full-history secret audit (2026-08-01). **V1 collects no money — cash at the branch** (2026-08-04 partner-trust decision), which retires the "payments are simulated" launch blocker outright. **A01 opened the admin portal** (2026-08-08): the founder's account exists, TOTP
+is live, and `/admin` is gated four ways. Next: A02 commission statement, F08
+reviews (needs the review writer function); card via PayTabs returns post-market-proof
 ⚠ **Two founder decisions are open and blocking nothing yet: the LICENSE / IP posture and whether vulnerability detail belongs in a public PROGRESS.** Both in Known risks.
 **Milestone target:** Labs + Scans booking working end-to-end at Town Hospital & Saridar Labs
 **Environment:** Supabase `instahealth-dev` live (Frankfurt). Design system published in Claude Design.
@@ -68,8 +70,15 @@ visual contract. Then specs → Claude Code.
 - [x] **F07** — ✅ DONE. Mobile: My Bookings list, detail & cancel (see Shipped)
 - [x] **PROF-01** — ✅ DONE. Mobile: profile tab + account deletion (see Shipped)
 - [ ] **F08** — Mobile: reviews (needs a review writer function — the
-      `update_branch_profile` shape)
-- [ ] **A01–A06** — Web: admin panel
+      `update_branch_profile` shape). Its design landed 2026-08-05
+      («Reviews Display Addendum»).
+- [x] **A01** — ✅ DONE. Web: admin auth (password + TOTP + recovery) & the /admin
+      shell (see Shipped). **The genesis admin exists, so every
+      `get_user_role() = 'admin'` policy in the schema is LIVE for the first
+      time** — read the ruling-③ table in the A01 entry before starting A02.
+- [ ] **A02** — Web: commission & invoicing statement. ⚠ OPENS WITH A DECISION:
+      the eleven admin `ALL` policies A01 made reachable (table in the A01 entry).
+- [ ] **A03–A06** — Web: providers & branches, catalog, staff accounts, oversight
 - [ ] **006_practitioners.sql + doctor booking** — after labs/scans proven
 
 **First milestone:** patient books on mobile at Town/Saridar → pays → gets SMS + confirmation →
@@ -78,6 +87,241 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 ---
 
 ## Shipped
+
+### 2026-08-08 · A01 — Admin auth (password + TOTP + recovery) & the /admin shell
+
+The admin portal exists. The founder signs in with email + password, is forced
+to replace the seeded temp password, enrols an authenticator, saves eight
+recovery codes, and lands in the shell — sidebar, header, seven surfaces, admin
+accent. Role-gated hard.
+
+**⚠ THE GENESIS ADMIN IS THE HEADLINE, not the login screen.** `admin_users` had
+ZERO rows since the schema was written, so `get_user_role()` could only ever
+return `'patient'` and **every `admin` policy in the database was unreachable
+dead code**. A01 is what switches twelve of them on. The consequences are the
+ruling-③ table below, and they are A02's opening decision.
+
+**Founder ruling ① — migration PLUS seed, split by concern.** DDL is applied via
+MCP `apply_migration`, which takes NO variables, so a migration could only carry
+the temp password as a literal — in a PUBLIC repo. And migrations run once,
+which is the opposite of the replayable bootstrap prod needs. So: schema in
+`20260808161645` (+ two follow-ups), account in
+`supabase/seeds/005_admin_users.sql`, following `003_provider_users.sql`
+exactly — psql `-v`, documented variable NAMES only, `auth.users` +
+`auth.identities` both written (an identity-less user cannot sign in),
+`ON CONFLICT … SET` upsert. Verified idempotent; login proven from the browser.
+
+---
+
+#### ⚠ FOUNDER RULING ② — THE SPIKE SAYS **NO**. The fallback ships.
+
+26/26 Node checks against the live project, run BEFORE any UI existed. The
+verdict is not close:
+
+- `auth.admin.mfa.*` exposes exactly **`deleteFactor, listFactors`**. No
+  `challenge`, no `verify`, nothing matching `/aal|assurance|elevat/`.
+- Supabase's own MFA reference states it: **"Recovery codes are not supported."**
+- `mfa.verify` refuses a recovery-code-shaped string (`Invalid TOTP code
+entered`) — there is no slot to put one in.
+- The only way a server could satisfy `verify` is to read
+  `auth.mfa_factors.secret` — stored in **PLAINTEXT**, confirmed by reading it —
+  and compute the user's own code. That is **forging** the second factor, which
+  is exactly the "lookalike that bypasses MFA" SPEC-A01 forbids.
+
+So a recovery code buys **one** thing: unbind the lost authenticator, kill every
+session, force re-enrollment. Proven end to end, in the browser, against live
+dev: factor deleted · sessions 0 · **1 code consumed, 7 live, the old batch of 8
+superseded** · lockout counter cleared · re-enrollment restored aal2.
+
+**⚠ THE GATE HAS FOUR STATES, NOT THREE — the fourth is new information.**
+Supabase access tokens are **stateless with a 60-minute TTL** (measured: 3600s),
+so "kill every session" does **not** revoke a token already issued. A stale
+token keeps its `aal2` claim for up to an hour after a recovery reset — the
+exact window the reset exists to close.
+
+| session state          | gate decision                              |
+| ---------------------- | ------------------------------------------ |
+| aal1 + verified factor | the TOTP verify step only                  |
+| aal1 + NO factor       | the ENROLLMENT screen only                 |
+| aal2 + verified factor | everything                                 |
+| **aal2 + NO factor**   | **stale token → enrollment, never access** |
+
+So the gate never trusts the `aal` claim alone: `get_admin_auth_state()` reads
+`auth.mfa_factors` live inside a SECURITY DEFINER function (no client can see
+that table) and pairs the two. Gating on aal2 alone in the no-factor case would
+**brick** the account — no factor means aal2 is unreachable, and if aal2 were
+required to enrol there would be no way back in, ever.
+
+**The accepted window, stated rather than discovered:** between the reset and
+re-enrollment the account is on password alone. Bounded — the next sign-in is
+forced through enrollment before it reaches any surface.
+
+---
+
+#### ⚠ FOUNDER RULING ③ — every admin policy, exercised for the first time
+
+`get_user_role()` returns `'admin'`. Reads + REVERSIBLE writes on throwaway rows
+only; all reverted (bookings back to 42, fixtures untouched).
+
+| table / fn                      | op                       | outcome                                                    | intent                        |      |
+| ------------------------------- | ------------------------ | ---------------------------------------------------------- | ----------------------------- | ---- |
+| 17 tables                       | SELECT                   | ALLOWED                                                    | allow                         | ✓    |
+| `service_categories`            | INSERT/UPDATE/DELETE     | ALLOWED                                                    | allow — A04's launch switch   | ✓    |
+| `admin_users`                   | SELECT                   | ALLOWED                                                    | allow                         | ✓    |
+| `admin_users`                   | INSERT (self-escalate)   | **DENIED 42501**                                           | deny                          | ✓    |
+| `admin_users`                   | UPDATE                   | **DENIED 42501**                                           | deny                          | ✓    |
+| `admin_recovery_codes`          | SELECT / INSERT          | **DENIED 42501**                                           | deny                          | ✓    |
+| `admin_lockouts`                | SELECT / INSERT          | **DENIED 42501**                                           | deny                          | ✓    |
+| `users`                         | UPDATE `phone`           | DENIED 42501 — by **column GRANT**, not the policy         | deny                          | ✓    |
+| `branches`                      | UPDATE rating/allocation | **ALLOWED — wrote rating=5, allocation=99**                | deny (marketplace integrity)  | ⚠    |
+| `slots`                         | INSERT + UPDATE capacity | **ALLOWED — wrote capacity=99**                            | deny                          | ⚠    |
+| `bookings`                      | INSERT w/ money          | **ALLOWED — `total=1, commission=0, payment_status=paid`** | deny (server-derived money)   | ⚠    |
+| `bookings`                      | UPDATE money             | **ALLOWED — rewrote total to 99999**                       | deny                          | ⚠    |
+| `payments`                      | INSERT                   | **ALLOWED — declared a payment `completed`**               | deny (§8 settlement boundary) | ⚠    |
+| `reviews`                       | UPDATE `is_flagged`      | 0 rows — **no admin write policy exists**                  | moderation unspecced          | flag |
+| `get_admin_auth_state`          | EXECUTE                  | ALLOWED                                                    | allow                         | ✓    |
+| `generate_admin_recovery_codes` | EXECUTE @aal1            | REFUSED `aal2_required`                                    | deny at aal1                  | ✓    |
+
+**A01 closed exactly one of these — `admin_users`, the one the founder
+delegated.** The other eleven are flagged, not fixed: deciding per table what
+the admin panel may legitimately write IS A02–A06's scope, and closing them
+blind would break the A-series before it is specced.
+
+**Why it is this wide:** every table except `users` still carries **blanket
+all-column INSERT+UPDATE grants to `anon` and `authenticated`**, so RLS policy is
+the only gate. `users` is the sole exception, and only **by accident** —
+REFACTOR 2/N narrowed its grants (INSERT 2/11, UPDATE 6/11) for unrelated
+reasons, and that narrowing is what stops an admin writing `users.phone` despite
+a policy that says ALL. That is the clearest unreachable-BY-ACCIDENT case in the
+schema.
+
+**⚠ THE METHOD MATTERS, because the first matrix was wrong and looked right.**
+RLS denies by **filtering rows**, not by raising — an UPDATE against an id that
+matches nothing returns "0 rows" whether the policy allows it or forbids it. Only
+a GRANT failure raises 42501. Two more probes returned `23503`, which is a
+FOREIGN-KEY violation, not a denial. A conclusive probe needs a row that really
+exists and that we are allowed to break, so the second pass created real
+throwaway rows and destroyed them. **A policy probe that cannot fail is not a
+probe.**
+
+---
+
+#### Three decisions A01 made
+
+1. **`admin_users` is no longer client-writable.** The `ALL` policy became
+   SELECT-only and INSERT/UPDATE/DELETE were REVOKED from `anon`+`authenticated`
+   — policy and grant are independent mechanisms and both had to shut.
+   Adding/removing an admin is runbook + seed in v1.
+2. **The lockout table is service-role/definer only** — zero policies, RLS on,
+   grants revoked. Decided up front so `authz:check` had a recorded answer
+   before the build, exactly as asked.
+3. **No self-service password reset**, per the design. The manual procedure is
+   `docs/runbooks/RUNBOOK-admin-account.md`, which is also A01's answer to
+   "where does a deliberate absence of automation get written down".
+
+#### ⚠ A bug found by RUNNING the flow, not reading it (§9's whole point)
+
+Enrollment succeeded, the session became aal2 — and Next revalidated the route
+after the server action, which re-ran the enroll page's gate, saw a
+fully-authorised admin, and **redirected to `/admin/overview`, destroying eight
+one-time recovery codes before they were ever displayed.** They exist only as
+bcrypt hashes, so they were unrecoverable: «تُعرض مرة واحدة» would have shown
+them ZERO times, and the founder's only recovery path would have been a set of
+codes nobody saw.
+
+The gate cannot be told "the client is holding codes" — the server has no way to
+know. So the fact became SERVER STATE (`admin_users.recovery_codes_acknowledged`,
+migration `20260808231917`): generated → FALSE, the checkbox → TRUE, and the gate
+keeps routing to enrollment until it flips. On a reload the plaintext really is
+gone, so that screen says so plainly and offers a regenerate — which turns
+«ولّد مجموعة جديدة بعد الدخول» from decoration into the actual remedy. The E2E
+carries the regression guard.
+
+**A second bug, same origin:** `uuid_generate_v4()` also lives in the
+`extensions` schema, so a bare call inside a body pinned to
+`search_path = public` raises 42883. The pgcrypto calls were already qualified;
+this one was missed. **A column DEFAULT is immune** (its expression stores the
+resolved OID), which is why the table inserted fine and only the function failed
+— an asymmetry that survives any read of the migration.
+
+#### Built to the handoff
+
+`Admin - Login and TOTP.dc.html`, all four drawn screens: the two-panel password
+step, the TOTP row with its 30-second validity bar, the wrong-code state with
+attempts-remaining + clock-drift hint, and the enrollment card with QR, manual
+key and the eight codes. Everything new went through the **contract**, not the
+page — `ADMIN_ACCENT` (the deep-ink `#023449` that distinguishes الإدارة from
+بوابة الشركاء, a literal in every admin screen with no `_ds` token),
+`ADMIN_PILL`, `ADMIN_SOON_CHIP`, `CODE_CELL` + `CODE_CELL_STATES`,
+`TOTP_VALIDITY_BAR`, `RECOVERY_CODE_CELL`.
+
+**التحليلات renders its APPROVED design, not a placeholder** — five questions,
+each with the evidence it needs — because that screen is finished and rendering
+it as a stub would throw it away. The other six carry their real title, a
+«قريباً» chip, and what they will do.
+
+**Composed from the contract where the bundle has no screen** (§9's second
+branch, which SPEC-A01 explicitly invokes): the forced password change and the
+recovery-code entry path. Both reuse the login screen's own anatomy.
+
+**Two deviations, flagged for the bundle's next revision:** the recovery-code
+copy now says a code **unbinds the authenticator** rather than logging you in
+(ruling ② changed the mechanism, so the copy follows); and the code alphabet
+excludes O/I/L/U/0/1 for legibility — the SHAPE (`XXXX-XXXX`) is the design's.
+
+**Two VIEW-01 lessons applied at birth:** the TOTP cells FLEX rather than taking
+a pixel width measured on this machine, and the Analytics evidence chip uses an
+`auto` track, not the design's fixed 160px — that chip is nowrap Arabic, which
+renders wider on Linux CI than on Windows.
+
+#### Verified
+
+**Live browser run, end to end:** first login → forced change → enrollment (real
+QR, real secret, real TOTP) → 8 codes → checkbox gates continue (asserted
+disabled before, enabled after) → shell. Returning login. Wrong code → «بقيت لك
+٤ محاولات», the SERVER's counter, plus the clock-drift hint. Recovery code →
+factor unbound, sessions killed, code consumed, back to enrollment.
+**Cross-portal both ways:** an admin visiting `/dashboard/today` gets the
+provider gate's `?rejected=1`; a provider at the admin door is refused and
+signed back out.
+
+**Gates:** format, lint, typecheck, 397 core + 88 mobile + 25 tokens unit tests,
+web build + mobile export, `pnpm audit --audit-level=high` all green.
+`authorization-surface.json` regenerated — the diff is +2 zero-policy tables,
+`admin_users` ALL→SELECT, +7 functions, **zero identity parameters**. Verified
+against the live catalog rather than assumed. `database.ts` regenerated and
+checked mechanically: 19/19 tables, 33/33 functions, no drift (the P05 lesson —
+a hand-edited `database.ts` shipped a real bug).
+
+⚠ **`pnpm audit` needed the §4 fix order for the fourth time.** New upstream
+advisories (nanoid, js-yaml ×2, postcss) landed mid-PR — all via `postcss`/Expo,
+**none from `qrcode`**, whose whole tree is three packages. Fixed by overrides.
+`image-size` has NO patched version at all and is build-tooling only
+(metro/@expo/cli, never shipped), so its two GHSAs are ignored with this note;
+**revisit at the Expo SDK upgrade.**
+
+#### For A02
+
+- The shell's conventions to reuse: `getAdminContext()` for the gate,
+  `AdminHeader`/`ComingSoonSurface` for chrome, `ADMIN_NAV_ITEMS` for the
+  sidebar, `data-testid="admin-*"` throughout.
+- **Open with the eleven-policy decision above.** A02 touches `bookings` and
+  `payments` — the two worst rows in that table.
+- `DECISION-commission-attachment` is unchanged: auto-closed
+  (`closed_by = 'system'`) bookings are EXCLUDED and must be visibly footnoted.
+- The `admin-recovery-reset` Edge Function is the second service-role function
+  after `settle-payment`; it re-checks authorization itself rather than
+  inheriting the RPC's check, and carries NO CORS headers because its only
+  caller is a server action.
+
+#### Founder actions
+
+1. **Do the real first login** at `/admin/login` and store the eight recovery
+   codes off-device. The dev account is reset to a pristine first-login state.
+2. **Add `ADMIN_TEST_EMAIL` / `ADMIN_TEST_PASSWORD` as GitHub secrets** or the
+   admin E2E SKIPS in CI — and a skipped suite looks exactly like a passing one.
+3. **Turn on `auth_leaked_password_protection`** before choosing the real
+   password (still disabled — Known risks).
 
 ### 2026-08-04 · VIEW-01 — dashboard viewport hardening (not responsiveness)
 
@@ -2478,6 +2722,37 @@ _Next entry after SETUP-02._
   they were dropped outright. When P05 needs to edit a branch profile and F09
   needs to write a review, each gets a writer function in the
   `update_branch_service` shape — the write-path rule, now in CLAUDE.md §8.
+
+- **⚠⚠ ELEVEN ADMIN `ALL` POLICIES ARE NOW LIVE — A01 switched them on, and
+  A02 must open by deciding what to do about them.** Until 2026-08-08
+  `admin_users` had zero rows, so `get_user_role()` could never return `'admin'`
+  and every admin policy was unreachable dead code. The genesis admin ends that.
+  Measured with a real admin session (full table in the A01 Shipped entry):
+
+  | table                                                                                                        | what an admin's BROWSER can now do                                                                        |
+  | ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+  | `payments`                                                                                                   | ⚠ INSERT a payment row marked `completed` — breaks §8's settlement boundary                               |
+  | `bookings`                                                                                                   | ⚠ INSERT/UPDATE `total_amount`, `commission_amount`, `payment_status` — reverses migration 20260729160519 |
+  | `slots`                                                                                                      | ⚠ INSERT rows and raise `capacity`                                                                        |
+  | `branches`                                                                                                   | ⚠ set `rating`, `review_count`, `instahealth_slot_allocation`                                             |
+  | `providers`, `services`, `service_categories`, `provider_users`, `notifications`, `branch_services`, `users` | full row access (several legitimate — A03/A04/A05 need them)                                              |
+
+  **Why so wide:** every table except `users` still carries BLANKET all-column
+  INSERT+UPDATE grants to `anon`+`authenticated`, so the RLS policy is the only
+  gate. `users` is narrowed only because REFACTOR 2/N happened to do it.
+
+  **Not exploited** — the only admin account is the founder's, behind TOTP — and
+  the exposure is roughly an admin's trust model anyway. But `payments` and
+  `bookings` are money facts the whole schema was deliberately re-plumbed to
+  make server-derived, and a browser session should not be able to assert them.
+  **A01 deliberately did not widen into this** (founder ruling ③: flag, don't
+  silently fix); the per-table answer is what the admin panel legitimately needs
+  to write, which is A02–A06's scope. Close them the writer-function way.
+
+- **⚠ `reviews` has NO admin write policy at all** — only a SELECT escape hatch
+  on "public read unflagged". So an admin can READ a flagged review and cannot
+  un-flag it: moderation has no path. Unreachable BY ACCIDENT rather than by
+  design, and F08 is the natural place to decide it.
 
 - **⚠⚠ `branches` HAS A COLUMN-BLIND UPDATE POLICY — the fifth instance of the
   §5 general law, and the first with MARKETPLACE-INTEGRITY consequences.**

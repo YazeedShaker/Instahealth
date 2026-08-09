@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/effects.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/themes.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/base.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/styles.css">
+  <script src="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/_ds_bundle.js"></script>
+  <style>
+    body { margin: 0; background: var(--ih-neutral-100); font-family: 'Cairo', 'Atkinson Hyperlegible', sans-serif; }
+    a { color: var(--ih-primary-600); } a:hover { color: var(--ih-primary-700); }
+    @keyframes ih-shimmer { 0% { opacity: 0.55; } 50% { opacity: 1; } 100% { opacity: 0.55; } }
+    @media (prefers-reduced-motion: reduce) { .ih-skel { animation: none !important; } }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 48px; align-items: center; padding: 40px 32px;">
+
+  <!-- ══════════ A · يوم سليم ══════════ -->
+  <div data-screen-label="نظرة عامة — يوم سليم">
+    <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; direction: rtl; flex-wrap: wrap;">
+      <span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--ih-primary-800);">A</span>
+      <span style="font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-700);">نظرة عامة — اليوم في الشبكة كلها، ولا شيء يحتاج انتباهك</span>
+      <span style="font-size: 11.5px; font-weight: 700; color: var(--ih-neutral-600); background: var(--ih-neutral-100); border: 1px solid var(--ih-neutral-200); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">مرشّحة لمراجعة ثانية بعد أسبوعين من الاستخدام اليومي</span>
+    </div>
+    <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 740 }}" url="admin.instahealth.eg/overview" hint-size="1366px,740px">
+      <div dir="rtl" style="--ih-surface-sidebar: #023449; display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden;">
+        <div style="flex-shrink: 0; display: flex; align-self: stretch; background: #023449;">
+          <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.SidebarNav" brand="الإدارة" items="{{ navItems }}" active="{{ 0 }}" style="{{ sidebarStyle }}" hint-size="220px,100%"></x-import>
+        </div>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); box-shadow: var(--ih-shadow-sm); padding: 10px 24px; display: flex; align-items: center; gap: 16px; min-height: 56px; box-sizing: border-box;">
+            <div style="display: flex; flex-direction: column; gap: 1px;">
+              <div style="font-size: 16px; font-weight: 800; color: var(--ih-neutral-800);">نظرة عامة</div>
+              <div style="font-size: 12px; color: var(--ih-neutral-500);">الأربعاء ٥ أغسطس ٢٠٢٦ · محدَّثة قبل دقيقة</div>
+            </div>
+            <span style="flex-shrink: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 4px 11px; white-space: nowrap;">لوحة الإدارة</span>
+            <div style="flex: 1;"></div>
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding-right: 16px; border-right: 1px solid var(--ih-neutral-200); white-space: nowrap;">
+              <div style="width: 32px; height: 32px; border-radius: 999px; background: #023449; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #FFFFFF;">م</div>
+              <div style="display: flex; flex-direction: column;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-700);">مؤسِّس</span>
+                <span style="font-size: 11px; color: var(--ih-neutral-500); cursor: pointer; text-decoration: underline;">تسجيل خروج</span>
+              </div>
+            </div>
+          </div>
+          <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 16px 24px 24px; display: flex; flex-direction: column; gap: 14px;">
+
+            <div style="flex-shrink: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px;">
+              <sc-for list="{{ stats }}" as="s" hint-placeholder-count="4">
+                <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-top: 3px solid var(--ih-primary-400); border-radius: 12px; box-shadow: var(--ih-shadow-sm); padding: 14px 16px; display: flex; flex-direction: column; gap: 4px;">
+                  <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-600);">{{ s.label }}</span>
+                  <span style="font-size: 26px; font-weight: 800; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums; line-height: 1.2;">{{ s.value }}</span>
+                  <span style="font-size: 11.5px; color: var(--ih-neutral-500); line-height: 1.55;">{{ s.sub }}</span>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 12px; background: var(--ih-success-bg); border: 1px solid rgba(2,128,144,0.3); border-radius: 12px; padding: 14px 16px;">
+              <span style="flex-shrink: 0; font-size: 16px;" aria-hidden="true">✓</span>
+              <div style="min-width: 0; display: flex; flex-direction: column; gap: 2px;">
+                <span style="font-size: 13.5px; font-weight: 700; color: #028090;">لا شيء يحتاج انتباهك</span>
+                <span style="font-size: 12px; color: #028090; line-height: 1.6;">توليد المواعيد يعمل (آخر تشغيل ٣:٠٠ ص)، كل فرع نشط لديه مواعيد وحساب نشط، ولا كشف متأخر عن موعد إرساله.</span>
+              </div>
+              <div style="flex: 1;"></div>
+              <span style="flex-shrink: 0; font-size: 11.5px; color: #028090;">تُراجَع هذه القائمة كل ٥ دقائق</span>
+            </div>
+
+            <div style="flex-shrink: 0; background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); overflow: hidden;">
+              <div style="padding: 14px 18px; border-bottom: 1px solid var(--ih-neutral-200); display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                  <span style="font-size: 14.5px; font-weight: 700; color: var(--ih-neutral-800);">اليوم في الفروع</span>
+                  <span style="font-size: 11.5px; color: var(--ih-neutral-600);">الإشغال = مواعيد محجوزة من مواعيد اليوم المتاحة</span>
+                </div>
+                <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="outline" hint-size="140px,36px"><span style="white-space: nowrap;">كل الحجوزات</span></x-import>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 150px 200px 116px 116px; align-items: center; gap: 10px; padding: 9px 18px; background: var(--ih-neutral-50); border-bottom: 1px solid var(--ih-neutral-200); font-size: 11.5px; font-weight: 700; color: var(--ih-neutral-600);">
+                <span>الفرع</span><span>حجوزات اليوم</span><span>الإشغال</span><span>إلغاءات</span><span>لم يحضر</span>
+              </div>
+              <sc-for list="{{ branchRows }}" as="b" hint-placeholder-count="8">
+                <div style="display: grid; grid-template-columns: 1fr 150px 200px 116px 116px; align-items: center; gap: 10px; padding: 0 18px; min-height: 46px; border-bottom: 1px solid var(--ih-neutral-100); cursor: pointer; font-size: 13px; color: var(--ih-neutral-700);" style-hover="background: var(--ih-neutral-50);">
+                  <div style="min-width: 0; display: flex; flex-direction: column; gap: 1px;">
+                    <span style="font-size: 13px; font-weight: 700; color: var(--ih-neutral-800); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ b.branch }}</span>
+                    <span style="font-size: 11px; color: var(--ih-neutral-500); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ b.provider }}</span>
+                  </div>
+                  <span style="font-variant-numeric: tabular-nums; font-weight: 700; color: var(--ih-neutral-800);">{{ b.booked }} <span style="font-weight: 500; color: var(--ih-neutral-500);">من {{ b.slots }}</span></span>
+                  <div style="min-width: 0; display: flex; align-items: center; gap: 10px;">
+                    <div style="flex: 1; min-width: 0; height: 8px; border-radius: 999px; background: var(--ih-neutral-100); overflow: hidden;">
+                      <div style="width: {{ b.fillW }}; height: 100%; border-radius: 999px; background: {{ b.fillColor }};"></div>
+                    </div>
+                    <span style="flex-shrink: 0; font-size: 12.5px; font-weight: 700; color: var(--ih-neutral-700); font-variant-numeric: tabular-nums;">{{ b.fill }}</span>
+                  </div>
+                  <span style="font-variant-numeric: tabular-nums; color: var(--ih-neutral-700);">{{ b.cancels }}</span>
+                  <span style="font-variant-numeric: tabular-nums; color: var(--ih-neutral-700);">{{ b.noShow }}</span>
+                </div>
+              </sc-for>
+              <div style="padding: 11px 18px; background: var(--ih-neutral-50); display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 11.5px; color: var(--ih-neutral-600); line-height: 1.6;">إشغال منخفض ليس بالضرورة خطأ — فرع جديد أو منطقة هادئة يبدو كذلك. تُقرأ الأرقام مع بعضها، لا كل رقم وحده.</span>
+                <div style="flex: 1;"></div>
+                <span style="font-size: 11.5px; color: var(--ih-neutral-500);">مقارنة الأسابيع والاتجاهات — مؤجَّلة لما بعد v1.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </x-import>
+  </div>
+
+  <!-- ══════════ B · شيء ما معطَّل ══════════ -->
+  <div data-screen-label="نظرة عامة — شيء ما معطَّل">
+    <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; direction: rtl; flex-wrap: wrap;">
+      <span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--ih-primary-800);">B</span>
+      <span style="font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-700);">ثلاثة أعطال حقيقية — كل واحد يقول ما يعنيه للمريض وما الخطوة التالية</span>
+      <span style="font-size: 11.5px; font-weight: 700; color: #92400E; background: var(--ih-warning-bg); border: 1px solid rgba(217,119,6,0.35); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">لا شارات حمراء مزخرفة — الأرقام تبقى صادقة كما هي</span>
+    </div>
+    <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 800 }}" url="admin.instahealth.eg/overview" hint-size="1366px,800px">
+      <div dir="rtl" style="--ih-surface-sidebar: #023449; display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden;">
+        <div style="flex-shrink: 0; display: flex; align-self: stretch; background: #023449;">
+          <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.SidebarNav" brand="الإدارة" items="{{ navItems }}" active="{{ 0 }}" style="{{ sidebarStyle }}" hint-size="220px,100%"></x-import>
+        </div>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); box-shadow: var(--ih-shadow-sm); padding: 10px 24px; display: flex; align-items: center; gap: 16px; min-height: 56px; box-sizing: border-box;">
+            <div style="display: flex; flex-direction: column; gap: 1px;">
+              <div style="font-size: 16px; font-weight: 800; color: var(--ih-neutral-800);">نظرة عامة</div>
+              <div style="font-size: 12px; color: var(--ih-neutral-500);">الأربعاء ٥ أغسطس ٢٠٢٦ · محدَّثة قبل دقيقتين</div>
+            </div>
+            <span style="flex-shrink: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 4px 11px; white-space: nowrap;">لوحة الإدارة</span>
+            <div style="flex: 1;"></div>
+            <span style="flex-shrink: 0; font-size: 11.5px; font-weight: 700; color: #92400E; background: var(--ih-warning-bg); border: 1px solid rgba(217,119,6,0.35); border-radius: 999px; padding: 5px 12px; white-space: nowrap;">٣ أمور تحتاج انتباهك</span>
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding-right: 16px; border-right: 1px solid var(--ih-neutral-200); white-space: nowrap;">
+              <div style="width: 32px; height: 32px; border-radius: 999px; background: #023449; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #FFFFFF;">م</div>
+              <div style="display: flex; flex-direction: column;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-700);">مؤسِّس</span>
+                <span style="font-size: 11px; color: var(--ih-neutral-500); cursor: pointer; text-decoration: underline;">تسجيل خروج</span>
+              </div>
+            </div>
+          </div>
+          <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 16px 24px 24px; display: flex; flex-direction: column; gap: 14px;">
+
+            <div style="flex-shrink: 0; background: var(--ih-neutral-0); border: 1px solid rgba(217,119,6,0.4); border-radius: 12px; box-shadow: var(--ih-shadow-sm); overflow: hidden;">
+              <div style="padding: 13px 18px; background: var(--ih-warning-bg); border-bottom: 1px solid rgba(217,119,6,0.3); display: flex; align-items: center; gap: 10px;">
+                <span style="flex-shrink: 0; font-size: 15px;" aria-hidden="true">⚠</span>
+                <span style="font-size: 13.5px; font-weight: 800; color: #92400E;">يحتاج انتباهك</span>
+                <div style="flex: 1;"></div>
+                <span style="font-size: 11.5px; color: #92400E;">مرتّبة بأثرها على المريض</span>
+              </div>
+              <sc-for list="{{ alerts }}" as="a" hint-placeholder-count="3">
+                <div style="padding: 14px 18px; border-bottom: 1px solid var(--ih-neutral-100); display: grid; grid-template-columns: 30px minmax(0, 1fr) 200px; gap: 14px; align-items: start;">
+                  <span style="width: 30px; height: 30px; border-radius: 8px; background: var(--ih-warning-bg); display: flex; align-items: center; justify-content: center; font-size: 14px;" aria-hidden="true">{{ a.icon }}</span>
+                  <div style="min-width: 0; display: flex; flex-direction: column; gap: 5px;">
+                    <span style="font-size: 14px; font-weight: 800; color: var(--ih-neutral-800); line-height: 1.5;">{{ a.title }}</span>
+                    <span style="font-size: 12.5px; color: var(--ih-neutral-700); line-height: 1.7;">{{ a.what }}</span>
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 2px;">
+                      <span style="font-size: 11.5px; font-weight: 700; color: #92400E; background: var(--ih-warning-bg); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">{{ a.impact }}</span>
+                      <span style="font-size: 11.5px; color: var(--ih-neutral-500);">{{ a.since }}</span>
+                    </div>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 6px; align-items: stretch;">
+                    <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="outline" full-width="{{ true }}" hint-size="100%,36px"><span style="white-space: nowrap;">{{ a.action }}</span></x-import>
+                    <span style="font-size: 11px; color: var(--ih-neutral-500); line-height: 1.55; text-align: center;">{{ a.actionNote }}</span>
+                  </div>
+                </div>
+              </sc-for>
+              <div style="padding: 11px 18px; background: var(--ih-neutral-50);">
+                <span style="font-size: 11.5px; color: var(--ih-neutral-600); line-height: 1.6;">لا يختفي أي بند من هنا إلا بزوال سببه — لا زر «تجاهل». التنبيهات بالبريد أو الواتساب مؤجَّلة لما بعد v1.</span>
+              </div>
+            </div>
+
+            <div style="flex-shrink: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px;">
+              <sc-for list="{{ statsBad }}" as="s" hint-placeholder-count="4">
+                <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-top: 3px solid {{ s.top }}; border-radius: 12px; box-shadow: var(--ih-shadow-sm); padding: 14px 16px; display: flex; flex-direction: column; gap: 4px;">
+                  <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-600);">{{ s.label }}</span>
+                  <span style="font-size: 26px; font-weight: 800; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums; line-height: 1.2;">{{ s.value }}</span>
+                  <span style="font-size: 11.5px; color: {{ s.subColor }}; line-height: 1.55;">{{ s.sub }}</span>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="flex-shrink: 0; background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); overflow: hidden;">
+              <div style="padding: 14px 18px; border-bottom: 1px solid var(--ih-neutral-200);">
+                <span style="font-size: 14.5px; font-weight: 700; color: var(--ih-neutral-800);">اليوم في الفروع</span>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 150px 200px 116px 116px; align-items: center; gap: 10px; padding: 9px 18px; background: var(--ih-neutral-50); border-bottom: 1px solid var(--ih-neutral-200); font-size: 11.5px; font-weight: 700; color: var(--ih-neutral-600);">
+                <span>الفرع</span><span>حجوزات اليوم</span><span>الإشغال</span><span>إلغاءات</span><span>لم يحضر</span>
+              </div>
+              <sc-for list="{{ branchRowsBad }}" as="b" hint-placeholder-count="5">
+                <div style="display: grid; grid-template-columns: 1fr 150px 200px 116px 116px; align-items: center; gap: 10px; padding: 0 18px; min-height: 46px; border-bottom: 1px solid var(--ih-neutral-100); cursor: pointer; font-size: 13px; color: var(--ih-neutral-700); background: {{ b.rowBg }};" style-hover="background: var(--ih-neutral-50);">
+                  <div style="min-width: 0; display: flex; flex-direction: column; gap: 1px;">
+                    <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                      <span style="font-size: 13px; font-weight: 700; color: var(--ih-neutral-800); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ b.branch }}</span>
+                      <sc-if value="{{ b.flag }}" hint-placeholder-val="{{ false }}">
+                        <span style="flex-shrink: 0; font-size: 10.5px; font-weight: 700; color: #92400E; background: var(--ih-warning-bg); border: 1px solid rgba(217,119,6,0.35); border-radius: 999px; padding: 2px 8px; white-space: nowrap;">{{ b.flagLabel }}</span>
+                      </sc-if>
+                    </div>
+                    <span style="font-size: 11px; color: var(--ih-neutral-500); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ b.provider }}</span>
+                  </div>
+                  <span style="font-variant-numeric: tabular-nums; font-weight: 700; color: var(--ih-neutral-800);">{{ b.booked }} <span style="font-weight: 500; color: var(--ih-neutral-500);">من {{ b.slots }}</span></span>
+                  <sc-if value="{{ b.hasFill }}" hint-placeholder-val="{{ true }}">
+                    <div style="min-width: 0; display: flex; align-items: center; gap: 10px;">
+                      <div style="flex: 1; min-width: 0; height: 8px; border-radius: 999px; background: var(--ih-neutral-100); overflow: hidden;">
+                        <div style="width: {{ b.fillW }}; height: 100%; border-radius: 999px; background: {{ b.fillColor }};"></div>
+                      </div>
+                      <span style="flex-shrink: 0; font-size: 12.5px; font-weight: 700; color: var(--ih-neutral-700); font-variant-numeric: tabular-nums;">{{ b.fill }}</span>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ b.noFill }}" hint-placeholder-val="{{ false }}">
+                    <span style="font-size: 12px; font-weight: 600; color: #92400E;">لا مواعيد اليوم — لا شيء ليُشغَل</span>
+                  </sc-if>
+                  <span style="font-variant-numeric: tabular-nums; color: var(--ih-neutral-700);">{{ b.cancels }}</span>
+                  <span style="font-variant-numeric: tabular-nums; color: var(--ih-neutral-700);">{{ b.noShow }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+    </x-import>
+  </div>
+
+  <!-- ══════════ C · تحميل وأول يوم ══════════ -->
+  <div data-screen-label="نظرة عامة — تحميل وأول يوم">
+    <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; direction: rtl;">
+      <span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--ih-primary-800);">C</span>
+      <span style="font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-700);">تحميل، وأول يوم بلا حجوزات — صفر صادق لا رسم بياني فارغ</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+      <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 520 }}" url="admin.instahealth.eg/overview" hint-size="1366px,520px">
+        <div dir="rtl" style="--ih-surface-sidebar: #023449; display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden;">
+          <div style="flex-shrink: 0; display: flex; align-self: stretch; background: #023449;">
+            <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.SidebarNav" brand="الإدارة" items="{{ navItems }}" active="{{ 0 }}" style="{{ sidebarStyle }}" hint-size="220px,100%"></x-import>
+          </div>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+            <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); box-shadow: var(--ih-shadow-sm); padding: 10px 24px; display: flex; align-items: center; gap: 16px; min-height: 56px; box-sizing: border-box;">
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <div style="font-size: 16px; font-weight: 800; color: var(--ih-neutral-800);">نظرة عامة</div>
+                <div class="ih-skel" style="width: 170px; height: 10px; border-radius: 4px; background: var(--ih-neutral-200); animation: ih-shimmer 1400ms ease-in-out infinite;"></div>
+              </div>
+              <span style="flex-shrink: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 4px 11px; white-space: nowrap;">لوحة الإدارة</span>
+            </div>
+            <div style="flex: 1; min-height: 0; padding: 16px 24px; display: flex; flex-direction: column; gap: 14px;">
+              <div style="flex-shrink: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px;">
+                <sc-for list="{{ skeletonRows }}" as="s" hint-placeholder-count="4">
+                  <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-top: 3px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;">
+                    <div class="ih-skel" style="width: 90px; height: 10px; border-radius: 4px; background: var(--ih-neutral-200); animation: ih-shimmer 1400ms ease-in-out infinite;"></div>
+                    <div class="ih-skel" style="width: 60px; height: 22px; border-radius: 6px; background: var(--ih-neutral-200); animation: ih-shimmer 1400ms ease-in-out infinite;"></div>
+                    <div class="ih-skel" style="width: 120px; height: 10px; border-radius: 4px; background: var(--ih-neutral-200); animation: ih-shimmer 1400ms ease-in-out infinite;"></div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="flex-shrink: 0; background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); overflow: hidden;">
+                <div style="display: grid; grid-template-columns: 1fr 150px 200px 116px 116px; align-items: center; gap: 10px; padding: 9px 18px; background: var(--ih-neutral-50); border-bottom: 1px solid var(--ih-neutral-200); font-size: 11.5px; font-weight: 700; color: var(--ih-neutral-600);">
+                  <span>الفرع</span><span>حجوزات اليوم</span><span>الإشغال</span><span>إلغاءات</span><span>لم يحضر</span>
+                </div>
+                <sc-for list="{{ skeletonRows }}" as="s" hint-placeholder-count="4">
+                  <div style="display: grid; grid-template-columns: 1fr 150px 200px 116px 116px; align-items: center; gap: 10px; padding: 0 18px; min-height: 46px; border-bottom: 1px solid var(--ih-neutral-100);">
+                    <div class="ih-skel" style="width: 200px; height: 12px; border-radius: 4px; background: var(--ih-neutral-200); animation: ih-shimmer 1400ms ease-in-out infinite;"></div>
+                    <div class="ih-skel" style="width: 80px; height: 12px; border-radius: 4px; background: var(--ih-neutral-200); animation: ih-shimmer 1400ms ease-in-out infinite;"></div>
+                    <div class="ih-skel" style="width: 160px; height: 8px; border-radius: 999px; background: var(--ih-neutral-200); animation: ih-shimmer 1400ms ease-in-out infinite;"></div>
+                    <div class="ih-skel" style="width: 24px; height: 12px; border-radius: 4px; background: var(--ih-neutral-200); animation: ih-shimmer 1400ms ease-in-out infinite;"></div>
+                    <div class="ih-skel" style="width: 24px; height: 12px; border-radius: 4px; background: var(--ih-neutral-200); animation: ih-shimmer 1400ms ease-in-out infinite;"></div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+      </x-import>
+      <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 560 }}" url="admin.instahealth.eg/overview" hint-size="1366px,560px">
+        <div dir="rtl" style="--ih-surface-sidebar: #023449; display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden;">
+          <div style="flex-shrink: 0; display: flex; align-self: stretch; background: #023449;">
+            <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.SidebarNav" brand="الإدارة" items="{{ navItems }}" active="{{ 0 }}" style="{{ sidebarStyle }}" hint-size="220px,100%"></x-import>
+          </div>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+            <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); box-shadow: var(--ih-shadow-sm); padding: 10px 24px; display: flex; align-items: center; gap: 16px; min-height: 56px; box-sizing: border-box;">
+              <div style="display: flex; flex-direction: column; gap: 1px;">
+                <div style="font-size: 16px; font-weight: 800; color: var(--ih-neutral-800);">نظرة عامة</div>
+                <div style="font-size: 12px; color: var(--ih-neutral-500);">أول يوم تشغيل · محدَّثة الآن</div>
+              </div>
+              <span style="flex-shrink: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 4px 11px; white-space: nowrap;">لوحة الإدارة</span>
+            </div>
+            <div style="flex: 1; min-height: 0; padding: 16px 24px; display: flex; flex-direction: column; gap: 14px;">
+              <div style="flex-shrink: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px;">
+                <sc-for list="{{ statsZero }}" as="s" hint-placeholder-count="4">
+                  <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-top: 3px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); padding: 14px 16px; display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-600);">{{ s.label }}</span>
+                    <span style="font-size: 26px; font-weight: 800; color: var(--ih-neutral-500); font-variant-numeric: tabular-nums; line-height: 1.2;">{{ s.value }}</span>
+                    <span style="font-size: 11.5px; color: var(--ih-neutral-500); line-height: 1.55;">{{ s.sub }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center;">
+                <div style="max-width: 520px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;">
+                  <span style="font-size: 28px;" aria-hidden="true">📊</span>
+                  <span style="font-size: 17px; font-weight: 800; color: var(--ih-neutral-800);">لا حجوزات اليوم بعد</span>
+                  <span style="font-size: 13px; color: var(--ih-neutral-600); line-height: 1.7;">٨ فروع نشطة و١٤٧ موعداً متاحاً — الشبكة جاهزة وتنتظر أول حجز. ستظهر الأرقام هنا لحظة وصوله.</span>
+                  <div style="margin-top: 4px; display: flex; gap: 8px;">
+                    <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="md" variant="outline" hint-size="160px,40px"><span style="white-space: nowrap;">راجع الفروع النشطة</span></x-import>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1460, &quot;height&quot;: 3300}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      navItems: [
+        { icon: "📊", label: "نظرة عامة" },
+        { icon: "📈", label: "التحليلات" },
+        { icon: "🧾", label: "العمولات والفواتير" },
+        { icon: "🏥", label: "المزودون والفروع" },
+        { icon: "🧪", label: "كتالوج الخدمات" },
+        { icon: "👤", label: "حسابات المزودين" },
+        { icon: "📋", label: "الحجوزات" },
+      ],
+      sidebarStyle: { height: "100%", alignSelf: "stretch", flexShrink: 0, boxSizing: "border-box" },
+      skeletonRows: [1, 2, 3, 4],
+      stats: [
+        { label: "حجوزات اليوم", value: "٣٤", sub: "٢٨ مؤكد · ٤ مكتمل · ٢ ملغي" },
+        { label: "إشغال الشبكة اليوم", value: "٦٢٪", sub: "٣٤ محجوزاً من ٥٥ موعداً متاحاً" },
+        { label: "إلغاءات اليوم", value: "٢", sub: "واحد ألغاه المريض · واحد ألغته الإدارة" },
+        { label: "عمولة متوقعة هذا الشهر", value: "٤١٨٠ ج.م", sub: "على الحجوزات المكتملة حتى الآن — ليست فاتورة" },
+      ],
+      statsBad: [
+        { label: "حجوزات اليوم", value: "١٩", sub: "أقل من المعتاد — فرعان بلا مواعيد", top: "#D97706", subColor: "#92400E" },
+        { label: "إشغال الشبكة اليوم", value: "٧٩٪", sub: "المتاح نفسه انخفض — ليس تحسّناً", top: "#D97706", subColor: "#92400E" },
+        { label: "إلغاءات اليوم", value: "١", sub: "ألغاه المريض", top: "var(--ih-primary-400)", subColor: "var(--ih-neutral-500)" },
+        { label: "عمولة متوقعة هذا الشهر", value: "٣٩٤٠ ج.م", sub: "على الحجوزات المكتملة حتى الآن — ليست فاتورة", top: "var(--ih-primary-400)", subColor: "var(--ih-neutral-500)" },
+      ],
+      statsZero: [
+        { label: "حجوزات اليوم", value: "٠", sub: "لم يصل حجز بعد" },
+        { label: "إشغال الشبكة اليوم", value: "٠٪", sub: "١٤٧ موعداً متاحاً" },
+        { label: "إلغاءات اليوم", value: "٠", sub: "—" },
+        { label: "عمولة متوقعة هذا الشهر", value: "٠ ج.م", sub: "تبدأ مع أول حجز مكتمل" },
+      ],
+      alerts: [
+        {
+          icon: "🕐",
+          title: "توليد المواعيد متوقف منذ ليلتين",
+          what: "آخر تشغيل ناجح ٣ أغسطس ٣:٠٠ ص. لم تُبنَ مواعيد جديدة لليومين القادمين، فالمرضى يرون أياماً فارغة في فروع تعمل فعلاً.",
+          impact: "المرضى لا يجدون مواعيد",
+          since: "منذ ٥١ ساعة · ٦ فروع متأثرة",
+          action: "شغّل التوليد الآن",
+          actionNote: "يبني مواعيد ٣٠ يوماً بالتوزيع المحفوظ لكل فرع",
+        },
+        {
+          icon: "📅",
+          title: "فرعان نشطان بلا أي مواعيد اليوم",
+          what: "فرع مدينة نصر لم يُوزَّع له مواعيد بعد إضافته، وفرع حلوان توزيعه صفر. الفرعان ظاهران للمرضى بلا شيء يمكن حجزه.",
+          impact: "ظاهر للمرضى وغير قابل للحجز",
+          since: "مدينة نصر منذ ٤ أغسطس · حلوان منذ ٣ أيام",
+          action: "افتح توزيع المواعيد",
+          actionNote: "أو أوقف الفرع حتى يجهز — يخفيه من المرضى",
+        },
+        {
+          icon: "👤",
+          title: "فرع الدقي بلا حساب نشط",
+          what: "عُطّل آخر حساب في الفرع أمس، ولا أحد يستطيع فتح بوابة الشركاء لرؤية حجوزاته. ٩ حجوزات قادمة ستصل بلا متابعة.",
+          impact: "٩ حجوزات بلا متابعة",
+          since: "منذ أمس ٥:٢٠ م",
+          action: "أنشئ حساباً للفرع",
+          actionNote: "أو أوقف الفرع إن كان توقفه مقصوداً",
+        },
+      ],
+      branchRows: [
+        { branch: "فرع التجمع الخامس", provider: "مختبرات النيل", booked: "٩", slots: "١٢", fill: "٧٥٪", fillW: "75%", fillColor: "var(--ih-primary-400)", cancels: "١", noShow: "٠" },
+        { branch: "فرع المهندسين", provider: "مختبرات النيل", booked: "٦", slots: "٨", fill: "٧٥٪", fillW: "75%", fillColor: "var(--ih-primary-400)", cancels: "٠", noShow: "١" },
+        { branch: "فرع مدينة نصر", provider: "مختبرات النيل", booked: "٢", slots: "٦", fill: "٣٣٪", fillW: "33%", fillColor: "var(--ih-primary-600)", cancels: "٠", noShow: "٠" },
+        { branch: "فرع الدقي", provider: "معامل سريدار", booked: "٥", slots: "٨", fill: "٦٣٪", fillW: "63%", fillColor: "var(--ih-primary-400)", cancels: "١", noShow: "٠" },
+        { branch: "فرع التجمع الخامس", provider: "معامل سريدار", booked: "٤", slots: "٦", fill: "٦٧٪", fillW: "67%", fillColor: "var(--ih-primary-400)", cancels: "٠", noShow: "٠" },
+        { branch: "فرع المعادي", provider: "صيدليات الحياة", booked: "٣", slots: "٥", fill: "٦٠٪", fillW: "60%", fillColor: "var(--ih-primary-400)", cancels: "٠", noShow: "١" },
+        { branch: "فرع الرحاب", provider: "صيدليات الحياة", booked: "٣", slots: "٥", fill: "٦٠٪", fillW: "60%", fillColor: "var(--ih-primary-400)", cancels: "٠", noShow: "٠" },
+        { branch: "فرع المقطم", provider: "صيدليات الحياة", booked: "٢", slots: "٥", fill: "٤٠٪", fillW: "40%", fillColor: "var(--ih-primary-600)", cancels: "٠", noShow: "٠" },
+      ],
+      branchRowsBad: [
+        { branch: "فرع التجمع الخامس", provider: "مختبرات النيل", booked: "٩", slots: "١٢", hasFill: true, fill: "٧٥٪", fillW: "75%", fillColor: "var(--ih-primary-400)", cancels: "١", noShow: "٠", rowBg: "transparent" },
+        { branch: "فرع الدقي", provider: "معامل سريدار", flag: true, flagLabel: "بلا حساب نشط", booked: "٥", slots: "٨", hasFill: true, fill: "٦٣٪", fillW: "63%", fillColor: "var(--ih-primary-400)", cancels: "٠", noShow: "٠", rowBg: "rgba(254,243,199,0.35)" },
+        { branch: "فرع مدينة نصر", provider: "مختبرات النيل", flag: true, flagLabel: "لم يُوزَّع", booked: "٠", slots: "٠", noFill: true, cancels: "٠", noShow: "٠", rowBg: "rgba(254,243,199,0.35)" },
+        { branch: "فرع حلوان", provider: "صيدليات الحياة", flag: true, flagLabel: "توزيع صفر", booked: "٠", slots: "٠", noFill: true, cancels: "٠", noShow: "٠", rowBg: "rgba(254,243,199,0.35)" },
+        { branch: "فرع المعادي", provider: "صيدليات الحياة", booked: "٥", slots: "٥", hasFill: true, fill: "١٠٠٪", fillW: "100%", fillColor: "#028090", cancels: "٠", noShow: "٠", rowBg: "transparent" },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

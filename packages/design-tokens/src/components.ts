@@ -437,3 +437,114 @@ export const INPUT_ERROR = {
   borderColor: 'semantic.error',
   background: 'semantic.errorBg',
 } as const
+
+// ── Admin panel (A01 · DESIGN-03) ──────────────────────────────────────────
+
+/** ⚠ THE ADMIN ACCENT. The whole point of DESIGN-03's visual brief is that
+ * nobody ever confuses which portal they are in, so الإدارة gets a DEEP-INK
+ * anchor where بوابة الشركاء uses the cerulean sidebar. `#023449` is a literal
+ * in every admin screen of the handoff (`Admin - *.dc.html`) and has no token
+ * in `_ds` — it is introduced HERE so no page ever hardcodes it, which is the
+ * §9 corollary: extend the contract, never the page. */
+export const ADMIN_ACCENT = {
+  /** Sidebar, brand pill, avatar disc, and the login page's authority panel. */
+  ink: '#023449',
+  onInk: '#FFFFFF',
+  /** The login screen's right-hand panel. */
+  panelWidth: 460,
+  panelPaddingY: 48,
+  panelPaddingX: 44,
+} as const
+
+/** «لوحة الإدارة» — the pill that names the portal in the header and beside the
+ * logo on the login screen. Deliberately NOT a CHIP_TONES variant: it is
+ * inverted (ink background, white text) and tracks its letters. */
+export const ADMIN_PILL = {
+  paddingY: 4,
+  paddingX: 11,
+  borderRadius: 9999,
+  fontSize: 11,
+  fontWeight: 700,
+  letterSpacing: 0.08,
+  background: ADMIN_ACCENT.ink,
+  color: ADMIN_ACCENT.onInk,
+} as const
+
+/** «قريباً» — the coming-soon chip on a placeholder surface's header. Neutral
+ * and quiet on purpose: a placeholder must not read as a warning. */
+export const ADMIN_SOON_CHIP = {
+  paddingY: 3,
+  paddingX: 10,
+  borderRadius: 9999,
+  fontSize: 11.5,
+  fontWeight: 700,
+  color: 'neutral.600',
+  background: 'neutral.100',
+  borderColor: 'neutral.200',
+  borderWidth: 1,
+} as const
+
+/** The six TOTP digit boxes. Three states, all drawn in
+ * `Admin - Login and TOTP.dc.html`: empty, active (the cell awaiting input),
+ * and errored (the whole row tints when a code is refused).
+ * ⚠ `width` is NOT fixed for the login rows — the handoff uses `flex: 1` with
+ * `min-width: 0`, which is the VIEW-01 lesson applied at birth: a hardcoded
+ * pixel width measured on one machine clips on another. The 52px below is the
+ * ENROLLMENT card's row only, where the container is a fixed-width panel. */
+export type CodeCellState = 'empty' | 'active' | 'filled' | 'errored'
+
+export interface CodeCellSpec {
+  borderColor: TokenRef
+  background: TokenRef
+}
+
+export const CODE_CELL = {
+  height: 60,
+  /** Enrollment card only — the login rows flex. */
+  enrollHeight: 56,
+  enrollWidth: 52,
+  gap: 8,
+  borderRadius: 8,
+  borderWidth: 1.5,
+  fontSize: 24,
+  enrollFontSize: 22,
+  fontWeight: 700,
+  color: 'neutral.800',
+} as const
+
+export const CODE_CELL_STATES: Record<CodeCellState, CodeCellSpec> = {
+  empty: { borderColor: 'neutral.200', background: 'neutral.0' },
+  active: { borderColor: 'primary.400', background: 'primary.50' },
+  filled: { borderColor: 'primary.400', background: 'neutral.0' },
+  errored: { borderColor: 'semantic.error', background: 'semantic.errorBg' },
+}
+
+/** The 30-second validity bar under the TOTP row. The design shows «صلاحية
+ * الرمز الحالي: ١٩ ثانية» beside a track filled to 63% — the number and the
+ * fill are the SAME fact, so a component owns both. */
+export const TOTP_VALIDITY_BAR = {
+  height: 4,
+  borderRadius: 9999,
+  track: 'neutral.100',
+  fill: 'primary.400',
+  labelFontSize: 12,
+  labelColor: 'neutral.500',
+  gap: 8,
+  /** RFC 6238 step. The bar is a display of it, not an independent timer. */
+  periodSeconds: 30,
+} as const
+
+/** One recovery code in the 4-column grid shown once at enrollment. */
+export const RECOVERY_CODE_CELL = {
+  paddingY: 6,
+  borderRadius: 6,
+  fontSize: 12.5,
+  fontWeight: 700,
+  letterSpacing: 0.04,
+  color: 'neutral.700',
+  background: 'neutral.50',
+  borderColor: 'neutral.200',
+  borderWidth: 1,
+  columns: 4,
+  gap: 8,
+} as const

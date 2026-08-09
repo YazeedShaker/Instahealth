@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/effects.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/themes.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/base.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/styles.css">
+  <script src="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/_ds_bundle.js"></script>
+  <style>
+    body { margin: 0; background: var(--ih-neutral-100); font-family: 'Cairo', 'Atkinson Hyperlegible', sans-serif; }
+    a { color: var(--ih-primary-600); } a:hover { color: var(--ih-primary-700); }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 24px; align-items: center; padding: 40px 32px;">
+  <div style="max-width: 900px; display: flex; flex-direction: column; gap: 8px; direction: rtl; text-align: center;">
+    <span style="font-size: 18px; font-weight: 800; color: var(--ih-neutral-800);">ملحق — عرض التقييمات في تطبيق المريض</span>
+    <span style="font-size: 13px; color: var(--ih-neutral-600); line-height: 1.7;">النجمة تظهر في نتائج البحث وملف المزود منذ اليوم الأول، لكن مصدرها لم يُرسَم بعد. هذا الملحق يرسم المصدر والعرض: كيف يُجمَع التقييم بعد الزيارة، وكيف يُعرض بصدق حين تكون البيانات قليلة.</span>
+    <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 4px;">
+      <span style="font-size: 11.5px; font-weight: 700; color: var(--ih-primary-700); background: var(--ih-primary-50); border: 1px solid var(--ih-primary-400); border-radius: 999px; padding: 3px 10px;">v1: تقييم بعد الزيارة المكتملة فقط — لا تقييم بلا حجز</span>
+      <span style="font-size: 11.5px; font-weight: 700; color: var(--ih-neutral-600); background: var(--ih-neutral-100); border: 1px solid var(--ih-neutral-200); border-radius: 999px; padding: 3px 10px;">ردود الشريك · الصور · طابور المراجعة في الإدارة — نسخة ٢</span>
+    </div>
+  </div>
+
+  <div style="display: flex; justify-content: center; gap: 40px; flex-wrap: wrap;">
+
+    <!-- A · التقييمات في ملف المزود -->
+    <div data-screen-label="ملف المزود — قسم التقييمات">
+      <div style="direction: rtl; margin-bottom: 10px; display: flex; align-items: baseline; gap: 8px;">
+        <span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--ih-primary-800);">A</span>
+        <span style="font-size: 13px; font-weight: 600; color: var(--ih-neutral-700);">في ملف المزود — الخلاصة وثلاثة آراء</span>
+      </div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="390px,844px">
+        <div dir="rtl" style="display: flex; flex-direction: column; height: 100%; background: var(--ih-neutral-50); padding-top: 62px; box-sizing: border-box;">
+          <div style="flex: 1; overflow-y: auto; min-height: 0; display: flex; flex-direction: column;">
+            <div style="padding: 14px 20px 12px; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); display: flex; flex-direction: column; gap: 6px;">
+              <span style="font-size: 12px; color: var(--ih-primary-600);">◂ معامل سريدار — التجمع الخامس</span>
+              <span style="font-size: 19px; font-weight: 800; color: var(--ih-neutral-800);">التقييمات</span>
+            </div>
+
+            <div style="padding: 16px 20px; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); display: flex; flex-direction: column; gap: 14px;">
+              <div style="display: flex; align-items: center; gap: 18px;">
+                <div style="flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                  <span style="font-size: 38px; font-weight: 800; color: var(--ih-neutral-800); line-height: 1.1; font-variant-numeric: tabular-nums;">٤.٦</span>
+                  <span style="font-size: 14px; color: #D97706; letter-spacing: 0.06em;" aria-hidden="true">★★★★★</span>
+                  <span style="font-size: 11.5px; color: var(--ih-neutral-500);">١٤٢ تقييماً</span>
+                </div>
+                <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px;">
+                  <sc-for list="{{ distribution }}" as="d" hint-placeholder-count="5">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span style="flex-shrink: 0; width: 30px; font-size: 11.5px; color: var(--ih-neutral-600); font-variant-numeric: tabular-nums;">{{ d.stars }} ★</span>
+                      <div style="flex: 1; min-width: 0; height: 7px; border-radius: 999px; background: var(--ih-neutral-100); overflow: hidden;">
+                        <div style="width: {{ d.w }}; height: 100%; border-radius: 999px; background: #D97706;"></div>
+                      </div>
+                      <span style="flex-shrink: 0; width: 26px; text-align: left; font-size: 11px; color: var(--ih-neutral-500); font-variant-numeric: tabular-nums;">{{ d.n }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px; background: var(--ih-neutral-50); border: 1px solid var(--ih-neutral-200); border-radius: 8px; padding: 9px 12px;">
+                <span style="flex-shrink: 0; font-size: 13px;" aria-hidden="true">✓</span>
+                <span style="font-size: 11.5px; color: var(--ih-neutral-600); line-height: 1.6;">كل تقييم من مريض أكمل زيارته فعلاً في هذا الفرع.</span>
+              </div>
+            </div>
+
+            <div style="padding: 14px 20px 20px; display: flex; flex-direction: column; gap: 10px;">
+              <sc-for list="{{ reviews }}" as="r" hint-placeholder-count="3">
+                <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); padding: 13px 14px; display: flex; flex-direction: column; gap: 8px;">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="flex-shrink: 0; width: 34px; height: 34px; border-radius: 999px; background: var(--ih-primary-50); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: var(--ih-primary-700);">{{ r.initial }}</span>
+                    <div style="min-width: 0; display: flex; flex-direction: column; gap: 1px;">
+                      <span style="font-size: 13.5px; font-weight: 700; color: var(--ih-neutral-800);">{{ r.name }}</span>
+                      <span style="font-size: 11px; color: var(--ih-neutral-500);">{{ r.service }} · {{ r.when }}</span>
+                    </div>
+                    <div style="flex: 1;"></div>
+                    <span style="flex-shrink: 0; font-size: 12px; color: #D97706; letter-spacing: 0.04em;" aria-hidden="true">{{ r.stars }}</span>
+                  </div>
+                  <sc-if value="{{ r.text }}" hint-placeholder-val="{{ true }}">
+                    <span style="font-size: 13px; color: var(--ih-neutral-700); line-height: 1.75;">{{ r.text }}</span>
+                  </sc-if>
+                  <sc-if value="{{ r.silent }}" hint-placeholder-val="{{ false }}">
+                    <span style="font-size: 12px; color: var(--ih-neutral-500); line-height: 1.6;">قيّم بالنجوم بلا تعليق.</span>
+                  </sc-if>
+                </div>
+              </sc-for>
+              <div style="display: flex; justify-content: center; padding-top: 4px;">
+                <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="md" variant="outline" hint-size="200px,44px"><span style="white-space: nowrap;">كل التقييمات (١٤٢)</span></x-import>
+              </div>
+            </div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- B · طلب التقييم بعد الزيارة -->
+    <div data-screen-label="بعد الزيارة — طلب التقييم">
+      <div style="direction: rtl; margin-bottom: 10px; display: flex; align-items: baseline; gap: 8px;">
+        <span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--ih-primary-800);">B</span>
+        <span style="font-size: 13px; font-weight: 600; color: var(--ih-neutral-700);">المصدر — يُطلب مرة واحدة بعد الإكمال</span>
+      </div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="390px,844px">
+        <div dir="rtl" style="display: flex; flex-direction: column; height: 100%; background: var(--ih-neutral-50); padding-top: 62px; box-sizing: border-box;">
+          <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 20px; display: flex; flex-direction: column; gap: 16px;">
+            <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 14px; box-shadow: var(--ih-shadow-sm); overflow: hidden;">
+              <div style="padding: 16px; background: linear-gradient(135deg, var(--ih-primary-700), var(--ih-primary-500)); display: flex; flex-direction: column; gap: 4px;">
+                <span style="font-size: 16px; font-weight: 800; color: #FFFFFF;">كيف كانت زيارتك؟</span>
+                <span style="font-size: 12.5px; color: rgba(255,255,255,0.85); line-height: 1.6;">معامل سريدار — التجمع الخامس · أمس ١١:٤٠ص</span>
+              </div>
+              <div style="padding: 18px 16px; display: flex; flex-direction: column; gap: 16px;">
+                <div style="display: flex; flex-direction: column; gap: 8px; align-items: center;">
+                  <div style="display: flex; gap: 10px;">
+                    <sc-for list="{{ starPicker }}" as="s" hint-placeholder-count="5">
+                      <span style="width: 44px; height: 44px; border-radius: 10px; border: 1.5px solid {{ s.border }}; background: {{ s.bg }}; display: flex; align-items: center; justify-content: center; font-size: 20px; color: {{ s.color }}; cursor: pointer;" aria-hidden="true">★</span>
+                    </sc-for>
+                  </div>
+                  <span style="font-size: 13px; font-weight: 700; color: var(--ih-neutral-700);">أربع نجوم — جيدة</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 7px;">
+                  <label style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-700);">تعليق <span style="font-weight: 500; color: var(--ih-neutral-500);">(اختياري)</span></label>
+                  <textarea placeholder="ما الذي أعجبك أو ما الذي يمكن أن يكون أفضل؟" style="box-sizing: border-box; width: 100%; min-height: 88px; padding: 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; font-family: 'Cairo', sans-serif; font-size: 13.5px; line-height: 1.7; color: var(--ih-neutral-800); background: var(--ih-neutral-0); resize: none;"></textarea>
+                </div>
+                <div style="display: flex; align-items: flex-start; gap: 9px; background: var(--ih-neutral-50); border: 1px solid var(--ih-neutral-200); border-radius: 8px; padding: 10px 12px;">
+                  <span style="flex-shrink: 0; font-size: 13px;" aria-hidden="true">ℹ</span>
+                  <span style="font-size: 11.5px; color: var(--ih-neutral-600); line-height: 1.65;">يظهر تقييمك باسمك الأول وأول حرف من اسم العائلة، مع الخدمة والتاريخ. رقم هاتفك لا يظهر أبداً.</span>
+                </div>
+                <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="lg" full-width="{{ true }}" hint-size="100%,52px"><span style="white-space: nowrap;">إرسال التقييم</span></x-import>
+                <div style="display: flex; justify-content: center;">
+                  <span style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-500); cursor: pointer;">ليس الآن</span>
+                </div>
+              </div>
+            </div>
+            <span style="font-size: 11.5px; color: var(--ih-neutral-500); line-height: 1.7; text-align: center;">يُطلب التقييم مرة واحدة لكل زيارة مكتملة، ولا يُكرَّر إن تجاهله المريض.</span>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+    <!-- C · فرع جديد بلا تقييمات -->
+    <div data-screen-label="ملف المزود — بلا تقييمات">
+      <div style="direction: rtl; margin-bottom: 10px; display: flex; align-items: baseline; gap: 8px;">
+        <span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--ih-primary-800);">C</span>
+        <span style="font-size: 13px; font-weight: 600; color: var(--ih-neutral-700);">فرع جديد — لا نجمة كاذبة ولا صفر مخيف</span>
+      </div>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="390px,844px">
+        <div dir="rtl" style="display: flex; flex-direction: column; height: 100%; background: var(--ih-neutral-50); padding-top: 62px; box-sizing: border-box;">
+          <div style="flex: 1; overflow-y: auto; min-height: 0; display: flex; flex-direction: column;">
+            <div style="padding: 14px 20px 12px; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); display: flex; flex-direction: column; gap: 6px;">
+              <span style="font-size: 12px; color: var(--ih-primary-600);">◂ مختبرات النيل — فرع مدينة نصر</span>
+              <span style="font-size: 19px; font-weight: 800; color: var(--ih-neutral-800);">التقييمات</span>
+            </div>
+            <div style="padding: 24px 20px; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;">
+              <span style="font-size: 24px;" aria-hidden="true">🆕</span>
+              <span style="font-size: 15.5px; font-weight: 800; color: var(--ih-neutral-800);">فرع جديد — لا تقييمات بعد</span>
+              <span style="font-size: 13px; color: var(--ih-neutral-600); line-height: 1.75;">افتتح هذا الفرع قبل أيام، فلم يقيّمه أحد حتى الآن. هذا لا يعني شيئاً عن جودته — مختبرات النيل تحمل ٤.٧ من ٥ في فروعها الأخرى.</span>
+            </div>
+            <div style="padding: 16px 20px; display: flex; flex-direction: column; gap: 10px;">
+              <span style="font-size: 13px; font-weight: 700; color: var(--ih-neutral-700);">تقييمات فروع مختبرات النيل الأخرى</span>
+              <sc-for list="{{ otherBranchReviews }}" as="r" hint-placeholder-count="2">
+                <div style="background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); padding: 13px 14px; display: flex; flex-direction: column; gap: 7px;">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="flex-shrink: 0; width: 34px; height: 34px; border-radius: 999px; background: var(--ih-primary-50); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: var(--ih-primary-700);">{{ r.initial }}</span>
+                    <div style="min-width: 0; display: flex; flex-direction: column; gap: 1px;">
+                      <span style="font-size: 13.5px; font-weight: 700; color: var(--ih-neutral-800);">{{ r.name }}</span>
+                      <span style="font-size: 11px; color: var(--ih-neutral-500);">{{ r.branch }} · {{ r.when }}</span>
+                    </div>
+                    <div style="flex: 1;"></div>
+                    <span style="flex-shrink: 0; font-size: 12px; color: #D97706; letter-spacing: 0.04em;" aria-hidden="true">{{ r.stars }}</span>
+                  </div>
+                  <span style="font-size: 13px; color: var(--ih-neutral-700); line-height: 1.75;">{{ r.text }}</span>
+                </div>
+              </sc-for>
+              <span style="font-size: 11.5px; color: var(--ih-neutral-500); line-height: 1.7;">تُعرض تقييمات المزود عند غياب تقييمات الفرع، بوسمها الواضح — ولا تُخلط في نجمة الفرع.</span>
+            </div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1400, &quot;height&quot;: 1080}}">
+class Component extends DCLogic {
+  renderVals() {
+    const on = { border: "#D97706", bg: "#FEF3C7", color: "#D97706" };
+    const off = { border: "var(--ih-neutral-200)", bg: "var(--ih-neutral-0)", color: "var(--ih-neutral-300)" };
+    return {
+      distribution: [
+        { stars: "٥", w: "72%", n: "١٠٢" },
+        { stars: "٤", w: "18%", n: "٢٦" },
+        { stars: "٣", w: "6%", n: "٩" },
+        { stars: "٢", w: "2%", n: "٣" },
+        { stars: "١", w: "1%", n: "٢" },
+      ],
+      reviews: [
+        { initial: "ه", name: "هالة ف.", service: "صورة دم كاملة", when: "قبل ٣ أيام", stars: "★★★★★", text: "دخلت في موعدي بالثانية ولم أنتظر دقيقة. سحب الدم كان سريعاً والنتيجة وصلت في نفس اليوم." },
+        { initial: "ع", name: "عمر خ.", service: "سكر صائم", when: "قبل أسبوع", stars: "★★★★☆", text: "المكان نظيف والتعامل محترم. المكان ضيق شيئاً ما في وقت الذروة." },
+        { initial: "د", name: "دينا م.", service: "فيتامين د", when: "قبل ١٢ يوماً", stars: "★★★★★", silent: true },
+      ],
+      otherBranchReviews: [
+        { initial: "ط", name: "طارق س.", branch: "فرع المهندسين", when: "قبل ٥ أيام", stars: "★★★★★", text: "أفضل مختبر تعاملت معه في المنطقة — دقة في المواعيد واحترام في التعامل." },
+        { initial: "م", name: "منى ع.", branch: "فرع التجمع الخامس", when: "قبل أسبوعين", stars: "★★★★☆", text: "التحضير كان مكتوباً بوضوح قبل الحجز، فلم أفاجأ بشيء." },
+      ],
+      starPicker: [on, on, on, on, off],
+    };
+  }
+}
+</script>
+</body>
+</html>

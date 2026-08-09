@@ -135,7 +135,8 @@ docs/
 ├── ENGINEERING-WORKFLOW.md   # stays at docs/ ROOT — the one file everything reads
 ├── specs/                    # SPEC-SETUP-*, SPEC-CORE-*, SPEC-F*, SPEC-P*
 ├── decisions/                # DECISION-*
-├── design-briefs/            # DESIGN-01, DESIGN-02
+├── design-briefs/            # DESIGN-01, DESIGN-02, DESIGN-03
+├── runbooks/                 # RUNBOOK-* — manual operational procedures
 └── data/                     # seed-source tables (saridar branches…)
 
 design/
@@ -153,8 +154,11 @@ CLAUDE.md · PRODUCT.md · PROGRESS.md    # repo ROOT
    repository root, and `docs/ENGINEERING-WORKFLOW.md` stays at the root of `docs/`. Every session
    and every spec opens these by path; moving them breaks the bootstrap in §1 of the workflow doc.
 2. **New artifacts land in their typed folder** — a new spec goes to `docs/specs/`, a new decision
-   to `docs/decisions/`, a new design brief to `docs/design-briefs/`, seed-source data to
-   `docs/data/`. Never at the root of `docs/`.
+   to `docs/decisions/`, a new design brief to `docs/design-briefs/`, a manual procedure to
+   `docs/runbooks/`, seed-source data to `docs/data/`. Never at the root of `docs/`.
+   **A runbook is where a deliberate absence of automation gets written down** — A01's admin
+   account has no self-service password reset and no admin-management UI by design, so
+   `RUNBOOK-admin-account.md` is the other half of that decision, not a leftover.
 
 3. **There is exactly ONE design handoff bundle: `design/handoff/`.** Claude Design exports the
    WHOLE project every time, so per-surface folders (`design/mobile/`, `design/dashboard/`…) are

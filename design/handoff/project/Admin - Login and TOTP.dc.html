@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/effects.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/themes.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/base.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/styles.css">
+  <script src="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/_ds_bundle.js"></script>
+  <style>
+    body { margin: 0; background: var(--ih-neutral-100); font-family: 'Cairo', 'Atkinson Hyperlegible', sans-serif; }
+    a { color: var(--ih-primary-600); } a:hover { color: var(--ih-primary-700); }
+    input:focus { outline: none; border-color: var(--ih-primary-400) !important; }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 48px; align-items: center; padding: 40px 32px;">
+
+  <!-- ══════════ A · كلمة المرور ══════════ -->
+  <div data-screen-label="الإدارة — تسجيل الدخول">
+    <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; direction: rtl; flex-wrap: wrap;">
+      <span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--ih-primary-800);">A</span>
+      <span style="font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-700);">دخول الإدارة — خطوة أولى: البريد وكلمة المرور</span>
+      <span style="font-size: 11.5px; font-weight: 700; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 3px 10px; white-space: nowrap;">لا استعادة ذاتية — الحساب الوحيد يُدار يدوياً</span>
+    </div>
+    <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 700 }}" url="admin.instahealth.eg/login" hint-size="1366px,700px">
+      <div dir="rtl" style="display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-0); font-family: 'Cairo', sans-serif; overflow: hidden;">
+        <div style="flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; padding: 40px;">
+          <div style="width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 22px;">
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <img src="assets/logo/mark-color.svg" alt="InstaHealth" width="40" height="40" style="display: block; flex-shrink: 0;">
+                <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 4px 11px; white-space: nowrap;">لوحة الإدارة</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <h1 style="margin: 0; font-family: 'Cairo', sans-serif; font-size: 24px; font-weight: 800; color: var(--ih-neutral-800);">لوحة الإدارة</h1>
+                <p style="margin: 0; font-size: 14px; line-height: 1.7; color: var(--ih-neutral-600);">هذه اللوحة تتحكم في شبكة المزودين كلها وفي ما يدفعه الشركاء. الدخول بخطوتين.</p>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <div style="display: flex; flex-direction: column; gap: 7px;">
+                <label style="font-size: 13px; font-weight: 600; color: var(--ih-neutral-700);">البريد الإلكتروني</label>
+                <input dir="ltr" value="founder@instahealth.eg" style="width: 100%; box-sizing: border-box; min-height: 48px; padding: 0 14px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 15px; color: var(--ih-neutral-800); background: var(--ih-neutral-0); text-align: left;">
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 7px;">
+                <label style="font-size: 13px; font-weight: 600; color: var(--ih-neutral-700);">كلمة المرور</label>
+                <input dir="ltr" type="password" value="············" style="width: 100%; box-sizing: border-box; min-height: 48px; padding: 0 14px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 15px; letter-spacing: 0.18em; color: var(--ih-neutral-800); background: var(--ih-neutral-0); text-align: left;">
+              </div>
+              <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="lg" full-width="{{ true }}" hint-size="100%,52px"><span style="white-space: nowrap;">متابعة</span></x-import>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 4px; border-top: 1px solid var(--ih-neutral-200);">
+              <span style="font-size: 12px; color: var(--ih-neutral-600); line-height: 1.7; padding-top: 12px;">نسيت كلمة المرور؟ لا يوجد إعادة تعيين بالبريد لحساب الإدارة — تُعاد يدوياً من قاعدة البيانات برموز الاستعادة. احفظ رموزك في مكان آمن خارج هذا الجهاز.</span>
+            </div>
+          </div>
+        </div>
+        <div style="width: 460px; flex-shrink: 0; background: #023449; padding: 48px 44px; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box;">
+          <img src="assets/logo/mark-white.svg" alt="InstaHealth" width="44" height="44" style="display: block; flex-shrink: 0;">
+          <div style="display: flex; flex-direction: column; gap: 22px;">
+            <div style="font-family: 'Cairo', sans-serif; font-size: 26px; font-weight: 800; color: #fff; line-height: 1.5;">صلاحية واسعة<br>تستحق خطوة ثانية</div>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <sc-for list="{{ bullets }}" as="b" hint-placeholder-count="3">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span style="width: 22px; height: 22px; border-radius: 999px; background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; font-size: 11px; color: #fff; flex-shrink: 0;">✓</span>
+                  <span style="font-size: 14px; color: rgba(255,255,255,0.92); line-height: 1.6;">{{ b }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <span style="font-size: 12px; color: rgba(255,255,255,0.6); line-height: 1.6;">كل دخول يُسجَّل بوقته وجهازه في سجل الحساب.</span>
+        </div>
+      </div>
+    </x-import>
+  </div>
+
+  <!-- ══════════ B · رمز التحقق ══════════ -->
+  <div data-screen-label="الإدارة — رمز التحقق">
+    <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; direction: rtl; flex-wrap: wrap;">
+      <span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--ih-primary-800);">B</span>
+      <span style="font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-700);">الخطوة الثانية — رمز تطبيق المصادقة، ٦ أرقام</span>
+    </div>
+    <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 620 }}" url="admin.instahealth.eg/login/verify" hint-size="1366px,620px">
+      <div dir="rtl" style="display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-0); font-family: 'Cairo', sans-serif; overflow: hidden;">
+        <div style="flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; padding: 40px;">
+          <div style="width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 22px;">
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <h1 style="margin: 0; font-family: 'Cairo', sans-serif; font-size: 22px; font-weight: 800; color: var(--ih-neutral-800);">أدخل رمز التحقق</h1>
+              <p style="margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--ih-neutral-600);">من تطبيق المصادقة على هاتفك — الرمز يتغيّر كل ٣٠ ثانية.</p>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <div dir="ltr" style="display: flex; gap: 8px; justify-content: space-between;">
+                <sc-for list="{{ codeCells }}" as="c" hint-placeholder-count="6">
+                  <span style="flex: 1; min-width: 0; height: 60px; border: 1.5px solid {{ c.border }}; border-radius: 8px; background: {{ c.bg }}; display: flex; align-items: center; justify-content: center; font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 24px; font-weight: 700; color: var(--ih-neutral-800);">{{ c.v }}</span>
+                </sc-for>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 12px; color: var(--ih-neutral-500);">صلاحية الرمز الحالي: ١٩ ثانية</span>
+                <div style="flex: 1; height: 4px; border-radius: 999px; background: var(--ih-neutral-100); overflow: hidden;">
+                  <div style="width: 63%; height: 100%; border-radius: 999px; background: var(--ih-primary-400);"></div>
+                </div>
+              </div>
+            </div>
+            <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="lg" full-width="{{ true }}" hint-size="100%,52px"><span style="white-space: nowrap;">دخول</span></x-import>
+            <div style="display: flex; flex-direction: column; gap: 10px; padding-top: 12px; border-top: 1px solid var(--ih-neutral-200);">
+              <span style="font-size: 12.5px; font-weight: 700; color: var(--ih-primary-600); cursor: pointer; text-decoration: underline;">استخدم رمز استعادة بدلاً من ذلك</span>
+              <span style="font-size: 12px; color: var(--ih-neutral-600); line-height: 1.7;">كل رمز استعادة يعمل مرة واحدة. إن استخدمت واحداً، ولّد مجموعة جديدة بعد الدخول.</span>
+            </div>
+          </div>
+        </div>
+        <div style="width: 460px; flex-shrink: 0; background: #023449; padding: 48px 44px; display: flex; flex-direction: column; justify-content: center; gap: 16px; box-sizing: border-box;">
+          <img src="assets/logo/mark-white.svg" alt="InstaHealth" width="44" height="44" style="display: block; flex-shrink: 0;">
+          <div style="font-family: 'Cairo', sans-serif; font-size: 20px; font-weight: 800; color: #fff; line-height: 1.6;">الخطوة الثانية تحمي<br>ما لا يُمكن التراجع عنه</div>
+          <span style="font-size: 13.5px; color: rgba(255,255,255,0.85); line-height: 1.7;">من هذه اللوحة تتغيّر نسب الاتفاق، وتُصدَر الكشوف، وتُخفى الفروع من المرضى. كلمة مرور مسروقة لا تكفي للوصول إليها.</span>
+        </div>
+      </div>
+    </x-import>
+  </div>
+
+  <!-- ══════════ C · رمز خاطئ ══════════ -->
+  <div data-screen-label="الإدارة — رمز خاطئ">
+    <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; direction: rtl; flex-wrap: wrap;">
+      <span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--ih-primary-800);">C</span>
+      <span style="font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-700);">رمز خاطئ — يقول المتبقي ويعطي مخرجاً، ولا يلوم</span>
+    </div>
+    <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 620 }}" url="admin.instahealth.eg/login/verify" hint-size="1366px,620px">
+      <div dir="rtl" style="display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-0); font-family: 'Cairo', sans-serif; overflow: hidden;">
+        <div style="flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; padding: 40px;">
+          <div style="width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 20px;">
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <h1 style="margin: 0; font-family: 'Cairo', sans-serif; font-size: 22px; font-weight: 800; color: var(--ih-neutral-800);">أدخل رمز التحقق</h1>
+              <p style="margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--ih-neutral-600);">من تطبيق المصادقة على هاتفك — الرمز يتغيّر كل ٣٠ ثانية.</p>
+            </div>
+            <div style="display: flex; align-items: flex-start; gap: 10px; background: var(--ih-error-bg); border: 1px solid var(--ih-error); border-radius: 8px; padding: 11px 14px;">
+              <span style="flex-shrink: 0; font-size: 14px;" aria-hidden="true">⚠</span>
+              <span style="font-size: 12.5px; color: var(--ih-error); line-height: 1.6;">الرمز غير صحيح أو انتهت صلاحيته. انتظر الرمز التالي في التطبيق وأدخله كاملاً — بقيت لك ٣ محاولات قبل قفل الدخول ١٥ دقيقة.</span>
+            </div>
+            <div dir="ltr" style="display: flex; gap: 8px; justify-content: space-between;">
+              <sc-for list="{{ codeCellsError }}" as="c" hint-placeholder-count="6">
+                <span style="flex: 1; min-width: 0; height: 60px; border: 1.5px solid {{ c.border }}; border-radius: 8px; background: {{ c.bg }}; display: flex; align-items: center; justify-content: center; font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 24px; font-weight: 700; color: var(--ih-neutral-800);">{{ c.v }}</span>
+              </sc-for>
+            </div>
+            <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="lg" full-width="{{ true }}" hint-size="100%,52px"><span style="white-space: nowrap;">حاول مرة أخرى</span></x-import>
+            <div style="display: flex; flex-direction: column; gap: 10px; padding-top: 12px; border-top: 1px solid var(--ih-neutral-200);">
+              <span style="font-size: 12.5px; font-weight: 700; color: var(--ih-primary-600); cursor: pointer; text-decoration: underline;">استخدم رمز استعادة بدلاً من ذلك</span>
+              <span style="font-size: 12px; color: var(--ih-neutral-600); line-height: 1.7;">تأخُّر ساعة هاتفك عن الوقت الحقيقي يُبطِل الرموز كلها — راجع مزامنة الوقت في إعدادات الهاتف.</span>
+            </div>
+          </div>
+        </div>
+        <div style="width: 460px; flex-shrink: 0; background: #023449; padding: 48px 44px; display: flex; flex-direction: column; justify-content: center; gap: 16px; box-sizing: border-box;">
+          <img src="assets/logo/mark-white.svg" alt="InstaHealth" width="44" height="44" style="display: block; flex-shrink: 0;">
+          <div style="font-family: 'Cairo', sans-serif; font-size: 20px; font-weight: 800; color: #fff; line-height: 1.6;">القفل مؤقّت<br>ولا يمسّ بياناتك</div>
+          <span style="font-size: 13.5px; color: rgba(255,255,255,0.85); line-height: 1.7;">بعد ٥ محاولات خاطئة يُقفل الدخول ١٥ دقيقة ثم يُفتح وحده. لا شيء يُحذف، ولا حاجة لتدخّل أحد.</span>
+        </div>
+      </div>
+    </x-import>
+  </div>
+
+  <!-- ══════════ D · ربط تطبيق المصادقة ══════════ -->
+  <div data-screen-label="الإدارة — ربط تطبيق المصادقة">
+    <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; direction: rtl; flex-wrap: wrap;">
+      <span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--ih-primary-800);">D</span>
+      <span style="font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-700);">أول دخول — ربط تطبيق المصادقة ورموز الاستعادة، مرة واحدة</span>
+    </div>
+    <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 720 }}" url="admin.instahealth.eg/login/enroll" hint-size="1366px,720px">
+      <div dir="rtl" style="display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden; align-items: center; justify-content: center; padding: 32px; box-sizing: border-box;">
+        <div style="width: 100%; max-width: 760px; background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 16px; box-shadow: var(--ih-shadow-sm); overflow: hidden;">
+          <div style="padding: 18px 22px; background: #023449; display: flex; align-items: center; gap: 12px;">
+            <img src="assets/logo/mark-white.svg" alt="InstaHealth" width="30" height="30" style="display: block; flex-shrink: 0;">
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+              <span style="font-size: 15px; font-weight: 800; color: #FFFFFF;">فعّل الخطوة الثانية قبل الدخول</span>
+              <span style="font-size: 12px; color: rgba(255,255,255,0.8);">إجراء لمرة واحدة — لا يمكن تخطّيه</span>
+            </div>
+          </div>
+          <div style="padding: 22px; display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 22px; align-items: start;">
+            <div style="display: flex; flex-direction: column; gap: 10px; align-items: center;">
+              <div style="width: 180px; height: 180px; border: 1.5px solid var(--ih-neutral-200); border-radius: 12px; background: var(--ih-neutral-50); display: flex; align-items: center; justify-content: center; text-align: center; padding: 14px; box-sizing: border-box;">
+                <span style="font-size: 11.5px; color: var(--ih-neutral-500); line-height: 1.6;">رمز QR<br>يُولَّد لهذا الحساب<br>مرة واحدة</span>
+              </div>
+              <span style="font-size: 11.5px; color: var(--ih-neutral-600); text-align: center; line-height: 1.6;">امسحه بتطبيق المصادقة<br>(Google Authenticator أو Authy)</span>
+              <span dir="ltr" style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 11.5px; font-weight: 700; color: var(--ih-neutral-700); background: var(--ih-neutral-100); border-radius: 6px; padding: 6px 10px; letter-spacing: 0.08em;">JBSW Y3DP EHPK 3PXP</span>
+              <span style="font-size: 11px; color: var(--ih-neutral-500); text-align: center;">أو أدخل هذا المفتاح يدوياً</span>
+            </div>
+            <div style="min-width: 0; display: flex; flex-direction: column; gap: 16px;">
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <label style="font-size: 13px; font-weight: 600; color: var(--ih-neutral-700);">أدخل الرمز الذي يظهر في التطبيق لتأكيد الربط</label>
+                <div dir="ltr" style="display: flex; gap: 8px;">
+                  <sc-for list="{{ codeCellsEmpty }}" as="c" hint-placeholder-count="6">
+                    <span style="width: 52px; height: 56px; border: 1.5px solid {{ c.border }}; border-radius: 8px; background: {{ c.bg }}; display: flex; align-items: center; justify-content: center; font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 22px; font-weight: 700; color: var(--ih-neutral-800);">{{ c.v }}</span>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="border: 1px solid var(--ih-neutral-200); border-radius: 12px; overflow: hidden;">
+                <div style="padding: 11px 14px; background: var(--ih-neutral-50); border-bottom: 1px solid var(--ih-neutral-200); display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                  <span style="font-size: 12.5px; font-weight: 700; color: var(--ih-neutral-700);">رموز الاستعادة — ٨ رموز</span>
+                  <span style="font-size: 11px; font-weight: 700; color: #92400E; background: var(--ih-warning-bg); border-radius: 999px; padding: 2px 8px; white-space: nowrap;">تُعرض مرة واحدة</span>
+                </div>
+                <div dir="ltr" style="padding: 12px 14px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px;">
+                  <sc-for list="{{ recoveryCodes }}" as="r" hint-placeholder-count="8">
+                    <span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12.5px; font-weight: 700; color: var(--ih-neutral-700); background: var(--ih-neutral-50); border: 1px solid var(--ih-neutral-200); border-radius: 6px; padding: 6px 0; text-align: center; letter-spacing: 0.04em;">{{ r }}</span>
+                  </sc-for>
+                </div>
+                <div style="padding: 11px 14px; background: var(--ih-neutral-50); border-top: 1px solid var(--ih-neutral-200); display: flex; align-items: center; gap: 10px;">
+                  <span style="font-size: 11.5px; color: var(--ih-neutral-600); line-height: 1.6;">إن فقدت هاتفك ورموزك معاً، لا طريق للدخول إلا من قاعدة البيانات مباشرة.</span>
+                  <div style="flex: 1;"></div>
+                  <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="outline" hint-size="120px,36px"><span style="white-space: nowrap;">تنزيل الرموز</span></x-import>
+                </div>
+              </div>
+              <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <span style="flex-shrink: 0; width: 20px; height: 20px; margin-top: 1px; border: 1.5px solid var(--ih-neutral-300); border-radius: 4px; background: var(--ih-neutral-0); cursor: pointer;"></span>
+                <span style="font-size: 12.5px; color: var(--ih-neutral-700); line-height: 1.6;">حفظتُ رموز الاستعادة في مكان آمن خارج هذا الجهاز.</span>
+              </div>
+              <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+                <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="md" full-width="{{ false }}" hint-size="200px,44px"><span style="white-space: nowrap;">تأكيد الربط والدخول</span></x-import>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </x-import>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1460, &quot;height&quot;: 2900}}">
+class Component extends DCLogic {
+  renderVals() {
+    const filled = (v) => ({ v, border: "var(--ih-primary-400)", bg: "var(--ih-neutral-0)" });
+    const active = { v: "", border: "var(--ih-primary-400)", bg: "var(--ih-primary-50)" };
+    const empty = { v: "", border: "var(--ih-neutral-200)", bg: "var(--ih-neutral-0)" };
+    const errored = (v) => ({ v, border: "var(--ih-error)", bg: "var(--ih-error-bg)" });
+    return {
+      bullets: [
+        "نسب الاتفاق وكشوف الحساب",
+        "تفعيل الفروع وإخفاؤها من المرضى",
+        "حسابات الشركاء وصلاحياتها",
+      ],
+      codeCells: [filled("4"), filled("1"), filled("8"), filled("2"), active, empty],
+      codeCellsError: [errored("9"), errored("0"), errored("3"), errored("7"), errored("1"), errored("2")],
+      codeCellsEmpty: [active, empty, empty, empty, empty, empty],
+      recoveryCodes: ["7K4Q-2XR9", "M8PL-3TB6", "QW21-9HZ4", "R6VD-8KN2", "T3XC-5JM7", "B9HN-4LP1", "Z2QF-6WR8", "K5MT-1DV3"],
+    };
+  }
+}
+</script>
+</body>
+</html>

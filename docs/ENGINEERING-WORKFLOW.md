@@ -326,6 +326,28 @@ detect` over the entire history. The weekly Monday scan is the full one, and
   NULL (not `{}`) for a non-provider, `x = ANY(NULL)` is NULL, and an OR/NOT
   chain containing it evaluates to NULL — which an `IF NOT (...)` treats as
   false and FALLS THROUGH TO ALLOW. Always `COALESCE(..., FALSE)` around it.
+- **⚠ pgcrypto AND uuid-ossp LIVE IN THE `extensions` SCHEMA, so a function
+  with a pinned `search_path = public` cannot see them.** A bare
+  `uuid_generate_v4()` / `crypt()` / `gen_random_bytes()` inside such a body
+  raises `42883: function does not exist` at CALL time. Schema-qualify them:
+  `extensions.crypt(...)`.
+  ⚠ **A column DEFAULT is IMMUNE**, because its expression is stored with the
+  function OID already resolved — which is exactly what makes this survive a
+  read of the migration: the table inserts fine and only the function fails, so
+  the two look unrelated. Seeds get away with a bare `crypt()` only because they
+  run under the default search_path. Found in A01, after catching it for
+  pgcrypto and missing it for uuid-ossp in the same file.
+
+- **⚠ AN RLS PROBE THAT CANNOT FAIL IS NOT A PROBE.** RLS denies by FILTERING
+  ROWS, not by raising, so `UPDATE … WHERE id = <no-such-id>` returns "0 rows"
+  whether the policy allows it or forbids it — the two are indistinguishable.
+  Only a GRANT failure raises `42501`. And `23503` is a FOREIGN-KEY violation,
+  not a denial. A01's first authorization matrix was built on non-matching ids,
+  reported six tables as safe, and was wrong about all of them; the second pass
+  created REAL throwaway rows, got the opposite answer, and deleted them again.
+  **To prove a write is refused, aim it at a row that really exists and that you
+  are allowed to break.**
+
 - **Realtime = DB-trigger broadcasts on private topics** (migration
   20260726205901): triggers call `realtime.send()` with MINIMAL payloads
   (ids only — postgres_changes would leak RLS-hidden rows or deliver
@@ -775,6 +797,22 @@ Two more, both found while capturing P02's screenshots:
   `whitespace-nowrap` and load-bearing (a payment amount, an action label)
   should be FIXED, not compressible. Give a dense table an `overflow-x: auto`
   wrapper as the backstop so nothing is ever unreachable.
+- **⚠ A SERVER ACTION REVALIDATES ITS ROUTE, SO A GATE IN THAT ROUTE RE-RUNS
+  WITH THE POST-ACTION STATE — and can redirect past the action's own result.**
+  A01's enrollment action made the session `aal2` and returned eight one-time
+  recovery codes for display. Next re-rendered the page, whose gate saw a
+  now-fully-authorised admin and redirected to the dashboard. The codes were
+  generated, never shown, and are stored only as bcrypt hashes — unrecoverable.
+  The screen promised «تُعرض مرة واحدة» and displayed them zero times.
+  **A gate cannot be told "wait, the client is holding something" — the server
+  has no way to know.** So the acknowledgement has to BE server state: a column
+  the action sets, a function the user's confirmation clears, and a gate that
+  keeps routing back until it flips. Same law as §1.4, applied to a handoff
+  between two renders rather than between client and server. Whenever a server
+  action produces something the user must SEE exactly once, ask what the gate
+  will do on the very next render — and note that `next dev` will not save you,
+  because the redirect is correct behaviour, not a bug.
+
 - **Read the screenshot you just captured.** The first P02 drawer capture looked
   fine in the accessibility tree but showed the scrim confined to `<main>`, with
   the sidebar and header undimmed — the design anchors both to the root shell.

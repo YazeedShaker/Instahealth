@@ -148,6 +148,8 @@ jobs:
     # is the only placement where `env.SUPABASE_DB_URL` actually resolves.
     env:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      # Job-level so the reset step's `if` can read it — see the note there.
+      ADMIN_TEST_PASSWORD: ${{ secrets.ADMIN_TEST_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -187,6 +189,25 @@ jobs:
             echo "::error::Fixture seeding failed. If this says 'Network is unreachable', SUPABASE_DB_URL is the DIRECT (IPv6-only) host — switch the secret to the Session pooler URL."
             exit 1
           }
+      # A01's admin suite drives the FIRST-LOGIN flow (forced password change,
+      # TOTP enrollment, one-time recovery codes), which is a once-per-account
+      # state. Without this reset the second run would find an enrolled admin
+      # and those assertions would SKIP — and the codes-shown-once regression
+      # guard is exactly the one that must never quietly stop running.
+      # Skipped when the admin secrets are absent; the suite then skips too.
+      # ⚠ THE `if` READS JOB-LEVEL `env`, and it has to. Two ways to get this
+      # wrong, both of which I did:
+      #   · `secrets.X` in a step `if` is INVALID — the secrets context is not
+      #     available there, and GitHub rejects the whole WORKFLOW FILE, so
+      #     every job vanishes rather than one step failing.
+      #   · a step's own step-level `env` block is not in scope for that same
+      #     step's `if`, so keying on it makes the step skip every time, quietly.
+      # Job-level env is in scope, which is why SUPABASE_DB_URL above works.
+      - name: Reset the admin account to first-login state
+        if: ${{ env.SUPABASE_DB_URL != '' && env.ADMIN_TEST_PASSWORD != '' }}
+        run: |
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -v admin_password="'$ADMIN_TEST_PASSWORD'" -f supabase/seeds/005_admin_users.sql
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/seeds/006_admin_e2e_reset.sql
       - name: Run Playwright
         run: pnpm turbo test:e2e --filter=@instahealth/web
         env:
@@ -197,6 +218,12 @@ jobs:
           # apps/web/e2e/dashboard.spec.ts.
           PROVIDER_TEST_EMAIL: ${{ secrets.PROVIDER_TEST_EMAIL }}
           PROVIDER_TEST_PASSWORD: ${{ secrets.PROVIDER_TEST_PASSWORD }}
+          # Admin panel suite (A01). Same discipline: absent secrets SKIP the
+          # admin tests rather than failing them, so a missing secret never
+          # masquerades as a broken feature. ⚠ READ THE COUNTS — a skipped
+          # suite and a passing suite look identical in the summary line (§9).
+          ADMIN_TEST_EMAIL: ${{ secrets.ADMIN_TEST_EMAIL }}
+          ADMIN_TEST_PASSWORD: ${{ secrets.ADMIN_TEST_PASSWORD }}
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4

@@ -14,24 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_lockouts: {
+        Row: {
+          auth_user_id: string
+          failed_count: number
+          last_failed_at: string | null
+          locked_until: string | null
+          updated_at: string
+        }
+        Insert: {
+          auth_user_id: string
+          failed_count?: number
+          last_failed_at?: string | null
+          locked_until?: string | null
+          updated_at?: string
+        }
+        Update: {
+          auth_user_id?: string
+          failed_count?: number
+          last_failed_at?: string | null
+          locked_until?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      admin_recovery_codes: {
+        Row: {
+          auth_user_id: string
+          batch_id: string
+          code_hash: string
+          created_at: string
+          id: string
+          superseded_at: string | null
+          used_at: string | null
+        }
+        Insert: {
+          auth_user_id: string
+          batch_id: string
+          code_hash: string
+          created_at?: string
+          id?: string
+          superseded_at?: string | null
+          used_at?: string | null
+        }
+        Update: {
+          auth_user_id?: string
+          batch_id?: string
+          code_hash?: string
+          created_at?: string
+          id?: string
+          superseded_at?: string | null
+          used_at?: string | null
+        }
+        Relationships: []
+      }
       admin_users: {
         Row: {
           auth_user_id: string
           created_at: string | null
           id: string
+          is_active: boolean
+          must_change_password: boolean
           name: string | null
+          recovery_codes_acknowledged: boolean
         }
         Insert: {
           auth_user_id: string
           created_at?: string | null
           id?: string
+          is_active?: boolean
+          must_change_password?: boolean
           name?: string | null
+          recovery_codes_acknowledged?: boolean
         }
         Update: {
           auth_user_id?: string
           created_at?: string | null
           id?: string
+          is_active?: boolean
+          must_change_password?: boolean
           name?: string | null
+          recovery_codes_acknowledged?: boolean
         }
         Relationships: []
       }
@@ -877,12 +940,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      acknowledge_admin_recovery_codes: { Args: never; Returns: Json }
       auto_close_stale_bookings: { Args: never; Returns: number }
       cancel_booking: {
         Args: { p_booking_id: string; p_cancelled_by: string; p_reason: string }
         Returns: Json
       }
       cleanup_expired_holds: { Args: never; Returns: number }
+      clear_admin_totp_failures: { Args: never; Returns: Json }
+      complete_admin_password_change: { Args: never; Returns: Json }
       confirm_booking: {
         Args: {
           p_booking_id: string
@@ -893,6 +959,7 @@ export type Database = {
         }
         Returns: Json
       }
+      consume_admin_recovery_code: { Args: { p_code: string }; Returns: Json }
       create_pending_booking: {
         Args: {
           p_branch_service_ids: string[]
@@ -902,6 +969,7 @@ export type Database = {
         Returns: Json
       }
       create_slot_hold: { Args: { p_slot_id: string }; Returns: Json }
+      generate_admin_recovery_codes: { Args: never; Returns: Json }
       generate_branch_slots: {
         Args: {
           p_branch_id: string
@@ -910,6 +978,7 @@ export type Database = {
         }
         Returns: number
       }
+      get_admin_auth_state: { Args: never; Returns: Json }
       get_branch_bookings_for_date: {
         Args: {
           p_branch_id: string
@@ -1004,6 +1073,7 @@ export type Database = {
         Returns: Json
       }
       normalize_arabic: { Args: { p_text: string }; Returns: string }
+      record_admin_totp_failure: { Args: never; Returns: Json }
       search_catalog: {
         Args: { p_category_slug?: string; p_query: string }
         Returns: Json

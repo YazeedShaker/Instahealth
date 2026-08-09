@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/effects.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/themes.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/tokens/base.css">
+  <link rel="stylesheet" href="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/styles.css">
+  <script src="_ds/instahealth-design-system-0ffa7c59-2869-41ad-94aa-6a07837aef70/_ds_bundle.js"></script>
+  <style>
+    body { margin: 0; background: var(--ih-neutral-100); font-family: 'Cairo', 'Atkinson Hyperlegible', sans-serif; }
+    a { color: var(--ih-primary-600); } a:hover { color: var(--ih-primary-700); }
+    select:focus, input:focus { outline: none; border-color: var(--ih-primary-400) !important; }
+    @keyframes ih-fade-in { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes ih-dialog-in { from { opacity: 0; transform: translateY(8px) scale(0.99); } to { opacity: 1; transform: none; } }
+    @keyframes ih-shimmer { 0% { opacity: 0.55; } 50% { opacity: 1; } 100% { opacity: 0.55; } }
+    @media (prefers-reduced-motion: reduce) { .ih-anim, .ih-skel { animation: none !important; } }
+  </style>
+</helmet>
+<div style="display: flex; flex-direction: column; gap: 48px; align-items: center; padding: 40px 32px;">
+
+  <!-- ══════════ A · قائمة المزودين ══════════ -->
+  <div data-screen-label="المزودون — القائمة">
+    <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; direction: rtl; flex-wrap: wrap;">
+      <span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--ih-primary-800);">A</span>
+      <span style="font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-700);">قائمة المزودين — الشبكة كلها في جدول واحد</span>
+    </div>
+    <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 700 }}" url="admin.instahealth.eg/providers" hint-size="1366px,700px">
+      <div dir="rtl" style="--ih-surface-sidebar: #023449; position: relative; display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden;">
+        <div style="flex-shrink: 0; display: flex; align-self: stretch; background: #023449;">
+          <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.SidebarNav" brand="الإدارة" items="{{ navItems }}" active="{{ 3 }}" style="{{ sidebarStyle }}" hint-size="220px,100%"></x-import>
+        </div>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); box-shadow: var(--ih-shadow-sm); padding: 10px 24px; display: flex; align-items: center; gap: 16px; min-height: 56px; box-sizing: border-box;">
+            <div style="display: flex; flex-direction: column; gap: 1px;">
+              <div style="font-size: 16px; font-weight: 800; color: var(--ih-neutral-800);">المزودون والفروع</div>
+              <div style="font-size: 12px; color: var(--ih-neutral-500);">٤ مزودين · ١٠ فروع · ٨ فروع نشطة</div>
+            </div>
+            <span style="flex-shrink: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 4px 11px; white-space: nowrap;">لوحة الإدارة</span>
+            <div style="flex: 1;"></div>
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding-right: 16px; border-right: 1px solid var(--ih-neutral-200); white-space: nowrap;">
+              <div style="width: 32px; height: 32px; border-radius: 999px; background: #023449; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #FFFFFF;">م</div>
+              <div style="display: flex; flex-direction: column;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-700);">مؤسِّس</span>
+                <span style="font-size: 11px; color: var(--ih-neutral-500); cursor: pointer; text-decoration: underline;">تسجيل خروج</span>
+              </div>
+            </div>
+          </div>
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); padding: 12px 24px; display: flex; align-items: center; gap: 12px;">
+            <input placeholder="ابحث باسم المزود أو الفرع أو المنطقة" style="flex: 1; min-width: 0; box-sizing: border-box; min-height: 40px; padding: 0 14px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; font-family: 'Cairo', sans-serif; font-size: 13.5px; color: var(--ih-neutral-800); background: var(--ih-neutral-0);">
+            <select style="flex-shrink: 0; min-width: 150px; min-height: 40px; padding: 0 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; background: var(--ih-neutral-0); font-family: 'Cairo', sans-serif; font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-800);">
+              <option>كل الحالات</option>
+              <option>نشط</option>
+              <option>غير نشط</option>
+            </select>
+            <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" hint-size="130px,36px"><span style="white-space: nowrap;">+ مزود جديد</span></x-import>
+          </div>
+          <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 14px 24px 24px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 10px; background: var(--ih-info-bg); border: 1px solid rgba(2,128,144,0.25); border-radius: 8px; padding: 10px 14px;">
+              <span style="flex-shrink: 0; font-size: 14px;" aria-hidden="true">ℹ</span>
+              <span style="font-size: 12.5px; color: var(--ih-primary-800); line-height: 1.6;">كل ما في هذه الشاشة تُديره الإدارة فقط — الاسم، ساعات العمل، توزيع المواعيد، الموقع، وحالة التفعيل مقفلة في بوابة الشركاء.</span>
+            </div>
+            <div style="flex-shrink: 0; background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); overflow: hidden;">
+              <div style="display: grid; grid-template-columns: 1fr 92px 118px 106px 128px 150px; align-items: center; gap: 10px; padding: 10px 18px; background: var(--ih-neutral-50); border-bottom: 1px solid var(--ih-neutral-200); font-size: 11.5px; font-weight: 700; color: var(--ih-neutral-600);">
+                <span>المزود</span><span>الفروع</span><span>نسبة الاتفاق</span><span style="color: var(--ih-neutral-400);">نسبة الفرع</span><span>الحالة</span><span>آخر تعديل</span>
+              </div>
+              <sc-for list="{{ providers }}" as="p" hint-placeholder-count="4">
+                <div style="display: grid; grid-template-columns: 1fr 92px 118px 106px 128px 150px; align-items: center; gap: 10px; padding: 0 18px; min-height: 56px; border-bottom: 1px solid var(--ih-neutral-100); cursor: pointer; font-size: 13px; color: var(--ih-neutral-700);" style-hover="background: var(--ih-neutral-50);">
+                  <div style="min-width: 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="flex-shrink: 0; width: 30px; height: 30px; border-radius: 8px; background: var(--ih-primary-50); display: flex; align-items: center; justify-content: center; font-size: 14px;" aria-hidden="true">{{ p.icon }}</span>
+                    <div style="min-width: 0; display: flex; flex-direction: column; gap: 1px;">
+                      <span style="font-size: 13.5px; font-weight: 700; color: var(--ih-neutral-800); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ p.name }}</span>
+                      <span style="font-size: 11.5px; color: var(--ih-neutral-500); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ p.areas }}</span>
+                    </div>
+                  </div>
+                  <span style="font-variant-numeric: tabular-nums; font-weight: 600;">{{ p.branches }}</span>
+                  <span style="font-variant-numeric: tabular-nums; font-weight: 700; color: var(--ih-neutral-800);">{{ p.rate }}</span>
+                  <span style="color: var(--ih-neutral-400);">—</span>
+                  <sc-if value="{{ p.active }}" hint-placeholder-val="{{ true }}">
+                    <span style="justify-self: start; display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; color: #028090; background: var(--ih-success-bg); border-radius: 999px; padding: 4px 11px; white-space: nowrap;">● نشط</span>
+                  </sc-if>
+                  <sc-if value="{{ p.pending }}" hint-placeholder-val="{{ false }}">
+                    <span style="justify-self: start; display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; color: #92400E; background: var(--ih-warning-bg); border-radius: 999px; padding: 4px 11px; white-space: nowrap;">◍ لم يُفعّل بعد</span>
+                  </sc-if>
+                  <span style="font-size: 12px; color: var(--ih-neutral-500);">{{ p.updated }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <span style="flex-shrink: 0; font-size: 11.5px; color: var(--ih-neutral-500); line-height: 1.7;">عمود «نسبة الفرع» محجوز لتجاوز نسبة العمولة على مستوى الفرع — غير مُفعّل في v1، ويظهر معطّلاً حتى يُقرّ.</span>
+          </div>
+        </div>
+      </div>
+    </x-import>
+  </div>
+
+  <!-- ══════════ A2 · تفاصيل المزود ══════════ -->
+  <div data-screen-label="تفاصيل المزود — نسبة الاتفاق">
+    <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; direction: rtl; flex-wrap: wrap;">
+      <span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--ih-primary-800);">A2</span>
+      <span style="font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-700);">تفاصيل المزود — بياناته وفروعه، وبيت نسبة الاتفاق</span>
+      <span style="font-size: 11.5px; font-weight: 700; color: var(--ih-primary-700); background: var(--ih-primary-50); border: 1px solid var(--ih-primary-400); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">النسبة سارية بتاريخ — لا أثر رجعي</span>
+    </div>
+    <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 768 }}" url="admin.instahealth.eg/providers/nile" hint-size="1366px,768px">
+      <div dir="rtl" style="--ih-surface-sidebar: #023449; position: relative; display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden;">
+        <div style="flex-shrink: 0; display: flex; align-self: stretch; background: #023449;">
+          <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.SidebarNav" brand="الإدارة" items="{{ navItems }}" active="{{ 3 }}" style="{{ sidebarStyle }}" hint-size="220px,100%"></x-import>
+        </div>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); box-shadow: var(--ih-shadow-sm); padding: 10px 24px; display: flex; align-items: center; gap: 16px; min-height: 56px; box-sizing: border-box;">
+            <div style="display: flex; flex-direction: column; gap: 1px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 12.5px; color: var(--ih-primary-600); cursor: pointer;">المزودون</span>
+                <span style="font-size: 11px; color: var(--ih-neutral-400);">◂</span>
+                <span style="font-size: 12.5px; color: var(--ih-neutral-500);">مختبرات النيل للتحاليل</span>
+              </div>
+              <div style="font-size: 16px; font-weight: 800; color: var(--ih-neutral-800);">مختبرات النيل للتحاليل</div>
+            </div>
+            <span style="flex-shrink: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 4px 11px; white-space: nowrap;">لوحة الإدارة</span>
+            <div style="flex: 1;"></div>
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding-right: 16px; border-right: 1px solid var(--ih-neutral-200); white-space: nowrap;">
+              <div style="width: 32px; height: 32px; border-radius: 999px; background: #023449; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #FFFFFF;">م</div>
+              <div style="display: flex; flex-direction: column;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-700);">مؤسِّس</span>
+                <span style="font-size: 11px; color: var(--ih-neutral-500); cursor: pointer; text-decoration: underline;">تسجيل خروج</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="flex: 1; min-height: 0; display: flex; overflow: hidden;">
+            <div style="flex: 1; min-width: 0; overflow-y: auto; padding: 16px 20px 24px; display: flex; flex-direction: column; gap: 14px;">
+
+              <!-- provider fields -->
+              <div style="flex-shrink: 0; background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); overflow: hidden;">
+                <div style="padding: 14px 18px; border-bottom: 1px solid var(--ih-neutral-200); display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                  <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <span style="font-size: 14.5px; font-weight: 700; color: var(--ih-neutral-800);">بيانات المزود</span>
+                    <span style="font-size: 11.5px; color: var(--ih-neutral-600);">تسري على كل فروعه</span>
+                  </div>
+                  <span style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 5px 12px; white-space: nowrap;">🔓 تُدار من الإدارة — مقفلة للشريك</span>
+                </div>
+                <div style="padding: 16px 18px; display: flex; flex-direction: column; gap: 16px;">
+                  <div style="display: grid; grid-template-columns: 1fr 1fr 190px; gap: 14px;">
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                      <label style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-700);">الاسم بالعربية</label>
+                      <input value="مختبرات النيل للتحاليل" style="box-sizing: border-box; min-height: 44px; padding: 0 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; font-family: 'Cairo', sans-serif; font-size: 14px; color: var(--ih-neutral-800); background: var(--ih-neutral-0);">
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                      <label style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-700);">الاسم بالإنجليزية</label>
+                      <input dir="ltr" value="Nile Analysis Labs" style="box-sizing: border-box; min-height: 44px; padding: 0 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 14px; color: var(--ih-neutral-800); background: var(--ih-neutral-0); text-align: left;">
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                      <label style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-700);">النوع</label>
+                      <select style="min-height: 44px; padding: 0 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; background: var(--ih-neutral-0); font-family: 'Cairo', sans-serif; font-size: 14px; color: var(--ih-neutral-800);">
+                        <option>مختبر تحاليل</option>
+                        <option>مركز أشعة</option>
+                        <option>صيدلية</option>
+                        <option>عيادة</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr 240px; gap: 14px;">
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                      <label style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-700);">الخط الساخن</label>
+                      <div style="display: flex; align-items: stretch; gap: 8px;">
+                        <div style="flex-shrink: 0; display: flex; align-items: center; gap: 6px; padding: 0 12px; min-height: 44px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; background: var(--ih-neutral-50); font-size: 13px; font-weight: 700; color: var(--ih-neutral-700); white-space: nowrap;"><span>🇪🇬</span><span dir="ltr">+20</span></div>
+                        <input dir="ltr" value="19 8 4 4" style="flex: 1; min-width: 0; box-sizing: border-box; min-height: 44px; padding: 0 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 14px; letter-spacing: 0.03em; color: var(--ih-neutral-800); background: var(--ih-neutral-0); text-align: left;">
+                      </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                      <label style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-700);">مسؤول التواصل</label>
+                      <input dir="ltr" value="ops@nilelabs.eg" style="box-sizing: border-box; min-height: 44px; padding: 0 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 14px; color: var(--ih-neutral-800); background: var(--ih-neutral-0); text-align: left;">
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                      <label style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-700);">حالة المزود</label>
+                      <div style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border: 1.5px solid var(--ih-primary-400); border-radius: 8px; background: var(--ih-primary-50); box-sizing: border-box;">
+                        <span style="width: 40px; height: 22px; border-radius: 999px; background: var(--ih-primary-400); display: flex; align-items: center; justify-content: flex-end; padding: 2px; box-sizing: border-box; flex-shrink: 0; cursor: pointer;"><span style="width: 18px; height: 18px; border-radius: 999px; background: #FFFFFF;"></span></span>
+                        <span style="font-size: 13px; font-weight: 700; color: var(--ih-primary-700);">نشط</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div style="padding: 12px 18px; border-top: 1px solid var(--ih-neutral-200); background: var(--ih-neutral-50); display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                  <span style="font-size: 11.5px; color: var(--ih-neutral-600);">إيقاف المزود يخفي فروعه كلها من التطبيق — يؤكَّد قبل التنفيذ.</span>
+                  <div style="flex-shrink: 0; display: flex; gap: 8px;">
+                    <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="ghost" hint-size="70px,36px"><span style="white-space: nowrap; color: var(--ih-neutral-600);">تراجع</span></x-import>
+                    <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" hint-size="120px,36px"><span style="white-space: nowrap;">حفظ التغييرات</span></x-import>
+                  </div>
+                </div>
+              </div>
+
+              <!-- commission rate editor -->
+              <div style="flex-shrink: 0; background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); overflow: hidden;">
+                <div style="padding: 14px 18px; border-bottom: 1px solid var(--ih-neutral-200); display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                  <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <span style="font-size: 14.5px; font-weight: 700; color: var(--ih-neutral-800);">نسبة الاتفاق</span>
+                    <span style="font-size: 11.5px; color: var(--ih-neutral-600);">تحكم عمولة كل حجز بحسب تاريخ استحقاقه — إليها ترجع نسب صفوف الكشف</span>
+                  </div>
+                  <span style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; color: var(--ih-primary-700); background: var(--ih-primary-50); border: 1px solid var(--ih-primary-400); border-radius: 999px; padding: 6px 14px; white-space: nowrap;">السارية الآن: ١٣٪</span>
+                </div>
+                <div style="padding: 16px 18px; display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 18px; align-items: start;">
+                  <div style="min-width: 0; display: flex; flex-direction: column; gap: 12px;">
+                    <div style="display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 12px;">
+                      <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <label style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-700);">النسبة الجديدة</label>
+                        <div style="display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border: 1.5px solid var(--ih-primary-400); border-radius: 8px; background: var(--ih-neutral-0); box-sizing: border-box;">
+                          <input value="١٤" style="flex: 1; min-width: 0; border: none; outline: none; background: transparent; font-family: 'Cairo', sans-serif; font-size: 17px; font-weight: 800; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">
+                          <span style="flex-shrink: 0; font-size: 14px; font-weight: 700; color: var(--ih-neutral-500);">٪</span>
+                        </div>
+                      </div>
+                      <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <label style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-700);">سارية من تاريخ <span style="font-weight: 500; color: var(--ih-neutral-500);">(مطلوب)</span></label>
+                        <select style="min-height: 44px; padding: 0 12px; border: 1.5px solid var(--ih-primary-400); border-radius: 8px; background: var(--ih-neutral-0); font-family: 'Cairo', sans-serif; font-size: 14px; font-weight: 600; color: var(--ih-neutral-800);">
+                          <option>١ سبتمبر ٢٠٢٦ — بداية الشهر القادم</option>
+                          <option>٦ أغسطس ٢٠٢٦ — غداً</option>
+                          <option>١ أكتوبر ٢٠٢٦</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px; background: var(--ih-info-bg); border: 1px solid rgba(2,128,144,0.25); border-radius: 8px; padding: 10px 14px;">
+                      <span style="flex-shrink: 0; font-size: 14px;" aria-hidden="true">ℹ</span>
+                      <span style="font-size: 12px; color: var(--ih-primary-800); line-height: 1.6;">لا يمكن أن يكون التاريخ في الماضي. الحجوزات التي استُحقت قبله تبقى بنسبتها القديمة إلى الأبد — والكشوف المُصدَرة لا تتأثر.</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <div style="flex: 1;"></div>
+                      <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="ghost" hint-size="70px,36px"><span style="white-space: nowrap; color: var(--ih-neutral-600);">تراجع</span></x-import>
+                      <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="destructive" on-click="{{ openRate }}" hint-size="170px,36px"><span style="white-space: nowrap;">حفظ النسبة الجديدة</span></x-import>
+                    </div>
+                  </div>
+                  <div style="border: 1px solid var(--ih-neutral-200); border-radius: 12px; overflow: hidden;">
+                    <div style="padding: 10px 14px; background: var(--ih-neutral-50); border-bottom: 1px solid var(--ih-neutral-200);">
+                      <span style="font-size: 12.5px; font-weight: 700; color: var(--ih-neutral-700);">تاريخ النسب</span>
+                    </div>
+                    <sc-for list="{{ rateHistory }}" as="h" hint-placeholder-count="2">
+                      <div style="display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-bottom: 1px solid var(--ih-neutral-100);">
+                        <span style="flex-shrink: 0; font-size: 15px; font-weight: 800; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">{{ h.rate }}</span>
+                        <div style="min-width: 0; display: flex; flex-direction: column; gap: 2px;">
+                          <span style="font-size: 12px; color: var(--ih-neutral-700);">{{ h.period }}</span>
+                          <span style="font-size: 11px; color: var(--ih-neutral-500);">{{ h.who }}</span>
+                        </div>
+                        <div style="flex: 1;"></div>
+                        <sc-if value="{{ h.current }}" hint-placeholder-val="{{ true }}">
+                          <span style="flex-shrink: 0; font-size: 10.5px; font-weight: 700; color: #028090; background: var(--ih-success-bg); border-radius: 999px; padding: 3px 9px; white-space: nowrap;">سارية</span>
+                        </sc-if>
+                      </div>
+                    </sc-for>
+                    <div style="padding: 10px 14px; background: var(--ih-neutral-50);">
+                      <span style="font-size: 11px; color: var(--ih-neutral-600); line-height: 1.6;">كشف يوليو ٢٠٢٦ يخلط ١٢٪ و ١٣٪ لهذا السبب.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- branch list -->
+              <div style="flex-shrink: 0; background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); overflow: hidden;">
+                <div style="padding: 14px 18px; border-bottom: 1px solid var(--ih-neutral-200); display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                  <span style="font-size: 14.5px; font-weight: 700; color: var(--ih-neutral-800);">الفروع — ٣</span>
+                  <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="outline" hint-size="120px,36px"><span style="white-space: nowrap;">+ فرع جديد</span></x-import>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 210px 128px 140px; align-items: center; gap: 10px; padding: 10px 18px; background: var(--ih-neutral-50); border-bottom: 1px solid var(--ih-neutral-200); font-size: 11.5px; font-weight: 700; color: var(--ih-neutral-600);">
+                  <span>الفرع</span><span>توزيع المواعيد</span><span>الحالة</span><span>آخر تعديل</span>
+                </div>
+                <sc-for list="{{ providerBranches }}" as="b" hint-placeholder-count="3">
+                  <div style="display: grid; grid-template-columns: 1fr 210px 128px 140px; align-items: center; gap: 10px; padding: 0 18px; min-height: 56px; border-bottom: 1px solid var(--ih-neutral-100); cursor: pointer; font-size: 13px; color: var(--ih-neutral-700);" style-hover="background: var(--ih-neutral-50);">
+                    <div style="min-width: 0; display: flex; align-items: center; gap: 10px;">
+                      <span style="flex-shrink: 0; width: 30px; height: 30px; border-radius: 8px; background: var(--ih-primary-50); display: flex; align-items: center; justify-content: center; font-size: 14px;" aria-hidden="true">{{ b.icon }}</span>
+                      <div style="min-width: 0; display: flex; flex-direction: column; gap: 1px;">
+                        <span style="font-size: 13.5px; font-weight: 700; color: var(--ih-neutral-800); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ b.name }}</span>
+                        <span style="font-size: 11.5px; color: var(--ih-neutral-500); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ b.area }}</span>
+                      </div>
+                    </div>
+                    <span style="font-size: 12.5px; color: var(--ih-neutral-700);">{{ b.alloc }}</span>
+                    <sc-if value="{{ b.active }}" hint-placeholder-val="{{ true }}">
+                      <span style="justify-self: start; display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; color: #028090; background: var(--ih-success-bg); border-radius: 999px; padding: 4px 11px; white-space: nowrap;">● نشط</span>
+                    </sc-if>
+                    <sc-if value="{{ b.pending }}" hint-placeholder-val="{{ false }}">
+                      <span style="justify-self: start; display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; color: #92400E; background: var(--ih-warning-bg); border-radius: 999px; padding: 4px 11px; white-space: nowrap;">◍ لم يُفعّل بعد</span>
+                    </sc-if>
+                    <span style="font-size: 12px; color: var(--ih-neutral-500);">{{ b.updated }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <!-- shared audit panel -->
+            <div style="width: 340px; flex-shrink: 0; background: var(--ih-neutral-0); border-left: 1px solid var(--ih-neutral-200); display: flex; flex-direction: column; overflow: hidden;">
+              <div style="flex-shrink: 0; padding: 14px 18px; border-bottom: 1px solid var(--ih-neutral-200); display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                <div style="display: flex; flex-direction: column; gap: 1px;">
+                  <span style="font-size: 14px; font-weight: 700; color: var(--ih-neutral-800);">سجل التغييرات</span>
+                  <span style="font-size: 11.5px; color: var(--ih-neutral-500);">على مستوى المزود — يشمل النسبة</span>
+                </div>
+                <span style="flex-shrink: 0; font-size: 11px; font-weight: 600; color: var(--ih-neutral-600); background: var(--ih-neutral-100); border-radius: 999px; padding: 4px 10px; white-space: nowrap;">٤ تعديلات</span>
+              </div>
+              <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 6px 18px 18px;">
+                <sc-for list="{{ providerAudit }}" as="e" hint-placeholder-count="4">
+                  <div style="display: flex; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--ih-neutral-100);">
+                    <span style="flex-shrink: 0; width: 26px; height: 26px; border-radius: 999px; background: var(--ih-neutral-100); display: flex; align-items: center; justify-content: center; font-size: 12px;" aria-hidden="true">{{ e.icon }}</span>
+                    <div style="min-width: 0; display: flex; flex-direction: column; gap: 3px;">
+                      <span style="font-size: 12.5px; font-weight: 700; color: var(--ih-neutral-800); line-height: 1.5;">{{ e.what }}</span>
+                      <sc-if value="{{ e.hasDelta }}" hint-placeholder-val="{{ true }}">
+                        <span style="font-size: 11.5px; color: var(--ih-neutral-600); font-variant-numeric: tabular-nums;">من <span style="text-decoration: line-through;">{{ e.from }}</span> إلى <span style="font-weight: 700; color: var(--ih-neutral-800);">{{ e.to }}</span></span>
+                      </sc-if>
+                      <sc-if value="{{ e.note }}" hint-placeholder-val="{{ false }}">
+                        <span style="font-size: 11px; color: var(--ih-primary-700); background: var(--ih-primary-50); border-radius: 6px; padding: 4px 8px; line-height: 1.5;">{{ e.note }}</span>
+                      </sc-if>
+                      <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                        <span style="font-size: 11px; color: var(--ih-neutral-500);">{{ e.who }} · {{ e.when }}</span>
+                        <span style="font-size: 10.5px; font-weight: 600; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 2px 8px; white-space: nowrap;">الإدارة</span>
+                      </div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="flex-shrink: 0; padding: 12px 18px; background: var(--ih-neutral-50); border-top: 1px solid var(--ih-neutral-200);">
+                <span style="font-size: 11.5px; color: var(--ih-neutral-600); line-height: 1.6;">السجل للقراءة فقط ولا يُحذف منه شيء.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- rate change confirm -->
+        <sc-if value="{{ rateOpen }}" hint-placeholder-val="{{ true }}">
+          <div class="ih-anim" style="position: absolute; inset: 0; z-index: 60; background: rgba(2,20,27,0.5); display: flex; align-items: center; justify-content: center; padding: 32px; animation: ih-fade-in 180ms linear;">
+            <div class="ih-anim" style="width: 560px; max-width: 100%; background: var(--ih-neutral-0); border-radius: 24px; box-shadow: 0 24px 60px rgba(2,20,27,0.35); overflow: hidden; animation: ih-dialog-in 250ms cubic-bezier(0.22,1,0.36,1);">
+              <div style="padding: 20px 24px 0; display: flex; flex-direction: column; gap: 8px;">
+                <span style="font-size: 17px; font-weight: 800; color: var(--ih-neutral-800);">هذا يغيّر ما يدفعه مختبرات النيل لإنستاهيلث</span>
+                <span style="font-size: 13px; color: var(--ih-neutral-600); line-height: 1.7;">من ١ سبتمبر ٢٠٢٦ تُحسب عمولة كل حجز يستحق في ذلك التاريخ أو بعده بنسبة ١٤٪ بدلاً من ١٣٪. أبلِغ الشريك قبل السريان — هذا بند في الاتفاق لا إعداد في النظام.</span>
+              </div>
+              <div style="margin: 16px 24px; border: 1px solid var(--ih-neutral-200); border-radius: 12px; overflow: hidden;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 16px; border-bottom: 1px solid var(--ih-neutral-100);">
+                  <span style="font-size: 12.5px; color: var(--ih-neutral-700);">النسبة الحالية — تبقى للحجوزات قبل التاريخ</span>
+                  <span style="font-size: 14px; font-weight: 700; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">١٣٪</span>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 16px; border-bottom: 1px solid var(--ih-neutral-100); background: var(--ih-primary-50);">
+                  <span style="font-size: 12.5px; font-weight: 700; color: var(--ih-primary-700);">النسبة الجديدة — من ١ سبتمبر ٢٠٢٦</span>
+                  <span style="font-size: 16px; font-weight: 800; color: var(--ih-primary-700); font-variant-numeric: tabular-nums;">١٤٪</span>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 16px; background: var(--ih-success-bg);">
+                  <span style="font-size: 12.5px; font-weight: 700; color: #028090;">كشوف يوليو وأغسطس المُصدَرة</span>
+                  <span style="font-size: 11.5px; color: #028090;">لا تتأثر — لا أثر رجعي</span>
+                </div>
+              </div>
+              <div style="padding: 0 24px 18px; display: flex; align-items: flex-start; gap: 10px;">
+                <span style="flex-shrink: 0; width: 20px; height: 20px; margin-top: 1px; border: 1.5px solid var(--ih-neutral-300); border-radius: 4px; background: var(--ih-neutral-0); cursor: pointer;"></span>
+                <span style="font-size: 12.5px; color: var(--ih-neutral-700); line-height: 1.6;">أكّدتُ النسبة الجديدة وتاريخ سريانها مع الشريك كتابةً.</span>
+              </div>
+              <div style="padding: 14px 24px; background: var(--ih-neutral-50); border-top: 1px solid var(--ih-neutral-200); display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+                <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="md" variant="ghost" on-click="{{ closeRate }}" hint-size="70px,40px"><span style="white-space: nowrap; color: var(--ih-neutral-600);">إلغاء</span></x-import>
+                <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="md" variant="destructive" on-click="{{ closeRate }}" hint-size="230px,40px"><span style="white-space: nowrap;">تثبيت ١٤٪ من ١ سبتمبر</span></x-import>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </x-import>
+  </div>
+
+  <!-- ══════════ A3 · إيقاف المزود ══════════ -->
+  <div data-screen-label="تفاصيل المزود — تأكيد الإيقاف">
+    <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; direction: rtl; flex-wrap: wrap;">
+      <span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--ih-primary-800);">A3</span>
+      <span style="font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-700);">إيقاف المزود — نفس تشريح التأكيد المُبيِّن للأثر</span>
+      <span style="font-size: 11.5px; font-weight: 700; color: var(--ih-primary-700); background: var(--ih-primary-50); border: 1px solid var(--ih-primary-400); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">الأثر مكتوب داخل الحوار — لا في شرح جانبي</span>
+    </div>
+    <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 560 }}" url="admin.instahealth.eg/providers/nile" hint-size="1366px,560px">
+      <div dir="rtl" style="--ih-surface-sidebar: #023449; position: relative; display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden;">
+        <div style="flex-shrink: 0; display: flex; align-self: stretch; background: #023449;">
+          <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.SidebarNav" brand="الإدارة" items="{{ navItems }}" active="{{ 3 }}" style="{{ sidebarStyle }}" hint-size="220px,100%"></x-import>
+        </div>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); box-shadow: var(--ih-shadow-sm); padding: 10px 24px; display: flex; align-items: center; gap: 16px; min-height: 56px; box-sizing: border-box;">
+            <div style="font-size: 16px; font-weight: 800; color: var(--ih-neutral-800);">مختبرات النيل للتحاليل</div>
+            <span style="flex-shrink: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 4px 11px; white-space: nowrap;">لوحة الإدارة</span>
+          </div>
+          <div style="flex: 1; min-height: 0; overflow: hidden; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="flex-shrink: 0; background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); padding: 16px 18px; display: flex; align-items: center; gap: 16px;">
+              <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0;">
+                <span style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-700);">حالة المزود</span>
+                <div style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border: 1.5px solid var(--ih-neutral-300); border-radius: 8px; background: var(--ih-neutral-50); box-sizing: border-box;">
+                  <span style="width: 40px; height: 22px; border-radius: 999px; background: var(--ih-neutral-300); display: flex; align-items: center; justify-content: flex-start; padding: 2px; box-sizing: border-box; flex-shrink: 0; cursor: pointer;"><span style="width: 18px; height: 18px; border-radius: 999px; background: #FFFFFF;"></span></span>
+                  <span style="font-size: 13px; font-weight: 700; color: var(--ih-neutral-700);">إيقاف — بانتظار التأكيد</span>
+                </div>
+              </div>
+              <span style="font-size: 12.5px; color: var(--ih-neutral-600); line-height: 1.7;">إيقاف المزود يخفي فروعه كلها من التطبيق فوراً.</span>
+            </div>
+          </div>
+        </div>
+        <div class="ih-anim" style="position: absolute; inset: 0; z-index: 60; background: rgba(2,20,27,0.5); display: flex; align-items: center; justify-content: center; padding: 32px; animation: ih-fade-in 180ms linear;">
+          <div class="ih-anim" style="width: 560px; max-width: 100%; background: var(--ih-neutral-0); border-radius: 24px; box-shadow: 0 24px 60px rgba(2,20,27,0.35); overflow: hidden; animation: ih-dialog-in 250ms cubic-bezier(0.22,1,0.36,1);">
+            <div style="padding: 20px 24px 0; display: flex; flex-direction: column; gap: 8px;">
+              <span style="font-size: 17px; font-weight: 800; color: var(--ih-neutral-800);">إيقاف المزود يخفي فروعه</span>
+              <span style="font-size: 13px; color: var(--ih-neutral-600); line-height: 1.7;">فروع مختبرات النيل الثلاثة تختفي من البحث ومن صفحات المرضى فوراً، ولن يستطيع أحد حجز موعد جديد فيها. لا يُحذف شيء — يمكنك إعادة التفعيل في أي وقت وتعود الفروع بحالتها.</span>
+            </div>
+            <div style="margin: 16px 24px; border: 1px solid var(--ih-neutral-200); border-radius: 12px; overflow: hidden;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 16px; border-bottom: 1px solid var(--ih-neutral-100); background: var(--ih-warning-bg);">
+                <span style="font-size: 12.5px; font-weight: 700; color: #92400E;">٣ فروع تُخفى من التطبيق فوراً</span>
+                <span style="font-size: 11.5px; color: #92400E;">التجمع · المهندسين · مدينة نصر</span>
+              </div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 16px; border-bottom: 1px solid var(--ih-neutral-100); background: var(--ih-success-bg);">
+                <span style="font-size: 12.5px; font-weight: 700; color: #028090;">١١ حجزاً قائماً لا تتأثر</span>
+                <span style="font-size: 11.5px; color: #028090;">تُخدَم في مواعيدها كما هي</span>
+              </div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 16px;">
+                <span style="font-size: 12.5px; color: var(--ih-neutral-700);">مواعيد فارغة تتوقف عن الظهور</span>
+                <span style="font-size: 13px; font-weight: 700; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">٢٩٤ موعداً</span>
+              </div>
+            </div>
+            <div style="padding: 0 24px 18px; display: flex; align-items: flex-start; gap: 10px;">
+              <span style="flex-shrink: 0; width: 20px; height: 20px; margin-top: 1px; border: 1.5px solid var(--ih-neutral-300); border-radius: 4px; background: var(--ih-neutral-0); cursor: pointer;"></span>
+              <span style="font-size: 12.5px; color: var(--ih-neutral-700); line-height: 1.6;">أفهم أن الفروع تختفي من التطبيق فوراً، وأن الحجوزات القائمة تبقى ويجب أن يخدمها الشريك.</span>
+            </div>
+            <div style="padding: 14px 24px; background: var(--ih-neutral-50); border-top: 1px solid var(--ih-neutral-200); display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+              <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="md" variant="ghost" hint-size="70px,40px"><span style="white-space: nowrap; color: var(--ih-neutral-600);">إلغاء</span></x-import>
+              <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="md" variant="destructive" hint-size="180px,40px"><span style="white-space: nowrap;">إيقاف المزود وإخفاء فروعه</span></x-import>
+            </div>
+          </div>
+        </div>
+      </div>
+    </x-import>
+  </div>
+
+  <!-- ══════════ B · تفاصيل الفرع + سجل التغييرات ══════════ -->
+  <div data-screen-label="تفاصيل الفرع — سجل التغييرات">
+    <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; direction: rtl; flex-wrap: wrap;">
+      <span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--ih-primary-800);">B</span>
+      <span style="font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-700);">تفاصيل الفرع — الحقول التي تقفلها بوابة الشركاء، قابلة للتعديل هنا</span>
+      <span style="font-size: 11.5px; font-weight: 700; color: var(--ih-primary-700); background: var(--ih-primary-50); border: 1px solid var(--ih-primary-400); border-radius: 999px; padding: 3px 10px; white-space: nowrap;">لوح «سجل التغييرات» — النمط المشترك، يُعاد استخدامه في الكتالوج وحسابات المزودين</span>
+    </div>
+    <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 768 }}" url="admin.instahealth.eg/providers/nile/branches/tagamoa" hint-size="1366px,768px">
+      <div dir="rtl" style="--ih-surface-sidebar: #023449; position: relative; display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden;">
+        <div style="flex-shrink: 0; display: flex; align-self: stretch; background: #023449;">
+          <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.SidebarNav" brand="الإدارة" items="{{ navItems }}" active="{{ 3 }}" style="{{ sidebarStyle }}" hint-size="220px,100%"></x-import>
+        </div>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); box-shadow: var(--ih-shadow-sm); padding: 10px 24px; display: flex; align-items: center; gap: 16px; min-height: 56px; box-sizing: border-box;">
+            <div style="display: flex; flex-direction: column; gap: 1px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 12.5px; color: var(--ih-primary-600); cursor: pointer;">المزودون</span>
+                <span style="font-size: 11px; color: var(--ih-neutral-400);">◂</span>
+                <span style="font-size: 12.5px; color: var(--ih-primary-600); cursor: pointer;">مختبرات النيل</span>
+              </div>
+              <div style="font-size: 16px; font-weight: 800; color: var(--ih-neutral-800);">فرع التجمع الخامس</div>
+            </div>
+            <span style="flex-shrink: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 4px 11px; white-space: nowrap;">لوحة الإدارة</span>
+            <div style="flex: 1;"></div>
+            <div style="flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding-right: 16px; border-right: 1px solid var(--ih-neutral-200); white-space: nowrap;">
+              <div style="width: 32px; height: 32px; border-radius: 999px; background: #023449; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #FFFFFF;">م</div>
+              <div style="display: flex; flex-direction: column;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--ih-neutral-700);">مؤسِّس</span>
+                <span style="font-size: 11px; color: var(--ih-neutral-500); cursor: pointer; text-decoration: underline;">تسجيل خروج</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="flex: 1; min-height: 0; display: flex; overflow: hidden;">
+            <div style="flex: 1; min-width: 0; overflow-y: auto; padding: 16px 20px 24px; display: flex; flex-direction: column; gap: 14px;">
+              <div style="flex-shrink: 0; background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); overflow: hidden;">
+                <div style="padding: 14px 18px; border-bottom: 1px solid var(--ih-neutral-200); display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                  <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <span style="font-size: 14.5px; font-weight: 700; color: var(--ih-neutral-800);">بيانات الفرع الأساسية</span>
+                    <span style="font-size: 11.5px; color: var(--ih-neutral-600);">آخر تعديل: مؤسِّس · ٤ أغسطس ٢٠٢٦</span>
+                  </div>
+                  <span style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 5px 12px; white-space: nowrap;">🔓 تُدار من الإدارة — مقفلة للشريك</span>
+                </div>
+                <div style="padding: 16px 18px; display: flex; flex-direction: column; gap: 16px;">
+                  <div style="display: grid; grid-template-columns: 1fr 200px; gap: 14px;">
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                      <label style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-700);">اسم الفرع <span style="font-weight: 500; color: var(--ih-neutral-500);">(يظهر للمرضى)</span></label>
+                      <input value="مختبرات النيل — فرع التجمع الخامس" style="box-sizing: border-box; min-height: 44px; padding: 0 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; font-family: 'Cairo', sans-serif; font-size: 14px; color: var(--ih-neutral-800); background: var(--ih-neutral-0);">
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                      <label style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-700);">المنطقة</label>
+                      <select style="min-height: 44px; padding: 0 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; background: var(--ih-neutral-0); font-family: 'Cairo', sans-serif; font-size: 14px; color: var(--ih-neutral-800);">
+                        <option>التجمع الخامس</option>
+                        <option>المهندسين</option>
+                        <option>مدينة نصر</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                      <label style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-700);">ساعات العمل</label>
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <input value="١٢:٣٠ م" style="flex: 1; min-width: 0; box-sizing: border-box; min-height: 44px; padding: 0 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; font-family: 'Cairo', sans-serif; font-size: 14px; color: var(--ih-neutral-800); background: var(--ih-neutral-0); font-variant-numeric: tabular-nums;">
+                        <span style="flex-shrink: 0; font-size: 12.5px; color: var(--ih-neutral-500);">إلى</span>
+                        <input value="٤:٣٠ م" style="flex: 1; min-width: 0; box-sizing: border-box; min-height: 44px; padding: 0 12px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; font-family: 'Cairo', sans-serif; font-size: 14px; color: var(--ih-neutral-800); background: var(--ih-neutral-0); font-variant-numeric: tabular-nums;">
+                      </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                      <label style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-700);">حالة الفرع</label>
+                      <div style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border: 1.5px solid var(--ih-primary-400); border-radius: 8px; background: var(--ih-primary-50); box-sizing: border-box;">
+                        <span style="width: 40px; height: 22px; border-radius: 999px; background: var(--ih-primary-400); display: flex; align-items: center; justify-content: flex-end; padding: 2px; box-sizing: border-box; flex-shrink: 0; cursor: pointer;"><span style="width: 18px; height: 18px; border-radius: 999px; background: #FFFFFF;"></span></span>
+                        <span style="font-size: 13px; font-weight: 700; color: var(--ih-primary-700);">نشط — يظهر للمرضى</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <label style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-700);">الموقع على الخريطة</label>
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; background: var(--ih-neutral-50);">
+                      <span style="flex-shrink: 0; font-size: 16px;" aria-hidden="true">📍</span>
+                      <div style="min-width: 0; display: flex; flex-direction: column; gap: 2px;">
+                        <span dir="ltr" style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 13px; font-weight: 700; color: var(--ih-neutral-800); text-align: right; unicode-bidi: isolate;">30.0131, 31.4270</span>
+                        <span style="font-size: 11.5px; color: var(--ih-neutral-600);">مثبّت على مدخل المبنى — يُستخدم في حساب المسافة للمريض</span>
+                      </div>
+                      <div style="flex: 1;"></div>
+                      <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="outline" hint-size="120px,36px"><span style="white-space: nowrap;">تعديل الدبوس</span></x-import>
+                    </div>
+                  </div>
+                </div>
+                <div style="padding: 12px 18px; border-top: 1px solid var(--ih-neutral-200); background: var(--ih-neutral-50); display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                  <span style="font-size: 11.5px; color: var(--ih-neutral-600);">يُسجَّل كل تعديل في سجل التغييرات باسمك وتاريخه.</span>
+                  <div style="flex-shrink: 0; display: flex; gap: 8px;">
+                    <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="ghost" hint-size="70px,36px"><span style="white-space: nowrap; color: var(--ih-neutral-600);">تراجع</span></x-import>
+                    <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" hint-size="120px,36px"><span style="white-space: nowrap;">حفظ التغييرات</span></x-import>
+                  </div>
+                </div>
+              </div>
+
+              <div style="flex-shrink: 0; background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); overflow: hidden;">
+                <div style="padding: 14px 18px; border-bottom: 1px solid var(--ih-neutral-200); display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                  <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <span style="font-size: 14.5px; font-weight: 700; color: var(--ih-neutral-800);">توزيع المواعيد</span>
+                    <span style="font-size: 11.5px; color: var(--ih-neutral-600);">يحدد مواعيد كل يوم قادم — والشريك يرى النتيجة فقط</span>
+                  </div>
+                  <span style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; color: #92400E; background: var(--ih-warning-bg); border: 1px solid rgba(217,119,6,0.35); border-radius: 999px; padding: 5px 12px; white-space: nowrap;">⚠ تغييره يعيد توليد المواعيد</span>
+                </div>
+                <div style="padding: 16px 18px; display: grid; grid-template-columns: 200px 1fr; gap: 16px; align-items: start;">
+                  <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <label style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-700);">عدد المواعيد اليومية</label>
+                    <div style="display: flex; align-items: center; gap: 0; border: 1.5px solid var(--ih-neutral-200); border-radius: 8px; overflow: hidden; background: var(--ih-neutral-0);">
+                      <span style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: var(--ih-neutral-600); cursor: pointer; border-left: 1px solid var(--ih-neutral-200);" style-hover="background: var(--ih-neutral-50);">−</span>
+                      <span style="flex: 1; text-align: center; font-size: 17px; font-weight: 800; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">١٢</span>
+                      <span style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: var(--ih-neutral-600); cursor: pointer; border-right: 1px solid var(--ih-neutral-200);" style-hover="background: var(--ih-neutral-50);">+</span>
+                    </div>
+                    <span style="font-size: 11.5px; color: #92400E; font-weight: 600;">كان ٨ — لم يُحفظ بعد</span>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label style="font-size: 12.5px; font-weight: 600; color: var(--ih-neutral-700);">مدة الموعد</label>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                      <span style="font-size: 13px; font-weight: 700; color: #FFFFFF; background: var(--ih-primary-600); border-radius: 999px; padding: 8px 18px; cursor: pointer;">٢٠ دقيقة</span>
+                      <span style="font-size: 13px; font-weight: 600; color: var(--ih-neutral-700); background: var(--ih-neutral-100); border: 1px solid var(--ih-neutral-200); border-radius: 999px; padding: 8px 18px; cursor: pointer;">٣٠ دقيقة</span>
+                      <span style="font-size: 13px; font-weight: 600; color: var(--ih-neutral-700); background: var(--ih-neutral-100); border: 1px solid var(--ih-neutral-200); border-radius: 999px; padding: 8px 18px; cursor: pointer;">٤٥ دقيقة</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px; background: var(--ih-neutral-50); border: 1px solid var(--ih-neutral-200); border-radius: 8px; padding: 10px 14px; margin-top: 4px;">
+                      <span style="font-size: 12.5px; color: var(--ih-neutral-700);">النتيجة: <span style="font-weight: 700; color: var(--ih-neutral-800);">١٢ موعداً · ١٢:٣٠م — ٤:٣٠م · كل ٢٠ دقيقة</span></span>
+                      <div style="flex: 1;"></div>
+                      <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="sm" variant="destructive" on-click="{{ openRegen }}" hint-size="180px,36px"><span style="white-space: nowrap;">حفظ وإعادة توليد المواعيد</span></x-import>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="width: 340px; flex-shrink: 0; background: var(--ih-neutral-0); border-left: 1px solid var(--ih-neutral-200); display: flex; flex-direction: column; overflow: hidden;">
+              <div style="flex-shrink: 0; padding: 14px 18px; border-bottom: 1px solid var(--ih-neutral-200); display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                <div style="display: flex; flex-direction: column; gap: 1px;">
+                  <span style="font-size: 14px; font-weight: 700; color: var(--ih-neutral-800);">سجل التغييرات</span>
+                  <span style="font-size: 11.5px; color: var(--ih-neutral-500);">كل تعديل على هذا الفرع — من أي بوابة</span>
+                </div>
+                <span style="flex-shrink: 0; font-size: 11px; font-weight: 600; color: var(--ih-neutral-600); background: var(--ih-neutral-100); border-radius: 999px; padding: 4px 10px; white-space: nowrap;">٦ تعديلات</span>
+              </div>
+              <div style="flex: 1; overflow-y: auto; min-height: 0; padding: 6px 18px 18px;">
+                <sc-for list="{{ auditEntries }}" as="e" hint-placeholder-count="6">
+                  <div style="display: flex; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--ih-neutral-100);">
+                    <span style="flex-shrink: 0; width: 26px; height: 26px; border-radius: 999px; background: var(--ih-neutral-100); display: flex; align-items: center; justify-content: center; font-size: 12px;" aria-hidden="true">{{ e.icon }}</span>
+                    <div style="min-width: 0; display: flex; flex-direction: column; gap: 3px;">
+                      <span style="font-size: 12.5px; font-weight: 700; color: var(--ih-neutral-800); line-height: 1.5;">{{ e.what }}</span>
+                      <sc-if value="{{ e.hasDelta }}" hint-placeholder-val="{{ true }}">
+                        <span style="font-size: 11.5px; color: var(--ih-neutral-600); font-variant-numeric: tabular-nums;">من <span style="text-decoration: line-through;">{{ e.from }}</span> إلى <span style="font-weight: 700; color: var(--ih-neutral-800);">{{ e.to }}</span></span>
+                      </sc-if>
+                      <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                        <span style="font-size: 11px; color: var(--ih-neutral-500);">{{ e.who }} · {{ e.when }}</span>
+                        <sc-if value="{{ e.fromPartner }}" hint-placeholder-val="{{ false }}">
+                          <span style="font-size: 10.5px; font-weight: 600; color: var(--ih-neutral-600); background: var(--ih-neutral-100); border-radius: 999px; padding: 2px 8px; white-space: nowrap;">بوابة الشركاء</span>
+                        </sc-if>
+                        <sc-if value="{{ e.fromAdmin }}" hint-placeholder-val="{{ true }}">
+                          <span style="font-size: 10.5px; font-weight: 600; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 2px 8px; white-space: nowrap;">الإدارة</span>
+                        </sc-if>
+                      </div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="flex-shrink: 0; padding: 12px 18px; background: var(--ih-neutral-50); border-top: 1px solid var(--ih-neutral-200);">
+                <span style="font-size: 11.5px; color: var(--ih-neutral-600); line-height: 1.6;">السجل للقراءة فقط ولا يُحذف منه شيء.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <sc-if value="{{ regenOpen }}" hint-placeholder-val="{{ true }}">
+          <div class="ih-anim" style="position: absolute; inset: 0; z-index: 60; background: rgba(2,20,27,0.5); display: flex; align-items: center; justify-content: center; padding: 32px; animation: ih-fade-in 180ms linear;">
+            <div class="ih-anim" style="width: 560px; max-width: 100%; background: var(--ih-neutral-0); border-radius: 24px; box-shadow: 0 24px 60px rgba(2,20,27,0.35); overflow: hidden; animation: ih-dialog-in 250ms cubic-bezier(0.22,1,0.36,1);">
+              <div style="padding: 20px 24px 0; display: flex; flex-direction: column; gap: 8px;">
+                <span style="font-size: 17px; font-weight: 800; color: var(--ih-neutral-800);">هذا التغيير يعيد توليد مواعيد الأيام القادمة</span>
+                <span style="font-size: 13px; color: var(--ih-neutral-600); line-height: 1.7;">حفظ التوزيع الجديد (١٢ موعداً كل ٢٠ دقيقة) يحذف المواعيد الفارغة من الغد وحتى ٣٠ يوماً ويبنيها من جديد على النمط الجديد. حجوزات اليوم لا تتأثر.</span>
+              </div>
+              <div style="margin: 16px 24px; border: 1px solid var(--ih-neutral-200); border-radius: 12px; overflow: hidden;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 16px; border-bottom: 1px solid var(--ih-neutral-100); background: var(--ih-success-bg);">
+                  <span style="font-size: 12.5px; font-weight: 700; color: #028090;">٤ حجوزات قائمة في الأيام القادمة تبقى كما هي</span>
+                  <span style="font-size: 11.5px; color: #028090;">بمواعيدها الأصلية</span>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 16px; border-bottom: 1px solid var(--ih-neutral-100);">
+                  <span style="font-size: 12.5px; color: var(--ih-neutral-700);">مواعيد فارغة تُحذف وتُبنى من جديد</span>
+                  <span style="font-size: 13px; font-weight: 700; color: var(--ih-neutral-800); font-variant-numeric: tabular-nums;">٢٣٦ موعداً</span>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 16px;">
+                  <span style="font-size: 12.5px; color: var(--ih-neutral-700);">النطاق</span>
+                  <span style="font-size: 12.5px; font-weight: 700; color: var(--ih-neutral-800);">٦ أغسطس — ٤ سبتمبر ٢٠٢٦</span>
+                </div>
+              </div>
+              <div style="padding: 0 24px 18px; display: flex; align-items: flex-start; gap: 10px;">
+                <span style="flex-shrink: 0; width: 20px; height: 20px; margin-top: 1px; border: 1.5px solid var(--ih-neutral-300); border-radius: 4px; background: var(--ih-neutral-0); cursor: pointer;"></span>
+                <span style="font-size: 12.5px; color: var(--ih-neutral-700); line-height: 1.6;">أفهم أن مواعيد الأيام القادمة ستُبنى من جديد، وأن المرضى قد يرون مواعيد مختلفة عن التي كانت متاحة قبل قليل.</span>
+              </div>
+              <div style="padding: 14px 24px; background: var(--ih-neutral-50); border-top: 1px solid var(--ih-neutral-200); display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+                <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="md" variant="ghost" on-click="{{ closeRegen }}" hint-size="70px,40px"><span style="white-space: nowrap; color: var(--ih-neutral-600);">إلغاء</span></x-import>
+                <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="md" variant="destructive" on-click="{{ closeRegen }}" hint-size="210px,40px"><span style="white-space: nowrap;">حفظ وإعادة توليد ٢٣٦ موعداً</span></x-import>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </x-import>
+  </div>
+
+  <!-- ══════════ C · تحميل ══════════ -->
+  <div data-screen-label="المزودون — تحميل">
+    <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; direction: rtl;">
+      <span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--ih-primary-800);">C</span>
+      <span style="font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-700);">تحميل القائمة — هيكل عظمي لا شاشة فارغة</span>
+    </div>
+    <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 520 }}" url="admin.instahealth.eg/providers" hint-size="1366px,520px">
+      <div dir="rtl" style="--ih-surface-sidebar: #023449; display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden;">
+        <div style="flex-shrink: 0; display: flex; align-self: stretch; background: #023449;">
+          <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.SidebarNav" brand="الإدارة" items="{{ navItems }}" active="{{ 3 }}" style="{{ sidebarStyle }}" hint-size="220px,100%"></x-import>
+        </div>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+          <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); box-shadow: var(--ih-shadow-sm); padding: 10px 24px; display: flex; align-items: center; gap: 16px; min-height: 56px; box-sizing: border-box;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <div style="font-size: 16px; font-weight: 800; color: var(--ih-neutral-800);">المزودون والفروع</div>
+              <div class="ih-skel" style="width: 160px; height: 10px; border-radius: 4px; background: var(--ih-neutral-200); animation: ih-shimmer 1400ms ease-in-out infinite;"></div>
+            </div>
+            <span style="flex-shrink: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 4px 11px; white-space: nowrap;">لوحة الإدارة</span>
+          </div>
+          <div style="flex: 1; min-height: 0; padding: 16px 24px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="flex-shrink: 0; background: var(--ih-neutral-0); border: 1px solid var(--ih-neutral-200); border-radius: 12px; box-shadow: var(--ih-shadow-sm); overflow: hidden;">
+              <div style="display: grid; grid-template-columns: 1fr 92px 118px 106px 128px 150px; align-items: center; gap: 10px; padding: 10px 18px; background: var(--ih-neutral-50); border-bottom: 1px solid var(--ih-neutral-200); font-size: 11.5px; font-weight: 700; color: var(--ih-neutral-600);">
+                <span>المزود</span><span>الفروع</span><span>نسبة الاتفاق</span><span style="color: var(--ih-neutral-400);">نسبة الفرع</span><span>الحالة</span><span>آخر تعديل</span>
+              </div>
+              <sc-for list="{{ skeletonRows }}" as="s" hint-placeholder-count="4">
+                <div style="display: grid; grid-template-columns: 1fr 92px 118px 106px 128px 150px; align-items: center; gap: 10px; padding: 0 18px; min-height: 56px; border-bottom: 1px solid var(--ih-neutral-100);">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <div class="ih-skel" style="width: 30px; height: 30px; border-radius: 8px; background: var(--ih-neutral-200); animation: ih-shimmer 1400ms ease-in-out infinite;"></div>
+                    <div class="ih-skel" style="width: 180px; height: 12px; border-radius: 4px; background: var(--ih-neutral-200); animation: ih-shimmer 1400ms ease-in-out infinite;"></div>
+                  </div>
+                  <div class="ih-skel" style="width: 24px; height: 12px; border-radius: 4px; background: var(--ih-neutral-200); animation: ih-shimmer 1400ms ease-in-out infinite;"></div>
+                  <div class="ih-skel" style="width: 40px; height: 12px; border-radius: 4px; background: var(--ih-neutral-200); animation: ih-shimmer 1400ms ease-in-out infinite;"></div>
+                  <span style="color: var(--ih-neutral-300);">—</span>
+                  <div class="ih-skel" style="width: 70px; height: 20px; border-radius: 999px; background: var(--ih-neutral-200); animation: ih-shimmer 1400ms ease-in-out infinite;"></div>
+                  <div class="ih-skel" style="width: 90px; height: 12px; border-radius: 4px; background: var(--ih-neutral-200); animation: ih-shimmer 1400ms ease-in-out infinite;"></div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+    </x-import>
+  </div>
+
+  <!-- ══════════ D · فارغة وخطأ ══════════ -->
+  <div data-screen-label="المزودون — فارغة وخطأ">
+    <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; direction: rtl;">
+      <span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--ih-primary-800);">D</span>
+      <span style="font-size: 13.5px; font-weight: 600; color: var(--ih-neutral-700);">فارغة (أول تشغيل) وخطأ في التحميل — كلتاهما تعطي خطوة تالية</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+      <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 500 }}" url="admin.instahealth.eg/providers" hint-size="1366px,500px">
+        <div dir="rtl" style="--ih-surface-sidebar: #023449; display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden;">
+          <div style="flex-shrink: 0; display: flex; align-self: stretch; background: #023449;">
+            <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.SidebarNav" brand="الإدارة" items="{{ navItems }}" active="{{ 3 }}" style="{{ sidebarStyle }}" hint-size="220px,100%"></x-import>
+          </div>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+            <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); box-shadow: var(--ih-shadow-sm); padding: 10px 24px; display: flex; align-items: center; gap: 16px; min-height: 56px; box-sizing: border-box;">
+              <div style="font-size: 16px; font-weight: 800; color: var(--ih-neutral-800);">المزودون والفروع</div>
+              <span style="flex-shrink: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 4px 11px; white-space: nowrap;">لوحة الإدارة</span>
+            </div>
+            <div style="flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 24px;">
+              <div style="max-width: 460px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;">
+                <span style="font-size: 30px;" aria-hidden="true">🏥</span>
+                <span style="font-size: 17px; font-weight: 800; color: var(--ih-neutral-800);">لا يوجد مزودون بعد</span>
+                <span style="font-size: 13px; color: var(--ih-neutral-600); line-height: 1.7;">أضف أول مزود لتبدأ الشبكة: بياناته وفروعه وساعات العمل، ثم فعّل الفرع ليظهر للمرضى.</span>
+                <div style="margin-top: 4px;">
+                  <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="md" hint-size="150px,40px"><span style="white-space: nowrap;">+ مزود جديد</span></x-import>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </x-import>
+      <x-import component-from-global-scope="ChromeWindow" from="./browser-window.jsx" width="{{ 1366 }}" height="{{ 500 }}" url="admin.instahealth.eg/providers" hint-size="1366px,500px">
+        <div dir="rtl" style="--ih-surface-sidebar: #023449; display: flex; height: 100%; min-height: 100%; align-self: stretch; flex: 1; background: var(--ih-neutral-100); font-family: 'Cairo', sans-serif; overflow: hidden;">
+          <div style="flex-shrink: 0; display: flex; align-self: stretch; background: #023449;">
+            <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.SidebarNav" brand="الإدارة" items="{{ navItems }}" active="{{ 3 }}" style="{{ sidebarStyle }}" hint-size="220px,100%"></x-import>
+          </div>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+            <div style="flex-shrink: 0; background: var(--ih-neutral-0); border-bottom: 1px solid var(--ih-neutral-200); box-shadow: var(--ih-shadow-sm); padding: 10px 24px; display: flex; align-items: center; gap: 16px; min-height: 56px; box-sizing: border-box;">
+              <div style="font-size: 16px; font-weight: 800; color: var(--ih-neutral-800);">المزودون والفروع</div>
+              <span style="flex-shrink: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #FFFFFF; background: #023449; border-radius: 999px; padding: 4px 11px; white-space: nowrap;">لوحة الإدارة</span>
+            </div>
+            <div style="flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 24px;">
+              <div style="max-width: 520px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;">
+                <span style="font-size: 26px;" aria-hidden="true">⚠</span>
+                <span style="font-size: 17px; font-weight: 800; color: var(--ih-neutral-800);">لم نتمكن من تحميل قائمة المزودين</span>
+                <span style="font-size: 13px; color: var(--ih-neutral-600); line-height: 1.7;">المشكلة عندنا لا عندك، ولم يتغيّر شيء في البيانات. حاول مرة أخرى، وإن تكرر الأمر افتح سجل الأخطاء.</span>
+                <div style="margin-top: 4px; display: flex; gap: 8px;">
+                  <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="md" hint-size="130px,40px"><span style="white-space: nowrap;">حاول مرة أخرى</span></x-import>
+                  <x-import component-from-global-scope="InstaHealthDesignSystem_0ffa7c.Button" size="md" variant="outline" hint-size="140px,40px"><span style="white-space: nowrap;">سجل الأخطاء</span></x-import>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </x-import>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1460, &quot;height&quot;: 4360}}">
+class Component extends DCLogic {
+  state = { regenOpen: true, rateOpen: true };
+  renderVals() {
+    return {
+      navItems: [
+        { icon: "📊", label: "نظرة عامة" },
+        { icon: "📈", label: "التحليلات" },
+        { icon: "🧾", label: "العمولات والفواتير" },
+        { icon: "🏥", label: "المزودون والفروع" },
+        { icon: "🧪", label: "كتالوج الخدمات" },
+        { icon: "👤", label: "حسابات المزودين" },
+        { icon: "📋", label: "الحجوزات" },
+      ],
+      sidebarStyle: { height: "100%", alignSelf: "stretch", flexShrink: 0, boxSizing: "border-box" },
+      skeletonRows: [1, 2, 3, 4],
+      providers: [
+        { icon: "🔬", name: "مختبرات النيل للتحاليل", areas: "التجمع الخامس · المهندسين · مدينة نصر", branches: "٣", rate: "١٣٪", active: true, updated: "أمس ٤:١٢ م" },
+        { icon: "🧪", name: "معامل سريدار", areas: "التجمع الخامس · الدقي", branches: "٢", rate: "١٢٪", active: true, updated: "٢٨ يوليو" },
+        { icon: "🩻", name: "مركز الشفاء للأشعة", areas: "مصر الجديدة", branches: "١", rate: "١٥٪", pending: true, updated: "٤ أغسطس ١١:٠٥ ص" },
+        { icon: "💊", name: "صيدليات الحياة", areas: "المعادي · حلوان · المقطم · الرحاب", branches: "٤", rate: "١٠٪", active: true, updated: "٢ أغسطس" },
+      ],
+      auditEntries: [
+        { icon: "🕐", what: "عدد المواعيد اليومية", hasDelta: true, from: "٦", to: "٨", who: "مؤسِّس", when: "أمس ٤:١٢ م", fromAdmin: true },
+        { icon: "🏥", what: "اسم الفرع", hasDelta: true, from: "معامل النيل — التجمع", to: "مختبرات النيل — فرع التجمع الخامس", who: "مؤسِّس", when: "٢٩ يوليو ١٠:٣٠ ص", fromAdmin: true },
+        { icon: "📞", what: "هاتف الفرع", hasDelta: true, from: "٢ ٢٧٣٥ ١١٩٠", to: "٢ ٢٧٣٥ ٤٤١٦", who: "إدارة الفرع", when: "٢٦ يوليو ٩:٤٠ ص", fromPartner: true },
+        { icon: "📍", what: "الموقع على الخريطة", hasDelta: false, who: "مؤسِّس", when: "٢٠ يوليو ١:٢٠ م", fromAdmin: true },
+        { icon: "🕐", what: "ساعات العمل", hasDelta: true, from: "١٠:٠٠ص — ٤:٠٠م", to: "١٢:٣٠م — ٤:٣٠م", who: "مؤسِّس", when: "١٨ يوليو ٥:٠٥ م", fromAdmin: true },
+        { icon: "✓", what: "تفعيل الفرع — ظهر للمرضى", hasDelta: false, who: "مؤسِّس", when: "١٥ يوليو ٢:٠٠ م", fromAdmin: true },
+      ],
+      providerBranches: [
+        { icon: "🔬", name: "فرع التجمع الخامس", area: "شارع التسعين الشمالي — القاهرة الجديدة", alloc: "١٢ موعداً · كل ٢٠ دقيقة", active: true, updated: "أمس ٤:١٢ م" },
+        { icon: "🔬", name: "فرع المهندسين", area: "شارع جامعة الدول العربية — الجيزة", alloc: "٨ مواعيد · كل ٣٠ دقيقة", active: true, updated: "٢٩ يوليو" },
+        { icon: "🔬", name: "فرع مدينة نصر", area: "شارع عباس العقاد — القاهرة", alloc: "لا مواعيد — لم يُوزَّع بعد", pending: true, updated: "٤ أغسطس ١١:٠٥ ص" },
+      ],
+      rateHistory: [
+        { rate: "١٣٪", period: "من ١٦ يوليو ٢٠٢٦ — حتى الآن", current: true, who: "مؤسِّس · ١٦ يوليو" },
+        { rate: "١٢٪", period: "من ١ يناير ٢٠٢٦ حتى ١٥ يوليو ٢٠٢٦", who: "مؤسِّس · ٢ يناير" },
+      ],
+      providerAudit: [
+        { icon: "٪", what: "نسبة الاتفاق", hasDelta: true, from: "١٢٪", to: "١٣٪", note: "سارية من ١٦ يوليو ٢٠٢٦ — بلا أثر رجعي", who: "مؤسِّس", when: "١٦ يوليو ٩:١٠ ص" },
+        { icon: "🏥", what: "إضافة فرع مدينة نصر", hasDelta: false, who: "مؤسِّس", when: "٤ أغسطس ١١:٠٥ ص" },
+        { icon: "📞", what: "الخط الساخن", hasDelta: true, from: "١٩٧٧٧", to: "١٩٨٤٤", who: "مؤسِّس", when: "٢٢ يوليو ١٢:٤٠ م" },
+        { icon: "✓", what: "تفعيل المزود", hasDelta: false, who: "مؤسِّس", when: "١٥ يوليو ١:٥٥ م" },
+      ],
+      rateOpen: this.state.rateOpen,
+      closeRate: () => this.setState({ rateOpen: false }),
+      openRate: () => this.setState({ rateOpen: true }),
+      regenOpen: this.state.regenOpen,
+      openRegen: () => this.setState({ regenOpen: true }),
+      closeRegen: () => this.setState({ regenOpen: false }),
+    };
+  }
+}
+</script>
+</body>
+</html>
