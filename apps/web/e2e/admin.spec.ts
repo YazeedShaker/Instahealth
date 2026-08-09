@@ -1,5 +1,6 @@
 import { createHmac, randomBytes } from 'node:crypto'
 
+import { toArabicDigits } from '@instahealth/core'
 import { expect, test, type Page } from '@playwright/test'
 
 // A01 E2E — the admin portal's auth flow and shell.
@@ -239,12 +240,22 @@ test.describe('admin portal — auth & shell (A01)', () => {
     await expect(page.getByTestId('admin-analytics-question')).toHaveCount(5)
     await expect(page.getByText('٥ أسئلة مُقرّة')).toBeVisible()
 
-    // A placeholder surface still carries its REAL title and its spec id.
+    // ⚠ العمولات والفواتير STOPPED being a placeholder when A02 landed. This
+    // assertion used to require the «قريباً» chip and the spec id; keeping it
+    // would have meant a real screen failing for looking real. A placeholder
+    // surface is still checked below — كتالوج الخدمات has not been built yet.
     await page.getByTestId('admin-nav-commissions').click()
     await page.waitForURL('**/admin/commissions')
     await expect(page.getByTestId('admin-commissions')).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByTestId('admin-soon-chip')).toHaveCount(0)
+    await expect(page.getByTestId('statement-provider')).toBeVisible()
+
+    // A placeholder surface still carries its REAL title and its spec id.
+    await page.getByTestId('admin-nav-catalog').click()
+    await page.waitForURL('**/admin/catalog')
+    await expect(page.getByTestId('admin-catalog')).toBeVisible({ timeout: 30_000 })
     await expect(page.getByTestId('admin-soon-chip')).toBeVisible()
-    await expect(page.getByTestId('admin-commissions-spec')).toContainText('A02')
+    await expect(page.getByTestId('admin-catalog-spec')).toContainText('A0')
   })
 
   test('an unauthenticated visitor cannot reach /admin', async ({ page }) => {
@@ -307,6 +318,121 @@ test.describe('admin portal — auth & shell (A01)', () => {
 
     await page.goto('/dashboard/today')
     await page.waitForURL('**/login?rejected=1')
+  })
+
+  // ── A02 · the commission statement ────────────────────────────────────────
+  //
+  // ⚠ READ-ONLY ON PURPOSE. Issuing a statement writes a row that the next run
+  // would find already there, and the double-issue guard would then refuse —
+  // so a mutating test here would pass once and skip-by-failure forever after.
+  // The full lifecycle (issue → sent → re-issue → settle → credit-forward) is
+  // proven against the live database by a Node run recorded in the PR, where
+  // the fixture can be created AND destroyed. What Playwright owns is what only
+  // a browser can answer: that the screen renders the money correctly and that
+  // it offers exactly the actions the server accepts.
+  async function openCommissions(page: Page): Promise<void> {
+    await signInWithPassword(page, ADMIN_EMAIL, NEW_PASSWORD)
+    await page.waitForURL('**/admin/login/verify')
+    await waitForFreshWindow()
+    await page.getByTestId('admin-totp-input').fill(totp(enrolledSecret))
+    await page.getByTestId('admin-verify-submit').click()
+    await page.waitForURL('**/admin/overview')
+    await page.goto(
+      '/admin/commissions?provider=aaaa0000-0000-4000-8000-000000000001&month=2026-07-01',
+    )
+    await expect(page.getByTestId('admin-commissions')).toBeVisible({ timeout: 30_000 })
+  }
+
+  test('A02 · the statement renders real money, and every card is traceable to its rows', async ({
+    page,
+  }) => {
+    await openCommissions(page)
+
+    // The month has never been issued, so this is the LIVE DRAFT state and the
+    // screen must say so rather than implying a document exists.
+    await expect(page.getByTestId('statement-issued-stamp')).toContainText('لم تُصدر بعد')
+    await expect(page.getByTestId('statement-status-draft')).toBeVisible()
+
+    // THE TRACEABILITY RULE, asserted rather than trusted: the commissionable
+    // count on the card equals the number of counted rows actually rendered.
+    const countedRows = page.getByTestId('statement-row')
+    const rowCount = await countedRows.count()
+    expect(rowCount).toBeGreaterThan(0)
+    await expect(page.getByTestId('statement-total-row')).toContainText(
+      `${toArabicDigits(String(rowCount))} حجوزات`,
+    )
+
+    // Both attachment rules are visible on this one real document — Town's July
+    // carries cash AND prepaid, which is exactly why it is the fixture.
+    await expect(page.getByText('تاريخ الإتمام').first()).toBeVisible()
+    await expect(page.getByText('تاريخ الدفع').first()).toBeVisible()
+
+    // ⚠ THE FIDELITY CAPTURE LIVES HERE, not in fidelity.spec.ts. That harness
+    // signs in as a PROVIDER, and this screen needs an aal2 ADMIN — which costs
+    // a whole TOTP enrollment. This test already holds one, so the capture is
+    // free here and would be a duplicated enrollment there. §9 wants the image
+    // in the PR body; it does not care which suite wrote it.
+    await page.setViewportSize({ width: 1366, height: 768 }) // the DESIGN-02 floor
+    await page.evaluate(() => document.fonts.ready)
+    await page.screenshot({
+      path: '../../docs/design-briefs/a02-fidelity/statement-draft-build.png',
+      fullPage: false,
+    })
+  })
+
+  test('A02 · auto-closed bookings are footnoted in the OPEN, and touch no total', async ({
+    page,
+  }) => {
+    await openCommissions(page)
+
+    // The founder's ruling: «أُغلقت تلقائياً — غير محتسبة» is a visible strip,
+    // never a tooltip.
+    const banner = page.getByTestId('statement-excluded-banner')
+    await expect(banner).toBeVisible()
+    await expect(banner).toContainText('أُغلقت تلقائياً — غير محتسبة')
+    await expect(banner).toContainText('ليست جزءاً من أي رقم أعلاه')
+
+    // Hidden from the table by default — and revealing them must not move a
+    // single number, which is the whole claim the strip makes.
+    await expect(page.getByTestId('statement-row-excluded')).toHaveCount(0)
+    const totalBefore = await page.getByTestId('statement-total-row').innerText()
+
+    await page.getByTestId('statement-toggle-excluded').click()
+    await expect(page.getByTestId('statement-row-excluded').first()).toBeVisible()
+    expect(await page.getByTestId('statement-total-row').innerText()).toBe(totalBefore)
+
+    // A struck-through row earns no rate and no commission.
+    const excludedRow = page.getByTestId('statement-row-excluded').first()
+    await expect(excludedRow).toContainText('أُغلقت تلقائياً — غير محتسبة')
+  })
+
+  test('A02 · a month with no activity is an honest zero, not an error', async ({ page }) => {
+    await openCommissions(page)
+
+    // Saridar has only cancellations, so its July is genuinely empty. A blank
+    // panel would read as a broken screen; the copy has to say the number is
+    // real.
+    await page.goto(
+      '/admin/commissions?provider=aaaa0000-0000-4000-8000-000000000002&month=2026-07-01',
+    )
+    await expect(page.getByTestId('statement-empty')).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByTestId('statement-empty')).toContainText('رقم حقيقي وليس خطأً')
+  })
+
+  test('A02 · display equals enforcement — no action is offered that the RPC refuses', async ({
+    page,
+  }) => {
+    await openCommissions(page)
+
+    // Never issued → the only forward move is «تحديد كمُرسلة». Settling skips a
+    // step, so the control for it must not exist at all — not merely be
+    // disabled, which still invites a click.
+    await expect(page.getByTestId('statement-mark-sent')).toBeVisible()
+    await expect(page.getByTestId('statement-mark-settled')).toHaveCount(0)
+    // No snapshot exists yet, so nothing can have drifted from one.
+    await expect(page.getByTestId('statement-changed-banner')).toHaveCount(0)
+    await expect(page.getByTestId('statement-credit-forward')).toHaveCount(0)
+    await expect(page.getByTestId('statement-locked')).toHaveCount(0)
   })
 
   // ── leave the account where the seed leaves it ────────────────────────────

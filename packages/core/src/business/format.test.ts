@@ -6,6 +6,7 @@ import {
   formatArabicDate,
   formatCairoIsoDate,
   formatEGP,
+  formatPiastersEgpAr,
   formatSlotTime,
 } from './format'
 
@@ -115,5 +116,45 @@ describe('formatCairoIsoDate — the dashboard\'s "today"', () => {
     const formatted = formatCairoIsoDate(new Date(Date.UTC(2026, 0, 9, 10, 0)))
     expect(formatted).toBe('2026-01-09')
     expect(formatted).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+  })
+})
+
+describe('formatPiastersEgpAr — the commission statement money renderer', () => {
+  test('a whole-pound amount renders without decimals, grouped', () => {
+    // The approved frame's «إجمالي المبيعات المحتسبة ٤٬١٥٠».
+    expect(formatPiastersEgpAr(415_000)).toBe('٤٬١٥٠')
+  })
+
+  test('a fractional amount renders with exactly two decimals', () => {
+    // «العمولة المستحقة ٥٢١٫٤٠» — trailing zero kept, because money always
+    // shows both places once it has any.
+    expect(formatPiastersEgpAr(52_140)).toBe('٥٢١٫٤٠')
+  })
+
+  test('it groups every three digits, not just the first thousand', () => {
+    expect(formatPiastersEgpAr(123_456_700)).toBe('١٬٢٣٤٬٥٦٧')
+  })
+
+  test('sub-pound amounts keep a leading zero pound', () => {
+    expect(formatPiastersEgpAr(7)).toBe('٠٫٠٧')
+  })
+
+  test('zero is zero, not an empty string', () => {
+    expect(formatPiastersEgpAr(0)).toBe('٠')
+  })
+
+  test('a negative delta renders signed — the credit-forward note can be either way', () => {
+    expect(formatPiastersEgpAr(-1_200)).toBe('-١٢')
+  })
+
+  test('it takes PIASTERS, so 100 is one pound and never one hundred', () => {
+    // The whole reason the signature is piasters: formatting from a float
+    // total is how rounding drift reaches a partner's invoice.
+    expect(formatPiastersEgpAr(100)).toBe('١')
+  })
+
+  test('a non-finite amount THROWS rather than rendering NaN on an invoice', () => {
+    expect(() => formatPiastersEgpAr(Number.NaN)).toThrow(/finite piaster/)
+    expect(() => formatPiastersEgpAr(Number.POSITIVE_INFINITY)).toThrow(/finite piaster/)
   })
 })

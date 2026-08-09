@@ -26,6 +26,7 @@ export * from './business/provider-bookings'
 export * from './business/service-pricing'
 export * from './business/branch-profile'
 export * from './business/search'
+export * from './business/commission-statement'
 export * from './business/sms'
 
 // Schemas

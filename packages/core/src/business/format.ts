@@ -155,6 +155,41 @@ export function formatArabicDate(date: Date): string {
   return ARABIC_DATE_FORMATTER.format(date)
 }
 
+/** The Arabic thousands separator (U+066C) and decimal mark (U+066B). The
+ *  commission statement groups thousands — «٤٬١٥٠», not «٤١٥٠» — because a
+ *  partner reads these figures off paper and an ungrouped five-digit number is
+ *  where a dispute starts. */
+const ARABIC_THOUSANDS_SEPARATOR = '٬'
+const ARABIC_DECIMAL_MARK = '٫'
+
+/**
+ * Money for the commission statement, from INTEGER PIASTERS — the unit the
+ * whole money path uses (CLAUDE.md §7). Whole pounds render without decimals
+ * («٤٬١٥٠»), fractional ones with exactly two («٥٢١٫٤٠»), matching the approved
+ * frames. The caller appends its own «ج.م», per the design.
+ *
+ * ⚠ Takes PIASTERS, not pounds. Formatting from a float total is how rounding
+ * drift reaches a partner's invoice; the statement never holds a float.
+ */
+export function formatPiastersEgpAr(piasters: number): string {
+  if (!Number.isFinite(piasters)) {
+    throw new Error(`formatPiastersEgpAr expects a finite piaster amount, got ${String(piasters)}`)
+  }
+  const rounded = Math.round(piasters)
+  const sign = rounded < 0 ? '-' : ''
+  const absolute = Math.abs(rounded)
+  const pounds = Math.floor(absolute / 100)
+  const remainder = absolute % 100
+
+  const grouped = String(pounds).replace(/\B(?=(\d{3})+(?!\d))/g, ARABIC_THOUSANDS_SEPARATOR)
+  const body =
+    remainder === 0
+      ? grouped
+      : `${grouped}${ARABIC_DECIMAL_MARK}${String(remainder).padStart(2, '0')}`
+
+  return `${sign}${toArabicDigits(body)}`
+}
+
 /** The time-strip label from the approved designs (e.g. ٩:٣٠ ص / 9:30 AM). */
 export function formatSlotTime(startsAt: Date, locale: SupportedLocale): string {
   return TIME_FORMATTERS[locale].format(startsAt)
