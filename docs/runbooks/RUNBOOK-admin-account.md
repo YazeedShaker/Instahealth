@@ -14,13 +14,22 @@
 
 | Thing                   | Where                                                                                                |
 | ----------------------- | ---------------------------------------------------------------------------------------------------- |
-| The genesis admin       | `supabase/seeds/005_admin_users.sql` — `admin@instahealth.eg`                                        |
+| The genesis admin       | `supabase/seeds/005_admin_users.sql` — `admin@instahealth.eg` (bootstrap, by hand, ONCE)             |
+| The E2E admin           | `supabase/seeds/006_admin_e2e_account.sql` — `admin-e2e@instahealth.eg` (CI only, reset every run)   |
 | Schema (codes, lockout) | migrations `20260808161645`, `20260808163722`, `20260808231917`                                      |
 | The recovery reset      | Edge Function `admin-recovery-reset` (service role)                                                  |
 | Credentials             | `ADMIN_TEST_EMAIL` / `ADMIN_TEST_PASSWORD` — password manager, `apps/web/.env.local`, GitHub secrets |
 
 **No admin credential is ever written into this repo.** The repo is PUBLIC and
 removal is not rotation (CLAUDE.md §8).
+
+⚠ **TWO ADMIN ACCOUNTS, AND THE DISTINCTION IS LOAD-BEARING.** The E2E suite
+RESETS whatever account it is given — password, authenticator, recovery codes —
+because it drives the once-per-account first-login flow. The first version of
+the CI step pointed that at `admin@instahealth.eg`, so every green build on an
+unrelated PR silently took the founder's admin account away from them. CI now
+uses `admin-e2e@instahealth.eg` only; `ADMIN_TEST_EMAIL` must never name the
+genesis account, and `admin.spec.ts` throws if it does.
 
 ---
 
@@ -70,9 +79,10 @@ UPDATE public.admin_users
 Deliver the temp password out of band. The panel forces a change at the next
 sign-in, so it is single-use in practice.
 
-⚠ **Turn on `auth_leaked_password_protection` before doing this.** It is
-currently DISABLED (PROGRESS → Known risks); with it off, a weak or breached
-replacement is accepted silently.
+ℹ `auth_leaked_password_protection` (HaveIBeenPwned checks on new passwords) is
+a Supabase **Pro-plan** feature and is not available on the current plan —
+decided 2026-08-09 not to pay for it at this stage. Choose admin passwords from
+a password manager instead; nothing checks them server-side.
 
 ---
 
@@ -163,9 +173,9 @@ UPDATE public.admin_users
  WHERE auth_user_id = '<admin-uuid>';
 ```
 
-Then re-run seed 005 to restore the temp password. `apps/web/e2e/admin.spec.ts`
-is the automated companion; it restores what it can through the UI and this SQL
-covers the rest.
+For the E2E admin this is just `006_admin_e2e_account.sql`, which does all of
+it. For the founder's account, run the SQL above by hand and then 005 to restore
+a temp password — and never wire either into a job that runs unattended.
 
 ---
 
