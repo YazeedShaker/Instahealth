@@ -48,10 +48,16 @@ export async function adminSignIn(
   // receptionist's credentials are perfectly valid against the auth server,
   // which has no idea this is the admin panel. Sign a non-admin straight back
   // OUT rather than leaving a half-authenticated session behind.
+  //
+  // ⚠ SCOPE IS 'local' ON PURPOSE. auth-js defaults signOut() to scope
+  // 'global', which revokes EVERY refresh token the account owns, on every
+  // device. This gate's job is to clear the half-authenticated session on THIS
+  // browser — not to sign a receptionist out of the front desk because someone
+  // tried their credentials at the wrong door.
   const { data: state } = await supabase.rpc('get_admin_auth_state')
   const isAdmin = (state as { is_admin?: boolean } | null)?.is_admin === true
   if (!isAdmin) {
-    await supabase.auth.signOut()
+    await supabase.auth.signOut({ scope: 'local' })
     return { errorAr: 'هذا الحساب لا يملك صلاحية الدخول إلى لوحة الإدارة.' }
   }
 

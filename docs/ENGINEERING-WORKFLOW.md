@@ -547,6 +547,29 @@ a full crawl`. It is benign and self-healing. To silence it, delete
   against a staff portal — the auth server has no idea it is one. The login
   action checks membership and signs a non-provider back OUT, rather than
   leaving a half-authenticated session on a shared front desk.
+- **⚠ `supabase.auth.signOut()` DEFAULTS TO `scope: 'global'` — it signs the
+  account out of EVERY device, not this browser.** auth-js's own doc comment
+  warns about it; the call site reads like an innocent local cleanup and is
+  the single most consequential default in the library. Both role gates above
+  used the bare form, so **a refusal at the wrong portal revoked every session
+  that account held anywhere** — a receptionist standing at the front desk was
+  logged out because someone tried those credentials at the admin door.
+  **It kept `main` RED for three days after A01** and read as flake, because in
+  CI the victim was whichever parallel worker navigated next: three different
+  tests failed on three consecutive runs, each a clean 120s `waitForURL`
+  timeout, each having silently landed on `/login?next=…`. Nobody suspects the
+  login action when a P04 slot test times out.
+  Two lessons beyond the one-word fix (`{ scope: 'local' }`):
+  ① **A "flaky" suite whose victim CHANGES every run is not flaky — it has one
+  shared cause and the tests are just the dice.** Chasing the individual test
+  is how three days go by. Ask what the runs have in common, not what the
+  failing test does.
+  ② **Reach for a `scope`/`options` argument's DEFAULT whenever a call has
+  blast radius beyond the current request.** Prove it from the library source
+  or a live probe, never from memory — this one was confirmed by reading
+  `GoTrueClient.js` and then by two real sessions on one account.
+  Deliberate global sign-outs stay global and say so: the recovery-code reset
+  in `admin/actions.ts` MUST kill every session (that is its entire purpose).
 - **Never derive scope from the URL.** The branch id comes from
   `provider_users`, server-side. The RPCs re-check membership regardless, but
   the UI should never even form the wrong request.
