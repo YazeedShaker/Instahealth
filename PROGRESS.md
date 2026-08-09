@@ -76,9 +76,13 @@ visual contract. Then specs → Claude Code.
       shell (see Shipped). **The genesis admin exists, so every
       `get_user_role() = 'admin'` policy in the schema is LIVE for the first
       time** — read the ruling-③ table in the A01 entry before starting A02.
-- [ ] **A02** — Web: commission & invoicing statement. ⚠ OPENS WITH A DECISION:
-      the eleven admin `ALL` policies A01 made reachable (table in the A01 entry).
-- [ ] **A03–A06** — Web: providers & branches, catalog, staff accounts, oversight
+- [x] **A02** — ✅ DONE. Web: commission & invoicing statement (see Shipped).
+      Its opening decision closed the two money policies — `bookings` and
+      `payments` admin `ALL` — outright. **Nine of the eleven remain** for
+      A03–A06.
+- [ ] **A03–A06** — Web: providers & branches, catalog, staff accounts, oversight.
+      ⚠ A03 owns the commission-rate editor, and it is a LAUNCH BLOCKER: the
+      seeded 12% is a placeholder (see Known risks).
 - [ ] **006_practitioners.sql + doctor booking** — after labs/scans proven
 
 **First milestone:** patient books on mobile at Town/Saridar → pays → gets SMS + confirmation →
@@ -87,6 +91,147 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 ---
 
 ## Shipped
+
+### 2026-08-09 · A02 — Commission & invoicing statement (web, admin)
+
+The document a partner is paid against. Pick a partner and a calendar month and
+get every commissionable booking as a traceable row, blended totals, the
+auto-closed exclusions footnoted in the open, and a real issuance lifecycle —
+مسودة → أُرسلت → تمت التسوية — with frozen snapshots and versioned re-issue.
+**This is how InstaHealth collects revenue in a cash-only world.**
+
+Shipped as TWO PRs (the spec says one): the data layer landed first because its
+migrations were already applied to the shared dev database, and holding them
+back would have left the repo and the DB diverged.
+
+#### The money contract, implemented verbatim
+
+`compute_commission_draft` is `DECISION-commission-attachment` in SQL: prepaid
+attaches AT PAYMENT (`confirmed_at`), cash AT COMPLETION (`completed_at`) and
+**only when a human closed it**. Integer piasters throughout, mirroring core's
+`pricing.ts`. A missing rate THROWS — `bookings.commission_rate` carries a
+`DEFAULT 0.1200`, and a silent 12% on a partner nobody agreed 12% with is
+exactly the failure being guarded against.
+
+`provider_commission_rates` is effective-dated and **APPEND-ONLY, enforced by a
+trigger** rather than documented: it is the evidence behind money already
+invoiced, so an UPDATE would rewrite history and silently change a statement
+nobody re-issued. Proven by aiming an UPDATE and a DELETE at a real row.
+
+#### ⚠ TWO BUGS CAUGHT THE SAME WAY — by looking, not by reading
+
+1. **The draft counted CANCELLED bookings.** The first prepaid rule checked that
+   money had moved and said nothing about the booking's own status. Saridar's
+   entire July "statement" was two cancellations worth 1,050 EGP; three more
+   inflated Town's. **That is an invoice to a partner for services never
+   delivered.** Found by running the query against real dev data instead of
+   trusting it. Fixed in its own migration so the sequence records it.
+2. **«تاريخ الحجز» was showing the VISIT date.** The column rendered
+   `slots.slot_date`, one column away from «تاريخ الاستحقاق» — two dates both
+   describing the visit, neither saying when the patient booked. Invisible in
+   the markup, in the types, and behind four passing E2E assertions. **It became
+   obvious the second someone opened the screenshot.** That is §9's entire
+   argument, and it has now paid for itself twice.
+
+A third, found while reading the authorization surface before committing it:
+`commission_rate_at` and `commission_piasters` were granted to `authenticated`,
+so any signed-in patient could read a partner's negotiated percentage. They need
+no grant at all — their only caller is SECURITY DEFINER, so privilege checks run
+as the OWNER. Revoked, then re-verified by re-running the draft.
+
+#### A02's opening decision — the two worst policies A01 switched on
+
+`bookings: admin full access` and `payments: admin full access` are **DROPPED**.
+Both were `ALL` policies with a NULL `with_check` (hence column-blind) over
+tables carrying blanket INSERT/UPDATE grants to `anon`+`authenticated`, so an
+admin's BROWSER could declare `total_amount`, `commission_amount` and
+`payment_status`, or mark a payment `completed`.
+
+A02 needs neither: it is read-only over both tables. Admin READS never came from
+those policies — the `… sees own` SELECT policies already OR in the admin role
+and stay. Verified there are NO client writes to either table anywhere in
+`apps/`, `packages/` or `supabase/functions/`; every real write is an Edge
+Function on the service role, which bypasses RLS. The door closed and needed no
+replacement, because nobody was walking through it. **Nine flagged policies
+remain for A03–A06.**
+
+#### The numbers, from live dev
+
+|                   | counted                | GMV       | commission @12% | excluded      |
+| ----------------- | ---------------------- | --------- | --------------- | ------------- |
+| Town · يوليو ٢٠٢٦ | 8 (4 cash + 4 prepaid) | 2,700 EGP | 324 EGP         | 3 (1,650 EGP) |
+| Town · أغسطس ٢٠٢٦ | 2 cash                 | 300 EGP   | 36 EGP          | 1 (250 EGP)   |
+| Saridar · both    | 0                      | —         | —               | 0             |
+
+Town's July carries BOTH attachment rules on one real document — the mixed
+mock-era data turned out to be coverage, not noise. Saridar is the honest-zero
+month: only cancellations, so no rows at all.
+
+⚠ **Mock-era provenance:** five completed bookings have no `payments` row (they
+predate the settlement plumbing). The draft reads them as CASH and attaches at
+completion — the only event they have. Stated in the function body, not inferred
+silently. Nothing fabricated.
+
+#### The lifecycle, proven end to end
+
+Issue freezes a snapshot + its lines (including excluded rows, so the export can
+print them). Re-issue creates v2 and marks v1 `superseded` — readable, exportable,
+never deleted. Settled is TERMINAL: re-issue refused, drift surfaced as a
+credit-forward NOTE against next month. Verified against live dev across three
+phases with a real fixture mutation the ADMIN SESSION ITSELF CANNOT MAKE (that
+is the policy closure working): 26 assertions, all passing, fixture fully
+restored afterwards.
+
+#### Built to the handoff
+
+Frames A–E of `Admin - Commission Statement.dc.html`. Everything new went
+through the **contract**, not the page: `STATEMENT_STATUS_CHIP`,
+`STATEMENT_BANNER`, `STATEMENT_SUMMARY_CARD`, `STATEMENT_TABLE`.
+
+⚠ **Two deviations, both deliberate.** The table columns are `auto … 1fr auto`,
+NOT the handoff's `150px 96px 124px…` — VIEW-01's law, since every column is
+nowrap Arabic or a nowrap Latin ref. (`1fr` is `minmax(auto,1fr)` and respects
+the automatic minimum; `minmax(0,1fr)` is the trap and is not used.) And
+«مسودة» is the label for `issued`, because frame D shows a freshly re-issued v2
+carrying «● مسودة» beside an issue stamp — in the founder's language مسودة means
+NOT YET SENT.
+
+#### Verified
+
+**Node, against live dev:** the money rules, Cairo month boundaries with no
+booking in two months, traceability (every card equals the sum of its rows),
+missing-rate throws, provider and anon refused. **Playwright:** 4 new admin
+tests — real money rendered, exclusions footnoted and toggling them moving no
+total, the honest-zero month, and display-equals-enforcement (the settle control
+does not EXIST before it is legal, rather than being disabled).
+
+⚠ The E2E is deliberately READ-ONLY: issuing writes a row the next run would
+find, and the double-issue guard would then refuse forever. The mutating
+lifecycle is the Node proof, where the fixture can be created and destroyed.
+
+**Gates:** format, lint, typecheck, build (web + mobile export), 420 core + 88
+mobile + 25 tokens unit tests, `pnpm audit`. `authorization-surface.json`
+regenerated — 22 tables, 40 functions, diff is exactly +3 functions, none
+SECURITY DEFINER with an identity parameter.
+
+#### For A03 and A06
+
+- **A03 writes `provider_commission_rates`** — append-only, effective-dated, and
+  the written-acknowledgment checkbox is REQUIRED per the design ruling. The
+  table, its trigger and its read path already exist; A03 builds the editor.
+- **A06 reuses `compute_commission_draft` and `get_commission_statement_view`** —
+  built shareable on purpose. عمولة متوقعة is the drawer's world; the statement
+  contains only OCCURRED events.
+- `docs/runbooks/RUNBOOK-monthly-invoicing.md` is the founder-executable
+  procedure, including what the red and blue strips mean and what to do about
+  them.
+
+#### Founder actions
+
+1. **Enter the signed commission rates via A03 before the first real statement.**
+   The 12% is a placeholder and nothing can detect that it is wrong.
+2. Generate July and August for both partners, export both, and eyeball every
+   number against its rows.
 
 ### 2026-08-09 · FIX — a refusal at the wrong portal signed the account out EVERYWHERE (main was red for three days)
 

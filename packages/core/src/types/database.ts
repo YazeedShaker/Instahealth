@@ -1232,6 +1232,10 @@ export type Database = {
           slot_time: string
         }[]
       }
+      get_commission_statement_view: {
+        Args: { p_month: string; p_provider_id: string; p_version?: number }
+        Returns: Json
+      }
       get_patient_bookings: {
         Args: never
         Returns: {
@@ -1259,6 +1263,10 @@ export type Database = {
       get_provider_branch_ids: { Args: never; Returns: string[] }
       get_user_role: { Args: never; Returns: string }
       is_internal_caller: { Args: never; Returns: boolean }
+      issue_statement: {
+        Args: { p_month: string; p_provider_id: string }
+        Returns: Json
+      }
       mark_booking_outcome: {
         Args: { p_booking_id: string; p_outcome: string }
         Returns: Json
@@ -1267,6 +1275,10 @@ export type Database = {
       record_admin_totp_failure: { Args: never; Returns: Json }
       search_catalog: {
         Args: { p_category_slug?: string; p_query: string }
+        Returns: Json
+      }
+      transition_statement: {
+        Args: { p_statement_id: string; p_to: string }
         Returns: Json
       }
       update_branch_profile: {

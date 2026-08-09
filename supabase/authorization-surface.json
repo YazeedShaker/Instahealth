@@ -600,6 +600,13 @@
     },
     {
       "config": "search_path=public",
+      "signature": "get_commission_statement_view(uuid,date,integer)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
       "signature": "get_patient_bookings()",
       "executeGrants": "authenticated,postgres,service_role",
       "securityDefiner": true,
@@ -631,6 +638,13 @@
       "signature": "is_internal_caller()",
       "executeGrants": "authenticated,postgres,service_role",
       "securityDefiner": false,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "issue_statement(uuid,date)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {
@@ -680,6 +694,13 @@
       "signature": "set_updated_at()",
       "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
       "securityDefiner": false,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "transition_statement(uuid,text)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {

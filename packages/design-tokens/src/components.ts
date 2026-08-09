@@ -548,3 +548,176 @@ export const RECOVERY_CODE_CELL = {
   columns: 4,
   gap: 8,
 } as const
+
+// ── A02 · the commission statement ──────────────────────────────────────────
+// Transcribed from `Admin - Commission Statement.dc.html` (frames A–E). These
+// live in the CONTRACT rather than on the page, per ENGINEERING-WORKFLOW §9:
+// a one-off style on a page is invisible to the next screen and drifts exactly
+// like a hand-copied value. A06's oversight drawer reuses these.
+
+export type StatementStatus = 'draft' | 'issued' | 'sent' | 'settled' | 'superseded'
+
+export interface StatementChipSpec {
+  label: string
+  /** The leading glyph the frames use — «●» draft, «✓» sent, «✓✓» settled. */
+  glyph: string
+  color: TokenRef
+  background: TokenRef
+  borderColor: TokenRef
+}
+
+/** The status chip in the scope bar. Five states because a SUPERSEDED version
+ *  stays viewable and must announce itself as «نسخة ملغاة» rather than looking
+ *  like a live document. */
+export const STATEMENT_STATUS_CHIP: Record<StatementStatus, StatementChipSpec> = {
+  draft: {
+    label: 'مسودة',
+    glyph: '●',
+    color: 'neutral.700',
+    background: 'neutral.100',
+    borderColor: 'neutral.300',
+  },
+  // ⚠ «مسودة», not «صدرت» — and the frames are why. Frame D shows a
+  // freshly RE-ISSUED v2 carrying «● مسودة» beside an «أُصدرت في» stamp, so in
+  // the founder's language مسودة means NOT YET SENT, not "not yet issued".
+  // A statement that has been snapshotted but not handed to the partner is
+  // still a draft to them. Same chip as the never-issued state, deliberately.
+  issued: {
+    label: 'مسودة',
+    glyph: '●',
+    color: 'neutral.700',
+    background: 'neutral.100',
+    borderColor: 'neutral.300',
+  },
+  sent: {
+    label: 'أُرسلت',
+    glyph: '✓',
+    color: 'primary.700',
+    background: 'info.bg',
+    borderColor: 'primary.400',
+  },
+  settled: {
+    label: 'تمت التسوية',
+    glyph: '✓✓',
+    color: 'neutral.0',
+    background: 'primary.600',
+    borderColor: 'primary.600',
+  },
+  superseded: {
+    label: 'نسخة ملغاة',
+    glyph: '',
+    color: 'neutral.600',
+    background: 'neutral.200',
+    borderColor: 'neutral.300',
+  },
+} as const
+
+export const STATEMENT_CHIP_BASE = {
+  paddingY: 5,
+  paddingX: 12,
+  borderRadius: 9999,
+  fontSize: 12,
+  fontWeight: 600,
+  borderWidth: 1,
+  gap: 6,
+} as const
+
+export type StatementBannerTone = 'excluded' | 'changed' | 'creditForward' | 'superseded'
+
+export interface StatementBannerSpec {
+  glyph: string
+  color: TokenRef
+  background: TokenRef
+  borderColor: TokenRef
+}
+
+/** The three strips that carry the statement's uncomfortable truths, plus the
+ *  superseded-predecessor bar. Each is a DIFFERENT tone on purpose: an
+ *  exclusion is routine (amber), a post-issue change is a problem (red), a
+ *  post-settlement change is information (info). Same fact, different remedy. */
+export const STATEMENT_BANNER: Record<StatementBannerTone, StatementBannerSpec> = {
+  excluded: {
+    glyph: '⚠',
+    color: '#92400E',
+    background: 'warning.bg',
+    borderColor: 'rgba(217,119,6,0.35)',
+  },
+  changed: {
+    glyph: '⚠',
+    color: '#991B1B',
+    background: 'error.bg',
+    borderColor: 'rgba(220,38,38,0.35)',
+  },
+  creditForward: {
+    glyph: 'ℹ',
+    color: 'primary.800',
+    background: 'info.bg',
+    borderColor: 'rgba(2,128,144,0.28)',
+  },
+  superseded: {
+    glyph: '',
+    color: 'neutral.700',
+    background: 'neutral.50',
+    borderColor: 'neutral.300',
+  },
+} as const
+
+export const STATEMENT_BANNER_BASE = {
+  paddingY: 11,
+  paddingX: 16,
+  borderRadius: 8,
+  borderWidth: 1,
+  gap: 12,
+  titleSize: 13,
+  bodySize: 11.5,
+} as const
+
+/** The three summary cards. The commission card is the emphasis one — thicker
+ *  top rule, larger figure — because it is the number the partner is paid. */
+export const STATEMENT_SUMMARY_CARD = {
+  paddingY: 14,
+  paddingX: 18,
+  borderRadius: 12,
+  borderWidth: 1,
+  borderColor: 'neutral.200',
+  topRuleWidth: 3,
+  topRuleColor: 'primary.400',
+  topRuleColorEmphasis: 'primary.600',
+  labelSize: 12,
+  figureSize: 26,
+  figureSizeEmphasis: 30,
+  suffixSize: 14,
+  footnoteSize: 11.5,
+  gap: 12,
+  columns: 3,
+} as const
+
+/**
+ * The seven statement columns.
+ *
+ * ⚠ NOT the handoff's `150px 96px 124px 128px 1fr 66px 116px`. VIEW-01's whole
+ * lesson is that a pixel width measured on one machine clips on another, and
+ * every one of these columns is nowrap Arabic or a nowrap Latin reference.
+ * `auto` sizes each track to its own content on the machine doing the
+ * rendering; the amount column keeps the design's `1fr` so slack lands where
+ * the frames put it.
+ *
+ * ⚠ `1fr` is `minmax(auto, 1fr)`, which RESPECTS the automatic minimum.
+ * `minmax(0, 1fr)` does not and can resolve to ZERO — that is the VIEW-01 trap,
+ * and it is why this is not written that way.
+ *
+ * The table still gets an `overflow-x: auto` wrapper as the backstop, so
+ * nothing is ever unreachable at any zoom level.
+ */
+export const STATEMENT_TABLE = {
+  columns: 'auto auto auto auto 1fr auto auto',
+  headerFontSize: 11.5,
+  rowFontSize: 13,
+  rowMinHeight: 46,
+  subtotalMinHeight: 40,
+  totalMinHeight: 54,
+  paddingX: 18,
+  gap: 8,
+  /** Minimum before the wrapper starts scrolling instead of compressing. */
+  minWidth: 860,
+} as const
