@@ -2,357 +2,421 @@
   "tables": [
     {
       "table": "admin_lockouts",
-      "rlsEnabled": true,
+      "policies": [],
       "rlsForced": false,
+      "rlsEnabled": true,
       "columnCount": 5,
-      "writableColumns": {},
-      "policies": []
+      "writableColumns": {}
     },
     {
       "table": "admin_recovery_codes",
-      "rlsEnabled": true,
+      "policies": [],
       "rlsForced": false,
+      "rlsEnabled": true,
       "columnCount": 7,
-      "writableColumns": {},
-      "policies": []
+      "writableColumns": {}
     },
     {
       "table": "admin_users",
-      "rlsEnabled": true,
-      "rlsForced": false,
-      "columnCount": 7,
-      "writableColumns": {},
       "policies": [
         {
-          "policy": "admin_users: admin reads, nobody writes",
-          "command": "SELECT",
           "roles": "PUBLIC",
           "using": "(get_user_role() = 'admin'::text)",
+          "policy": "admin_users: admin reads, nobody writes",
+          "command": "SELECT",
           "withCheck": "-"
         }
-      ]
+      ],
+      "rlsForced": false,
+      "rlsEnabled": true,
+      "columnCount": 7,
+      "writableColumns": {}
     },
     {
       "table": "booking_services",
-      "rlsEnabled": true,
-      "rlsForced": false,
-      "columnCount": 5,
-      "writableColumns": {},
       "policies": [
         {
-          "policy": "booking_services: see if booking is accessible",
-          "command": "SELECT",
           "roles": "PUBLIC",
           "using": "(EXISTS ( SELECT 1\n   FROM bookings b\n  WHERE ((b.id = booking_services.booking_id) AND ((b.user_id = auth.uid()) OR (b.branch_id = ANY (get_provider_branch_ids())) OR (get_user_role() = 'admin'::text)))))",
+          "policy": "booking_services: see if booking is accessible",
+          "command": "SELECT",
           "withCheck": "-"
         }
-      ]
+      ],
+      "rlsForced": false,
+      "rlsEnabled": true,
+      "columnCount": 5,
+      "writableColumns": {}
     },
     {
       "table": "bookings",
-      "rlsEnabled": true,
-      "rlsForced": false,
-      "columnCount": 23,
-      "writableColumns": {},
       "policies": [
         {
-          "policy": "bookings: admin full access",
-          "command": "ALL",
-          "roles": "PUBLIC",
-          "using": "(get_user_role() = 'admin'::text)",
-          "withCheck": "-"
-        },
-        {
-          "policy": "bookings: patient sees own",
-          "command": "SELECT",
           "roles": "PUBLIC",
           "using": "((user_id = auth.uid()) OR (branch_id = ANY (get_provider_branch_ids())) OR (get_user_role() = 'admin'::text))",
+          "policy": "bookings: patient sees own",
+          "command": "SELECT",
           "withCheck": "-"
         }
-      ]
+      ],
+      "rlsForced": false,
+      "rlsEnabled": true,
+      "columnCount": 23,
+      "writableColumns": {}
     },
     {
       "table": "branch_profile_history",
-      "rlsEnabled": true,
-      "rlsForced": false,
-      "columnCount": 6,
-      "writableColumns": {},
       "policies": [
         {
-          "policy": "profile history: branch staff read own",
-          "command": "SELECT",
           "roles": "PUBLIC",
           "using": "(COALESCE((branch_id = ANY (get_provider_branch_ids())), false) OR (get_user_role() = 'admin'::text))",
+          "policy": "profile history: branch staff read own",
+          "command": "SELECT",
           "withCheck": "-"
         }
-      ]
+      ],
+      "rlsForced": false,
+      "rlsEnabled": true,
+      "columnCount": 6,
+      "writableColumns": {}
     },
     {
       "table": "branch_service_price_history",
-      "rlsEnabled": true,
-      "rlsForced": false,
-      "columnCount": 8,
-      "writableColumns": {},
       "policies": [
         {
-          "policy": "price history: branch staff read own",
-          "command": "SELECT",
           "roles": "PUBLIC",
           "using": "(EXISTS ( SELECT 1\n   FROM branch_services bs\n  WHERE ((bs.id = branch_service_price_history.branch_service_id) AND (COALESCE((bs.branch_id = ANY (get_provider_branch_ids())), false) OR (get_user_role() = 'admin'::text)))))",
+          "policy": "price history: branch staff read own",
+          "command": "SELECT",
           "withCheck": "-"
         }
-      ]
+      ],
+      "rlsForced": false,
+      "rlsEnabled": true,
+      "columnCount": 8,
+      "writableColumns": {}
     },
     {
       "table": "branch_services",
-      "rlsEnabled": true,
-      "rlsForced": false,
-      "columnCount": 10,
-      "writableColumns": {},
       "policies": [
         {
-          "policy": "branch_services: admin full access",
-          "command": "ALL",
           "roles": "PUBLIC",
           "using": "(get_user_role() = 'admin'::text)",
+          "policy": "branch_services: admin full access",
+          "command": "ALL",
           "withCheck": "-"
         },
         {
-          "policy": "branch_services: public read",
-          "command": "SELECT",
           "roles": "PUBLIC",
           "using": "true",
+          "policy": "branch_services: public read",
+          "command": "SELECT",
           "withCheck": "-"
         }
-      ]
+      ],
+      "rlsForced": false,
+      "rlsEnabled": true,
+      "columnCount": 10,
+      "writableColumns": {}
     },
     {
       "table": "branches",
-      "rlsEnabled": true,
-      "rlsForced": false,
-      "columnCount": 23,
-      "writableColumns": {},
       "policies": [
         {
-          "policy": "branches: admin full access",
-          "command": "ALL",
           "roles": "PUBLIC",
           "using": "(get_user_role() = 'admin'::text)",
+          "policy": "branches: admin full access",
+          "command": "ALL",
           "withCheck": "-"
         },
         {
-          "policy": "branches: public read active",
-          "command": "SELECT",
           "roles": "PUBLIC",
           "using": "((is_active = true) OR (get_user_role() = ANY (ARRAY['admin'::text, 'provider'::text])))",
+          "policy": "branches: public read active",
+          "command": "SELECT",
           "withCheck": "-"
         }
-      ]
+      ],
+      "rlsForced": false,
+      "rlsEnabled": true,
+      "columnCount": 23,
+      "writableColumns": {}
+    },
+    {
+      "table": "commission_statement_lines",
+      "policies": [
+        {
+          "roles": "PUBLIC",
+          "using": "(get_user_role() = 'admin'::text)",
+          "policy": "commission statement lines: admin reads",
+          "command": "SELECT",
+          "withCheck": "-"
+        }
+      ],
+      "rlsForced": false,
+      "rlsEnabled": true,
+      "columnCount": 13,
+      "writableColumns": {}
+    },
+    {
+      "table": "commission_statements",
+      "policies": [
+        {
+          "roles": "PUBLIC",
+          "using": "(get_user_role() = 'admin'::text)",
+          "policy": "commission statements: admin reads",
+          "command": "SELECT",
+          "withCheck": "-"
+        }
+      ],
+      "rlsForced": false,
+      "rlsEnabled": true,
+      "columnCount": 18,
+      "writableColumns": {}
     },
     {
       "table": "notifications",
-      "rlsEnabled": true,
-      "rlsForced": false,
-      "columnCount": 11,
-      "writableColumns": {},
       "policies": [
         {
-          "policy": "notifications: admin full access",
-          "command": "ALL",
           "roles": "PUBLIC",
           "using": "(get_user_role() = 'admin'::text)",
+          "policy": "notifications: admin full access",
+          "command": "ALL",
           "withCheck": "-"
         },
         {
-          "policy": "notifications: user sees own",
-          "command": "SELECT",
           "roles": "PUBLIC",
           "using": "((user_id = auth.uid()) OR (get_user_role() = 'admin'::text))",
+          "policy": "notifications: user sees own",
+          "command": "SELECT",
           "withCheck": "-"
         }
-      ]
+      ],
+      "rlsForced": false,
+      "rlsEnabled": true,
+      "columnCount": 11,
+      "writableColumns": {}
     },
     {
       "table": "payments",
-      "rlsEnabled": true,
-      "rlsForced": false,
-      "columnCount": 13,
-      "writableColumns": {},
       "policies": [
         {
-          "policy": "payments: admin full access",
-          "command": "ALL",
-          "roles": "PUBLIC",
-          "using": "(get_user_role() = 'admin'::text)",
-          "withCheck": "-"
-        },
-        {
-          "policy": "payments: patient sees own",
-          "command": "SELECT",
           "roles": "PUBLIC",
           "using": "((EXISTS ( SELECT 1\n   FROM bookings b\n  WHERE ((b.id = payments.booking_id) AND (b.user_id = auth.uid())))) OR (get_user_role() = 'admin'::text))",
+          "policy": "payments: patient sees own",
+          "command": "SELECT",
           "withCheck": "-"
         }
-      ]
+      ],
+      "rlsForced": false,
+      "rlsEnabled": true,
+      "columnCount": 13,
+      "writableColumns": {}
+    },
+    {
+      "table": "provider_commission_rates",
+      "policies": [
+        {
+          "roles": "PUBLIC",
+          "using": "(get_user_role() = 'admin'::text)",
+          "policy": "commission rates: admin reads",
+          "command": "SELECT",
+          "withCheck": "-"
+        }
+      ],
+      "rlsForced": false,
+      "rlsEnabled": true,
+      "columnCount": 7,
+      "writableColumns": {}
     },
     {
       "table": "provider_users",
-      "rlsEnabled": true,
-      "rlsForced": false,
-      "columnCount": 7,
-      "writableColumns": {},
       "policies": [
         {
-          "policy": "provider_users: admin full access",
-          "command": "ALL",
           "roles": "PUBLIC",
           "using": "(get_user_role() = 'admin'::text)",
+          "policy": "provider_users: admin full access",
+          "command": "ALL",
           "withCheck": "-"
         },
         {
-          "policy": "provider_users: see own record",
-          "command": "SELECT",
           "roles": "PUBLIC",
           "using": "((auth_user_id = auth.uid()) OR (get_user_role() = 'admin'::text))",
+          "policy": "provider_users: see own record",
+          "command": "SELECT",
           "withCheck": "-"
         }
-      ]
+      ],
+      "rlsForced": false,
+      "rlsEnabled": true,
+      "columnCount": 7,
+      "writableColumns": {}
     },
     {
       "table": "providers",
-      "rlsEnabled": true,
-      "rlsForced": false,
-      "columnCount": 14,
-      "writableColumns": {},
       "policies": [
         {
-          "policy": "providers: admin full access",
-          "command": "ALL",
           "roles": "PUBLIC",
           "using": "(get_user_role() = 'admin'::text)",
+          "policy": "providers: admin full access",
+          "command": "ALL",
           "withCheck": "-"
         },
         {
-          "policy": "providers: public read active",
-          "command": "SELECT",
           "roles": "PUBLIC",
           "using": "((is_active = true) OR (get_user_role() = 'admin'::text))",
+          "policy": "providers: public read active",
+          "command": "SELECT",
           "withCheck": "-"
         }
-      ]
+      ],
+      "rlsForced": false,
+      "rlsEnabled": true,
+      "columnCount": 14,
+      "writableColumns": {}
     },
     {
       "table": "reviews",
-      "rlsEnabled": true,
-      "rlsForced": false,
-      "columnCount": 10,
-      "writableColumns": {},
       "policies": [
         {
-          "policy": "reviews: public read unflagged",
-          "command": "SELECT",
           "roles": "PUBLIC",
           "using": "((is_flagged = false) OR (get_user_role() = 'admin'::text))",
+          "policy": "reviews: public read unflagged",
+          "command": "SELECT",
           "withCheck": "-"
         }
-      ]
+      ],
+      "rlsForced": false,
+      "rlsEnabled": true,
+      "columnCount": 10,
+      "writableColumns": {}
     },
     {
       "table": "service_categories",
-      "rlsEnabled": true,
-      "rlsForced": false,
-      "columnCount": 9,
-      "writableColumns": {},
       "policies": [
         {
-          "policy": "categories: admin full access",
-          "command": "ALL",
           "roles": "PUBLIC",
           "using": "(get_user_role() = 'admin'::text)",
+          "policy": "categories: admin full access",
+          "command": "ALL",
           "withCheck": "-"
         },
         {
-          "policy": "categories: public read active",
-          "command": "SELECT",
           "roles": "PUBLIC",
           "using": "((is_active = true) OR (get_user_role() = 'admin'::text))",
+          "policy": "categories: public read active",
+          "command": "SELECT",
           "withCheck": "-"
         }
-      ]
+      ],
+      "rlsForced": false,
+      "rlsEnabled": true,
+      "columnCount": 9,
+      "writableColumns": {}
     },
     {
       "table": "services",
-      "rlsEnabled": true,
-      "rlsForced": false,
-      "columnCount": 12,
-      "writableColumns": {},
       "policies": [
         {
-          "policy": "services: admin full access",
-          "command": "ALL",
           "roles": "PUBLIC",
           "using": "(get_user_role() = 'admin'::text)",
+          "policy": "services: admin full access",
+          "command": "ALL",
           "withCheck": "-"
         },
         {
-          "policy": "services: public read active",
-          "command": "SELECT",
           "roles": "PUBLIC",
           "using": "((is_active = true) OR (get_user_role() = 'admin'::text))",
+          "policy": "services: public read active",
+          "command": "SELECT",
           "withCheck": "-"
         }
-      ]
+      ],
+      "rlsForced": false,
+      "rlsEnabled": true,
+      "columnCount": 12,
+      "writableColumns": {}
     },
     {
       "table": "slot_holds",
-      "rlsEnabled": true,
-      "rlsForced": false,
-      "columnCount": 5,
-      "writableColumns": {},
       "policies": [
         {
-          "policy": "slot_holds: patient deletes own",
-          "command": "DELETE",
           "roles": "PUBLIC",
           "using": "((user_id = auth.uid()) OR (get_user_role() = 'admin'::text))",
+          "policy": "slot_holds: patient deletes own",
+          "command": "DELETE",
           "withCheck": "-"
         },
         {
-          "policy": "slot_holds: patient own",
-          "command": "SELECT",
           "roles": "PUBLIC",
           "using": "((user_id = auth.uid()) OR (get_user_role() = 'admin'::text))",
+          "policy": "slot_holds: patient own",
+          "command": "SELECT",
           "withCheck": "-"
         }
-      ]
+      ],
+      "rlsForced": false,
+      "rlsEnabled": true,
+      "columnCount": 5,
+      "writableColumns": {}
     },
     {
       "table": "slots",
-      "rlsEnabled": true,
-      "rlsForced": false,
-      "columnCount": 8,
-      "writableColumns": {},
       "policies": [
         {
-          "policy": "slots: admin full access",
-          "command": "ALL",
           "roles": "PUBLIC",
           "using": "(get_user_role() = 'admin'::text)",
+          "policy": "slots: admin full access",
+          "command": "ALL",
           "withCheck": "-"
         },
         {
-          "policy": "slots: patient sees available only",
-          "command": "SELECT",
           "roles": "PUBLIC",
           "using": "(((is_blocked = false) AND (booked_count < capacity)) OR (branch_id = ANY (get_provider_branch_ids())) OR (get_user_role() = 'admin'::text))",
+          "policy": "slots: patient sees available only",
+          "command": "SELECT",
           "withCheck": "-"
         }
-      ]
+      ],
+      "rlsForced": false,
+      "rlsEnabled": true,
+      "columnCount": 8,
+      "writableColumns": {}
     },
     {
       "table": "users",
-      "rlsEnabled": true,
+      "policies": [
+        {
+          "roles": "PUBLIC",
+          "using": "(get_user_role() = 'admin'::text)",
+          "policy": "users: admin full access",
+          "command": "ALL",
+          "withCheck": "-"
+        },
+        {
+          "roles": "PUBLIC",
+          "using": "-",
+          "policy": "users: patient inserts own row",
+          "command": "INSERT",
+          "withCheck": "(id = auth.uid())"
+        },
+        {
+          "roles": "PUBLIC",
+          "using": "((id = auth.uid()) OR (get_user_role() = 'admin'::text))",
+          "policy": "users: patient sees own row",
+          "command": "SELECT",
+          "withCheck": "-"
+        },
+        {
+          "roles": "PUBLIC",
+          "using": "(id = auth.uid())",
+          "policy": "users: patient updates own row",
+          "command": "UPDATE",
+          "withCheck": "-"
+        }
+      ],
       "rlsForced": false,
+      "rlsEnabled": true,
       "columnCount": 11,
       "writableColumns": {
         "authenticated": {
@@ -369,269 +433,267 @@
             "sms_reminders"
           ]
         }
-      },
-      "policies": [
-        {
-          "policy": "users: admin full access",
-          "command": "ALL",
-          "roles": "PUBLIC",
-          "using": "(get_user_role() = 'admin'::text)",
-          "withCheck": "-"
-        },
-        {
-          "policy": "users: patient inserts own row",
-          "command": "INSERT",
-          "roles": "PUBLIC",
-          "using": "-",
-          "withCheck": "(id = auth.uid())"
-        },
-        {
-          "policy": "users: patient sees own row",
-          "command": "SELECT",
-          "roles": "PUBLIC",
-          "using": "((id = auth.uid()) OR (get_user_role() = 'admin'::text))",
-          "withCheck": "-"
-        },
-        {
-          "policy": "users: patient updates own row",
-          "command": "UPDATE",
-          "roles": "PUBLIC",
-          "using": "(id = auth.uid())",
-          "withCheck": "-"
-        }
-      ]
+      }
     }
   ],
   "functions": [
     {
+      "config": "search_path=public",
       "signature": "acknowledge_admin_recovery_codes()",
-      "securityDefiner": true,
-      "config": "search_path=public",
       "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {
+      "config": "search_path=public",
       "signature": "auto_close_stale_bookings()",
-      "securityDefiner": true,
-      "config": "search_path=public",
       "executeGrants": "postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {
+      "config": "search_path=public",
       "signature": "broadcast_branch_booking_change()",
-      "securityDefiner": true,
-      "config": "search_path=public",
       "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {
-      "signature": "broadcast_slot_hold_change()",
-      "securityDefiner": true,
       "config": "-",
+      "signature": "broadcast_slot_hold_change()",
       "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {
-      "signature": "cancel_booking(uuid,text,character varying)",
-      "securityDefiner": true,
       "config": "search_path=public",
+      "signature": "cancel_booking(uuid,text,character varying)",
       "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": true
     },
     {
+      "config": "-",
       "signature": "cleanup_expired_holds()",
-      "securityDefiner": true,
-      "config": "-",
       "executeGrants": "postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {
+      "config": "search_path=public",
       "signature": "clear_admin_totp_failures()",
-      "securityDefiner": true,
-      "config": "search_path=public",
       "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {
+      "config": "search_path=public",
+      "signature": "commission_piasters(bigint,numeric)",
+      "executeGrants": "postgres,service_role",
+      "securityDefiner": false,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "commission_rate_at(uuid,date)",
+      "executeGrants": "postgres,service_role",
+      "securityDefiner": false,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
       "signature": "complete_admin_password_change()",
-      "securityDefiner": true,
-      "config": "search_path=public",
       "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {
+      "config": "search_path=public",
+      "signature": "compute_commission_draft(uuid,date)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "-",
       "signature": "confirm_booking(uuid,character varying,character varying,character varying,jsonb)",
-      "securityDefiner": true,
-      "config": "-",
       "executeGrants": "postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {
+      "config": "search_path=public",
       "signature": "consume_admin_recovery_code(text)",
-      "securityDefiner": true,
-      "config": "search_path=public",
       "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {
+      "config": "search_path=public",
       "signature": "create_pending_booking(uuid,uuid[],text)",
-      "securityDefiner": true,
-      "config": "search_path=public",
       "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {
+      "config": "search_path=public",
       "signature": "create_slot_hold(uuid)",
-      "securityDefiner": true,
-      "config": "search_path=public",
       "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {
+      "config": "-",
       "signature": "enforce_slot_hold_capacity()",
-      "securityDefiner": false,
-      "config": "-",
       "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
+      "securityDefiner": false,
       "takesIdentityParameter": false
     },
     {
+      "config": "search_path=public",
+      "signature": "forbid_commission_rate_mutation()",
+      "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
+      "securityDefiner": false,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
       "signature": "generate_admin_recovery_codes()",
-      "securityDefiner": true,
-      "config": "search_path=public",
       "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {
+      "config": "-",
       "signature": "generate_branch_slots(uuid,date,date)",
-      "securityDefiner": true,
-      "config": "-",
       "executeGrants": "postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {
+      "config": "search_path=public",
       "signature": "get_admin_auth_state()",
-      "securityDefiner": true,
-      "config": "search_path=public",
       "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {
+      "config": "search_path=public",
       "signature": "get_branch_bookings_for_date(uuid,date,text,text,integer,integer)",
-      "securityDefiner": true,
-      "config": "search_path=public",
       "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {
+      "config": "search_path=public",
       "signature": "get_branch_services_for_editor(uuid)",
-      "securityDefiner": true,
-      "config": "search_path=public",
       "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {
+      "config": "-",
       "signature": "get_branch_slots(uuid,date,date)",
-      "securityDefiner": true,
-      "config": "-",
       "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {
+      "config": "search_path=public",
       "signature": "get_patient_bookings()",
-      "securityDefiner": true,
-      "config": "search_path=public",
       "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {
+      "config": "-",
       "signature": "get_provider_branch_ids()",
-      "securityDefiner": true,
-      "config": "-",
       "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {
+      "config": "search_path=public",
       "signature": "get_user_role()",
-      "securityDefiner": true,
-      "config": "search_path=public",
       "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {
+      "config": "search_path=public",
       "signature": "handle_new_user()",
-      "securityDefiner": true,
-      "config": "search_path=public",
       "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {
+      "config": "search_path=public",
       "signature": "is_internal_caller()",
-      "securityDefiner": false,
-      "config": "search_path=public",
       "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": false,
       "takesIdentityParameter": false
     },
     {
+      "config": "search_path=public",
       "signature": "mark_booking_outcome(uuid,character varying)",
-      "securityDefiner": true,
-      "config": "search_path=public",
       "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {
+      "config": "search_path=public",
       "signature": "normalize_arabic(text)",
-      "securityDefiner": false,
-      "config": "search_path=public",
       "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": false,
       "takesIdentityParameter": false
     },
     {
+      "config": "-",
       "signature": "recalculate_branch_rating()",
-      "securityDefiner": false,
-      "config": "-",
       "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
+      "securityDefiner": false,
       "takesIdentityParameter": false
     },
     {
+      "config": "search_path=public",
       "signature": "record_admin_totp_failure()",
-      "securityDefiner": true,
-      "config": "search_path=public",
       "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {
+      "config": "search_path=public",
       "signature": "search_catalog(text,text)",
-      "securityDefiner": false,
-      "config": "search_path=public",
       "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": false,
       "takesIdentityParameter": false
     },
     {
+      "config": "-",
       "signature": "set_booking_ref()",
-      "securityDefiner": false,
-      "config": "-",
       "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
+      "securityDefiner": false,
       "takesIdentityParameter": false
     },
     {
+      "config": "-",
       "signature": "set_updated_at()",
-      "securityDefiner": false,
-      "config": "-",
       "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
+      "securityDefiner": false,
       "takesIdentityParameter": false
     },
     {
+      "config": "search_path=public",
       "signature": "update_branch_profile(text,text,text,text)",
-      "securityDefiner": true,
-      "config": "search_path=public",
       "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {
-      "signature": "update_branch_service(uuid,integer,boolean)",
-      "securityDefiner": true,
       "config": "search_path=public",
+      "signature": "update_branch_service(uuid,integer,boolean)",
       "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     }
   ]
