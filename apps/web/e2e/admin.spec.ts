@@ -21,6 +21,13 @@ const ADMIN_EMAIL = process.env.ADMIN_TEST_EMAIL ?? ''
 const ADMIN_TEMP_PASSWORD = process.env.ADMIN_TEST_PASSWORD ?? ''
 const HAS_CREDS = ADMIN_EMAIL.length > 0 && ADMIN_TEMP_PASSWORD.length > 0
 
+// ⚠ A TRIPWIRE, not a nicety. This suite RESETS the account it runs against —
+// password, authenticator, recovery codes. Pointed at the founder's real admin
+// it locks them out, which is precisely what the first version of the CI step
+// did. If ADMIN_TEST_EMAIL is ever set to the genesis account, fail LOUDLY
+// rather than quietly destroying it.
+const GENESIS_ADMIN_EMAIL = 'admin@instahealth.eg'
+
 const PROVIDER_EMAIL = process.env.PROVIDER_TEST_EMAIL ?? ''
 const PROVIDER_PASSWORD = process.env.PROVIDER_TEST_PASSWORD ?? ''
 const HAS_PROVIDER = PROVIDER_EMAIL.length > 0 && PROVIDER_PASSWORD.length > 0
@@ -98,6 +105,17 @@ test.describe.configure({ mode: 'serial' })
 
 test.describe('admin portal — auth & shell (A01)', () => {
   test.skip(!HAS_CREDS, 'ADMIN_TEST_EMAIL / ADMIN_TEST_PASSWORD not set')
+
+  test.beforeAll(() => {
+    if (ADMIN_EMAIL.trim().toLowerCase() === GENESIS_ADMIN_EMAIL) {
+      throw new Error(
+        `REFUSING TO RUN: ADMIN_TEST_EMAIL is the GENESIS admin (${GENESIS_ADMIN_EMAIL}). ` +
+          'This suite resets the password, deletes the authenticator and wipes the recovery ' +
+          'codes of whatever account it is given. Point it at admin-e2e@instahealth.eg ' +
+          '(supabase/seeds/006_admin_e2e_account.sql).',
+      )
+    }
+  })
 
   let enrolledSecret = ''
 

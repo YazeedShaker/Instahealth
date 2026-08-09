@@ -320,8 +320,9 @@ advisories (nanoid, js-yaml ×2, postcss) landed mid-PR — all via `postcss`/Ex
    codes off-device. The dev account is reset to a pristine first-login state.
 2. **Add `ADMIN_TEST_EMAIL` / `ADMIN_TEST_PASSWORD` as GitHub secrets** or the
    admin E2E SKIPS in CI — and a skipped suite looks exactly like a passing one.
-3. **Turn on `auth_leaked_password_protection`** before choosing the real
-   password (still disabled — Known risks).
+3. ~~Turn on `auth_leaked_password_protection`~~ — **Pro-plan only, declined
+   2026-08-09.** Choose admin passwords from a password manager; nothing checks
+   them server-side.
 
 ### 2026-08-04 · VIEW-01 — dashboard viewport hardening (not responsiveness)
 
@@ -2787,9 +2788,11 @@ _Next entry after SETUP-02._
   NOT fixed in the 2026-08-01 security PR to keep it one scope.** Reviewed after the
   `create_slot_hold` migration; `create_slot_hold` no longer appears among the
   anon-executable functions. What remains, worst first:
-  - **`auth_leaked_password_protection` is DISABLED.** Supabase can check new passwords
-    against HaveIBeenPwned. ⚠ **Turn this on BEFORE rotating the dev provider passwords**,
-    or the new ones are set without the check that would have caught a weak reuse.
+  - **`auth_leaked_password_protection` is DISABLED and will stay that way.** Supabase
+    can check new passwords against HaveIBeenPwned, but it is a **Pro-plan** feature and
+    the founder declined it 2026-08-09 at this stage. Consequence to keep in mind: no
+    server-side check catches a weak or breached password, so every staff and admin
+    password must come from a password manager. Revisit if the project moves to Pro.
   - **Six SECURITY DEFINER functions are still anon-executable**: `get_branch_slots`
     (deliberate — public slot browsing), `get_user_role` / `get_provider_branch_ids`
     (return empty for anon; harmless but pointless to expose), and

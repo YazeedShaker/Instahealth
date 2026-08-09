@@ -73,6 +73,13 @@
 -- Role resolution is a TABLE LOOKUP (get_user_role reads admin_users FIRST,
 -- and since 20260808161645 also requires is_active), not a JWT claim.
 --
+-- ⚠⚠ CI MUST NEVER RUN THIS FILE. It re-hashes the password and re-raises
+-- must_change_password, so running it on a schedule would silently take the
+-- founder's admin account away from them — which is exactly what the first
+-- version of the E2E reset step did. The suite has its own account:
+-- `supabase/seeds/006_admin_e2e_account.sql`. This file is a BOOTSTRAP
+-- artifact, run by hand, once per environment.
+--
 -- ⚠ THIS SEED DOES NOT TOUCH auth.mfa_factors. Re-running it in PROD must never
 -- destroy the founder's enrolled authenticator. To replay the first-login flow
 -- in DEV, clear the factor explicitly — see the runbook,
