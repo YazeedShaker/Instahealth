@@ -2853,6 +2853,19 @@ _Next entry after SETUP-02._
   - **Eleven functions have a mutable `search_path`** — the older ones predate the
     `SET search_path = public` convention. Same sweep.
   - `pnpm audit` carries one ignored GHSA (`GHSA-mh99-v99m-4gvg`, build tooling).
+- **⚠⚠ LAUNCH BLOCKER — COMMISSION RATES ARE PLACEHOLDERS (12%). Enter the
+  signed values via A03 before the first real statement.** A02 backfilled
+  `provider_commission_rates` with 12.00% for both partners, effective from
+  2026-01-01, because **no signed agreement rate exists yet** (founder ruling,
+  2026-08-09). The design's «١٢٪ → ١٣٪ من ١٦ يوليو» was ILLUSTRATIVE and is
+  deliberately NOT seeded; tests bring their own rate-change fixtures. Every
+  backfilled row carries a `note` saying so, so the placeholder is visible in
+  the data rather than only in this file. The statement will compute and issue
+  perfectly against a wrong number — that is exactly why this is a blocker and
+  not a nicety: **a partner would be invoiced against a rate nobody agreed.**
+  ⚠ A missing rate THROWS rather than defaulting, which is deliberate; a WRONG
+  rate cannot be detected by any code. Only a human comparing it to a signed
+  agreement can catch it.
 - **⚠ Seeded prices are PLACEHOLDERS — now a DATA task, not a code task.** P03 shipped the
   editor, so partners enter their real prices themselves at
   `/dashboard/services`. The rows that have never been touched show
