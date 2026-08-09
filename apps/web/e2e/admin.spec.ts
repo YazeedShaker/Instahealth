@@ -254,19 +254,48 @@ test.describe('admin portal — auth & shell (A01)', () => {
     await expect(page.getByTestId('admin-email')).toBeVisible({ timeout: 30_000 })
   })
 
-  test('THE TWO PORTALS NEVER CONFUSE THEIR SESSIONS', async ({ page }) => {
+  test('THE TWO PORTALS NEVER CONFUSE THEIR SESSIONS', async ({ page, browser }) => {
     test.skip(!HAS_PROVIDER, 'PROVIDER_TEST_* not set')
 
-    // ① A provider signing in at the ADMIN door is refused and signed back out
-    //    — valid credentials are not an authorisation (the P01 law).
-    await signInWithPassword(page, PROVIDER_EMAIL, PROVIDER_PASSWORD)
-    await expect(page.getByTestId('admin-login-error')).toBeVisible({ timeout: 30_000 })
-    await expect(page.getByTestId('admin-login-error')).toContainText('لا يملك صلاحية')
+    // ⚠ THE BYSTANDER. A second, unrelated session on the SAME provider
+    // account — the receptionist already working at the front desk. It exists
+    // to pin down the scope of the refusal below.
+    //
+    // This is the regression guard for the bug that kept main red from A01 to
+    // 2026-08-09: the role gate called `signOut()` with auth-js's DEFAULT scope
+    // ('global'), which revokes every refresh token the account owns. In CI the
+    // victim was whichever parallel worker happened to navigate next, so three
+    // different tests failed on three runs and it read as flake. It is not
+    // flake — it is a real product defect. A refusal at the wrong door must
+    // never sign anyone out of a desk they are standing at.
+    const deskContext = await browser.newContext()
+    const desk = await deskContext.newPage()
+    try {
+      await desk.goto('/login')
+      await desk.getByTestId('login-email').fill(PROVIDER_EMAIL)
+      await desk.getByTestId('login-password').fill(PROVIDER_PASSWORD)
+      await desk.getByTestId('login-submit').click()
+      await desk.waitForURL('**/dashboard/today', { timeout: 30_000 })
 
-    // …and the refusal really did sign them out, rather than leaving a
-    // half-authenticated session on the machine.
-    await page.goto('/admin/overview')
-    await page.waitForURL('**/admin/login**')
+      // ① A provider signing in at the ADMIN door is refused and signed back out
+      //    — valid credentials are not an authorisation (the P01 law).
+      await signInWithPassword(page, PROVIDER_EMAIL, PROVIDER_PASSWORD)
+      await expect(page.getByTestId('admin-login-error')).toBeVisible({ timeout: 30_000 })
+      await expect(page.getByTestId('admin-login-error')).toContainText('لا يملك صلاحية')
+
+      // …and the refusal really did sign them out, rather than leaving a
+      // half-authenticated session on the machine.
+      await page.goto('/admin/overview')
+      await page.waitForURL('**/admin/login**')
+
+      // …while the front desk is UNTOUCHED. A full navigation, so the middleware
+      // actually revalidates the session rather than serving a cached payload.
+      await desk.goto('/dashboard/today')
+      await expect(desk).toHaveURL(/\/dashboard\/today/, { timeout: 30_000 })
+      await expect(desk.getByTestId('branch-name')).toBeVisible({ timeout: 30_000 })
+    } finally {
+      await deskContext.close()
+    }
 
     // ② An ADMIN visiting the partner portal gets the provider gate's rejection.
     await signInWithPassword(page, ADMIN_EMAIL, NEW_PASSWORD)
