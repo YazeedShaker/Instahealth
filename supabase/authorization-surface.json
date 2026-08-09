@@ -1,15 +1,31 @@
 {
   "tables": [
     {
+      "table": "admin_lockouts",
+      "rlsEnabled": true,
+      "rlsForced": false,
+      "columnCount": 5,
+      "writableColumns": {},
+      "policies": []
+    },
+    {
+      "table": "admin_recovery_codes",
+      "rlsEnabled": true,
+      "rlsForced": false,
+      "columnCount": 7,
+      "writableColumns": {},
+      "policies": []
+    },
+    {
       "table": "admin_users",
       "rlsEnabled": true,
       "rlsForced": false,
-      "columnCount": 4,
+      "columnCount": 7,
       "writableColumns": {},
       "policies": [
         {
-          "policy": "admin_users: admin only",
-          "command": "ALL",
+          "policy": "admin_users: admin reads, nobody writes",
+          "command": "SELECT",
           "roles": "PUBLIC",
           "using": "(get_user_role() = 'admin'::text)",
           "withCheck": "-"
@@ -388,6 +404,13 @@
   ],
   "functions": [
     {
+      "signature": "acknowledge_admin_recovery_codes()",
+      "securityDefiner": true,
+      "config": "search_path=public",
+      "executeGrants": "authenticated,postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
       "signature": "auto_close_stale_bookings()",
       "securityDefiner": true,
       "config": "search_path=public",
@@ -423,10 +446,31 @@
       "takesIdentityParameter": false
     },
     {
+      "signature": "clear_admin_totp_failures()",
+      "securityDefiner": true,
+      "config": "search_path=public",
+      "executeGrants": "authenticated,postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
+      "signature": "complete_admin_password_change()",
+      "securityDefiner": true,
+      "config": "search_path=public",
+      "executeGrants": "authenticated,postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
       "signature": "confirm_booking(uuid,character varying,character varying,character varying,jsonb)",
       "securityDefiner": true,
       "config": "-",
       "executeGrants": "postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
+      "signature": "consume_admin_recovery_code(text)",
+      "securityDefiner": true,
+      "config": "search_path=public",
+      "executeGrants": "authenticated,postgres,service_role",
       "takesIdentityParameter": false
     },
     {
@@ -451,10 +495,24 @@
       "takesIdentityParameter": false
     },
     {
+      "signature": "generate_admin_recovery_codes()",
+      "securityDefiner": true,
+      "config": "search_path=public",
+      "executeGrants": "authenticated,postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
       "signature": "generate_branch_slots(uuid,date,date)",
       "securityDefiner": true,
       "config": "-",
       "executeGrants": "postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
+      "signature": "get_admin_auth_state()",
+      "securityDefiner": true,
+      "config": "search_path=public",
+      "executeGrants": "authenticated,postgres,service_role",
       "takesIdentityParameter": false
     },
     {
@@ -495,7 +553,7 @@
     {
       "signature": "get_user_role()",
       "securityDefiner": true,
-      "config": "-",
+      "config": "search_path=public",
       "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
       "takesIdentityParameter": false
     },
@@ -532,6 +590,13 @@
       "securityDefiner": false,
       "config": "-",
       "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
+      "takesIdentityParameter": false
+    },
+    {
+      "signature": "record_admin_totp_failure()",
+      "securityDefiner": true,
+      "config": "search_path=public",
+      "executeGrants": "authenticated,postgres,service_role",
       "takesIdentityParameter": false
     },
     {

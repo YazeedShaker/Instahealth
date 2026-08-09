@@ -54,6 +54,27 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // The admin panel (A01). Same split of responsibilities: middleware answers
+  // "signed in?", the (shell) layout answers "admin, and how far in?".
+  //
+  // ⚠ `/admin/login/*` is EXCLUDED — it is the sign-in flow itself, and every
+  // step of it (verify, enroll, recovery, change-password) legitimately runs
+  // with a session that is not yet allowed through the gate.
+  const isAdminAuthRoute = pathname.startsWith('/admin/login')
+  if (pathname.startsWith('/admin') && !isAdminAuthRoute && !user) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/admin/login'
+    url.search = ''
+    return NextResponse.redirect(url)
+  }
+
+  // ⚠ NO "already signed in → skip the login page" shortcut for /admin, unlike
+  // the partner portal below. An admin session sitting on /admin/login may be
+  // mid-flow — aal1 awaiting a TOTP code, or awaiting enrollment — and
+  // bouncing it to /admin/overview would send it straight back here from the
+  // gate. The (auth) pages each redirect a genuinely-finished session onward
+  // themselves, where the four-state answer is already in hand.
+
   // A signed-in visitor has no business on the portal — EXCEPT when they were
   // just bounced off a staff-only surface.
   //
