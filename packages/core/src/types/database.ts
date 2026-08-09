@@ -453,6 +453,147 @@ export type Database = {
           },
         ]
       }
+      commission_statement_lines: {
+        Row: {
+          amount_piasters: number
+          booking_date: string
+          booking_id: string
+          booking_ref: string
+          commission_piasters: number
+          event_date: string | null
+          event_kind: string
+          excluded: boolean
+          excluded_reason: string | null
+          id: string
+          method: string
+          rate_percent: number | null
+          statement_id: string
+        }
+        Insert: {
+          amount_piasters: number
+          booking_date: string
+          booking_id: string
+          booking_ref: string
+          commission_piasters?: number
+          event_date?: string | null
+          event_kind: string
+          excluded?: boolean
+          excluded_reason?: string | null
+          id?: string
+          method: string
+          rate_percent?: number | null
+          statement_id: string
+        }
+        Update: {
+          amount_piasters?: number
+          booking_date?: string
+          booking_id?: string
+          booking_ref?: string
+          commission_piasters?: number
+          event_date?: string | null
+          event_kind?: string
+          excluded?: boolean
+          excluded_reason?: string | null
+          id?: string
+          method?: string
+          rate_percent?: number | null
+          statement_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_statement_lines_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_statement_lines_statement_id_fkey"
+            columns: ["statement_id"]
+            isOneToOne: false
+            referencedRelation: "commission_statements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commission_statements: {
+        Row: {
+          commission_total_piasters: number
+          commissionable_count: number
+          created_at: string
+          excluded_amount_piasters: number
+          excluded_count: number
+          gmv_piasters: number
+          id: string
+          issued_at: string
+          issued_by: string | null
+          month: string
+          provider_id: string
+          sent_at: string | null
+          sent_by: string | null
+          settled_at: string | null
+          settled_by: string | null
+          status: string
+          superseded_by: string | null
+          version: number
+        }
+        Insert: {
+          commission_total_piasters: number
+          commissionable_count: number
+          created_at?: string
+          excluded_amount_piasters: number
+          excluded_count: number
+          gmv_piasters: number
+          id?: string
+          issued_at?: string
+          issued_by?: string | null
+          month: string
+          provider_id: string
+          sent_at?: string | null
+          sent_by?: string | null
+          settled_at?: string | null
+          settled_by?: string | null
+          status: string
+          superseded_by?: string | null
+          version: number
+        }
+        Update: {
+          commission_total_piasters?: number
+          commissionable_count?: number
+          created_at?: string
+          excluded_amount_piasters?: number
+          excluded_count?: number
+          gmv_piasters?: number
+          id?: string
+          issued_at?: string
+          issued_by?: string | null
+          month?: string
+          provider_id?: string
+          sent_at?: string | null
+          sent_by?: string | null
+          settled_at?: string | null
+          settled_by?: string | null
+          status?: string
+          superseded_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_statements_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_statements_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "commission_statements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           booking_id: string | null
@@ -562,6 +703,44 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: true
             referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provider_commission_rates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          id: string
+          note: string | null
+          percent: number
+          provider_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          effective_from: string
+          id?: string
+          note?: string | null
+          percent: number
+          provider_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          id?: string
+          note?: string | null
+          percent?: number
+          provider_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_commission_rates_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
             referencedColumns: ["id"]
           },
         ]
@@ -948,7 +1127,19 @@ export type Database = {
       }
       cleanup_expired_holds: { Args: never; Returns: number }
       clear_admin_totp_failures: { Args: never; Returns: Json }
+      commission_piasters: {
+        Args: { p_amount_piasters: number; p_percent: number }
+        Returns: number
+      }
+      commission_rate_at: {
+        Args: { p_on: string; p_provider_id: string }
+        Returns: number
+      }
       complete_admin_password_change: { Args: never; Returns: Json }
+      compute_commission_draft: {
+        Args: { p_month: string; p_provider_id: string }
+        Returns: Json
+      }
       confirm_booking: {
         Args: {
           p_booking_id: string
