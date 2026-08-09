@@ -1,7 +1,8 @@
+import QRCode from 'qrcode'
+
 import { redirect } from 'next/navigation'
 
-import { AdminEnrollCard } from '../../../../../components/admin/AdminEnrollCard'
-import { AdminRecoveryCodesRecovery } from '../../../../../components/admin/AdminRecoveryCodesRecovery'
+import { AdminEnrollFlow } from '../../../../../components/admin/AdminEnrollFlow'
 import { adminBeginEnrollment } from '../../../actions'
 import { getAdminContext } from '../../../../../lib/auth/admin'
 
@@ -11,6 +12,17 @@ export const dynamic = 'force-dynamic'
 // after a recovery reset, which is why the gate routes on "no verified factor"
 // rather than on "first login": the two are the same state and must behave the
 // same way.
+//
+// ⚠ BOTH BRANCHES RENDER THE SAME COMPONENT, and that is load-bearing. Confirming
+// enrollment is a server action, so the route revalidates and this page re-runs
+// with the post-action state — enrolled, codes unacknowledged. If that made the
+// page return a DIFFERENT component, React would unmount the first one and
+// destroy the client state holding the eight one-time recovery codes, which
+// exist nowhere else (the database keeps only bcrypt hashes). That is exactly
+// what happened to the founder's first login: a QR scanned, then a screen saying
+// the codes "were shown and not confirmed" — having shown them zero times.
+// `AdminEnrollFlow` takes `codesPending` as a PROP so the element type never
+// changes and the instance survives. See the note in that file.
 export default async function AdminEnrollPage() {
   const lookup = await getAdminContext()
 
@@ -19,18 +31,33 @@ export default async function AdminEnrollPage() {
   if (lookup.kind === 'needsTotp') redirect('/admin/login/verify')
   if (lookup.kind === 'ok') redirect('/admin/overview')
 
-  // ⚠ ALREADY ENROLLED, codes minted but never confirmed saved. Do NOT start a
-  // new enrollment here — the factor is fine; it is the one-time codes that
-  // were lost (see migration 20260808231917). The plaintext is unrecoverable by
-  // design, so the honest screen says so and offers a fresh set.
-  if (lookup.kind === 'needsRecoveryCodes') {
-    return <AdminRecoveryCodesRecovery />
-  }
+  const codesPending = lookup.kind === 'needsRecoveryCodes'
 
-  // Mint the factor server-side so the QR and the manual key are in the first
-  // paint — an enrollment screen that renders empty and then fills in invites a
-  // reload, and a reload would mint a second factor.
-  const enrollment = await adminBeginEnrollment()
+  // ⚠ Do NOT start a new enrollment in the codes-pending case — the factor is
+  // already verified and fine; it is only the codes that were lost. Minting a
+  // second factor there would leave the account with two.
+  const enrollment = codesPending ? null : await adminBeginEnrollment()
 
-  return <AdminEnrollCard enrollment={enrollment} />
+  // The QR is rendered to an inline SVG on the SERVER. No canvas, no client
+  // library, no network request — and critically the secret never becomes an
+  // <img src> that could land in a proxy log or a browser cache.
+  const qrSvg =
+    enrollment?.ok === true
+      ? await QRCode.toString(enrollment.data.uri, {
+          type: 'svg',
+          margin: 0,
+          errorCorrectionLevel: 'M',
+          color: { dark: '#023449', light: '#FFFFFF' },
+        })
+      : null
+
+  return (
+    <AdminEnrollFlow
+      qrSvg={qrSvg}
+      factorId={enrollment?.ok === true ? enrollment.data.factorId : null}
+      secret={enrollment?.ok === true ? enrollment.data.secret : null}
+      codesPending={codesPending}
+      enrollErrorAr={enrollment && !enrollment.ok ? enrollment.errorAr : null}
+    />
+  )
 }
