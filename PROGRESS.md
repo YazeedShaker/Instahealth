@@ -88,6 +88,57 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 
 ## Shipped
 
+### 2026-08-09 · FIX — a refusal at the wrong portal signed the account out EVERYWHERE (main was red for three days)
+
+`main` had been RED since A01 merged — three consecutive runs (#42, #43, #44),
+last green was #41 on 2026-08-05. It read as flake, because **the victim was a
+different test every time**: `admin.spec.ts:84` first-login, then
+`dashboard.spec.ts:690` prices editor, then `dashboard.spec.ts:821` P04 slots.
+Each a clean 120s `waitForURL` timeout. PR #45 — **docs-only** — failed the same
+way, which is what made it impossible to write off.
+
+**One cause.** `supabase.auth.signOut()` defaults to `scope: 'global'`, which
+revokes every refresh token the account owns on every device. Both role gates
+used the bare form:
+
+| call site                             | what it meant to do                       | what it did                                     |
+| ------------------------------------- | ----------------------------------------- | ----------------------------------------------- |
+| `app/admin/actions.ts` (admin door)   | clear the half-authenticated session HERE | killed every session that account held anywhere |
+| `app/login/actions.ts` (partner door) | same                                      | same                                            |
+
+A01's cross-portal test signs the **provider** account into the admin door to
+assert it is refused. The refusal then revoked that provider account's sessions
+globally — including the two other Playwright workers using the same shared dev
+account, which bounced to `/login?next=…` mid-test. Hence a different casualty
+each run, and hence three days of it looking like geography.
+
+**This is a product defect, not a test defect.** A receptionist standing at the
+front desk is signed out because a colleague tried those credentials at the
+admin door — on a shared account, that is a live front desk going blank. The
+gate's stated intent has always been "don't leave a half-authenticated session
+on THIS machine", which is `scope: 'local'` exactly.
+
+**Proven, both directions, before and after.** Two real independent sessions on
+the shared provider account against live dev: with the default scope the
+bystander's refresh returns `Invalid Refresh Token: Refresh Token Not Found`;
+with `{ scope: 'local' }` it survives. Then the same thing end-to-end — the new
+guard was run **against the unfixed code first** (it failed, landing on
+`/login?next=%2Fdashboard%2Ftoday`, the CI symptom exactly) and again after
+(passed), on a **production build** per §9.
+
+**The regression guard lives in the cross-portal test**: a second browser
+context signed in as the provider at the front desk, asserted still working
+after the admin door refuses those same credentials. It would have caught this
+on the A01 PR.
+
+**Deliberately unchanged:** the recovery-code reset in `admin/actions.ts` stays
+GLOBAL — killing every session is its entire purpose (A01 ruling ②) — as do the
+two explicit logout buttons.
+
+⚠ **The transferable lesson, now in ENGINEERING-WORKFLOW §6a:** a suite whose
+FAILING TEST CHANGES every run is not flaky; it has one shared cause and the
+tests are just the dice. Chasing the individual test is how three days go by.
+
 ### 2026-08-08 · A01 — Admin auth (password + TOTP + recovery) & the /admin shell
 
 The admin portal exists. The founder signs in with email + password, is forced

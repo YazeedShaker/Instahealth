@@ -48,8 +48,12 @@ export async function signIn(_prev: LoginState, formData: FormData): Promise<Log
     .eq('is_active', true)
     .maybeSingle()
 
+  // ⚠ SCOPE IS 'local' ON PURPOSE — see the same note in app/admin/actions.ts.
+  // auth-js defaults signOut() to scope 'global', which would revoke every
+  // session the account holds anywhere. "Don't leave a half-authenticated
+  // session on THIS front desk" is a local concern.
   if (!membership || (membership.branch_ids?.length ?? 0) === 0) {
-    await supabase.auth.signOut()
+    await supabase.auth.signOut({ scope: 'local' })
     return { errorAr: getLoginErrorMessageAr('notProvider') }
   }
 
