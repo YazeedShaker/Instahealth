@@ -72,6 +72,26 @@ async function signInWithPassword(page: Page, email: string, password: string): 
   await page.getByTestId('admin-email').fill(email)
   await page.getByTestId('admin-password').fill(password)
   await page.getByTestId('admin-login-submit').click()
+
+  // ⚠ ASSERT THE SIGN-IN, don't just wait for where it should land. When the
+  // ADMIN_TEST_PASSWORD secret did not match what the seed had hashed, every
+  // test failed as `waitForURL: Test timeout` pointing at a line about the
+  // password-change screen — which says nothing about the actual cause and cost
+  // a CI round trip to diagnose. If the credentials are wrong, say so here.
+  const loginError = page.getByTestId('admin-login-error')
+  await expect
+    .poll(async () => (await loginError.isVisible()) || !page.url().includes('/admin/login?'), {
+      timeout: 15_000,
+      message: 'sign-in neither errored nor navigated',
+    })
+    .toBeTruthy()
+  if (await loginError.isVisible()) {
+    throw new Error(
+      `Admin sign-in was REFUSED: "${await loginError.innerText()}". ` +
+        'Most likely ADMIN_TEST_PASSWORD does not match what seed 005 hashed — ' +
+        'check the secret, and that CI passes it RAW so psql does the quoting.',
+    )
+  }
 }
 
 test.describe.configure({ mode: 'serial' })

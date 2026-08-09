@@ -38,11 +38,19 @@
 -- PowerShell:
 --
 --   psql $env:DATABASE_URL `
---     -v admin_password="'$env:ADMIN_TEST_PASSWORD'" `
+--     -v admin_password="$env:ADMIN_TEST_PASSWORD" `
 --     -f supabase/seeds/005_admin_users.sql
 --
+-- ⚠ THE VARIABLE IS PASSED RAW AND QUOTED BY PSQL, via :'admin_password'
+-- (note the quotes INSIDE the colon form). The obvious alternative — wrapping
+-- the value in single quotes in the shell, `-v admin_password="'$PASS'"` — is
+-- what CI ran first, and it silently corrupts any password containing a
+-- single quote, a dollar sign or a backslash: psql then hashes a DIFFERENT
+-- string than the one in the secret, sign-in fails, and the E2E times out on a
+-- URL with nothing pointing at the cause. Let psql escape it.
+--
 -- Applying through the Supabase MCP / SQL editor instead? Substitute
--- :admin_password in your editor buffer only — never save it back here, and
+-- :'admin_password' in your editor buffer only — never save it back here, and
 -- never paste it into a commit message, a PR body or PROGRESS.md.
 --
 -- ⚠ THE PASSWORD SET HERE IS A TEMP PASSWORD. `must_change_password` is TRUE
@@ -85,7 +93,7 @@ ins_auth AS (
     confirmation_token, recovery_token, email_change_token_new, email_change
   )
   SELECT '00000000-0000-0000-0000-000000000000', c.uid, 'authenticated', 'authenticated',
-         c.email, crypt(:admin_password, gen_salt('bf')), NOW(),
+         c.email, crypt(:'admin_password', gen_salt('bf')), NOW(),
          '{"provider":"email","providers":["email"]}'::jsonb,
          jsonb_build_object('full_name', c.name),
          NOW(), NOW(), '', '', '', ''

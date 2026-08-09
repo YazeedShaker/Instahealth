@@ -206,7 +206,7 @@ jobs:
       - name: Reset the admin account to first-login state
         if: ${{ env.SUPABASE_DB_URL != '' && env.ADMIN_TEST_PASSWORD != '' }}
         run: |
-          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -v admin_password="'$ADMIN_TEST_PASSWORD'" -f supabase/seeds/005_admin_users.sql
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -v admin_password="$ADMIN_TEST_PASSWORD" -f supabase/seeds/005_admin_users.sql
           psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/seeds/006_admin_e2e_reset.sql
       - name: Run Playwright
         run: pnpm turbo test:e2e --filter=@instahealth/web
