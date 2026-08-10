@@ -250,12 +250,148 @@ test.describe('admin portal — auth & shell (A01)', () => {
     await expect(page.getByTestId('admin-soon-chip')).toHaveCount(0)
     await expect(page.getByTestId('statement-provider')).toBeVisible()
 
-    // A placeholder surface still carries its REAL title and its spec id.
+    // ⚠ AND كتالوج الخدمات + حسابات المزودين STOPPED being placeholders when
+    // A04/A05 landed — the same adjustment A02 made for العمولات, for the same
+    // reason: keeping the assertion would mean a real screen failing CI for
+    // looking real. The «قريباً» chip must now be ABSENT on both.
     await page.getByTestId('admin-nav-catalog').click()
     await page.waitForURL('**/admin/catalog')
     await expect(page.getByTestId('admin-catalog')).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByTestId('admin-soon-chip')).toHaveCount(0)
+    await expect(page.getByTestId('catalog-table')).toBeVisible()
+
+    await page.getByTestId('admin-nav-staff').click()
+    await page.waitForURL('**/admin/staff')
+    await expect(page.getByTestId('admin-staff')).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByTestId('admin-soon-chip')).toHaveCount(0)
+    await expect(page.getByTestId('staff-table')).toBeVisible()
+
+    // A placeholder surface still carries its REAL title and its spec id, and
+    // الحجوزات (A06) is the one still outstanding — so the assertion moves
+    // rather than disappearing.
+    await page.getByTestId('admin-nav-bookings').click()
+    await page.waitForURL('**/admin/bookings')
+    await expect(page.getByTestId('admin-bookings')).toBeVisible({ timeout: 30_000 })
     await expect(page.getByTestId('admin-soon-chip')).toBeVisible()
-    await expect(page.getByTestId('admin-catalog-spec')).toContainText('A0')
+    await expect(page.getByTestId('admin-bookings-spec')).toContainText('A0')
+  })
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // A04 / A05 — the Tier 2 happy paths.
+  //
+  // ⚠ DELIBERATELY READ-ONLY, and this is a judgement worth stating. Creating
+  // a service here would add a row plus 24 branch_services to a dev database
+  // THREE WORKERS AND EVERY OTHER BRANCH SHARE, and nothing would remove it —
+  // «a seed must own its whole footprint» applies to a spec that writes just as
+  // much as to a seed. The write paths are already proven by 51 Node assertions
+  // inside rolled-back transactions, which is the right place for them
+  // (WORKFLOW §9: prove append-only rules in Node, let Playwright own what only
+  // a browser can answer).
+  //
+  // What only a browser can answer is what these cover: that the screens render
+  // real data, that a consequential dialog opens with the SERVER's numbers, and
+  // that its CTA stays disabled until the acknowledgment is ticked.
+  // ═══════════════════════════════════════════════════════════════════════
+  test('A04 — the catalog lists real services and the publish confirm carries server numbers', async ({
+    page,
+  }) => {
+    await signInWithPassword(page, ADMIN_EMAIL, NEW_PASSWORD)
+    await page.waitForURL('**/admin/login/verify')
+    await waitForFreshWindow()
+    await page.getByTestId('admin-totp-input').fill(totp(enrolledSecret))
+    await page.getByTestId('admin-verify-submit').click()
+    await page.waitForURL('**/admin/overview')
+
+    await page.goto('/admin/catalog')
+    await expect(page.getByTestId('admin-catalog')).toBeVisible({ timeout: 30_000 })
+
+    // The counts line is server-computed; the seeded catalogue is non-empty.
+    await expect(page.getByTestId('admin-header-subtitle')).toContainText('خدمة')
+    const rows = page.getByTestId('catalog-row')
+    expect(await rows.count()).toBeGreaterThan(0)
+
+    // The launch switch is on this screen and reflects real category state.
+    await expect(page.getByTestId('catalog-categories')).toBeVisible()
+
+    // Search filters server-rendered rows without a round trip. Web-first
+    // assertion on the END STATE — no fixed timeout after a keystroke (§9).
+    const firstName = (await rows.first().innerText()).split('\n')[0] ?? ''
+    await page.getByTestId('catalog-search').fill('zzzz-no-such-service')
+    await expect(page.getByTestId('catalog-no-matches')).toBeVisible()
+    await page.getByTestId('catalog-search').fill('')
+    await expect(rows.first()).toContainText(firstName)
+
+    // Open a service and reach its publish/suspend confirm.
+    await rows.first().click()
+    await expect(page.getByTestId('admin-catalog-detail')).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByTestId('catalog-price-table')).toBeVisible()
+
+    await page.getByTestId('catalog-status-change').click()
+    const confirm = page.getByTestId('catalog-status-confirm')
+    await expect(confirm).toBeVisible({ timeout: 30_000 })
+    // Every row in the panel is a number the preview function produced.
+    expect(await page.getByTestId('catalog-status-confirm-row').count()).toBeGreaterThan(0)
+
+    // ⚠ THE ACKNOWLEDGMENT IS A REAL GATE, not decoration: disabled until ticked.
+    const submit = page.getByTestId('catalog-status-confirm-submit')
+    await expect(submit).toBeDisabled()
+    await page.getByTestId('catalog-status-confirm-ack').check()
+    await expect(submit).toBeEnabled()
+
+    // Leave without applying it — this spec does not mutate the shared catalogue.
+    await confirm.getByRole('button', { name: 'إلغاء' }).click()
+    await expect(confirm).toBeHidden()
+  })
+
+  test('A05 — the staff list shows real accounts and the disable confirm gates on its checkbox', async ({
+    page,
+  }) => {
+    await signInWithPassword(page, ADMIN_EMAIL, NEW_PASSWORD)
+    await page.waitForURL('**/admin/login/verify')
+    await waitForFreshWindow()
+    await page.getByTestId('admin-totp-input').fill(totp(enrolledSecret))
+    await page.getByTestId('admin-verify-submit').click()
+    await page.waitForURL('**/admin/overview')
+
+    await page.goto('/admin/staff')
+    await expect(page.getByTestId('admin-staff')).toBeVisible({ timeout: 30_000 })
+
+    const rows = page.getByTestId('staff-row')
+    expect(await rows.count()).toBeGreaterThan(0)
+    // «الدور» is drawn disabled and footnoted — the standing no-role-tiers
+    // decision, asserted so a future session cannot quietly ship tiers.
+    await expect(page.getByText('عمود «الدور» محجوز')).toBeVisible()
+
+    // The create flow's step 1 opens and the role control is inert.
+    await page.getByTestId('staff-new').click()
+    await expect(page.getByTestId('staff-create-dialog')).toBeVisible()
+    await expect(page.getByTestId('staff-create-role')).toBeDisabled()
+    await expect(page.getByTestId('staff-create-submit')).toBeDisabled()
+    await page.getByTestId('staff-create-dialog').getByRole('button', { name: 'إلغاء' }).click()
+    await expect(page.getByTestId('staff-create-dialog')).toBeHidden()
+
+    // An ACTIVE account's detail, and its disable confirm.
+    await page.getByTestId('staff-filter-state').selectOption('active')
+    await expect(rows.first()).toBeVisible()
+    await rows.first().click()
+    await expect(page.getByTestId('admin-staff-detail')).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByTestId('staff-audit')).toBeVisible()
+
+    await page.getByTestId('staff-disable').click()
+    const confirm = page.getByTestId('staff-disable-confirm')
+    await expect(confirm).toBeVisible({ timeout: 30_000 })
+    expect(await page.getByTestId('staff-disable-confirm-row').count()).toBeGreaterThan(0)
+
+    const submit = page.getByTestId('staff-disable-confirm-submit')
+    await expect(submit).toBeDisabled()
+    await page.getByTestId('staff-disable-confirm-ack').check()
+    await expect(submit).toBeEnabled()
+
+    // ⚠ Leave WITHOUT disabling. Disabling here would ban a dev login the
+    // dashboard suite signs in with, and the next run would fail for a reason
+    // that looks nothing like its cause.
+    await confirm.getByRole('button', { name: 'إلغاء' }).click()
+    await expect(confirm).toBeHidden()
   })
 
   test('an unauthenticated visitor cannot reach /admin', async ({ page }) => {
