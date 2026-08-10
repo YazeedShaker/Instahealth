@@ -41,9 +41,14 @@ Those three are the reason this file is read.
 **Phase:** 🎉 **MILESTONE ONE — the loop is closed.** Patient books on mobile (F01→F07) → the branch desk sees it, records the outcome, opens the detail drawer, cancels on the patient's behalf, manages its own prices, reads its slot picture and maintains its own contact details (P01–P05 — every sidebar surface is live). The four shipped identity/money holes are all closed and the repo passed a full-history secret audit (2026-08-01). **V1 collects no money — cash at the branch** (2026-08-04 partner-trust decision), which retires the "payments are simulated" launch blocker outright. **A01 opened the admin portal** (2026-08-08): the founder's account exists, TOTP
 is live, and `/admin` is gated four ways. **A02 shipped the commission statement**
 (2026-08-09) — the founder can issue, send and settle a partner's monthly
-invoice, and the two money policies A01 flagged are closed. Next: A03 (the
-commission-rate editor, a LAUNCH BLOCKER — the seeded 12% is a placeholder), F08
-reviews (needs the review writer function); card via PayTabs returns post-market-proof
+invoice, and the two money policies A01 flagged are closed. **A03 shipped the
+network screens and the commission-rate editor** (2026-08-10; its PROGRESS entry
+was reconstructed after the fact — neither of its PRs wrote one). **A04+A05'
+data layer landed 2026-08-10 and is verified 34/34 against live dev, but their
+SCREENS ARE NOT BUILT** — branch `feat/a04-a05-catalog-staff`, hand-off in the
+Shipped entry. Ten of A01's eleven admin write policies are now closed. Next:
+finish A04/A05's screens, then A06+A07; F08 reviews still needs the review
+writer function; card via PayTabs returns post-market-proof
 ⚠ **Two founder decisions are open and blocking nothing yet: the LICENSE / IP posture and whether vulnerability detail belongs in a public PROGRESS.** Both in Known risks.
 **Milestone target:** Labs + Scans booking working end-to-end at Town Hospital & Saridar Labs
 **Environment:** Supabase `instahealth-dev` live (Frankfurt). Design system published in Claude Design.
@@ -100,9 +105,19 @@ visual contract. Then specs → Claude Code.
       Its opening decision closed the two money policies — `bookings` and
       `payments` admin `ALL` — outright. **Nine of the eleven remain** for
       A03–A06.
-- [ ] **A03–A06** — Web: providers & branches, catalog, staff accounts, oversight.
-      ⚠ A03 owns the commission-rate editor, and it is a LAUNCH BLOCKER: the
-      seeded 12% is a placeholder (see Known risks).
+- [x] **A03** — ✅ DONE. Web: providers & branches + the commission-rate editor
+      (PRs #50, #52 — entry reconstructed 2026-08-10, see Shipped). Remainder:
+      branch detail w/ regeneration dialog + the creation forms; their RPCs
+      exist and are proven.
+- [~] **A04 + A05** — Web: service catalog + provider staff accounts.
+  **Data layer DONE and verified (34/34 on live dev); SCREENS NOT BUILT.**
+  Branch `feat/a04-a05-catalog-staff`. Read the A04+A05 hand-off in Shipped
+  before continuing — it lists the four remaining pieces in order.
+- [ ] **A06–A07** — Web: oversight + overview. A06 consumes A02's computation
+      functions and the عمولة متوقعة chip rules; A07's alert states are now real
+      data — **a branch with zero active accounts is detectable**
+      (`preview_staff_disable.isLastActiveAccount`), and so is a published
+      service nobody has priced (`service_branch_pricing.unpricedCount`).
 - [ ] **006_practitioners.sql + doctor booking** — after labs/scans proven
 
 **First milestone:** patient books on mobile at Town/Saridar → pays → gets SMS + confirmation →
@@ -111,6 +126,184 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 ---
 
 ## Shipped
+
+### 2026-08-10 · A04 + A05 (data layer) — Service catalog & provider staff accounts
+
+⚠ **PARTIAL — the Tier 1 half. The screens are NOT built.** See the hand-off at
+the end of this entry before continuing; the branch is
+`feat/a04-a05-catalog-staff`.
+
+**A04 — the catalog gets three states, and the launch switch becomes real.**
+SPEC-A04 says to map مسودة/منشورة/موقوفة onto the real schema before building.
+It did not exist: `services` carried one boolean, `is_active`, TRUE on all 26
+rows. `status` (draft | published | suspended) is now THE dial, and `is_active`
+is **GENERATED from it** rather than kept beside it — four proven predicates
+read that column, and two facts that must agree but are maintained separately is
+the most repeated mistake in this schema. Proven unwritable, aimed at a real row
+holding the value it already had: `ERROR 428C9: column "is_active" can only be
+updated to DEFAULT`.
+
+**Two holes the spec did not know about, both closed:**
+
+1. **⚠ THE LAUNCH SWITCH WAS A DISPLAY FILTER.** `create_pending_booking`
+   checked `services.is_active` and **not** `service_categories.is_active`.
+   Search filtered on the category flag, the branch profile filtered on it,
+   booking creation did not — so flipping a category off hid it everywhere and
+   still let a client holding a `branch_service` id it had cached seconds
+   earlier book it. DECISION-provider-data-model calls that flag "THE launch
+   switch"; it now gates the booking. **Proven both ways on dev**: category ON,
+   a real patient booking succeeded (`IH-2026-52316`, 175 EGP); category OFF,
+   the identical call returned `service_unavailable`.
+2. **⚠ A NEW SERVICE COULD NEVER BE PRICED, BY ANYBODY, EVER.**
+   `admin_create_service` makes a draft; the frame then shows its per-branch
+   price table and the publish confirm counts the priced branches. But
+   `update_branch_service` (P03) takes an existing `branch_services` id and has
+   no insert path, nothing else wrote the table, and `price` was NOT NULL — so
+   "offered but not yet priced" could not even be **represented**. The catalog's
+   primary action dead-ended at «٢٤ فرعاً بلا سعر».
+   The design already knew: its audit panel draws a price change as
+   «من — إلى ١٨٠ ج.م», an em-dash for the old price. That is a NULL. `price` is
+   now nullable and means exactly that, creating a service creates the offering
+   row at every live branch, and «بلا سعر» is a state instead of a caption.
+   Every predicate that reads a price excludes the NULL — **twice** in
+   `create_pending_booking`, because a NULL in that SUM makes `total_amount`
+   NULL and migration 20260729160519 exists to keep that number true.
+
+**A05 — staff accounts.** `name`, `must_change_password` and
+`temp_password_issued_at` are new on `provider_users`; email and «آخر دخول» are
+deliberately **not** — they are `auth.users.email` and `last_sign_in_at`, read
+through a definer function, because copying an identity into a second table is
+how the two drift. That read is also what makes «لم يُستخدم بعد» a fact rather
+than an inference. The writers are an Edge Function
+(`admin-staff-accounts`) because every action has one half in GoTrue and one in
+Postgres, and a function that can only do the Postgres half leaves accounts
+whose halves disagree.
+
+**⚠ The session kill was wrong first, and the wrong version looked right.** The
+confirm promises «يقطع الدخول في نفس اللحظة». `signOut()` wants the target's own
+access token, so the trick that suggests itself is a ban/unban round trip — and
+it does nothing: GoTrue's ban sets `banned_until` and deletes no sessions, and
+the refresh endpoint re-reads that column, so unbanning a second later hands
+every live session back. Applied after the disable's permanent ban it **lifts
+the ban**. A session ends when its row stops existing:
+`admin_revoke_provider_sessions` deletes from `auth.sessions` (proven: 34 rows
+deleted, then rolled back). What it still cannot do — A01's finding, restated —
+is reach a stateless access token already issued; immediate lockout is kept by
+`is_active`, which `getProviderContext()` re-reads on every render.
+
+**Policy closures — four more. Ten of A01's eleven are now closed.**
+`services` and `service_categories` replaced by the writers; `provider_users`
+replaced by the Edge Function; **`branch_services` dropped with no replacement**
+— and that is the one that mattered, because PRICE, the single field this
+feature deliberately does not let the admin write
+(«يُسعِّرها الشريك — قراءة فقط»), was writable from an admin's browser the whole
+time. Verified there are no client writes to any of the four anywhere in
+`apps/`, `packages/` or `supabase/functions/`.
+Remaining: `users`, **`notifications`** (⚠ not in the five the A03 hand-off
+named — A03's own closing note listed it and the hand-off dropped it), and the
+`reviews` moderation gap that F08 decides.
+
+**Verification (Tier 1): 34/34 assertions passed against the live dev DB**, all
+inside one transaction that was rolled back, with callers impersonated the way
+PostgREST does it (`request.jwt.claims` + `set local role`). Residue re-checked
+afterwards from outside the transaction: 26 services, 486 branch_services, 0
+audit rows, provider flag back to false — nothing left behind. Included: the
+category flip both ways, publish/suspend against `search_catalog`, preview
+numbers == applied effect, the transition table's refusals, the 72-hour temp
+rule, the partner password-change audit row, the disable preview's counts
+against a hand-computed control, and **8 authorization denials all raising
+42501**.
+
+**Judgement calls, spec/design deviations — all deliberate:**
+
+- **No design frame exists for the category flip.** The spec asks for it («THE
+  launch switch», acknowledgment checkbox); the Catalog bundle has four frames
+  (list, detail+publish, suspend, loading/empty) and none of them is a category
+  surface. The data layer is built and proven; **the screen still needs a
+  decision** — compose it from the drawn confirm anatomy, or get a frame.
+- **«مدة الزيارة التقديرية» (estimated visit duration) is drawn and not built.**
+  There is no column and no consumer, and the spec's own writer field list omits
+  it. Flagged rather than invented.
+- **`services.code` is nullable and the 26 seeded services have none.** Codes
+  are required on new services; inventing 26 codes for real lab tests would be
+  fabricated data in a table the founder reads as truth.
+- **«موعد ظهور النتيجة» maps to the existing `default_tat_hours`**, not to the
+  free-text the frame draws — curation is the safer control, the same lesson
+  A03 learned with its date picker.
+- **⚠ An EXISTING service still cannot be priced at a branch that has no row for
+  it.** A04 creates offering rows for NEW services only. Of 26 × 24 possible
+  pairs, 486 exist — so some «بلا سعر» rows on existing services are
+  un-actionable: the nudge reaches the partner, and the partner has nothing to
+  edit. Backfilling would assert that every branch offers every service, which
+  is not true and not ours to declare. Needs either a data pass or a small
+  "offer this service here" affordance, and neither is drawn.
+- **The nudge channel order is driven by measured data, not preference.** Of 24
+  branches, ONE has a WhatsApp number and NONE has a mobile — every
+  `branches.phone` is a Cairo landline, which wa.me cannot open. A
+  WhatsApp-first affordance would have rendered on one row in twenty-four. So
+  email leads, and the address is the branch's own **staff account** — which is
+  why these two features belong in one PR: before A05 there was no address.
+- **`complete_provider_password_change()` trusts the client called
+  `auth.updateUser({password})` first**, exactly as its A01 sibling does.
+  Postgres cannot see a GoTrue password change. The exposure is an
+  already-authenticated staff member keeping their own temp password; the
+  72-hour rule is unaffected because it reads the same flag.
+- **`takesIdentityParameter: true` on three new functions is expected.**
+  `admin_revoke_provider_sessions`, `get_provider_staff_detail` and
+  `preview_staff_disable` take a **`provider_users` id**, not an auth user id —
+  the auth id is looked up from it, so no argument they accept could name the
+  founder's account or a patient's. The flag is a uuid-shaped heuristic and
+  these are the false positives it is expected to produce.
+
+**⚠ HAND-OFF — what is left of A04/A05, in order:**
+
+1. **The screens.** Both features are Tier 2 from here: every RPC exists and is
+   proven, so this is composition, not new predicates. A04: list (search,
+   category+status filters, counts header), detail (definition, prep-note editor
+   with the cream patient preview, the read-only per-branch price table incl.
+   the «بلا سعر» rows and the nudge affordances), publish/suspend confirms.
+   A05: list with the last-login column and the disabled Role column, the 2-step
+   create flow (temp password shown once + copy), account detail, and **both**
+   disable confirm variants.
+   ⚠ The temp-password dialog is the A01 recovery-codes trap wearing a different
+   hat: it is shown once by a server action. Unlike A01 there IS a recovery path
+   (regenerate), so it needs no server-state acknowledgment — but it must be one
+   client component taking state as a prop, and the router refresh must happen
+   only after the founder dismisses it.
+2. **The provider portal's login enforcement.** `get_provider_login_state()`
+   exists and is proven; nothing calls it yet. Wire it into
+   `apps/web/app/login/actions.ts` AND `getProviderContext()` — the gate is the
+   enforcement, the login action is the courtesy — plus a change-password page
+   mirroring the admin one.
+3. **Playwright happy paths + fidelity screenshots**, and read them.
+4. **The Edge Function's create/disable lifecycle has NOT been exercised
+   end-to-end over HTTP.** Its Postgres half is proven; its GoTrue half
+   (createUser, ban, the compensating delete) is not. That needs a real admin
+   JWT and explicit cleanup — it cannot be rolled back.
+
+### 2026-08-10 · A03 — Providers, branches & the commission-rate editor (web, admin)
+
+⚠ **Reconstructed 2026-08-10 from PRs #50 and #52 — A03 shipped in two PRs and
+NEITHER updated this file.** There was no A03 entry and no A03 hand-off, which
+is why the A04/A05 session began by reading merge commits. CLAUDE.md §10 says
+PROGRESS is updated in the same PR; both A03 PRs missed it.
+
+- **#50 (data layer):** `provider_profile_history` (the table SPEC-A03 assumed
+  existed and did not), `set_provider_commission_rate` with a strictly-FUTURE
+  effective date enforced server-side, `admin_update_provider`,
+  `admin_update_branch`, the slot-shaping preview/apply pair, and
+  `preview_provider_deactivation`. Closed three admin `ALL` policies —
+  `branches`, `providers`, `slots`.
+- **#52 (screens):** the providers & branches list, provider detail, and the
+  rate editor with the consequential-confirm anatomy and its required written
+  acknowledgment.
+- **Two defects were caught by READING THE SCREENSHOT**, invisible in markup and
+  types: an `<input type="date">` rendering `mm/dd/yyyy` inside an Arabic RTL
+  panel (now a curated select of future dates), and the backfilled rate rows'
+  English internal note rendering as raw debris in the founder's panel (now the
+  Arabic launch-blocker warning).
+- **Still open from A03:** branch detail with the regeneration dialog, and the
+  creation forms. Their RPCs exist and are proven; only the screens are missing.
 
 ### 2026-08-09 · A02 — Commission & invoicing statement (web, admin)
 
@@ -698,6 +891,14 @@ exactly when something looks arbitrary.
   | `branches`                                                                                                   | ⚠ set `rating`, `review_count`, `instahealth_slot_allocation`                                             |
   | `providers`, `services`, `service_categories`, `provider_users`, `notifications`, `branch_services`, `users` | full row access (several legitimate — A03/A04/A05 need them)                                              |
 
+  **Status 2026-08-10: TEN OF ELEVEN CLOSED.** A02 took `bookings` + `payments`;
+  A03 took `branches`, `providers`, `slots`; A04 took `services`,
+  `service_categories` and `branch_services`; A05 took `provider_users`.
+  Remaining: **`users`** (patient self-service, out of the admin panel's scope)
+  and **`notifications`** — ⚠ `notifications` was omitted from the five the A03
+  hand-off listed even though A03's own closing note named it, so a future
+  session reading only the hand-off would think it was already done.
+
   **Why so wide:** every table except `users` still carries BLANKET all-column
   INSERT+UPDATE grants to `anon`+`authenticated`, so the RLS policy is the only
   gate. `users` is narrowed only because REFACTOR 2/N happened to do it.
@@ -710,6 +911,22 @@ exactly when something looks arbitrary.
   silently fix); the per-table answer is what the admin panel legitimately needs
   to write, which is A02–A06's scope. Close them the writer-function way.
 
+- **⚠ AN EXISTING SERVICE CANNOT BE PRICED AT A BRANCH THAT HAS NO ROW FOR IT.**
+  Opened by A04 (2026-08-10), which made «بلا سعر» a real state and so made this
+  visible. Creating a service now materialises an offering row at every live
+  branch, but the 26 seeded services were never given that treatment: 486 of the
+  26 × 24 possible pairs exist, so the remaining «بلا سعر» rows are
+  **un-actionable** — the founder's nudge reaches the partner and the partner has
+  nothing in their editor to price. Backfilling all 624 would assert that every
+  branch offers every service, which is false (a lab-only branch does not do
+  scans) and is not ours to declare. Needs either a data pass per partner or a
+  small "offer this service at these branches" admin affordance — **neither is
+  drawn**, so it is a product decision, not just a task.
+- **⚠ The `admin-staff-accounts` Edge Function's GoTrue half is UNPROVEN.** Its
+  Postgres half is covered by the 34/34 Tier 1 run, but `createUser`, the ban,
+  and the compensating `deleteUser` on a failed insert have never executed. They
+  cannot be rolled back, so proving them needs a real admin JWT and an explicit
+  cleanup step. **Do this before anyone creates a real partner account.**
 - **⚠ `reviews` has NO admin write policy at all** — only a SELECT escape hatch
   on "public read unflagged". So an admin can READ a flagged review and cannot
   un-flag it: moderation has no path. Unreachable BY ACCIDENT rather than by
