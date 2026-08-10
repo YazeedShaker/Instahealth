@@ -109,10 +109,12 @@ visual contract. Then specs → Claude Code.
       (PRs #50, #52 — entry reconstructed 2026-08-10, see Shipped). Remainder:
       branch detail w/ regeneration dialog + the creation forms; their RPCs
       exist and are proven.
-- [~] **A04 + A05** — Web: service catalog + provider staff accounts.
-  **Data layer DONE and verified (34/34 on live dev); SCREENS NOT BUILT.**
-  Branch `feat/a04-a05-catalog-staff`. Read the A04+A05 hand-off in Shipped
-  before continuing — it lists the four remaining pieces in order.
+- [x] **A04 + A05** — ✅ DONE. Web: service catalog + provider staff accounts
+      (PR #54). Data layer and screens: 51/51 Node assertions on live dev, 64
+      Playwright tests, 0 skipped. **Eleven of eleven admin write policies now
+      closed.** Three follow-ups in the Shipped entry — fidelity screenshots (not
+      captured), the Edge Function's GoTrue half (unproven), and web component
+      tests (none exist).
 - [ ] **A06–A07** — Web: oversight + overview. A06 consumes A02's computation
       functions and the عمولة متوقعة chip rules; A07's alert states are now real
       data — **a branch with zero active accounts is detectable**
