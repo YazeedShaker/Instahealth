@@ -203,8 +203,10 @@ Remaining: `users`, **`notifications`** (⚠ not in the five the A03 hand-off
 named — A03's own closing note listed it and the hand-off dropped it), and the
 `reviews` moderation gap that F08 decides.
 
-**Verification (Tier 1): 34/34 assertions passed against the live dev DB**, all
-inside one transaction that was rolled back, with callers impersonated the way
+**Verification (Tier 1): 51/51 assertions passed against the live dev DB** —
+34 for the catalog and staff data layers, 2 for the unpriced-booking guard, and
+15 for the linking ruling and the eleventh policy closure — all inside
+transactions that were rolled back, with callers impersonated the way
 PostgREST does it (`request.jwt.claims` + `set local role`). Residue re-checked
 afterwards from outside the transaction: 26 services, 486 branch_services, 0
 audit rows, provider flag back to false — nothing left behind. Included: the
@@ -216,11 +218,18 @@ against a hand-computed control, and **8 authorization denials all raising
 
 **Judgement calls, spec/design deviations — all deliberate:**
 
-- **No design frame exists for the category flip.** The spec asks for it («THE
-  launch switch», acknowledgment checkbox); the Catalog bundle has four frames
-  (list, detail+publish, suspend, loading/empty) and none of them is a category
-  surface. The data layer is built and proven; **the screen still needs a
-  decision** — compose it from the drawn confirm anatomy, or get a frame.
+- **The category flip has no design frame — RULED 2026-08-10: compose it** from
+  the established consequential-confirm anatomy, sanctioned under the
+  component-contract exception as the sixth instance of a settled pattern, no
+  design round-trip. Required content per the ruling: the category name; the
+  network-wide effect **in numbers from `preview_category_activation`** (N
+  published services across M providers become patient-visible and bookable at
+  once); the caveat that unpriced or unpublished services inside it still will
+  not appear; the deactivation direction stating the reverse (hides
+  network-wide, standing bookings still served); an understanding checkbox
+  naming the go-live — «أفهم أن هذا يفتح التصنيف للمرضى في كل الشبكة»; and its
+  own audit action label (`category_activated` / `category_deactivated`, already
+  written by the writer).
 - **«مدة الزيارة التقديرية» (estimated visit duration) is drawn and not built.**
   There is no column and no consumer, and the spec's own writer field list omits
   it. Flagged rather than invented.
@@ -230,13 +239,13 @@ against a hand-computed control, and **8 authorization denials all raising
 - **«موعد ظهور النتيجة» maps to the existing `default_tat_hours`**, not to the
   free-text the frame draws — curation is the safer control, the same lesson
   A03 learned with its date picker.
-- **⚠ An EXISTING service still cannot be priced at a branch that has no row for
-  it.** A04 creates offering rows for NEW services only. Of 26 × 24 possible
-  pairs, 486 exist — so some «بلا سعر» rows on existing services are
-  un-actionable: the nudge reaches the partner, and the partner has nothing to
-  edit. Backfilling would assert that every branch offers every service, which
-  is not true and not ours to declare. Needs either a data pass or a small
-  "offer this service here" affordance, and neither is drawn.
+- **The un-actionable «بلا سعر» rows — RULED 2026-08-10 and CLOSED** (migration
+  `20260810151717`). No 624-pair backfill; linking is an explicit admin act
+  («أضف فرعاً» → `admin_link_service_to_branch`, creating the row unpriced and
+  hidden). The price table now lists only LINKED branches and the unlinked ones
+  become the picker's contents, so every «بلا سعر» row on screen is one a partner
+  can act on. Ownership: **definition = admin, link = admin, price = partner.**
+  No unlink in v1. Full detail in Known risks.
 - **The nudge channel order is driven by measured data, not preference.** Of 24
   branches, ONE has a WhatsApp number and NONE has a mobile — every
   `branches.phone` is a Cairo landline, which wa.me cannot open. A
@@ -261,7 +270,10 @@ against a hand-computed control, and **8 authorization denials all raising
    proven, so this is composition, not new predicates. A04: list (search,
    category+status filters, counts header), detail (definition, prep-note editor
    with the cream patient preview, the read-only per-branch price table incl.
-   the «بلا سعر» rows and the nudge affordances), publish/suspend confirms.
+   the «بلا سعر» rows, the nudge affordances and the «أضف فرعاً» picker fed by
+   `linkableBranches`), publish/suspend confirms, and the **category-flip
+   confirm composed per the 2026-08-10 ruling** (content list in the deviations
+   above).
    A05: list with the last-login column and the disabled Role column, the 2-step
    create flow (temp password shown once + copy), account detail, and **both**
    disable confirm variants.
@@ -891,13 +903,28 @@ exactly when something looks arbitrary.
   | `branches`                                                                                                   | ⚠ set `rating`, `review_count`, `instahealth_slot_allocation`                                             |
   | `providers`, `services`, `service_categories`, `provider_users`, `notifications`, `branch_services`, `users` | full row access (several legitimate — A03/A04/A05 need them)                                              |
 
-  **Status 2026-08-10: TEN OF ELEVEN CLOSED.** A02 took `bookings` + `payments`;
-  A03 took `branches`, `providers`, `slots`; A04 took `services`,
-  `service_categories` and `branch_services`; A05 took `provider_users`.
-  Remaining: **`users`** (patient self-service, out of the admin panel's scope)
-  and **`notifications`** — ⚠ `notifications` was omitted from the five the A03
-  hand-off listed even though A03's own closing note named it, so a future
-  session reading only the hand-off would think it was already done.
+  **✅ Status 2026-08-10: ELEVEN OF ELEVEN CLOSED.** A02 took `bookings` +
+  `payments`; A03 took `branches`, `providers`, `slots`; A04 took `services`,
+  `service_categories` and `branch_services`; A05 took `provider_users`; and the
+  founder's ruling closed **`notifications`** in the same PR (migration
+  `20260810151717`) — ⚠ it had been omitted from the five the A03 hand-off
+  listed even though A03's own closing note named it.
+
+  ⚠ **The arithmetic is not "eleven policies dropped".** Ten were dropped or
+  replaced by writers. The eleventh, **`users`, still HAS its admin `ALL` policy
+  and is nonetheless closed**: its GRANT was narrowed to 2 insertable and 6
+  updatable columns on 2026-08-03, and **the grant is a ceiling a policy can
+  never raise**. So the count means: every one of A01's eleven column-blind admin
+  write surfaces is shut — nine by deleting the door, one by replacing it with a
+  writer, one by shrinking it.
+
+  `notifications` turned out to carry the **widest grant left in the schema** —
+  INSERT and UPDATE on all 11 columns to `authenticated` **and to `anon`**,
+  where `users` had none for anon at all. No policy was anon-satisfiable, so it
+  was not reachable, but it was one permissive policy away from being. Both the
+  policy and the write grants are now gone; admin reads survive via
+  «notifications: user sees own». Proven against a real row:
+  `42501 permission denied for table notifications`.
 
   **Why so wide:** every table except `users` still carries BLANKET all-column
   INSERT+UPDATE grants to `anon`+`authenticated`, so the RLS policy is the only
@@ -911,17 +938,78 @@ exactly when something looks arbitrary.
   silently fix); the per-table answer is what the admin panel legitimately needs
   to write, which is A02–A06's scope. Close them the writer-function way.
 
-- **⚠ AN EXISTING SERVICE CANNOT BE PRICED AT A BRANCH THAT HAS NO ROW FOR IT.**
-  Opened by A04 (2026-08-10), which made «بلا سعر» a real state and so made this
-  visible. Creating a service now materialises an offering row at every live
-  branch, but the 26 seeded services were never given that treatment: 486 of the
-  26 × 24 possible pairs exist, so the remaining «بلا سعر» rows are
-  **un-actionable** — the founder's nudge reaches the partner and the partner has
-  nothing in their editor to price. Backfilling all 624 would assert that every
-  branch offers every service, which is false (a lab-only branch does not do
-  scans) and is not ours to declare. Needs either a data pass per partner or a
-  small "offer this service at these branches" admin affordance — **neither is
-  drawn**, so it is a product decision, not just a task.
+- ✅ ~~THE CATEGORY FLAG ENFORCED NOTHING ON BOOKING CREATION~~ — **FOUND AND
+  CLOSED 2026-08-10, BEFORE ANY REAL PATIENT EXISTED** (migration
+  `20260810140157`). The **sixth** instance of the §5 family — a fact the client
+  was allowed to assert because the guard that should have caught it was
+  somewhere else entirely. Described in full because it is FIXED and verified;
+  an open hole would not be (see the disclosure entry below).
+
+  `create_pending_booking` checked `services.is_active` and **not**
+  `service_categories.is_active`. Search filtered on the category flag
+  (`search_catalog`), the branch profile filtered on it
+  (`apps/mobile/features/branch/queries.ts`), and the one consumer that can take
+  money did not. So `service_categories.is_active` — which
+  DECISION-provider-data-model calls **THE launch switch**, and which the whole
+  "onboard the full menu, surface only active categories" model rests on — was a
+  **display filter only**. Flipping a category off hid it from every screen and
+  did not stop a booking: a client holding a `branch_service` id the app had
+  cached seconds earlier still booked it, and the desk would have seen a real
+  confirmed appointment for a category we had deliberately not launched.
+
+  Reachable with real data, not hypothetically: all six `scans` services have
+  live `branch_services` rows today.
+
+  **Proven both ways on dev before and after the fix**, which is now the standard
+  for this family — one direction only proves that something else was already
+  refusing it:
+
+  | category | `create_pending_booking`                             |
+  | -------- | ---------------------------------------------------- |
+  | ON       | success — real booking `IH-2026-52316`, 175 EGP      |
+  | OFF      | `{"success": false, "error": "service_unavailable"}` |
+
+  **Not exploited** — the only bookings are ours, and every category with any
+  service in it (labs, scans) is deliberately live. The exposure was the model's
+  central promise, not a live loss.
+
+  **The durable lesson is now a convention, not a memory:**
+  ENGINEERING-WORKFLOW **§5a①** requires any PR touching an availability or
+  state dial to ship a **predicate-parity table** enumerating every consumer —
+  search, discovery, branch profile, booking creation, settlement, the partner's
+  editor, the admin's reads — with per-consumer proof. Nobody had lied here;
+  everybody had checked "the" predicate, and there were five of them. **A dial
+  with N consumers is N predicates until proven otherwise.**
+
+- ✅ ~~AN EXISTING SERVICE CANNOT BE PRICED AT A BRANCH THAT HAS NO ROW FOR IT~~
+  — **CLOSED 2026-08-10 by founder ruling** (migration `20260810151717`). Opened
+  by A04 earlier the same day, which made «بلا سعر» a real state and so made the
+  gap visible: 486 of the 26 × 24 pairs existed, and the missing ones rendered as
+  «بلا سعر» rows the partner could not act on, because there was nothing in their
+  editor to price.
+
+  **Ruled: no 624-pair backfill.** Backfilling would assert that every branch
+  offers every service, which is false — a lab-only branch does not do scans —
+  and it is a commercial claim, not a data fix. Instead **linking is an explicit
+  ADMIN act**: «أضف فرعاً» on the service detail's price table calls
+  `admin_link_service_to_branch`, which creates the pairing row **unpriced and
+  hidden**, landing directly in the drawn «بلا سعر — لن تظهر» state with its
+  nudge; the partner then prices it via P03 to surface it. Audited with its own
+  action label, idempotent, admin-gated. **No unlink in v1** — partners toggle
+  availability, the admin suspends services, removal is v2.
+
+  **The ownership map, settled for the record:**
+  **definition = admin · link = admin** (an onboarding act,
+  DECISION-provider-data-model §2) **· price = partner.**
+
+  ⚠ It also changed what the price table MEANS, and that was the point rather
+  than a side effect: `service_branch_pricing` now INNER-joins, so the table
+  lists only LINKED branches and the unlinked ones become the picker's contents.
+  A linked-but-unpriced row is actionable; an unlinked branch was never an
+  offering at all, and showing the two identically is what made half of them
+  un-actionable in the first place. **Every «بلا سعر» row on the screen is now
+  one a partner can act on.** 15/15 Node assertions.
+
 - **⚠ The `admin-staff-accounts` Edge Function's GoTrue half is UNPROVEN.** Its
   Postgres half is covered by the 34/34 Tier 1 run, but `createUser`, the ban,
   and the compensating `deleteUser` on a failed insert have never executed. They
