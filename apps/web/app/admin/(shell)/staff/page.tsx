@@ -1,19 +1,42 @@
-import { ComingSoonSurface } from '../../../../components/admin/ComingSoonSurface'
+import { StaffView } from '../../../../components/admin/StaffView'
+import {
+  fetchBranchOptions,
+  fetchDisablePreview,
+  fetchStaffAccounts,
+  fetchStaffDetail,
+} from '../../../../lib/staff/accounts'
+
+// A05 — one route, two views: the list and `?account=<id>`.
+//
+// The disable confirm's numbers are fetched HERE, keyed by `?confirm=disable`,
+// so `isLastActiveAccount` — which decides whether the escalated variant
+// renders — is the server's answer rather than something the browser inferred
+// from the row that was clicked (SPEC-A05: the escalation is enforced, not
+// merely drawn).
 
 export const dynamic = 'force-dynamic'
 
-export default function AdminStaffPage() {
+type Search = { account?: string; confirm?: string }
+
+export default async function AdminStaffPage({ searchParams }: { searchParams: Promise<Search> }) {
+  const params = await searchParams
+  const accountId = params.account
+
+  const [staff, branches] = await Promise.all([fetchStaffAccounts(), fetchBranchOptions()])
+
+  const detail = accountId === undefined ? null : await fetchStaffDetail(accountId)
+  const disablePreview =
+    accountId !== undefined && params.confirm === 'disable' && detail !== null
+      ? await fetchDisablePreview(accountId)
+      : null
+
   return (
-    <ComingSoonSurface
-      testId="admin-staff"
-      title="حسابات المزودين"
-      spec="A05"
-      summary="النصف اليدوي من التسجيل: إنشاء أو تعطيل حساب موظف استقبال لفرع، وقائمة الحسابات لكل مزود."
-      bullets={[
-        'إنشاء حساب: بريد + كلمة مرور مؤقتة، على نمط seed 003.',
-        'تعطيل حساب دون حذفه — provider_users.is_active موجود بالفعل.',
-        'عمود الصلاحيات مرسوم في التصميم ولا يُشحن الآن: كل الحسابات متساوية في v1.',
-      ]}
+    <StaffView
+      accounts={staff.accounts}
+      counts={staff.counts}
+      branches={branches}
+      detail={detail}
+      disablePreview={disablePreview}
     />
   )
 }

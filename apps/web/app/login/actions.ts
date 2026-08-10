@@ -57,6 +57,28 @@ export async function signIn(_prev: LoginState, formData: FormData): Promise<Log
     return { errorAr: getLoginErrorMessageAr('notProvider') }
   }
 
+  // A05 — the temp-password lifecycle. The DASHBOARD GATE enforces both of
+  // these on every render; doing it here too means the desk gets a sentence
+  // that explains itself instead of a bounce it has to interpret.
+  const { data: loginState } = await supabase.rpc('get_provider_login_state')
+  const state = loginState as unknown as {
+    must_change_password: boolean
+    temp_password_expired: boolean
+  } | null
+
+  if (state?.temp_password_expired === true) {
+    // ⚠ Sign them back out: an expired temp must not leave a usable session
+    // behind, and the remedy is not something they can do themselves.
+    await supabase.auth.signOut({ scope: 'local' })
+    return {
+      errorAr: 'انتهت صلاحية كلمة المرور المؤقتة — اطلب كلمة جديدة من الإدارة.',
+    }
+  }
+
+  if (state?.must_change_password === true) {
+    redirect('/login/change-password')
+  }
+
   // Only ever redirect to a path on this site — an open redirect on a login
   // form is a phishing primitive.
   const next = parsed.data.next
