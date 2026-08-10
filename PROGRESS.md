@@ -1010,6 +1010,22 @@ exactly when something looks arbitrary.
   un-actionable in the first place. **Every «بلا سعر» row on the screen is now
   one a partner can act on.** 15/15 Node assertions.
 
+- **⚠ `apps/web` HAS ZERO UNIT TESTS, and the gate reports it as a pass.** Found
+  2026-08-10 while reading the A04/A05 CI counts rather than the checkmarks. The
+  web workspace runs `vitest run --passWithNoTests` and prints
+  «No test files found, exiting with code 0», so «test:unit 560 passed» contains
+  **no web coverage at all** — the 560 are core (447), mobile (88) and
+  design-tokens (25). Every web-side assertion this project has comes from the
+  62 Playwright E2E tests.
+  That is exactly the shape CLAUDE.md §9 asks for and does not have: «Components
+  — test behavior, not implementation. React Testing Library (web)». It matters
+  now because A04/A05's screens are the next thing built, and the CHECKLIST's
+  Tier 2 bargain (component tests + ONE Playwright happy path + batched manual)
+  currently has nothing behind its first term on web.
+  ⚠ Also noted: turbo reports «Running test:unit in 5 packages» but
+  «Tasks: 4 successful, 4 total» — `@instahealth/config` has no `test:unit`
+  script and silently contributes nothing. Harmless, but it makes the package
+  count in the summary line untrustworthy.
 - **⚠ The `admin-staff-accounts` Edge Function's GoTrue half is UNPROVEN.** Its
   Postgres half is covered by the 34/34 Tier 1 run, but `createUser`, the ban,
   and the compensating `deleteUser` on a failed insert have never executed. They
