@@ -767,8 +767,13 @@ function StaffDetailScreen({
               </div>
               <div className="flex flex-col gap-0.5">
                 <dt className="text-[11.5px] text-ih-neutral-500">البريد — يُستخدم للدخول</dt>
-                <dd dir="ltr" className="text-start font-mono font-semibold text-ih-neutral-800">
-                  {account.email ?? '—'}
+                {/* Same rule as the catalog's Detail: isolate the Latin run,
+                    never re-anchor the block, or the address slides away from
+                    the label that names it. */}
+                <dd className="font-semibold text-ih-neutral-800">
+                  <bdi dir="ltr" className="font-mono">
+                    {account.email ?? '—'}
+                  </bdi>
                 </dd>
               </div>
               <div className="flex flex-col gap-0.5">
