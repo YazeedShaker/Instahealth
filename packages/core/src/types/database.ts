@@ -745,6 +745,41 @@ export type Database = {
           },
         ]
       }
+      provider_profile_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          id: string
+          new_values: Json
+          old_values: Json
+          provider_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_values: Json
+          old_values: Json
+          provider_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_values?: Json
+          old_values?: Json
+          provider_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_profile_history_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       provider_users: {
         Row: {
           auth_user_id: string
@@ -1120,6 +1155,47 @@ export type Database = {
     }
     Functions: {
       acknowledge_admin_recovery_codes: { Args: never; Returns: Json }
+      admin_create_branch: {
+        Args: {
+          p_allocation?: number
+          p_district: string
+          p_lat: number
+          p_lng: number
+          p_name_ar: string
+          p_name_en: string
+          p_provider_id: string
+        }
+        Returns: Json
+      }
+      admin_create_provider: {
+        Args: { p_name_ar: string; p_name_en: string; p_percent: number }
+        Returns: Json
+      }
+      admin_update_branch: {
+        Args: {
+          p_branch_id: string
+          p_district: string
+          p_is_active: boolean
+          p_lat: number
+          p_lng: number
+          p_name_ar: string
+          p_name_en: string
+        }
+        Returns: Json
+      }
+      admin_update_provider: {
+        Args: {
+          p_is_active: boolean
+          p_name_ar: string
+          p_name_en: string
+          p_provider_id: string
+        }
+        Returns: Json
+      }
+      apply_branch_slot_shape: {
+        Args: { p_allocation: number; p_branch_id: string }
+        Returns: Json
+      }
       auto_close_stale_bookings: { Args: never; Returns: number }
       cancel_booking: {
         Args: { p_booking_id: string; p_cancelled_by: string; p_reason: string }
@@ -1272,9 +1348,23 @@ export type Database = {
         Returns: Json
       }
       normalize_arabic: { Args: { p_text: string }; Returns: string }
+      preview_branch_slot_shape: {
+        Args: { p_allocation: number; p_branch_id: string }
+        Returns: Json
+      }
+      preview_provider_deactivation: { Args: { p_provider_id: string }; Returns: Json }
       record_admin_totp_failure: { Args: never; Returns: Json }
       search_catalog: {
         Args: { p_category_slug?: string; p_query: string }
+        Returns: Json
+      }
+      set_provider_commission_rate: {
+        Args: {
+          p_effective_from: string
+          p_note?: string
+          p_percent: number
+          p_provider_id: string
+        }
         Returns: Json
       }
       transition_statement: {
