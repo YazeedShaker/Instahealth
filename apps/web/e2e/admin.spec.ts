@@ -260,6 +260,14 @@ test.describe('admin portal — auth & shell (A01)', () => {
 
   test('an unauthenticated visitor cannot reach /admin', async ({ page }) => {
     await page.context().clearCookies()
+
+    // ⚠ THE FRONT DOOR ITSELF. `/admin` used to 404 — the route groups add no
+    // path segment, so every deep link worked and the address a human types did
+    // not. It must land on the gate, not on a Next error page.
+    await page.goto('/admin')
+    await page.waitForURL('**/admin/login')
+    await expect(page.getByTestId('admin-email')).toBeVisible({ timeout: 30_000 })
+
     await page.goto('/admin/overview')
     await page.waitForURL('**/admin/login')
     await expect(page.getByTestId('admin-email')).toBeVisible({ timeout: 30_000 })
