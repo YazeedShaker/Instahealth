@@ -435,6 +435,97 @@ test.describe('admin portal — auth & shell (A01)', () => {
     await expect(page.getByTestId('statement-locked')).toHaveCount(0)
   })
 
+  // ── A03 · the provider network ────────────────────────────────────────────
+  //
+  // ⚠ READ-ONLY, like the A02 tests and for the same reason: setting a rate
+  // writes an APPEND-ONLY row that no later run can remove, so a mutating test
+  // would permanently accrete rate history on a real provider. The server rules
+  // (future-only dates, audit rows, refusal codes) are proven by the Node run
+  // recorded in the PR, where the fixture is created and destroyed. What
+  // Playwright owns here is the UI gate the server cannot enforce.
+  test('A03 · the network list shows the rate in force and links to the provider', async ({
+    page,
+  }) => {
+    await signInWithPassword(page, ADMIN_EMAIL, NEW_PASSWORD)
+    await page.waitForURL('**/admin/login/verify')
+    await waitForFreshWindow()
+    await page.getByTestId('admin-totp-input').fill(totp(enrolledSecret))
+    await page.getByTestId('admin-verify-submit').click()
+    await page.waitForURL('**/admin/overview')
+
+    await page.getByTestId('admin-nav-providers').click()
+    await page.waitForURL('**/admin/providers')
+    await expect(page.getByTestId('admin-network')).toBeVisible({ timeout: 30_000 })
+
+    // Every provider carries a rate, because A03 makes rate-less impossible.
+    const rates = page.getByTestId('network-rate')
+    expect(await rates.count()).toBeGreaterThan(0)
+    for (const cell of await rates.all()) await expect(cell).toContainText('٪')
+
+    // The reserved branch-override column is present and empty, per the frame.
+    await expect(page.getByText('عمود «نسبة الفرع» محجوز')).toBeVisible()
+
+    await page.getByTestId('network-provider-row').first().click()
+    await page.waitForURL(/\/admin\/providers\?provider=/)
+    await expect(page.getByTestId('network-rate-editor')).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByTestId('network-current-rate')).toContainText('السارية الآن')
+
+    // The seeded 12% is a PLACEHOLDER and the screen says so, in Arabic, where
+    // the founder fixes it — this is the standing launch blocker.
+    await expect(page.getByTestId('network-rate-placeholder').first()).toContainText(
+      'أدخل النسبة المتفق عليها',
+    )
+
+    await page.setViewportSize({ width: 1366, height: 768 })
+    await page.evaluate(() => document.fonts.ready)
+    await page.screenshot({
+      path: '../../docs/design-briefs/a03-fidelity/provider-detail-build.png',
+      fullPage: false,
+    })
+  })
+
+  test('A03 · a rate change cannot be confirmed without the written acknowledgment', async ({
+    page,
+  }) => {
+    await signInWithPassword(page, ADMIN_EMAIL, NEW_PASSWORD)
+    await page.waitForURL('**/admin/login/verify')
+    await waitForFreshWindow()
+    await page.getByTestId('admin-totp-input').fill(totp(enrolledSecret))
+    await page.getByTestId('admin-verify-submit').click()
+    await page.waitForURL('**/admin/overview')
+    await page.goto('/admin/providers?provider=aaaa0000-0000-4000-8000-000000000001')
+    await expect(page.getByTestId('network-rate-editor')).toBeVisible({ timeout: 30_000 })
+
+    // Save stays disabled until BOTH a percent and a future date are present —
+    // the client mirroring the server rule rather than discovering it.
+    await expect(page.getByTestId('network-rate-save')).toBeDisabled()
+    await page.getByTestId('network-rate-input').fill('13')
+    await expect(page.getByTestId('network-rate-save')).toBeDisabled()
+
+    // The date control is a curated SELECT of future dates, not a native
+    // picker — every option it offers is one the server will accept.
+    const dateSelect = page.getByTestId('network-rate-date')
+    await dateSelect.selectOption({ index: 1 })
+    await expect(page.getByTestId('network-rate-save')).toBeEnabled()
+
+    await page.getByTestId('network-rate-save').click()
+    const dialog = page.getByTestId('network-rate-confirm')
+    await expect(dialog).toBeVisible()
+    // The dialog states the CONSEQUENCE, not just the change.
+    await expect(dialog).toContainText('هذا يغيّر ما يدفعه')
+    await expect(dialog).toContainText('لا تتأثر — لا أثر رجعي')
+
+    // ⚠ THE GATE. The design makes written partner acknowledgment a REQUIRED
+    // element, so the commit button is inert until it is ticked.
+    await expect(page.getByTestId('network-rate-confirm-submit')).toBeDisabled()
+    await page.getByTestId('network-rate-ack').check()
+    await expect(page.getByTestId('network-rate-confirm-submit')).toBeEnabled()
+
+    // Deliberately NOT submitted — see the note above this describe block.
+    await page.getByRole('button', { name: 'إلغاء' }).click()
+    await expect(dialog).toHaveCount(0)
+  })
+
   // ── leave the account where the seed leaves it ────────────────────────────
   test('RESTORE: the password returns to the seeded value', async ({ page }) => {
     // ⚠ This suite MUTATES a shared account, so it cleans up after itself — the
