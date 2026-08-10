@@ -1006,3 +1006,27 @@ how sessions inherit each other's scars.
 _Last updated: 2026-08-10 · Covers SETUP-01 → A05. §5a (predicate parity,
 representability, generated-column drift-proofing) added after A04 found the
 category flip enforcing nothing on the one consumer that takes money._
+
+- **⚠ `dir="ltr"` ON A BLOCK RE-ANCHORS IT; ISOLATE THE TEXT RUN INSTEAD.**
+  Direction is a property of a text RUN, not of a column. Putting `dir="ltr"` on
+  a `<dd>`/`<div>` to make a Latin value read correctly also makes
+  `text-align: start` resolve to LEFT, so the value slides to the far side of
+  its cell while its own label stays right-aligned — and at a glance the value
+  reads as though it belongs to the NEIGHBOURING label. Shipped in A04: «الرمز»
+  sat above «Complete Blood Count (CBC)». Measured against the real stylesheet,
+  RTL container, identical markup:
+
+  | rendering                           | label right edge | glyph right edge | gap      |
+  | ----------------------------------- | ---------------- | ---------------- | -------- |
+  | `<dd dir="ltr" class="text-start">` | 600px            | 562px            | **38px** |
+  | `<dd><bdi dir="ltr">`               | 288px            | 288px            | **0**    |
+
+  Use `<bdi dir="ltr">` (or core's `isolateLtr()`, which does the same with
+  Unicode LRI/PDI for plain strings — CLAUDE.md §7). ⚠ INPUTS ARE THE
+  EXCEPTION: `dir="ltr"` + left alignment on an `<input>` for an English name,
+  a code or an email is what the handoff frames draw and what a typist expects;
+  the rule is about DISPLAY blocks.
+  ⚠ And the meta-lesson: A04/A05 shipped with «fidelity screenshots were not
+  captured» recorded as a known gap, and this is the exact defect that gap let
+  through. The founder found it on the deployed preview. §9's opening sentence
+  is not decorative.

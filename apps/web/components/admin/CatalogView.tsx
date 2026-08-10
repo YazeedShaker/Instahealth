@@ -1217,15 +1217,35 @@ function ServiceDetailScreen({
   )
 }
 
+/**
+ * ⚠ A LATIN VALUE IS ISOLATED INLINE — the BLOCK STAYS IN THE RTL FLOW.
+ *
+ * The first version put `dir="ltr"` on the `<dd>` itself. That does not just
+ * fix the character order, it re-anchors the whole block: `text-start` under
+ * `dir="ltr"` means LEFT, so the value slid to the far side of its grid cell
+ * while its own `<dt>` stayed right-aligned. The label and the value it
+ * describes stopped lining up, and at a glance an English name read as though
+ * it belonged to the NEIGHBOURING label — «الرمز» sitting above
+ * «Complete Blood Count (CBC)».
+ *
+ * Direction is a property of the TEXT RUN, not of the column. So the `<dd>`
+ * inherits the page's RTL alignment and only the Latin run is isolated, which
+ * is the same fix `isolateLtr()` applies to phone numbers in core (CLAUDE.md
+ * §7). Caught by the founder on the deployed preview — precisely the class of
+ * defect §9 says a capture finds and a markup review does not.
+ */
 function Detail({ label, value, ltr = false }: { label: string; value: string; ltr?: boolean }) {
   return (
     <div className="flex flex-col gap-0.5">
       <dt className="text-[11.5px] text-ih-neutral-500">{label}</dt>
-      <dd
-        dir={ltr ? 'ltr' : undefined}
-        className={`font-semibold text-ih-neutral-800 ${ltr ? 'text-start font-mono' : ''}`}
-      >
-        {value}
+      <dd className="font-semibold text-ih-neutral-800">
+        {ltr ? (
+          <bdi dir="ltr" className="font-mono">
+            {value}
+          </bdi>
+        ) : (
+          value
+        )}
       </dd>
     </div>
   )
