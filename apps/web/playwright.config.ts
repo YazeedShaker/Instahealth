@@ -70,7 +70,13 @@ export default defineConfig({
     // floor is much higher — a slow assertion is not a failing one.
     timeout: 15_000,
   },
-  reporter: [['html', { outputFolder: 'playwright-report', open: 'never' }], ['list']],
+  // ⚠ QUIET IN CI. `dot` keeps the summary line — "60 passed", "9 skipped" —
+  // which is the number §9 insists on reading, and drops the per-test line that
+  // made a green run ~70 lines of log. The HTML report is still written, so a
+  // FAILURE is fully inspectable as an artifact.
+  reporter: process.env.CI
+    ? [['html', { outputFolder: 'playwright-report', open: 'never' }], ['dot']]
+    : [['html', { outputFolder: 'playwright-report', open: 'never' }], ['list']],
   use: {
     baseURL: 'http://localhost:3000',
   },

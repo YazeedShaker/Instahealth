@@ -5,6 +5,13 @@ on:
     branches: [main, develop]
   push:
     branches: [main, develop]
+  # ⚠ THE NIGHTLY IS THE OTHER HALF OF THE PATH FILTERS. Mobile E2E now skips on
+  # merges that cannot affect the mobile app — so it must run on a schedule
+  # regardless, or a regression from a shared dependency could sit unnoticed
+  # until the next mobile PR. 02:00 UTC = 04:00 Cairo, well clear of any working
+  # session that might be using the shared dev database.
+  schedule:
+    - cron: '0 2 * * *'
 
 # Cancel in-progress runs for the same PR/branch
 concurrency:
@@ -15,6 +22,44 @@ env:
   NODE_VERSION: 20
 
 jobs:
+  # ────────────────────────────────────────────────
+  # 0. Which suites does this change actually need?
+  #
+  # Answered from the TURBO GRAPH (scripts/affected.mjs), not from hand-written
+  # path globs: turbo already knows that `packages/core` reaches BOTH apps and
+  # that `design-tokens` reaches mobile, and it stays correct as the workspace
+  # changes. A glob list would drift, and a stale glob's failure mode is a suite
+  # that silently stops running while CI stays green.
+  #
+  # ⚠ IT FAILS OPEN. Dependency/build/CI files, an unreadable base ref, a turbo
+  # error — anything ambiguous runs everything. Skipping a suite is only safe
+  # when we are certain it could not be affected.
+  # ────────────────────────────────────────────────
+  changes:
+    name: Affected packages
+    runs-on: ubuntu-latest
+    outputs:
+      web: ${{ steps.detect.outputs.web }}
+      mobile: ${{ steps.detect.outputs.mobile }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The diff needs both sides; a shallow clone cannot see the base.
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - id: detect
+        env:
+          # A PR diffs against its target; a push diffs against what was there
+          # before it. A schedule has no diff at all and forces everything.
+          BASE_REF: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || github.event.before }}
+          FORCE_ALL: ${{ github.event_name == 'schedule' }}
+        run: node scripts/affected.mjs
+
   # ────────────────────────────────────────────────
   # 1. Install & cache — all other jobs depend on this
   # ────────────────────────────────────────────────
@@ -124,7 +169,9 @@ jobs:
   # ────────────────────────────────────────────────
   e2e-web:
     name: E2E Web (Playwright)
-    needs: build
+    needs: [build, changes]
+    # Skipped only when the turbo graph proves no web-affecting package moved.
+    if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     # ⚠ ONE E2E RUN AT A TIME, REPO-WIDE. The workflow-level `concurrency` above
@@ -243,7 +290,11 @@ jobs:
   # ────────────────────────────────────────────────
   e2e-mobile:
     name: E2E Mobile (Maestro)
-    needs: build
+    needs: [build, changes]
+    # ⚠ macos-14 is the most expensive runner in the pipeline and the mobile app
+    # is untouched by most web PRs. It runs when the graph says mobile is
+    # affected, and every night regardless (see the `schedule` trigger).
+    if: needs.changes.outputs.mobile == 'true'
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
@@ -269,15 +320,62 @@ jobs:
   ci-passed:
     name: CI Passed
     if: always()
-    needs: [lint, typecheck, unit-tests, build, e2e-web, e2e-mobile]
+    needs: [changes, lint, typecheck, unit-tests, build, e2e-web, e2e-mobile]
     runs-on: ubuntu-latest
     steps:
       - name: Verify all jobs succeeded
-        # skipped/cancelled upstream jobs must also block the merge — a skipped
-        # pipeline is not a green pipeline
+        # ⚠ THIS USED TO BE `contains(needs.*.result, 'skipped')` AND THAT WOULD
+        # NOW FAIL EVERY FILTERED RUN. The old rule — a skipped pipeline is not a
+        # green pipeline — is still exactly right for the unconditional jobs, so
+        # they are still checked for `success` and nothing else. What changed is
+        # that TWO jobs are now allowed to skip, and only when the `changes` job
+        # says the graph proves they could not be affected.
+        #
+        # The distinction that matters: an ACCIDENTAL skip (a cancelled
+        # dependency, a bad `if`) must still be red. So a skip is accepted only
+        # when it agrees with the corresponding `changes` output — if the graph
+        # says web was affected and the web E2E skipped anyway, that is a
+        # failure, which is what the second half of each condition catches.
+        env:
+          WEB_AFFECTED: ${{ needs.changes.outputs.web }}
+          MOBILE_AFFECTED: ${{ needs.changes.outputs.mobile }}
         run: |
-          if [[ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}" == "true" ]]; then
-            echo "One or more CI jobs failed, was cancelled, or was skipped."
+          set -euo pipefail
+          fail=0
+
+          require_success() {
+            if [[ "$2" != "success" ]]; then
+              echo "::error::$1 did not succeed (result: $2)."
+              fail=1
+            fi
+          }
+
+          # These must ALWAYS run and ALWAYS pass.
+          require_success "Affected packages" "${{ needs.changes.result }}"
+          require_success "Lint"              "${{ needs.lint.result }}"
+          require_success "Typecheck"         "${{ needs.typecheck.result }}"
+          require_success "Unit Tests"        "${{ needs.unit-tests.result }}"
+          require_success "Build"             "${{ needs.build.result }}"
+
+          # These may skip — but only in agreement with the graph.
+          check_conditional() {
+            local name="$1" result="$2" affected="$3"
+            if [[ "$result" == "success" ]]; then
+              return
+            fi
+            if [[ "$result" == "skipped" && "$affected" != "true" ]]; then
+              echo "$name skipped — the turbo graph says nothing affecting it changed."
+              return
+            fi
+            echo "::error::$name did not succeed (result: $result, affected: $affected)."
+            fail=1
+          }
+
+          check_conditional "E2E Web (Playwright)" "${{ needs.e2e-web.result }}"    "$WEB_AFFECTED"
+          check_conditional "E2E Mobile (Maestro)" "${{ needs.e2e-mobile.result }}" "$MOBILE_AFFECTED"
+
+          if [[ "$fail" == "1" ]]; then
+            echo "One or more CI jobs failed, was cancelled, or skipped when it should not have."
             exit 1
           fi
           echo "All CI checks passed."
