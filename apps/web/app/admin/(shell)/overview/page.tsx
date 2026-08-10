@@ -1,19 +1,12 @@
-import { ComingSoonSurface } from '../../../../components/admin/ComingSoonSurface'
+import { OverviewView } from '../../../../components/admin/OverviewView'
+import { fetchOpsOverview } from '../../../../lib/oversight/bookings'
+
+// A07 — «نظرة عامة». Every number and every alert comes from ONE server call,
+// so the cards and the attention panel cannot describe two different moments.
 
 export const dynamic = 'force-dynamic'
 
-export default function AdminOverviewPage() {
-  return (
-    <ComingSoonSurface
-      testId="admin-overview"
-      title="نظرة عامة"
-      spec="A06"
-      summary="اليوم عبر الشبكة كلها: الحجوزات، نسبة الإشغال لكل فرع، الإلغاءات، وأي شيء يحتاج انتباهك — صغيرة وصادقة، تكفي لتشغيل اليوم."
-      bullets={[
-        'أرقام اليوم عبر كل المزودين — حجوزات، مكتملة، ملغاة.',
-        'نسبة الإشغال لكل فرع، وأي فرع بلا مواعيد مولّدة.',
-        'ما هو أحمر: كرون متوقف، فرع بصفر مواعيد، حجز عالق.',
-      ]}
-    />
-  )
+export default async function AdminOverviewPage() {
+  const overview = await fetchOpsOverview()
+  return <OverviewView overview={overview} />
 }
