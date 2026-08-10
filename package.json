@@ -17,6 +17,7 @@
     "test:e2e": "turbo test:e2e",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "gate": "node scripts/gate.mjs",
     "gen:types": "node scripts/gen-types.mjs",
     "authz:check": "node scripts/check-authorization-surface.mjs",
     "authz:write": "node scripts/check-authorization-surface.mjs --write"

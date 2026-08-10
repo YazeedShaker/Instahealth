@@ -2,9 +2,37 @@
 
 > Session-independent working agreements. CLAUDE.md defines WHAT we build;
 > this file defines HOW a coding session operates — the habits and hard-won
-> gotchas that don't live in any one chat's memory. Read it at session start
-> alongside CLAUDE.md. When you learn a new trap the hard way, ADD IT HERE
-> in the same PR.
+> gotchas that don't live in any one chat's memory. When you learn a new trap
+> the hard way, ADD IT HERE in the same PR.
+
+> **📋 START AT [`CHECKLIST.md`](./CHECKLIST.md), NOT HERE.** That is one page
+> and it tells you which verification a given change needs. **This file is the
+> REFERENCE it points into** — long, scar-shaped, and meant to be read by
+> section when something bites, not front-to-back before every commit.
+>
+> ⚠ Nothing here is optional for a **Tier 1** change (money · state · auth ·
+> migrations). The tiers in the checklist change how often the full treatment is
+> owed, never what it consists of.
+
+---
+
+## Where to look
+
+| #      | Section                                 | Read it when                                                                                              |
+| ------ | --------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| **1**  | Session bootstrap                       | Starting any session — what to read, and verifying claims against the live DB                             |
+| **2**  | Branch, commit, PR discipline           | Opening a PR · stacked PRs · commit authorship (Vercel blocks the wrong one)                              |
+| **3**  | Pre-push gate sequence                  | Before pushing. `pnpm gate` runs this whole thing in the right order                                      |
+| **4**  | CI facts                                | CI went red for a reason that isn't your diff · secrets · the public repo                                 |
+| **5**  | Database changes                        | ANY migration, policy, grant, or SECURITY DEFINER function. **The longest and most load-bearing section** |
+| **6**  | Mobile (Expo) specifics                 | Node version, Metro, Hermes, native modules, keyboard, RTL                                                |
+| **6a** | Web (Next.js) specifics                 | Server actions, caching, sessions, TanStack, the Router Cache                                             |
+| **7**  | Core package discipline                 | Anything in `packages/core` — money math, mirrors, SMS copy                                               |
+| **9**  | UI fidelity — prove it, don't assert it | Any screen. Screenshots, E2E discipline, viewport, `next dev` blind spots                                 |
+| **8**  | When something isn't in this file       | You just lost more than one attempt to a trap. Write it down                                              |
+
+_(§8 sits after §9 in the file — the numbering is historical and cross-references
+in specs cite it, so it stays. See §3a of CLAUDE.md for why numbers don't move.)_
 
 ---
 
@@ -63,12 +91,27 @@
 ## 3 · Pre-push gate sequence (run ALL of it locally — never discover red in CI)
 
 ```
-pnpm format               # ALWAYS FIRST — Prettier check is a separate CI gate
-pnpm format:check
-pnpm turbo lint typecheck test:unit --force
-pnpm turbo build --force  # web build + mobile Metro export (iOS+Android)
+pnpm gate
+```
+
+**That is the whole sequence, in the one order that works**, with a summary table
+instead of ~700 lines of green-run chatter and the full output printed only for
+a step that actually failed. It stops at the first failure, because the steps are
+ordered by dependency and a wall of downstream errors buries the real one.
+
+The steps it runs, and why the ORDER is load-bearing:
+
+```
+pnpm format               # ALWAYS FIRST — Prettier REWRITES files, so checking
+pnpm format:check         #   first and formatting second invalidates the check
+pnpm turbo build --force  # BEFORE typecheck — running them concurrently races
+pnpm turbo typecheck --force  #   on .next/types and produces a wall of TS6053
+pnpm turbo lint --force       #   "file not found" that names nothing real
+pnpm turbo test:unit --force
 pnpm audit --audit-level=high
 ```
+
+Run the raw commands only when you want one step in isolation.
 
 - **⚠ THE FULL SEQUENCE IS THE MERGE GATE, NOT THE EDIT GATE.** Running all of
   it after every small edit costs ~5 minutes a go and was measured at roughly

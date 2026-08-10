@@ -7,6 +7,13 @@
 > **Also read `docs/ENGINEERING-WORKFLOW.md` before writing code** — it defines
 > HOW sessions operate: gate sequence, commit/PR rules, DB-change procedure,
 > and the accumulated toolchain gotchas. CLAUDE.md is the what; that file is the how.
+>
+> **And start at `docs/CHECKLIST.md`** — one page that says what verification a
+> given change actually needs (Tier 1 money/state/auth/migrations · Tier 2 UI on
+> proven patterns · Tier 3 copy/style). It is the index; ENGINEERING-WORKFLOW is
+> the reference it points into. ⚠ **Tier 1 rigor is unchanged by the tiering** —
+> the tiers exist so the full treatment stays affordable where it matters, not to
+> discount it.
 
 ---
 
@@ -398,6 +405,43 @@ Every PR must pass ALL of these before merge to `main`. Red = no merge.
   This lets any session resume anywhere.
 - **One feature = one PR = one spec.** Keep PRs reviewable. No 40-file mega-merges.
 - **Specs reference this file.** Claude Code should read `CLAUDE.md` + `PRODUCT.md` before each feature.
+
+---
+
+## 10a. Subagent policy — the main context carries DECISIONS, not transcripts
+
+**Delegate the reading; keep the deciding.** A coding session's context is a
+budget, and the three things that consume it fastest produce almost no durable
+information:
+
+| Delegate to a subagent                                           | Because a green run tells you one thing                                    |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| **Test runs** — `pnpm gate`, Playwright, a filtered vitest       | Hundreds of lines; what matters is pass/fail and the COUNTS                |
+| **CI log reads** — `gh run view --log`                           | Thousands of lines; what matters is which job failed and the error         |
+| **DB verification** — the `verify_*.mjs` probes, catalog queries | What matters is the verdict and any number that contradicted an assumption |
+
+**The subagent reports a SUMMARY. The main context never sees the transcript.**
+A good report is: the verdict, the counts, the exact error if there was one, and
+any number that surprised it. A bad report is the log.
+
+Three rules keep this honest:
+
+1. **⚠ A SUMMARY MUST NOT LAUNDER A FAILURE.** "Tests passed" from a subagent
+   that saw `9 skipped` is worse than no delegation at all — a skipped suite and
+   a passing suite look identical in a summary line, and that has already cost
+   this project two days (§9). Subagent reports carry the numbers, and the main
+   context reads them.
+2. **Delegate reading, never judging.** Whether a policy is safe, whether a
+   number is right, whether a design matches — those are decisions and they stay
+   in the main context, with the evidence quoted. A subagent may report that
+   `commission_total = 32400`; only the session decides that this is correct.
+3. **Never delegate the thing you are least sure about.** If a result would
+   change the plan, run it where you can see all of it.
+
+Corollary for verification: a subagent is a good place to run a probe and a bad
+place to design one. Write the probe in the main context — that is where the
+"a probe that cannot fail is not a probe" judgement lives (§5) — then hand it
+over to be executed.
 
 ---
 
