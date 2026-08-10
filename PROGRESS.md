@@ -129,9 +129,10 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 
 ### 2026-08-10 · A04 + A05 (data layer) — Service catalog & provider staff accounts
 
-⚠ **PARTIAL — the Tier 1 half. The screens are NOT built.** See the hand-off at
-the end of this entry before continuing; the branch is
-`feat/a04-a05-catalog-staff`.
+✅ **COMPLETE — data layer and screens.** PR #54. **51/51 Node assertions** on
+live dev (rolled back), **64 Playwright tests passing, 0 skipped / 0 flaky**
+(up from 62 — the two new happy paths), gate green at 560 unit tests. Three
+items remain and are listed at the end of this entry; none of them blocks A06.
 
 **A04 — the catalog gets three states, and the launch switch becomes real.**
 SPEC-A04 says to map مسودة/منشورة/موقوفة onto the real schema before building.
@@ -264,34 +265,40 @@ against a hand-computed control, and **8 authorization denials all raising
   founder's account or a patient's. The flag is a uuid-shaped heuristic and
   these are the false positives it is expected to produce.
 
-**⚠ HAND-OFF — what is left of A04/A05, in order:**
+**⚠ WHAT REMAINS — three items, none blocking A06:**
 
-1. **The screens.** Both features are Tier 2 from here: every RPC exists and is
-   proven, so this is composition, not new predicates. A04: list (search,
-   category+status filters, counts header), detail (definition, prep-note editor
-   with the cream patient preview, the read-only per-branch price table incl.
-   the «بلا سعر» rows, the nudge affordances and the «أضف فرعاً» picker fed by
-   `linkableBranches`), publish/suspend confirms, and the **category-flip
-   confirm composed per the 2026-08-10 ruling** (content list in the deviations
-   above).
-   A05: list with the last-login column and the disabled Role column, the 2-step
-   create flow (temp password shown once + copy), account detail, and **both**
-   disable confirm variants.
-   ⚠ The temp-password dialog is the A01 recovery-codes trap wearing a different
-   hat: it is shown once by a server action. Unlike A01 there IS a recovery path
-   (regenerate), so it needs no server-state acknowledgment — but it must be one
-   client component taking state as a prop, and the router refresh must happen
-   only after the founder dismisses it.
-2. **The provider portal's login enforcement.** `get_provider_login_state()`
-   exists and is proven; nothing calls it yet. Wire it into
-   `apps/web/app/login/actions.ts` AND `getProviderContext()` — the gate is the
-   enforcement, the login action is the courtesy — plus a change-password page
-   mirroring the admin one.
-3. **Playwright happy paths + fidelity screenshots**, and read them.
-4. **The Edge Function's create/disable lifecycle has NOT been exercised
-   end-to-end over HTTP.** Its Postgres half is proven; its GoTrue half
-   (createUser, ban, the compensating delete) is not. That needs a real admin
-   JWT and explicit cleanup — it cannot be rolled back.
+1. **⚠ FIDELITY SCREENSHOTS WERE NOT CAPTURED.** §9 is explicit that reading
+   markup is not seeing a screen, and P01 shipped a dashboard that looked
+   plausible in an accessibility tree and was visibly wrong the moment the
+   founder opened it. **Nothing in this feature claims visual fidelity.** The
+   Playwright paths prove the screens render real server data and that the
+   acknowledgment checkbox genuinely gates its CTA; they prove nothing about
+   how any of it LOOKS. Add captures to `apps/web/e2e/fidelity.spec.ts` at
+   1366×768 and read them — A03 found two defects that way that were invisible
+   in markup, types and passing E2E.
+2. **⚠ The `admin-staff-accounts` Edge Function's GoTrue half is UNPROVEN.**
+   Its Postgres half is covered by the 51/51 run, but `createUser`, the ban and
+   the compensating `deleteUser` on a failed insert have never executed — they
+   cannot be rolled back, so a transaction-based probe could not reach them.
+   Needs a real admin JWT and an explicit cleanup step. **Do this before
+   anyone creates a real partner account.**
+3. **`apps/web` still has ZERO unit tests** (see Known risks). The Tier 2
+   bargain is component tests + one Playwright path + batched manual, and on
+   web the first term has nothing behind it. A04/A05 shipped on the Playwright
+   path alone, which is a deliberate, recorded gap rather than an oversight.
+
+**⚠ MANUAL, BATCHED — owed at the next weekly check:** suspend a service on dev
+and confirm the phone hides it; create a staff account and log into the partner
+portal through the temp-password flow end to end. Both are in SPEC-A04-A05.
+
+**HAND-OFF TO A06 + A07.** Everything they were promised is now real data:
+A06 (oversight) consumes A02's computation functions and the عمولة متوقعة chip
+rules. A07 (overview) gets the alert states A05 made detectable — a branch with
+zero active accounts is `preview_staff_disable.isLastActiveAccount`, and a
+published service nobody has priced is `service_branch_pricing.unpricedCount`.
+⚠ And A06 owns the LAST placeholder surface: الحجوزات. The admin.spec assertion
+that guards «قريباً» chips now points at it, so building it will fail that test
+— move the assertion, do not delete it.
 
 ### 2026-08-10 · A03 — Providers, branches & the commission-rate editor (web, admin)
 
