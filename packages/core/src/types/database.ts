@@ -1290,6 +1290,10 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_link_service_to_branch: {
+        Args: { p_branch_id: string; p_service_id: string }
+        Returns: Json
+      }
       admin_revoke_provider_sessions: {
         Args: { p_provider_user_id: string }
         Returns: Json

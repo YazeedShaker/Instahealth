@@ -165,13 +165,6 @@
       "policies": [
         {
           "roles": "PUBLIC",
-          "using": "(get_user_role() = 'admin'::text)",
-          "policy": "notifications: admin full access",
-          "command": "ALL",
-          "withCheck": "-"
-        },
-        {
-          "roles": "PUBLIC",
           "using": "((user_id = auth.uid()) OR (get_user_role() = 'admin'::text))",
           "policy": "notifications: user sees own",
           "command": "SELECT",
@@ -460,6 +453,13 @@
     {
       "config": "search_path=public",
       "signature": "admin_create_service(text,text,text,uuid,text,text,integer)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "admin_link_service_to_branch(uuid,uuid)",
       "executeGrants": "authenticated,postgres,service_role",
       "securityDefiner": true,
       "takesIdentityParameter": false
