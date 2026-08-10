@@ -124,13 +124,6 @@
       "policies": [
         {
           "roles": "PUBLIC",
-          "using": "(get_user_role() = 'admin'::text)",
-          "policy": "branches: admin full access",
-          "command": "ALL",
-          "withCheck": "-"
-        },
-        {
-          "roles": "PUBLIC",
           "using": "((is_active = true) OR (get_user_role() = ANY (ARRAY['admin'::text, 'provider'::text])))",
           "policy": "branches: public read active",
           "command": "SELECT",
@@ -230,6 +223,22 @@
       "writableColumns": {}
     },
     {
+      "table": "provider_profile_history",
+      "policies": [
+        {
+          "roles": "PUBLIC",
+          "using": "(get_user_role() = 'admin'::text)",
+          "policy": "provider history: admin reads",
+          "command": "SELECT",
+          "withCheck": "-"
+        }
+      ],
+      "rlsForced": false,
+      "rlsEnabled": true,
+      "columnCount": 6,
+      "writableColumns": {}
+    },
+    {
       "table": "provider_users",
       "policies": [
         {
@@ -255,13 +264,6 @@
     {
       "table": "providers",
       "policies": [
-        {
-          "roles": "PUBLIC",
-          "using": "(get_user_role() = 'admin'::text)",
-          "policy": "providers: admin full access",
-          "command": "ALL",
-          "withCheck": "-"
-        },
         {
           "roles": "PUBLIC",
           "using": "((is_active = true) OR (get_user_role() = 'admin'::text))",
@@ -365,13 +367,6 @@
       "policies": [
         {
           "roles": "PUBLIC",
-          "using": "(get_user_role() = 'admin'::text)",
-          "policy": "slots: admin full access",
-          "command": "ALL",
-          "withCheck": "-"
-        },
-        {
-          "roles": "PUBLIC",
           "using": "(((is_blocked = false) AND (booked_count < capacity)) OR (branch_id = ANY (get_provider_branch_ids())) OR (get_user_role() = 'admin'::text))",
           "policy": "slots: patient sees available only",
           "command": "SELECT",
@@ -440,6 +435,41 @@
     {
       "config": "search_path=public",
       "signature": "acknowledge_admin_recovery_codes()",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "admin_create_branch(uuid,text,text,text,numeric,numeric,integer)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "admin_create_provider(text,text,numeric)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "admin_update_branch(uuid,text,text,text,numeric,numeric,boolean)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "admin_update_provider(uuid,text,text,boolean)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "apply_branch_slot_shape(uuid,integer)",
       "executeGrants": "authenticated,postgres,service_role",
       "securityDefiner": true,
       "takesIdentityParameter": false
@@ -662,6 +692,20 @@
       "takesIdentityParameter": false
     },
     {
+      "config": "search_path=public",
+      "signature": "preview_branch_slot_shape(uuid,integer)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "preview_provider_deactivation(uuid)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
       "config": "-",
       "signature": "recalculate_branch_rating()",
       "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
@@ -687,6 +731,13 @@
       "signature": "set_booking_ref()",
       "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
       "securityDefiner": false,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "set_provider_commission_rate(uuid,numeric,date,text)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {

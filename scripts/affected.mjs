@@ -36,6 +36,12 @@ const force = process.env.FORCE_ALL === 'true' || !base
  * (docs, PROGRESS, the checklist) → let the package graph decide.
  */
 const GLOBAL_PATHS = [
+  // ⚠ `supabase/` IS GLOBAL, and the omission was caught the first time it
+  // mattered. A migration or a seed lives in no turbo package, so the graph
+  // correctly reported "nothing affected" for a PR whose ENTIRE PURPOSE was
+  // fixing the E2E fixtures — and both E2E suites skipped. The database is a
+  // dependency of every suite even though the package graph cannot see it.
+  'supabase/',
   'package.json',
   'pnpm-lock.yaml',
   'pnpm-workspace.yaml',
