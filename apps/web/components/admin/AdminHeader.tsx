@@ -20,10 +20,15 @@ export function AdminHeader({
   title,
   displayName,
   soon = false,
+  subtitle,
 }: {
   title: string
   displayName: string
   soon?: boolean
+  /** The counts line the list frames draw under the title — «١٤ خدمة · ١١
+   *  منشورة · ٢ مسودة · ١ موقوفة». Extended into the shared header rather than
+   *  re-implemented per page (§9: extend the contract, never the page). */
+  subtitle?: string
 }) {
   // The disc shows the first letter of the admin's name — «م» for المؤسس in
   // the handoff. Derived, never hardcoded.
@@ -35,25 +40,35 @@ export function AdminHeader({
       data-testid="admin-header"
       className="flex min-h-[56px] shrink-0 flex-wrap items-center gap-4 border-b border-ih-neutral-200 bg-white px-6 py-2.5 shadow-sm"
     >
-      <div className="flex min-w-0 items-center gap-2.5">
-        <h1 className="truncate text-[16px] font-extrabold text-ih-neutral-800">{title}</h1>
-        {soon ? (
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <h1 className="truncate text-[16px] font-extrabold text-ih-neutral-800">{title}</h1>
+          {soon ? (
+            <span
+              data-testid="admin-soon-chip"
+              style={{
+                padding: `${ADMIN_SOON_CHIP.paddingY}px ${ADMIN_SOON_CHIP.paddingX}px`,
+                borderRadius: ADMIN_SOON_CHIP.borderRadius,
+                fontSize: ADMIN_SOON_CHIP.fontSize,
+                fontWeight: ADMIN_SOON_CHIP.fontWeight,
+                color: resolveTokenCss(ADMIN_SOON_CHIP.color),
+                background: resolveTokenCss(ADMIN_SOON_CHIP.background),
+                border: `${ADMIN_SOON_CHIP.borderWidth}px solid ${resolveTokenCss(ADMIN_SOON_CHIP.borderColor)}`,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              قريباً
+            </span>
+          ) : null}
+        </div>
+        {subtitle === undefined ? null : (
           <span
-            data-testid="admin-soon-chip"
-            style={{
-              padding: `${ADMIN_SOON_CHIP.paddingY}px ${ADMIN_SOON_CHIP.paddingX}px`,
-              borderRadius: ADMIN_SOON_CHIP.borderRadius,
-              fontSize: ADMIN_SOON_CHIP.fontSize,
-              fontWeight: ADMIN_SOON_CHIP.fontWeight,
-              color: resolveTokenCss(ADMIN_SOON_CHIP.color),
-              background: resolveTokenCss(ADMIN_SOON_CHIP.background),
-              border: `${ADMIN_SOON_CHIP.borderWidth}px solid ${resolveTokenCss(ADMIN_SOON_CHIP.borderColor)}`,
-              whiteSpace: 'nowrap',
-            }}
+            data-testid="admin-header-subtitle"
+            className="truncate text-[12px] text-ih-neutral-500"
           >
-            قريباً
+            {subtitle}
           </span>
-        ) : null}
+        )}
       </div>
 
       <span

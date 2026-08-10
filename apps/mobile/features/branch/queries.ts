@@ -59,10 +59,20 @@ export function useBranchProfile(branchId: string | undefined) {
         categoriesResult.data.map((category) => [category.id, category]),
       )
 
+      // The SAME predicate create_pending_booking enforces (§1.4 — the screen
+      // may not offer what the server will refuse):
+      //   · the partner has it switched on
+      //   · the partner has actually PRICED it — a NULL price is «بلا سعر», an
+      //     offering the branch has never quoted, and it is unbookable
+      //     (migration 20260810142758)
+      //   · the admin has it published — `services.is_active` is generated from
+      //     `services.status`, so draft and suspended fall out here for free
+      //   · its category is launched
       const services: BranchServiceItem[] = branch.branch_services
         .filter(
-          (branchService) =>
+          (branchService): branchService is typeof branchService & { price: number } =>
             branchService.is_available !== false &&
+            branchService.price !== null &&
             branchService.service.is_active !== false &&
             activeCategoriesById.has(branchService.service.category_id),
         )

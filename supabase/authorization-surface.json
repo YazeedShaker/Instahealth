@@ -101,13 +101,6 @@
       "policies": [
         {
           "roles": "PUBLIC",
-          "using": "(get_user_role() = 'admin'::text)",
-          "policy": "branch_services: admin full access",
-          "command": "ALL",
-          "withCheck": "-"
-        },
-        {
-          "roles": "PUBLIC",
           "using": "true",
           "policy": "branch_services: public read",
           "command": "SELECT",
@@ -172,13 +165,6 @@
       "policies": [
         {
           "roles": "PUBLIC",
-          "using": "(get_user_role() = 'admin'::text)",
-          "policy": "notifications: admin full access",
-          "command": "ALL",
-          "withCheck": "-"
-        },
-        {
-          "roles": "PUBLIC",
           "using": "((user_id = auth.uid()) OR (get_user_role() = 'admin'::text))",
           "policy": "notifications: user sees own",
           "command": "SELECT",
@@ -239,15 +225,24 @@
       "writableColumns": {}
     },
     {
-      "table": "provider_users",
+      "table": "provider_user_history",
       "policies": [
         {
           "roles": "PUBLIC",
           "using": "(get_user_role() = 'admin'::text)",
-          "policy": "provider_users: admin full access",
-          "command": "ALL",
+          "policy": "staff history: admin reads",
+          "command": "SELECT",
           "withCheck": "-"
-        },
+        }
+      ],
+      "rlsForced": false,
+      "rlsEnabled": true,
+      "columnCount": 8,
+      "writableColumns": {}
+    },
+    {
+      "table": "provider_users",
+      "policies": [
         {
           "roles": "PUBLIC",
           "using": "((auth_user_id = auth.uid()) OR (get_user_role() = 'admin'::text))",
@@ -258,7 +253,7 @@
       ],
       "rlsForced": false,
       "rlsEnabled": true,
-      "columnCount": 7,
+      "columnCount": 10,
       "writableColumns": {}
     },
     {
@@ -294,15 +289,24 @@
       "writableColumns": {}
     },
     {
-      "table": "service_categories",
+      "table": "service_catalog_history",
       "policies": [
         {
           "roles": "PUBLIC",
           "using": "(get_user_role() = 'admin'::text)",
-          "policy": "categories: admin full access",
-          "command": "ALL",
+          "policy": "catalog history: admin reads",
+          "command": "SELECT",
           "withCheck": "-"
-        },
+        }
+      ],
+      "rlsForced": false,
+      "rlsEnabled": true,
+      "columnCount": 8,
+      "writableColumns": {}
+    },
+    {
+      "table": "service_categories",
+      "policies": [
         {
           "roles": "PUBLIC",
           "using": "((is_active = true) OR (get_user_role() = 'admin'::text))",
@@ -321,13 +325,6 @@
       "policies": [
         {
           "roles": "PUBLIC",
-          "using": "(get_user_role() = 'admin'::text)",
-          "policy": "services: admin full access",
-          "command": "ALL",
-          "withCheck": "-"
-        },
-        {
-          "roles": "PUBLIC",
           "using": "((is_active = true) OR (get_user_role() = 'admin'::text))",
           "policy": "services: public read active",
           "command": "SELECT",
@@ -336,7 +333,7 @@
       ],
       "rlsForced": false,
       "rlsEnabled": true,
-      "columnCount": 12,
+      "columnCount": 15,
       "writableColumns": {}
     },
     {
@@ -455,6 +452,41 @@
     },
     {
       "config": "search_path=public",
+      "signature": "admin_create_service(text,text,text,uuid,text,text,integer)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "admin_link_service_to_branch(uuid,uuid)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "admin_revoke_provider_sessions(uuid)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": true
+    },
+    {
+      "config": "search_path=public",
+      "signature": "admin_set_category_active(uuid,boolean)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "admin_set_service_status(uuid,text)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
       "signature": "admin_update_branch(uuid,text,text,text,numeric,numeric,boolean)",
       "executeGrants": "authenticated,postgres,service_role",
       "securityDefiner": true,
@@ -463,6 +495,13 @@
     {
       "config": "search_path=public",
       "signature": "admin_update_provider(uuid,text,text,boolean)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "admin_update_service(uuid,text,text,text,uuid,text,text,integer)",
       "executeGrants": "authenticated,postgres,service_role",
       "securityDefiner": true,
       "takesIdentityParameter": false
@@ -533,6 +572,13 @@
     {
       "config": "search_path=public",
       "signature": "complete_admin_password_change()",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "complete_provider_password_change()",
       "executeGrants": "authenticated,postgres,service_role",
       "securityDefiner": true,
       "takesIdentityParameter": false
@@ -651,6 +697,48 @@
     },
     {
       "config": "search_path=public",
+      "signature": "get_provider_login_state()",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "get_provider_staff_accounts()",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "get_provider_staff_detail(uuid)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": true
+    },
+    {
+      "config": "search_path=public",
+      "signature": "get_service_catalog()",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "get_service_categories_admin()",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "get_service_detail(uuid)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
       "signature": "get_user_role()",
       "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
       "securityDefiner": true,
@@ -700,10 +788,31 @@
     },
     {
       "config": "search_path=public",
+      "signature": "preview_category_activation(uuid,boolean)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
       "signature": "preview_provider_deactivation(uuid)",
       "executeGrants": "authenticated,postgres,service_role",
       "securityDefiner": true,
       "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "preview_service_status_change(uuid,text)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "preview_staff_disable(uuid)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": true
     },
     {
       "config": "-",
@@ -723,6 +832,13 @@
       "config": "search_path=public",
       "signature": "search_catalog(text,text)",
       "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": false,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "service_branch_pricing(uuid)",
+      "executeGrants": "postgres,service_role",
       "securityDefiner": false,
       "takesIdentityParameter": false
     },
@@ -766,6 +882,13 @@
       "signature": "update_branch_service(uuid,integer,boolean)",
       "executeGrants": "authenticated,postgres,service_role",
       "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "validate_service_definition(text,text,text,uuid,text,text,integer)",
+      "executeGrants": "postgres,service_role",
+      "securityDefiner": false,
       "takesIdentityParameter": false
     }
   ]

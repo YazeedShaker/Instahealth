@@ -23,6 +23,11 @@ export interface ProviderContext {
 
 export type ProviderLookup =
   | { kind: 'ok'; context: ProviderContext }
+  /** A temp password issued by the admin has not been replaced yet (A05). */
+  | { kind: 'needsPasswordChange' }
+  /** An UNUSED temp password older than 72h. Refused, with the copy the design
+   *  promises — «اطلب كلمة جديدة من الإدارة». */
+  | { kind: 'tempPasswordExpired' }
   /** Signed in, but not provider staff — a patient session, most likely. */
   | { kind: 'notProvider' }
   | { kind: 'signedOut' }
@@ -36,6 +41,23 @@ export async function getProviderContext(): Promise<ProviderLookup> {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return { kind: 'signedOut' }
+
+  // ⚠ A05: ONE round trip answers every question the gate has, so the answers
+  // cannot disagree with each other — the same shape A01 gave the admin gate.
+  // This runs on EVERY dashboard render, which is what makes «التعطيل يقطع
+  // الدخول في نفس اللحظة» true: a stateless access token cannot be revoked, so
+  // the gate is the enforcement.
+  const { data: loginState } = await supabase.rpc('get_provider_login_state')
+  const state = loginState as unknown as {
+    is_provider: boolean
+    must_change_password: boolean
+    temp_password_expired: boolean
+  } | null
+  if (state === null || state.is_provider !== true) return { kind: 'notProvider' }
+  // ORDER MATTERS: an expired temp is refused outright; a live one forces the
+  // change before anything else is reachable.
+  if (state.temp_password_expired) return { kind: 'tempPasswordExpired' }
+  if (state.must_change_password) return { kind: 'needsPasswordChange' }
 
   const { data: membership } = await supabase
     .from('provider_users')

@@ -900,11 +900,109 @@ Two more, both found while capturing P02's screenshots:
   §9 exists because markup review does not catch this class of thing; the
   capture only helps if someone actually looks at it.
 
+## 5a · Changing a state dial — three checks, added after A04
+
+These three are a **convention**, not advice. Each one is a table or a named
+check that goes in the PR body, because each replaced a sentence that had
+sounded true and wasn't.
+
+### ⚠ ① THE PREDICATE-PARITY TABLE — enumerate every consumer, prove each one
+
+**Any PR that adds or changes an availability or state dial ships a table naming
+EVERY consumer of that dial with per-consumer proof. Prose does not count.**
+
+The dials, today: `services.status` / `services.is_active`,
+`service_categories.is_active`, `branch_services.is_available`,
+`branch_services.price IS NULL`, `branches.is_active`, `providers.is_active`,
+`slots.is_blocked`. The consumers to enumerate, every time:
+
+| consumer             | where                                               |
+| -------------------- | --------------------------------------------------- |
+| search               | `search_catalog()`                                  |
+| discovery / home     | `apps/mobile/features/home/queries.ts`              |
+| branch profile       | `apps/mobile/features/branch/queries.ts`            |
+| booking creation     | `create_pending_booking()`                          |
+| settlement           | `confirm_booking()`, `settle-payment`               |
+| the partner's editor | `get_branch_services_for_editor()`                  |
+| the admin's reads    | `get_service_catalog()`, `service_branch_pricing()` |
+
+**Why it is a table and not a habit:** `create_pending_booking` checked
+`services.is_active` and not `service_categories.is_active` for four features.
+Search filtered on the category flag, the branch profile filtered on it, and the
+one consumer that could take money did not — so
+DECISION-provider-data-model's "THE launch switch" was a display filter, and a
+client holding a `branch_service` id it had cached seconds before the flip still
+booked. Nobody had lied; everybody had checked "the" predicate and there were
+five of them. **A dial with N consumers is N predicates until proven otherwise.**
+
+Per-consumer proof means a run, not a reading — for the category flip that was:
+category ON → a real booking (`IH-2026-52316`, 175 EGP); category OFF → the
+identical call returning `service_unavailable`. **Both directions. One direction
+proves only that something else was already refusing it.**
+
+### ⚠ ② THE REPRESENTABILITY CHECK — a spec'd state is not real until a column holds it
+
+**Before building a state a spec or a frame describes, name the column, enum
+value or NULL-semantics that will store it, and confirm it EXISTS. If it does
+not, that is a migration, and it is discovered now rather than three screens
+later.**
+
+Canonical example, A04: «بلا سعر — لن تظهر» is drawn as a row state on the
+service detail's price table, and the publish confirm counts it. But
+`branch_services.price` was `NOT NULL`, so "offered but not yet priced" could
+not be **represented at all** — the state existed in the design and nowhere in
+the database. It surfaced only when the create flow was wired up and dead-ended
+at «٢٤ فرعاً بلا سعر» with no route out, because no writer anywhere could
+produce a row in that state.
+
+The tell was in the design the whole time: its audit panel draws a price change
+as «من — إلى ١٨٠ ج.م», an em-dash for the OLD price. An em-dash is a NULL. **Read
+the frame's empty and first-time cells as schema requirements, not as styling.**
+
+Sibling instance in the same feature: the design's three service states
+(مسودة/منشورة/موقوفة) against a table with one boolean. SPEC-A04 happened to say
+"map the states to the real schema first"; ② is that instruction generalised so
+it does not depend on a spec remembering to say it.
+
+### ⚠ ③ WIDENING A BOOLEAN TO AN ENUM — derive the old flag, never maintain it
+
+**When a boolean dial widens into an enum, do NOT drop the boolean and do NOT
+keep writing it. Make it a `GENERATED` column derived from the enum.**
+
+```sql
+ALTER TABLE services DROP COLUMN is_active;   -- drop the POLICY first; it depends on it
+ALTER TABLE services ADD COLUMN is_active BOOLEAN
+  GENERATED ALWAYS AS (status = 'published') STORED;
+```
+
+Dropping it means editing every predicate that reads it — four of them here, all
+already proven, each an opportunity to introduce the very drift the change was
+meant to prevent. Keeping it as a maintained column means two facts that must
+agree and can be written separately, which is **the single most repeated mistake
+in this schema**. Generated, they cannot disagree by construction and every
+existing reader stays correct with no edit at all.
+
+Prove it is genuinely unwritable, aimed at a REAL row holding the value it
+already has (so success would be harmless and failure is the signal):
+
+```
+ERROR 428C9: column "is_active" can only be updated to DEFAULT
+DETAIL:  Column "is_active" is a generated column.
+```
+
+⚠ Two gotchas. **An RLS policy that references the column blocks the DROP** —
+drop the policy, drop the column, add the generated one, recreate the policy
+reading the identical expression. And **the Supabase type generator does not
+know about generated columns**: `database.ts` will still list `is_active?:` in
+Insert and Update. That is cosmetic — the database raises `428C9` regardless —
+but do not "fix" the generated file, and do not trust the type as evidence.
+
 ## 8 · When something isn't in this file
 
 If you debug a toolchain/CI/platform trap that cost you more than one
 attempt, append it to the relevant section here in the same PR. This file is
 how sessions inherit each other's scars.
 
-_Last updated: 2026-08-01 · Covers everything learned SETUP-01 → P03 plus the
-public-repo security pass (`create_slot_hold`, full-history secret audit)._
+_Last updated: 2026-08-10 · Covers SETUP-01 → A05. §5a (predicate parity,
+representability, generated-column drift-proofing) added after A04 found the
+category flip enforcing nothing on the one consumer that takes money._

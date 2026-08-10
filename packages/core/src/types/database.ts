@@ -322,7 +322,7 @@ export type Database = {
           home_collection_fee: number | null
           id: string
           is_available: boolean | null
-          price: number
+          price: number | null
           service_id: string
           updated_at: string | null
         }
@@ -334,7 +334,7 @@ export type Database = {
           home_collection_fee?: number | null
           id?: string
           is_available?: boolean | null
-          price: number
+          price?: number | null
           service_id: string
           updated_at?: string | null
         }
@@ -346,7 +346,7 @@ export type Database = {
           home_collection_fee?: number | null
           id?: string
           is_available?: boolean | null
-          price?: number
+          price?: number | null
           service_id?: string
           updated_at?: string | null
         }
@@ -780,6 +780,47 @@ export type Database = {
           },
         ]
       }
+      provider_user_history: {
+        Row: {
+          action: string
+          changed_at: string
+          changed_by: string | null
+          id: string
+          new_values: Json
+          old_values: Json
+          provider_user_id: string
+          source: string
+        }
+        Insert: {
+          action: string
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_values?: Json
+          old_values?: Json
+          provider_user_id: string
+          source: string
+        }
+        Update: {
+          action?: string
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_values?: Json
+          old_values?: Json
+          provider_user_id?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_user_history_provider_user_id_fkey"
+            columns: ["provider_user_id"]
+            isOneToOne: false
+            referencedRelation: "provider_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       provider_users: {
         Row: {
           auth_user_id: string
@@ -787,8 +828,11 @@ export type Database = {
           created_at: string | null
           id: string
           is_active: boolean | null
+          must_change_password: boolean
+          name: string | null
           provider_id: string
           role: string | null
+          temp_password_issued_at: string | null
         }
         Insert: {
           auth_user_id: string
@@ -796,8 +840,11 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_active?: boolean | null
+          must_change_password?: boolean
+          name?: string | null
           provider_id: string
           role?: string | null
+          temp_password_issued_at?: string | null
         }
         Update: {
           auth_user_id?: string
@@ -805,8 +852,11 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_active?: boolean | null
+          must_change_password?: boolean
+          name?: string | null
           provider_id?: string
           role?: string | null
+          temp_password_issued_at?: string | null
         }
         Relationships: [
           {
@@ -938,6 +988,54 @@ export type Database = {
           },
         ]
       }
+      service_catalog_history: {
+        Row: {
+          action: string
+          category_id: string | null
+          changed_at: string
+          changed_by: string | null
+          id: string
+          new_values: Json
+          old_values: Json
+          service_id: string | null
+        }
+        Insert: {
+          action: string
+          category_id?: string | null
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_values?: Json
+          old_values?: Json
+          service_id?: string | null
+        }
+        Update: {
+          action?: string
+          category_id?: string | null
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_values?: Json
+          old_values?: Json
+          service_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_catalog_history_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_catalog_history_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_categories: {
         Row: {
           created_at: string | null
@@ -977,6 +1075,7 @@ export type Database = {
       services: {
         Row: {
           category_id: string
+          code: string | null
           created_at: string | null
           default_tat_hours: number | null
           description_ar: string | null
@@ -988,9 +1087,12 @@ export type Database = {
           preparation_notes_ar: string | null
           preparation_notes_en: string | null
           sort_order: number | null
+          status: string
+          updated_at: string
         }
         Insert: {
           category_id: string
+          code?: string | null
           created_at?: string | null
           default_tat_hours?: number | null
           description_ar?: string | null
@@ -1002,9 +1104,12 @@ export type Database = {
           preparation_notes_ar?: string | null
           preparation_notes_en?: string | null
           sort_order?: number | null
+          status?: string
+          updated_at?: string
         }
         Update: {
           category_id?: string
+          code?: string | null
           created_at?: string | null
           default_tat_hours?: number | null
           description_ar?: string | null
@@ -1016,6 +1121,8 @@ export type Database = {
           preparation_notes_ar?: string | null
           preparation_notes_en?: string | null
           sort_order?: number | null
+          status?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -1171,6 +1278,34 @@ export type Database = {
         Args: { p_name_ar: string; p_name_en: string; p_percent: number }
         Returns: Json
       }
+      admin_create_service: {
+        Args: {
+          p_category_id: string
+          p_code: string
+          p_name_ar: string
+          p_name_en: string
+          p_preparation_notes_ar?: string
+          p_preparation_notes_en?: string
+          p_tat_hours?: number
+        }
+        Returns: Json
+      }
+      admin_link_service_to_branch: {
+        Args: { p_branch_id: string; p_service_id: string }
+        Returns: Json
+      }
+      admin_revoke_provider_sessions: {
+        Args: { p_provider_user_id: string }
+        Returns: Json
+      }
+      admin_set_category_active: {
+        Args: { p_category_id: string; p_is_active: boolean }
+        Returns: Json
+      }
+      admin_set_service_status: {
+        Args: { p_service_id: string; p_to_status: string }
+        Returns: Json
+      }
       admin_update_branch: {
         Args: {
           p_branch_id: string
@@ -1189,6 +1324,19 @@ export type Database = {
           p_name_ar: string
           p_name_en: string
           p_provider_id: string
+        }
+        Returns: Json
+      }
+      admin_update_service: {
+        Args: {
+          p_category_id: string
+          p_code: string
+          p_name_ar: string
+          p_name_en: string
+          p_preparation_notes_ar?: string
+          p_preparation_notes_en?: string
+          p_service_id: string
+          p_tat_hours?: number
         }
         Returns: Json
       }
@@ -1212,6 +1360,7 @@ export type Database = {
         Returns: number
       }
       complete_admin_password_change: { Args: never; Returns: Json }
+      complete_provider_password_change: { Args: never; Returns: Json }
       compute_commission_draft: {
         Args: { p_month: string; p_provider_id: string }
         Returns: Json
@@ -1337,6 +1486,15 @@ export type Database = {
         }[]
       }
       get_provider_branch_ids: { Args: never; Returns: string[] }
+      get_provider_login_state: { Args: never; Returns: Json }
+      get_provider_staff_accounts: { Args: never; Returns: Json }
+      get_provider_staff_detail: {
+        Args: { p_provider_user_id: string }
+        Returns: Json
+      }
+      get_service_catalog: { Args: never; Returns: Json }
+      get_service_categories_admin: { Args: never; Returns: Json }
+      get_service_detail: { Args: { p_service_id: string }; Returns: Json }
       get_user_role: { Args: never; Returns: string }
       is_internal_caller: { Args: never; Returns: boolean }
       issue_statement: {
@@ -1352,12 +1510,28 @@ export type Database = {
         Args: { p_allocation: number; p_branch_id: string }
         Returns: Json
       }
-      preview_provider_deactivation: { Args: { p_provider_id: string }; Returns: Json }
+      preview_category_activation: {
+        Args: { p_category_id: string; p_is_active: boolean }
+        Returns: Json
+      }
+      preview_provider_deactivation: {
+        Args: { p_provider_id: string }
+        Returns: Json
+      }
+      preview_service_status_change: {
+        Args: { p_service_id: string; p_to_status: string }
+        Returns: Json
+      }
+      preview_staff_disable: {
+        Args: { p_provider_user_id: string }
+        Returns: Json
+      }
       record_admin_totp_failure: { Args: never; Returns: Json }
       search_catalog: {
         Args: { p_category_slug?: string; p_query: string }
         Returns: Json
       }
+      service_branch_pricing: { Args: { p_service_id: string }; Returns: Json }
       set_provider_commission_rate: {
         Args: {
           p_effective_from: string
@@ -1387,6 +1561,18 @@ export type Database = {
           p_price_egp: number
         }
         Returns: Json
+      }
+      validate_service_definition: {
+        Args: {
+          p_category_id: string
+          p_code: string
+          p_name_ar: string
+          p_name_en: string
+          p_prep_ar: string
+          p_prep_en: string
+          p_tat_hours: number
+        }
+        Returns: string
       }
     }
     Enums: {

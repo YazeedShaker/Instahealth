@@ -41,9 +41,14 @@ Those three are the reason this file is read.
 **Phase:** 🎉 **MILESTONE ONE — the loop is closed.** Patient books on mobile (F01→F07) → the branch desk sees it, records the outcome, opens the detail drawer, cancels on the patient's behalf, manages its own prices, reads its slot picture and maintains its own contact details (P01–P05 — every sidebar surface is live). The four shipped identity/money holes are all closed and the repo passed a full-history secret audit (2026-08-01). **V1 collects no money — cash at the branch** (2026-08-04 partner-trust decision), which retires the "payments are simulated" launch blocker outright. **A01 opened the admin portal** (2026-08-08): the founder's account exists, TOTP
 is live, and `/admin` is gated four ways. **A02 shipped the commission statement**
 (2026-08-09) — the founder can issue, send and settle a partner's monthly
-invoice, and the two money policies A01 flagged are closed. Next: A03 (the
-commission-rate editor, a LAUNCH BLOCKER — the seeded 12% is a placeholder), F08
-reviews (needs the review writer function); card via PayTabs returns post-market-proof
+invoice, and the two money policies A01 flagged are closed. **A03 shipped the
+network screens and the commission-rate editor** (2026-08-10; its PROGRESS entry
+was reconstructed after the fact — neither of its PRs wrote one). **A04+A05'
+data layer landed 2026-08-10 and is verified 34/34 against live dev, but their
+SCREENS ARE NOT BUILT** — branch `feat/a04-a05-catalog-staff`, hand-off in the
+Shipped entry. Ten of A01's eleven admin write policies are now closed. Next:
+finish A04/A05's screens, then A06+A07; F08 reviews still needs the review
+writer function; card via PayTabs returns post-market-proof
 ⚠ **Two founder decisions are open and blocking nothing yet: the LICENSE / IP posture and whether vulnerability detail belongs in a public PROGRESS.** Both in Known risks.
 **Milestone target:** Labs + Scans booking working end-to-end at Town Hospital & Saridar Labs
 **Environment:** Supabase `instahealth-dev` live (Frankfurt). Design system published in Claude Design.
@@ -100,9 +105,21 @@ visual contract. Then specs → Claude Code.
       Its opening decision closed the two money policies — `bookings` and
       `payments` admin `ALL` — outright. **Nine of the eleven remain** for
       A03–A06.
-- [ ] **A03–A06** — Web: providers & branches, catalog, staff accounts, oversight.
-      ⚠ A03 owns the commission-rate editor, and it is a LAUNCH BLOCKER: the
-      seeded 12% is a placeholder (see Known risks).
+- [x] **A03** — ✅ DONE. Web: providers & branches + the commission-rate editor
+      (PRs #50, #52 — entry reconstructed 2026-08-10, see Shipped). Remainder:
+      branch detail w/ regeneration dialog + the creation forms; their RPCs
+      exist and are proven.
+- [x] **A04 + A05** — ✅ DONE. Web: service catalog + provider staff accounts
+      (PR #54). Data layer and screens: 51/51 Node assertions on live dev, 64
+      Playwright tests, 0 skipped. **Eleven of eleven admin write policies now
+      closed.** Three follow-ups in the Shipped entry — fidelity screenshots (not
+      captured), the Edge Function's GoTrue half (unproven), and web component
+      tests (none exist).
+- [ ] **A06–A07** — Web: oversight + overview. A06 consumes A02's computation
+      functions and the عمولة متوقعة chip rules; A07's alert states are now real
+      data — **a branch with zero active accounts is detectable**
+      (`preview_staff_disable.isLastActiveAccount`), and so is a published
+      service nobody has priced (`service_branch_pricing.unpricedCount`).
 - [ ] **006_practitioners.sql + doctor booking** — after labs/scans proven
 
 **First milestone:** patient books on mobile at Town/Saridar → pays → gets SMS + confirmation →
@@ -111,6 +128,203 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 ---
 
 ## Shipped
+
+### 2026-08-10 · A04 + A05 (data layer) — Service catalog & provider staff accounts
+
+✅ **COMPLETE — data layer and screens.** PR #54. **51/51 Node assertions** on
+live dev (rolled back), **64 Playwright tests passing, 0 skipped / 0 flaky**
+(up from 62 — the two new happy paths), gate green at 560 unit tests. Three
+items remain and are listed at the end of this entry; none of them blocks A06.
+
+**A04 — the catalog gets three states, and the launch switch becomes real.**
+SPEC-A04 says to map مسودة/منشورة/موقوفة onto the real schema before building.
+It did not exist: `services` carried one boolean, `is_active`, TRUE on all 26
+rows. `status` (draft | published | suspended) is now THE dial, and `is_active`
+is **GENERATED from it** rather than kept beside it — four proven predicates
+read that column, and two facts that must agree but are maintained separately is
+the most repeated mistake in this schema. Proven unwritable, aimed at a real row
+holding the value it already had: `ERROR 428C9: column "is_active" can only be
+updated to DEFAULT`.
+
+**Two holes the spec did not know about, both closed:**
+
+1. **⚠ THE LAUNCH SWITCH WAS A DISPLAY FILTER.** `create_pending_booking`
+   checked `services.is_active` and **not** `service_categories.is_active`.
+   Search filtered on the category flag, the branch profile filtered on it,
+   booking creation did not — so flipping a category off hid it everywhere and
+   still let a client holding a `branch_service` id it had cached seconds
+   earlier book it. DECISION-provider-data-model calls that flag "THE launch
+   switch"; it now gates the booking. **Proven both ways on dev**: category ON,
+   a real patient booking succeeded (`IH-2026-52316`, 175 EGP); category OFF,
+   the identical call returned `service_unavailable`.
+2. **⚠ A NEW SERVICE COULD NEVER BE PRICED, BY ANYBODY, EVER.**
+   `admin_create_service` makes a draft; the frame then shows its per-branch
+   price table and the publish confirm counts the priced branches. But
+   `update_branch_service` (P03) takes an existing `branch_services` id and has
+   no insert path, nothing else wrote the table, and `price` was NOT NULL — so
+   "offered but not yet priced" could not even be **represented**. The catalog's
+   primary action dead-ended at «٢٤ فرعاً بلا سعر».
+   The design already knew: its audit panel draws a price change as
+   «من — إلى ١٨٠ ج.م», an em-dash for the old price. That is a NULL. `price` is
+   now nullable and means exactly that, creating a service creates the offering
+   row at every live branch, and «بلا سعر» is a state instead of a caption.
+   Every predicate that reads a price excludes the NULL — **twice** in
+   `create_pending_booking`, because a NULL in that SUM makes `total_amount`
+   NULL and migration 20260729160519 exists to keep that number true.
+
+**A05 — staff accounts.** `name`, `must_change_password` and
+`temp_password_issued_at` are new on `provider_users`; email and «آخر دخول» are
+deliberately **not** — they are `auth.users.email` and `last_sign_in_at`, read
+through a definer function, because copying an identity into a second table is
+how the two drift. That read is also what makes «لم يُستخدم بعد» a fact rather
+than an inference. The writers are an Edge Function
+(`admin-staff-accounts`) because every action has one half in GoTrue and one in
+Postgres, and a function that can only do the Postgres half leaves accounts
+whose halves disagree.
+
+**⚠ The session kill was wrong first, and the wrong version looked right.** The
+confirm promises «يقطع الدخول في نفس اللحظة». `signOut()` wants the target's own
+access token, so the trick that suggests itself is a ban/unban round trip — and
+it does nothing: GoTrue's ban sets `banned_until` and deletes no sessions, and
+the refresh endpoint re-reads that column, so unbanning a second later hands
+every live session back. Applied after the disable's permanent ban it **lifts
+the ban**. A session ends when its row stops existing:
+`admin_revoke_provider_sessions` deletes from `auth.sessions` (proven: 34 rows
+deleted, then rolled back). What it still cannot do — A01's finding, restated —
+is reach a stateless access token already issued; immediate lockout is kept by
+`is_active`, which `getProviderContext()` re-reads on every render.
+
+**Policy closures — four more. Ten of A01's eleven are now closed.**
+`services` and `service_categories` replaced by the writers; `provider_users`
+replaced by the Edge Function; **`branch_services` dropped with no replacement**
+— and that is the one that mattered, because PRICE, the single field this
+feature deliberately does not let the admin write
+(«يُسعِّرها الشريك — قراءة فقط»), was writable from an admin's browser the whole
+time. Verified there are no client writes to any of the four anywhere in
+`apps/`, `packages/` or `supabase/functions/`.
+Remaining: `users`, **`notifications`** (⚠ not in the five the A03 hand-off
+named — A03's own closing note listed it and the hand-off dropped it), and the
+`reviews` moderation gap that F08 decides.
+
+**Verification (Tier 1): 51/51 assertions passed against the live dev DB** —
+34 for the catalog and staff data layers, 2 for the unpriced-booking guard, and
+15 for the linking ruling and the eleventh policy closure — all inside
+transactions that were rolled back, with callers impersonated the way
+PostgREST does it (`request.jwt.claims` + `set local role`). Residue re-checked
+afterwards from outside the transaction: 26 services, 486 branch_services, 0
+audit rows, provider flag back to false — nothing left behind. Included: the
+category flip both ways, publish/suspend against `search_catalog`, preview
+numbers == applied effect, the transition table's refusals, the 72-hour temp
+rule, the partner password-change audit row, the disable preview's counts
+against a hand-computed control, and **8 authorization denials all raising
+42501**.
+
+**Judgement calls, spec/design deviations — all deliberate:**
+
+- **The category flip has no design frame — RULED 2026-08-10: compose it** from
+  the established consequential-confirm anatomy, sanctioned under the
+  component-contract exception as the sixth instance of a settled pattern, no
+  design round-trip. Required content per the ruling: the category name; the
+  network-wide effect **in numbers from `preview_category_activation`** (N
+  published services across M providers become patient-visible and bookable at
+  once); the caveat that unpriced or unpublished services inside it still will
+  not appear; the deactivation direction stating the reverse (hides
+  network-wide, standing bookings still served); an understanding checkbox
+  naming the go-live — «أفهم أن هذا يفتح التصنيف للمرضى في كل الشبكة»; and its
+  own audit action label (`category_activated` / `category_deactivated`, already
+  written by the writer).
+- **«مدة الزيارة التقديرية» (estimated visit duration) is drawn and not built.**
+  There is no column and no consumer, and the spec's own writer field list omits
+  it. Flagged rather than invented.
+- **`services.code` is nullable and the 26 seeded services have none.** Codes
+  are required on new services; inventing 26 codes for real lab tests would be
+  fabricated data in a table the founder reads as truth.
+- **«موعد ظهور النتيجة» maps to the existing `default_tat_hours`**, not to the
+  free-text the frame draws — curation is the safer control, the same lesson
+  A03 learned with its date picker.
+- **The un-actionable «بلا سعر» rows — RULED 2026-08-10 and CLOSED** (migration
+  `20260810151717`). No 624-pair backfill; linking is an explicit admin act
+  («أضف فرعاً» → `admin_link_service_to_branch`, creating the row unpriced and
+  hidden). The price table now lists only LINKED branches and the unlinked ones
+  become the picker's contents, so every «بلا سعر» row on screen is one a partner
+  can act on. Ownership: **definition = admin, link = admin, price = partner.**
+  No unlink in v1. Full detail in Known risks.
+- **The nudge channel order is driven by measured data, not preference.** Of 24
+  branches, ONE has a WhatsApp number and NONE has a mobile — every
+  `branches.phone` is a Cairo landline, which wa.me cannot open. A
+  WhatsApp-first affordance would have rendered on one row in twenty-four. So
+  email leads, and the address is the branch's own **staff account** — which is
+  why these two features belong in one PR: before A05 there was no address.
+- **`complete_provider_password_change()` trusts the client called
+  `auth.updateUser({password})` first**, exactly as its A01 sibling does.
+  Postgres cannot see a GoTrue password change. The exposure is an
+  already-authenticated staff member keeping their own temp password; the
+  72-hour rule is unaffected because it reads the same flag.
+- **`takesIdentityParameter: true` on three new functions is expected.**
+  `admin_revoke_provider_sessions`, `get_provider_staff_detail` and
+  `preview_staff_disable` take a **`provider_users` id**, not an auth user id —
+  the auth id is looked up from it, so no argument they accept could name the
+  founder's account or a patient's. The flag is a uuid-shaped heuristic and
+  these are the false positives it is expected to produce.
+
+**⚠ WHAT REMAINS — three items, none blocking A06:**
+
+1. **⚠ FIDELITY SCREENSHOTS WERE NOT CAPTURED.** §9 is explicit that reading
+   markup is not seeing a screen, and P01 shipped a dashboard that looked
+   plausible in an accessibility tree and was visibly wrong the moment the
+   founder opened it. **Nothing in this feature claims visual fidelity.** The
+   Playwright paths prove the screens render real server data and that the
+   acknowledgment checkbox genuinely gates its CTA; they prove nothing about
+   how any of it LOOKS. Add captures to `apps/web/e2e/fidelity.spec.ts` at
+   1366×768 and read them — A03 found two defects that way that were invisible
+   in markup, types and passing E2E.
+2. **⚠ The `admin-staff-accounts` Edge Function's GoTrue half is UNPROVEN.**
+   Its Postgres half is covered by the 51/51 run, but `createUser`, the ban and
+   the compensating `deleteUser` on a failed insert have never executed — they
+   cannot be rolled back, so a transaction-based probe could not reach them.
+   Needs a real admin JWT and an explicit cleanup step. **Do this before
+   anyone creates a real partner account.**
+3. **`apps/web` still has ZERO unit tests** (see Known risks). The Tier 2
+   bargain is component tests + one Playwright path + batched manual, and on
+   web the first term has nothing behind it. A04/A05 shipped on the Playwright
+   path alone, which is a deliberate, recorded gap rather than an oversight.
+
+**⚠ MANUAL, BATCHED — owed at the next weekly check:** suspend a service on dev
+and confirm the phone hides it; create a staff account and log into the partner
+portal through the temp-password flow end to end. Both are in SPEC-A04-A05.
+
+**HAND-OFF TO A06 + A07.** Everything they were promised is now real data:
+A06 (oversight) consumes A02's computation functions and the عمولة متوقعة chip
+rules. A07 (overview) gets the alert states A05 made detectable — a branch with
+zero active accounts is `preview_staff_disable.isLastActiveAccount`, and a
+published service nobody has priced is `service_branch_pricing.unpricedCount`.
+⚠ And A06 owns the LAST placeholder surface: الحجوزات. The admin.spec assertion
+that guards «قريباً» chips now points at it, so building it will fail that test
+— move the assertion, do not delete it.
+
+### 2026-08-10 · A03 — Providers, branches & the commission-rate editor (web, admin)
+
+⚠ **Reconstructed 2026-08-10 from PRs #50 and #52 — A03 shipped in two PRs and
+NEITHER updated this file.** There was no A03 entry and no A03 hand-off, which
+is why the A04/A05 session began by reading merge commits. CLAUDE.md §10 says
+PROGRESS is updated in the same PR; both A03 PRs missed it.
+
+- **#50 (data layer):** `provider_profile_history` (the table SPEC-A03 assumed
+  existed and did not), `set_provider_commission_rate` with a strictly-FUTURE
+  effective date enforced server-side, `admin_update_provider`,
+  `admin_update_branch`, the slot-shaping preview/apply pair, and
+  `preview_provider_deactivation`. Closed three admin `ALL` policies —
+  `branches`, `providers`, `slots`.
+- **#52 (screens):** the providers & branches list, provider detail, and the
+  rate editor with the consequential-confirm anatomy and its required written
+  acknowledgment.
+- **Two defects were caught by READING THE SCREENSHOT**, invisible in markup and
+  types: an `<input type="date">` rendering `mm/dd/yyyy` inside an Arabic RTL
+  panel (now a curated select of future dates), and the backfilled rate rows'
+  English internal note rendering as raw debris in the founder's panel (now the
+  Arabic launch-blocker warning).
+- **Still open from A03:** branch detail with the regeneration dialog, and the
+  creation forms. Their RPCs exist and are proven; only the screens are missing.
 
 ### 2026-08-09 · A02 — Commission & invoicing statement (web, admin)
 
@@ -698,6 +912,29 @@ exactly when something looks arbitrary.
   | `branches`                                                                                                   | ⚠ set `rating`, `review_count`, `instahealth_slot_allocation`                                             |
   | `providers`, `services`, `service_categories`, `provider_users`, `notifications`, `branch_services`, `users` | full row access (several legitimate — A03/A04/A05 need them)                                              |
 
+  **✅ Status 2026-08-10: ELEVEN OF ELEVEN CLOSED.** A02 took `bookings` +
+  `payments`; A03 took `branches`, `providers`, `slots`; A04 took `services`,
+  `service_categories` and `branch_services`; A05 took `provider_users`; and the
+  founder's ruling closed **`notifications`** in the same PR (migration
+  `20260810151717`) — ⚠ it had been omitted from the five the A03 hand-off
+  listed even though A03's own closing note named it.
+
+  ⚠ **The arithmetic is not "eleven policies dropped".** Ten were dropped or
+  replaced by writers. The eleventh, **`users`, still HAS its admin `ALL` policy
+  and is nonetheless closed**: its GRANT was narrowed to 2 insertable and 6
+  updatable columns on 2026-08-03, and **the grant is a ceiling a policy can
+  never raise**. So the count means: every one of A01's eleven column-blind admin
+  write surfaces is shut — nine by deleting the door, one by replacing it with a
+  writer, one by shrinking it.
+
+  `notifications` turned out to carry the **widest grant left in the schema** —
+  INSERT and UPDATE on all 11 columns to `authenticated` **and to `anon`**,
+  where `users` had none for anon at all. No policy was anon-satisfiable, so it
+  was not reachable, but it was one permissive policy away from being. Both the
+  policy and the write grants are now gone; admin reads survive via
+  «notifications: user sees own». Proven against a real row:
+  `42501 permission denied for table notifications`.
+
   **Why so wide:** every table except `users` still carries BLANKET all-column
   INSERT+UPDATE grants to `anon`+`authenticated`, so the RLS policy is the only
   gate. `users` is narrowed only because REFACTOR 2/N happened to do it.
@@ -710,6 +947,99 @@ exactly when something looks arbitrary.
   silently fix); the per-table answer is what the admin panel legitimately needs
   to write, which is A02–A06's scope. Close them the writer-function way.
 
+- ✅ ~~THE CATEGORY FLAG ENFORCED NOTHING ON BOOKING CREATION~~ — **FOUND AND
+  CLOSED 2026-08-10, BEFORE ANY REAL PATIENT EXISTED** (migration
+  `20260810140157`). The **sixth** instance of the §5 family — a fact the client
+  was allowed to assert because the guard that should have caught it was
+  somewhere else entirely. Described in full because it is FIXED and verified;
+  an open hole would not be (see the disclosure entry below).
+
+  `create_pending_booking` checked `services.is_active` and **not**
+  `service_categories.is_active`. Search filtered on the category flag
+  (`search_catalog`), the branch profile filtered on it
+  (`apps/mobile/features/branch/queries.ts`), and the one consumer that can take
+  money did not. So `service_categories.is_active` — which
+  DECISION-provider-data-model calls **THE launch switch**, and which the whole
+  "onboard the full menu, surface only active categories" model rests on — was a
+  **display filter only**. Flipping a category off hid it from every screen and
+  did not stop a booking: a client holding a `branch_service` id the app had
+  cached seconds earlier still booked it, and the desk would have seen a real
+  confirmed appointment for a category we had deliberately not launched.
+
+  Reachable with real data, not hypothetically: all six `scans` services have
+  live `branch_services` rows today.
+
+  **Proven both ways on dev before and after the fix**, which is now the standard
+  for this family — one direction only proves that something else was already
+  refusing it:
+
+  | category | `create_pending_booking`                             |
+  | -------- | ---------------------------------------------------- |
+  | ON       | success — real booking `IH-2026-52316`, 175 EGP      |
+  | OFF      | `{"success": false, "error": "service_unavailable"}` |
+
+  **Not exploited** — the only bookings are ours, and every category with any
+  service in it (labs, scans) is deliberately live. The exposure was the model's
+  central promise, not a live loss.
+
+  **The durable lesson is now a convention, not a memory:**
+  ENGINEERING-WORKFLOW **§5a①** requires any PR touching an availability or
+  state dial to ship a **predicate-parity table** enumerating every consumer —
+  search, discovery, branch profile, booking creation, settlement, the partner's
+  editor, the admin's reads — with per-consumer proof. Nobody had lied here;
+  everybody had checked "the" predicate, and there were five of them. **A dial
+  with N consumers is N predicates until proven otherwise.**
+
+- ✅ ~~AN EXISTING SERVICE CANNOT BE PRICED AT A BRANCH THAT HAS NO ROW FOR IT~~
+  — **CLOSED 2026-08-10 by founder ruling** (migration `20260810151717`). Opened
+  by A04 earlier the same day, which made «بلا سعر» a real state and so made the
+  gap visible: 486 of the 26 × 24 pairs existed, and the missing ones rendered as
+  «بلا سعر» rows the partner could not act on, because there was nothing in their
+  editor to price.
+
+  **Ruled: no 624-pair backfill.** Backfilling would assert that every branch
+  offers every service, which is false — a lab-only branch does not do scans —
+  and it is a commercial claim, not a data fix. Instead **linking is an explicit
+  ADMIN act**: «أضف فرعاً» on the service detail's price table calls
+  `admin_link_service_to_branch`, which creates the pairing row **unpriced and
+  hidden**, landing directly in the drawn «بلا سعر — لن تظهر» state with its
+  nudge; the partner then prices it via P03 to surface it. Audited with its own
+  action label, idempotent, admin-gated. **No unlink in v1** — partners toggle
+  availability, the admin suspends services, removal is v2.
+
+  **The ownership map, settled for the record:**
+  **definition = admin · link = admin** (an onboarding act,
+  DECISION-provider-data-model §2) **· price = partner.**
+
+  ⚠ It also changed what the price table MEANS, and that was the point rather
+  than a side effect: `service_branch_pricing` now INNER-joins, so the table
+  lists only LINKED branches and the unlinked ones become the picker's contents.
+  A linked-but-unpriced row is actionable; an unlinked branch was never an
+  offering at all, and showing the two identically is what made half of them
+  un-actionable in the first place. **Every «بلا سعر» row on the screen is now
+  one a partner can act on.** 15/15 Node assertions.
+
+- **⚠ `apps/web` HAS ZERO UNIT TESTS, and the gate reports it as a pass.** Found
+  2026-08-10 while reading the A04/A05 CI counts rather than the checkmarks. The
+  web workspace runs `vitest run --passWithNoTests` and prints
+  «No test files found, exiting with code 0», so «test:unit 560 passed» contains
+  **no web coverage at all** — the 560 are core (447), mobile (88) and
+  design-tokens (25). Every web-side assertion this project has comes from the
+  62 Playwright E2E tests.
+  That is exactly the shape CLAUDE.md §9 asks for and does not have: «Components
+  — test behavior, not implementation. React Testing Library (web)». It matters
+  now because A04/A05's screens are the next thing built, and the CHECKLIST's
+  Tier 2 bargain (component tests + ONE Playwright happy path + batched manual)
+  currently has nothing behind its first term on web.
+  ⚠ Also noted: turbo reports «Running test:unit in 5 packages» but
+  «Tasks: 4 successful, 4 total» — `@instahealth/config` has no `test:unit`
+  script and silently contributes nothing. Harmless, but it makes the package
+  count in the summary line untrustworthy.
+- **⚠ The `admin-staff-accounts` Edge Function's GoTrue half is UNPROVEN.** Its
+  Postgres half is covered by the 34/34 Tier 1 run, but `createUser`, the ban,
+  and the compensating `deleteUser` on a failed insert have never executed. They
+  cannot be rolled back, so proving them needs a real admin JWT and an explicit
+  cleanup step. **Do this before anyone creates a real partner account.**
 - **⚠ `reviews` has NO admin write policy at all** — only a SELECT escape hatch
   on "public read unflagged". So an admin can READ a flagged review and cannot
   un-flag it: moderation has no path. Unreachable BY ACCIDENT rather than by

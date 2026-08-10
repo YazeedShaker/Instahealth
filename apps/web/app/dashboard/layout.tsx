@@ -16,6 +16,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   if (lookup.kind === 'signedOut') redirect('/login')
   if (lookup.kind === 'notProvider') redirect('/login?rejected=1')
+  // ⚠ A05 — THE GATE IS THE ENFORCEMENT, not the login action. A session can
+  // reach here without passing through sign-in: a cookie held from before the
+  // admin regenerated the temp password, or a tab left open. Checking only at
+  // login would let both straight in.
+  if (lookup.kind === 'tempPasswordExpired') redirect('/login?temp=expired')
+  if (lookup.kind === 'needsPasswordChange') redirect('/login/change-password')
 
   return (
     <>

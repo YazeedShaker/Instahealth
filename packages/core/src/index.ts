@@ -28,6 +28,7 @@ export * from './business/branch-profile'
 export * from './business/search'
 export * from './business/commission-statement'
 export * from './business/sms'
+export * from './business/catalog'
 
 // Schemas
 export * from './schemas/messages'
