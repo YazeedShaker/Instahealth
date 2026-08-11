@@ -1169,11 +1169,16 @@ exactly when something looks arbitrary.
   «Tasks: 4 successful, 4 total» — `@instahealth/config` has no `test:unit`
   script and silently contributes nothing. Harmless, but it makes the package
   count in the summary line untrustworthy.
-- **⚠ The `admin-staff-accounts` Edge Function's GoTrue half is UNPROVEN.** Its
-  Postgres half is covered by the 34/34 Tier 1 run, but `createUser`, the ban,
-  and the compensating `deleteUser` on a failed insert have never executed. They
-  cannot be rolled back, so proving them needs a real admin JWT and an explicit
-  cleanup step. **Do this before anyone creates a real partner account.**
+- ✅ ~~The `admin-staff-accounts` Edge Function's GoTrue half is UNPROVEN~~ —
+  **PROVEN 2026-08-11, 19/19 end-to-end against dev** (`scripts/verify-gotrue-lifecycle.mjs`).
+  It creates a REAL account, drives the whole lifecycle through the real HTTP
+  endpoint, and deletes it in a `finally` that runs even on failure —
+  «the test account is GONE — no residue». Proven: both halves written together ·
+  the forced change fires · a 73h-old temp reported expired against a backdated
+  fixture · regenerate invalidates the old · disable returns «User is banned» ·
+  a duplicate is refused 409 · a PROVIDER session is refused 403 by the function
+  itself. ⚠ NOT in CI — it writes to a shared dev auth server. **Re-run it before
+  creating a real partner account.**
 - **⚠ `reviews` has NO admin write policy at all** — only a SELECT escape hatch
   on "public read unflagged". So an admin can READ a flagged review and cannot
   un-flag it: moderation has no path. Unreachable BY ACCIDENT rather than by
