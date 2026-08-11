@@ -38,7 +38,7 @@ Those three are the reason this file is read.
 
 ## Current status
 
-**Phase:** 🎉 **MILESTONE ONE — the loop is closed.** Patient books on mobile (F01→F07) → the branch desk sees it, records the outcome, opens the detail drawer, cancels on the patient's behalf, manages its own prices, reads its slot picture and maintains its own contact details (P01–P05 — every sidebar surface is live). The four shipped identity/money holes are all closed and the repo passed a full-history secret audit (2026-08-01). **V1 collects no money — cash at the branch** (2026-08-04 partner-trust decision), which retires the "payments are simulated" launch blocker outright. **A01 opened the admin portal** (2026-08-08): the founder's account exists, TOTP
+**Phase:** 🎉 **THE ADMIN PORTAL IS COMPLETE (2026-08-10)** — A01→A07 all shipped, every sidebar surface live, eleven of eleven admin write policies closed. Before that: **MILESTONE ONE — the loop is closed.** Patient books on mobile (F01→F07) → the branch desk sees it, records the outcome, opens the detail drawer, cancels on the patient's behalf, manages its own prices, reads its slot picture and maintains its own contact details (P01–P05 — every sidebar surface is live). The four shipped identity/money holes are all closed and the repo passed a full-history secret audit (2026-08-01). **V1 collects no money — cash at the branch** (2026-08-04 partner-trust decision), which retires the "payments are simulated" launch blocker outright. **A01 opened the admin portal** (2026-08-08): the founder's account exists, TOTP
 is live, and `/admin` is gated four ways. **A02 shipped the commission statement**
 (2026-08-09) — the founder can issue, send and settle a partner's monthly
 invoice, and the two money policies A01 flagged are closed. **A03 shipped the
@@ -115,11 +115,8 @@ visual contract. Then specs → Claude Code.
       closed.** Three follow-ups in the Shipped entry — fidelity screenshots (not
       captured), the Edge Function's GoTrue half (unproven), and web component
       tests (none exist).
-- [ ] **A06–A07** — Web: oversight + overview. A06 consumes A02's computation
-      functions and the عمولة متوقعة chip rules; A07's alert states are now real
-      data — **a branch with zero active accounts is detectable**
-      (`preview_staff_disable.isLastActiveAccount`), and so is a published
-      service nobody has priced (`service_branch_pricing.unpricedCount`).
+- [x] **A06 + A07** — ✅ DONE. Web: bookings oversight + ops overview (PR #56).
+      **🎉 The admin portal is COMPLETE** — no placeholder surface remains.
 - [ ] **006_practitioners.sql + doctor booking** — after labs/scans proven
 
 **First milestone:** patient books on mobile at Town/Saridar → pays → gets SMS + confirmation →
@@ -128,6 +125,71 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 ---
 
 ## Shipped
+
+### 2026-08-10 · A06 + A07 — Bookings oversight & the ops overview (web, admin)
+
+**🎉 THE ADMIN PORTAL IS COMPLETE.** Every sidebar surface is live; there is no
+`ComingSoonSurface` left anywhere in `/admin`. PR #56. 19/19 Node
+assertions on live dev, gate green at 560 unit tests.
+
+**⚠ THE SPEC ASKED FOR A WRITER THE DATABASE ALREADY HAD.** SPEC-A06 wants an
+admin cancel "per the standing pattern (NOT a loosening of the patient or
+provider paths)". Verified first, per §1.3: `cancel_booking` **already
+supported it correctly** — it computes `v_is_admin`, permits the
+`'admin'` discriminator only to a caller that actually holds that capacity
+(VERIFIED, not trusted — the §5 fix landed in 20260728120808), releases the slot
+and records `cancelled_by`. A second full writer would have been a SECOND
+DOOR to one transition, which is what A04's `admin_update_service` refuses
+to be.
+
+So `admin_cancel_booking` DELEGATES the state change and adds only what
+the admin path owes and the shared function cannot know:
+
+- **⚠ THE BOUNDARY.** `cancel_booking` applies the before-slot-start rule
+  to the PATIENT ALONE (`IF v_is_owner AND NOT v_is_privileged`) —
+  reception must be able to close out a past booking. The spec says the admin
+  path carries it too, so it is enforced ABOVE the delegate. **A tightening, not
+  a loosening.** Proven: a past-slot booking returns `slot_started`.
+- A **required, enumerated** reason — prose cannot be counted in aggregate — and
+  «other» without a note is refused, because a shrug is not a reason.
+- An audit row (`admin_booking_history`) naming the admin. Internal; the
+  frame is explicit that it never reaches the patient.
+
+**The money block has ZERO drawer-local math.** `booking_commission_view`
+calls A02's own `commission_rate_at` and `commission_piasters` —
+internal-only functions, reachable because a DEFINER body runs as the owner,
+which is the whole reason it is a function and not a client calculation. Proven
+the drawer's figure EQUALS an independently computed control (3000 piasters at
+12%), and the chip rules proven as a matrix from real rows: completed → actual,
+confirmed/arrived → expected, cancelled/no_show → **absent**. The event date is
+when the booking was TAKEN (20260809183734), so the rate is the one in force
+then, not today's.
+
+**A07's detectors answer BOTH directions.** The staleness detector reads
+`cron.job_run_details`, which no client can read — the only place the
+answer exists. ⚠ PROGRESS once called this cron "unscheduled" for nine days
+while the database said otherwise; the claim is now self-checking. Proven quiet
+against the healthy job, and the zero-staff detector proven to FIRE on a seeded
+broken branch and to release that branch once healthy.
+
+**⚠ AND IT FOUND A REAL ONE IMMEDIATELY: 22 of 24 active branches have no staff
+account at all.** The alert is CORRECT, not noise — it is exactly the condition
+A07 exists to surface, and A05 is what made it detectable. See Known risks.
+
+«شغّل التوليد الآن» REUSES the nightly job's exact body, read from
+`cron.job` rather than reimplemented. It is the ONLY alert action that
+mutates; every other links to the screen that owns the problem, because an alert
+panel that can change six things is a second, undocumented admin surface.
+
+**Two deliberate absences on the drawer, asserted in E2E as absences:** no
+«تسجيل الوصول» (arrival is a fact only the desk can witness — the two-portal
+authority model), and no reschedule. The money block is admin-only.
+
+**⚠ STILL NOT DONE — the standing gap, unchanged:** fidelity screenshots were
+not captured for these screens either. The Playwright paths prove they render
+real server data and that the absences hold; they prove nothing about how any of
+it looks. The A04 «الرمز» misalignment the founder caught on the deployed
+preview is what that gap costs.
 
 ### 2026-08-10 · A04 + A05 (data layer) — Service catalog & provider staff accounts
 
@@ -1019,6 +1081,15 @@ exactly when something looks arbitrary.
   un-actionable in the first place. **Every «بلا سعر» row on the screen is now
   one a partner can act on.** 15/15 Node assertions.
 
+- **⚠ 22 OF 24 ACTIVE BRANCHES HAVE NO STAFF ACCOUNT.** Surfaced by A07's
+  zero-staff detector the first time it ran (2026-08-10) — not a bug, a real
+  operational fact that was simply invisible before. Only Town's التجمع الخامس
+  and Saridar's الدقي have provider_users rows; the other 22 are live, bookable,
+  and nobody can open the partner portal for them. Today it costs nothing
+  because those branches have no bookings, but **it must be closed before any
+  real patient books at them** — a booking arriving at a branch with no account
+  is a patient turning up to a desk that never saw them. Create the accounts via
+  A05's «+ حساب جديد».
 - **⚠ `apps/web` HAS ZERO UNIT TESTS, and the gate reports it as a pass.** Found
   2026-08-10 while reading the A04/A05 CI counts rather than the checkmarks. The
   web workspace runs `vitest run --passWithNoTests` and prints
