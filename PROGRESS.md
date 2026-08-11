@@ -124,6 +124,68 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 
 ---
 
+## 🎉 The admin portal — closing note (2026-08-10)
+
+**A01→A07 are all shipped. There is no placeholder surface left in `/admin`.**
+The software side of "run the marketplace" is done pending F08.
+
+### The surface map
+
+| screen             | route                | what it owns                                                                  |
+| ------------------ | -------------------- | ----------------------------------------------------------------------------- |
+| نظرة عامة          | `/admin/overview`    | health detectors, today's cards, the one action that mutates (توليد المواعيد) |
+| التحليلات          | `/admin/analytics`   | the five approved questions (stub by design, DESIGN-04 post-pilot)            |
+| العمولات والفواتير | `/admin/commissions` | the statement: issue → send → settle, and its exports                         |
+| المزودون والفروع   | `/admin/providers`   | providers, branches, slot shaping, **the commission-rate editor**             |
+| كتالوج الخدمات     | `/admin/catalog`     | service definitions, the three states, category launch, branch linking        |
+| حسابات المزودين    | `/admin/staff`       | who may open the partner portal, and the temp-password lifecycle              |
+| الحجوزات           | `/admin/bookings`    | network-wide oversight, the money block, admin cancel                         |
+
+### Who may write what
+
+**Eleven of eleven of A01's column-blind admin write policies are closed.** Nine
+were dropped, one (`provider_users`) replaced by an Edge Function, and one
+(`users`) closed by narrowing its GRANT — a grant is a ceiling a policy
+can never raise. Every admin write is now a SECURITY DEFINER function that
+derives its values server-side and writes an audit row.
+`supabase/authorization-surface.json` is the answer to "who may write
+this?", and CI fails on drift.
+
+### The runbooks
+
+- `docs/runbooks/RUNBOOK-admin-account.md` — the admin account has no
+  self-service password reset and no admin-management UI **by design**; the
+  runbook is the other half of that decision.
+- Monthly invoicing procedure: A02's statement lifecycle (issue → send →
+  settle), with ⚠ the commission rate entered via A03 first.
+
+### ⚠ What is NOT done, portal-wide
+
+1. **Fidelity screenshots were never captured for A04, A05, A06 or A07.** The
+   founder caught an RTL misalignment on the deployed preview that a capture
+   would have found; that is what the gap costs, and it is still open.
+2. **The `admin-staff-accounts` Edge Function's GoTrue half is unproven** —
+   `createUser`, the ban, the compensating delete. Before a real partner
+   account exists.
+3. **`apps/web` has zero unit tests.** Every web assertion is Playwright.
+4. **22 of 24 active branches have no staff account** (A07 surfaced it).
+5. **⚠ LAUNCH BLOCKER, unchanged: commission rates are still the placeholder
+   12%.** The A03 editor exists. Enter the signed values before any real
+   statement.
+
+### The board
+
+**F08 (reviews — submission + display) is the last feature spec.** It also owns
+the `reviews` moderation gap: an admin can read a flagged review and
+cannot un-flag it, because `reviews` has no admin write policy at all —
+unreachable by accident rather than by design.
+Then: the P05 fidelity + card fix, EAS publish + the auto-publish job, and
+pilot-prep. Founder items (LICENSE/IP, the privacy-policy + terms URLs that
+block store submission, the patient support contact) are unchanged and are not
+engineering tasks.
+
+---
+
 ## Shipped
 
 ### 2026-08-10 · A06 + A07 — Bookings oversight & the ops overview (web, admin)
