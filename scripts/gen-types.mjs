@@ -49,7 +49,20 @@ if (output.length < MIN_BYTES || !REQUIRED_MARKERS.every((marker) => output.incl
   process.exit(1)
 }
 
-const previous = fs.existsSync(TARGET) ? fs.readFileSync(TARGET, 'utf8') : ''
+// ⚠ READ, DON'T ASK-THEN-READ. `existsSync()` followed by `readFileSync()` is a
+// time-of-check/time-of-use race: the file can vanish between the two calls and
+// the read throws. CodeQL has flagged it as `js/file-system-race` since
+// 2026-07-29; it surfaced as a PR blocker the first time an unrelated change
+// added another file under `scripts/`, which pulled the directory into the
+// pull request's diff scope. Fixed rather than dismissed — one read, and a
+// missing file is simply "no previous content".
+let previous = ''
+try {
+  previous = fs.readFileSync(TARGET, 'utf8')
+} catch {
+  // No previous file, or it disappeared mid-run. Either way there is nothing to
+  // compare against, and the write below is still correct.
+}
 fs.writeFileSync(TARGET, output)
 console.log(
   previous === output
