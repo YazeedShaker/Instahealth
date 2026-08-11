@@ -156,8 +156,9 @@ this?", and CI fails on drift.
 - `docs/runbooks/RUNBOOK-admin-account.md` — the admin account has no
   self-service password reset and no admin-management UI **by design**; the
   runbook is the other half of that decision.
-- Monthly invoicing procedure: A02's statement lifecycle (issue → send →
-  settle), with ⚠ the commission rate entered via A03 first.
+- `docs/runbooks/RUNBOOK-monthly-invoicing.md` — the monthly procedure over
+  A02's statement lifecycle (issue → send → settle). ⚠ It assumes the commission
+  rate is correct; entering the signed value via A03 comes FIRST.
 
 ### ⚠ What is NOT done, portal-wide
 
