@@ -127,7 +127,20 @@ export const CARD = {
   borderWidth: 1,
   borderColor: 'border.base',
   padding: 20, // 1.25rem
-  background: 'surface.base',
+  // ⚠ `surface`, NOT `surface.base`. resolveTokenCss kebab-joins the ref, so
+  // 'surface.base' asked for `var(--ih-surface-base)` — A VARIABLE THAT DOES NOT
+  // EXIST. tokens.css defines `--ih-surface`. An undefined CSS variable with no
+  // fallback is not an error: the declaration is simply dropped, so every base
+  // Card painted TRANSPARENT and showed the page's `--ih-neutral-100` grey
+  // instead of white. Measured against the real stylesheet:
+  //   var(--ih-surface-base)   → rgba(0, 0, 0, 0)   raw: ""
+  //   var(--ih-surface-raised) → rgb(255, 255, 255) raw: "#fff"
+  //   var(--ih-surface)        → rgb(255, 255, 255) raw: "#fff"
+  // `raised` was spelled correctly, which is exactly why this stayed subtle —
+  // half the cards were right. This is the P05 "card background doesn't match
+  // the bundle" finding, and it was never a P05 bug: it is EVERY base Card in
+  // both portals.
+  background: 'surface',
   raisedBackground: 'surface.raised',
   shadow: 'shadow.card',
   raisedShadow: 'shadow.raised',
