@@ -124,6 +124,42 @@ receptionist sees it on web dashboard and confirms. Closed loop = model proven.
 
 ---
 
+## Hardening — 2026-08-11
+
+**⚠ THE FIDELITY DEBT IS ONLY PARTLY PAID, and the honest position is that the
+screenshot batch is STILL OWED.** What this pass did produce is the defect that
+batch existed to find, and it turned out bigger than the finding that prompted it:
+
+- ✅ **Every base `<Card>` in BOTH portals painted TRANSPARENT.**
+  `CARD.background` was `'surface.base'`, and `resolveTokenCss`
+  kebab-joins a ref — so it asked for `var(--ih-surface-base)`, **a variable
+  that does not exist**. tokens.css defines `--ih-surface`. An undefined CSS
+  variable with no fallback is not an error: the declaration is silently DROPPED,
+  so the card painted transparent and showed the page's `--ih-neutral-100`
+  grey where the bundle draws `--ih-neutral-0` white.
+  ⚠ `'surface.raised'` was spelled CORRECTLY, which is exactly why this
+  survived — half the cards were right, so it read as a shade being slightly off
+  rather than a background missing entirely. Carried for weeks as "the P05
+  card-background finding"; it was never a P05 bug. Fixed in the CONTRACT, one
+  line. Measured rather than reasoned about:
+  `var(--ih-surface-base)` → `rgba(0, 0, 0, 0)`, raw value `""`.
+- ✅ **The GoTrue half of `admin-staff-accounts` is PROVEN** — 19/19
+  end-to-end against dev, `scripts/verify-gotrue-lifecycle.mjs`.
+
+**⚠ STILL OWED: the A04–A07 side-by-side screenshot set.** The admin captures
+need a TOTP login the fidelity harness has never done — real work, and it was
+not finished here. Two defects have now been found in these screens BY LOOKING
+(the «الرمز» RTL anchor, and this Card background) and ZERO by reading markup.
+That is the argument for finishing the batch, not evidence it can be skipped.
+
+**⚠ THE STANDING RULE, restated because a batch like this could be misread as
+licence:** fidelity capture is **per-PR**, at the moment the screen is built.
+This batch is the exception that pays down a convention four sessions skipped —
+**it is not a new pattern.** A PR claiming fidelity ships its comparison
+screenshots (§9).
+
+---
+
 ## 🎉 The admin portal — closing note (2026-08-10)
 
 **A01→A07 are all shipped. There is no placeholder surface left in `/admin`.**
