@@ -1030,3 +1030,14 @@ category flip enforcing nothing on the one consumer that takes money._
   captured» recorded as a known gap, and this is the exact defect that gap let
   through. The founder found it on the deployed preview. §9's opening sentence
   is not decorative.
+
+- **⚠ A `'use server'` MODULE MAY EXPORT ONLY ASYNC FUNCTIONS — a `const` from
+  one compiles, typechecks, lints, and then renders NOTHING.** A05/A06 put the
+  cancel-reason list beside the action that validates it, which reads as good
+  cohesion and is invalid: importing a non-function export from a server-actions
+  module into a client component fails at RUNTIME. `/admin/bookings` returned an
+  empty page — the URL changed, the route was in the build manifest at 6.4 kB,
+  and the testid never appeared. **Nothing in `pnpm gate` can see this**; the
+  E2E found it. Put shared constants in a module with no `'use server'` and no
+  server imports, and have BOTH sides read that one — the Zod enum and the
+  dropdown then cannot drift either.

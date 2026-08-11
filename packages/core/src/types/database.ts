@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_booking_history: {
+        Row: {
+          action: string
+          booking_id: string
+          changed_at: string
+          changed_by: string | null
+          id: string
+          reason_code: string | null
+          reason_note: string | null
+        }
+        Insert: {
+          action: string
+          booking_id: string
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          reason_code?: string | null
+          reason_note?: string | null
+        }
+        Update: {
+          action?: string
+          booking_id?: string
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          reason_code?: string | null
+          reason_note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_booking_history_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_lockouts: {
         Row: {
           auth_user_id: string
@@ -1262,6 +1300,14 @@ export type Database = {
     }
     Functions: {
       acknowledge_admin_recovery_codes: { Args: never; Returns: Json }
+      admin_cancel_booking: {
+        Args: {
+          p_booking_id: string
+          p_reason_code: string
+          p_reason_note?: string
+        }
+        Returns: Json
+      }
       admin_create_branch: {
         Args: {
           p_allocation?: number
@@ -1298,6 +1344,7 @@ export type Database = {
         Args: { p_provider_user_id: string }
         Returns: Json
       }
+      admin_run_slot_generation: { Args: never; Returns: Json }
       admin_set_category_active: {
         Args: { p_category_id: string; p_is_active: boolean }
         Returns: Json
@@ -1345,6 +1392,7 @@ export type Database = {
         Returns: Json
       }
       auto_close_stale_bookings: { Args: never; Returns: number }
+      booking_commission_view: { Args: { p_booking_id: string }; Returns: Json }
       cancel_booking: {
         Args: { p_booking_id: string; p_cancelled_by: string; p_reason: string }
         Returns: Json
@@ -1395,6 +1443,22 @@ export type Database = {
         Returns: number
       }
       get_admin_auth_state: { Args: never; Returns: Json }
+      get_admin_booking_detail: {
+        Args: { p_booking_id: string }
+        Returns: Json
+      }
+      get_admin_bookings: {
+        Args: {
+          p_from?: string
+          p_limit?: number
+          p_offset?: number
+          p_provider_id?: string
+          p_search?: string
+          p_status?: string
+          p_to?: string
+        }
+        Returns: Json
+      }
       get_branch_bookings_for_date: {
         Args: {
           p_branch_id: string
@@ -1461,6 +1525,7 @@ export type Database = {
         Args: { p_month: string; p_provider_id: string; p_version?: number }
         Returns: Json
       }
+      get_ops_overview: { Args: never; Returns: Json }
       get_patient_bookings: {
         Args: never
         Returns: {

@@ -266,14 +266,79 @@ test.describe('admin portal — auth & shell (A01)', () => {
     await expect(page.getByTestId('admin-soon-chip')).toHaveCount(0)
     await expect(page.getByTestId('staff-table')).toBeVisible()
 
-    // A placeholder surface still carries its REAL title and its spec id, and
-    // الحجوزات (A06) is the one still outstanding — so the assertion moves
-    // rather than disappearing.
+    // ⚠ الحجوزات AND نظرة عامة were the last two placeholders; A06/A07 built
+    // them. NO «قريباً» CHIP SURVIVES ANYWHERE — the admin portal is complete,
+    // so the assertion that used to move from surface to surface now asserts
+    // its own absence across the whole shell.
     await page.getByTestId('admin-nav-bookings').click()
     await page.waitForURL('**/admin/bookings')
     await expect(page.getByTestId('admin-bookings')).toBeVisible({ timeout: 30_000 })
-    await expect(page.getByTestId('admin-soon-chip')).toBeVisible()
-    await expect(page.getByTestId('admin-bookings-spec')).toContainText('A0')
+    await expect(page.getByTestId('admin-soon-chip')).toHaveCount(0)
+
+    await page.getByTestId('admin-nav-overview').click()
+    await page.waitForURL('**/admin/overview')
+    await expect(page.getByTestId('admin-overview')).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByTestId('admin-soon-chip')).toHaveCount(0)
+    await expect(page.getByTestId('overview-card-bookings')).toBeVisible()
+  })
+
+  test('A06 — oversight search, the drawer money block, and the cancel gate', async ({ page }) => {
+    await signInWithPassword(page, ADMIN_EMAIL, NEW_PASSWORD)
+    await page.waitForURL('**/admin/login/verify')
+    await waitForFreshWindow()
+    await page.getByTestId('admin-totp-input').fill(totp(enrolledSecret))
+    await page.getByTestId('admin-verify-submit').click()
+    await page.waitForURL('**/admin/overview')
+
+    await page.goto('/admin/bookings')
+    await expect(page.getByTestId('admin-bookings')).toBeVisible({ timeout: 30_000 })
+    const rows = page.getByTestId('oversight-row')
+    expect(await rows.count()).toBeGreaterThan(0)
+
+    // A ref nobody holds routes to the phone-lookup guidance rather than a
+    // dead end — «I have the patient on the line» is why this screen is open.
+    await page.getByTestId('oversight-search').fill('IH-0000-00000')
+    await page.getByTestId('oversight-search-submit').click()
+    await expect(page.getByTestId('oversight-empty')).toBeVisible({ timeout: 30_000 })
+
+    await page.goto('/admin/bookings')
+    await expect(rows.first()).toBeVisible({ timeout: 30_000 })
+    await rows.first().click()
+    await expect(page.getByTestId('oversight-drawer')).toBeVisible({ timeout: 30_000 })
+
+    // ⚠ THE ADMIN CANNOT CHECK A PATIENT IN. Asserted as an ABSENCE, because
+    // the two-portal authority model is exactly what would erode quietly.
+    await expect(page.getByTestId('dashboard-mark-arrived')).toHaveCount(0)
+    await expect(page.getByTestId('oversight-money')).toBeVisible()
+  })
+
+  test('A07 — the overview shows cards and either alerts or an honest green', async ({ page }) => {
+    await signInWithPassword(page, ADMIN_EMAIL, NEW_PASSWORD)
+    await page.waitForURL('**/admin/login/verify')
+    await waitForFreshWindow()
+    await page.getByTestId('admin-totp-input').fill(totp(enrolledSecret))
+    await page.getByTestId('admin-verify-submit').click()
+    await page.waitForURL('**/admin/overview')
+
+    await expect(page.getByTestId('admin-overview')).toBeVisible({ timeout: 30_000 })
+    for (const id of [
+      'overview-card-bookings',
+      'overview-card-fill',
+      'overview-card-cancellations',
+      'overview-card-commission',
+    ]) {
+      await expect(page.getByTestId(id)).toBeVisible()
+    }
+    // «ليست فاتورة» — a number that looks like a statement and is not one is
+    // how a partner gets invoiced against the wrong figure.
+    await expect(page.getByTestId('overview-card-commission')).toContainText('ليست فاتورة')
+
+    // Either the attention panel has alerts, or it states what it CHECKED.
+    // An empty div would satisfy neither.
+    await expect(page.getByTestId('overview-attention')).toBeVisible()
+    const healthy = page.getByTestId('overview-healthy')
+    const alerts = page.locator('[data-testid^="overview-alert-"]')
+    expect((await healthy.count()) + (await alerts.count())).toBeGreaterThan(0)
   })
 
   // ═══════════════════════════════════════════════════════════════════════

@@ -58,6 +58,7 @@ export function ConsequentialConfirm({
   confirmTestId,
   secondaryAction,
   pending = false,
+  children,
   onCancel,
   onConfirm,
 }: {
@@ -71,6 +72,9 @@ export function ConsequentialConfirm({
   confirmTestId: string
   secondaryAction?: { label: string; onClick: () => void; testId: string }
   pending?: boolean
+  /** Extra controls the decision itself needs — A06s cancel reason is part of
+   *  the confirm, not a step before it. */
+  children?: ReactNode
   onCancel: () => void
   onConfirm: () => void
 }) {
@@ -146,6 +150,8 @@ export function ConsequentialConfirm({
             </div>
           ))}
         </div>
+
+        {children}
 
         <label className="mx-6 flex items-start gap-2.5 pb-4 text-[12.5px] leading-[1.6] text-ih-neutral-700">
           <input
