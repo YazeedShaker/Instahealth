@@ -1,7 +1,9 @@
-import { createHmac, randomBytes } from 'node:crypto'
+import { randomBytes } from 'node:crypto'
 
 import { toArabicDigits } from '@instahealth/core'
 import { expect, test, type Page } from '@playwright/test'
+
+import { totp, waitForFreshWindow } from './support/totp'
 
 // A01 E2E — the admin portal's auth flow and shell.
 //
@@ -42,38 +44,11 @@ const HAS_PROVIDER = PROVIDER_EMAIL.length > 0 && PROVIDER_PASSWORD.length > 0
  * also means one run's value cannot unlock anything in the next. */
 const NEW_PASSWORD = `A01-${randomBytes(15).toString('base64url')}`
 
-// ── RFC 6238, so the suite can act as the authenticator app ─────────────────
-// Deliberately hand-rolled rather than a dependency: it is fifteen lines, and
-// the alternative is shipping an npm package into `pnpm audit` for a test.
-function base32Decode(input: string): Buffer {
-  const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
-  let bits = ''
-  for (const char of input.replace(/[^A-Za-z2-7]/g, '').toUpperCase()) {
-    const index = ALPHABET.indexOf(char)
-    if (index >= 0) bits += index.toString(2).padStart(5, '0')
-  }
-  const bytes: number[] = []
-  for (let i = 0; i + 8 <= bits.length; i += 8) bytes.push(parseInt(bits.slice(i, i + 8), 2))
-  return Buffer.from(bytes)
-}
-
-function totp(secret: string, atMs: number = Date.now()): string {
-  const counter = Math.floor(atMs / 30_000)
-  const buffer = Buffer.alloc(8)
-  buffer.writeUInt32BE(Math.floor(counter / 2 ** 32), 0)
-  buffer.writeUInt32BE(counter >>> 0, 4)
-  const digest = createHmac('sha1', base32Decode(secret)).update(buffer).digest()
-  const offset = digest[digest.length - 1]! & 0x0f
-  const code = (digest.readUInt32BE(offset) & 0x7fffffff) % 1_000_000
-  return String(code).padStart(6, '0')
-}
-
-/** Supabase rejects a REPLAYED code, so a second verify in the same 30s window
- *  fails for a reason that has nothing to do with the feature under test. */
-async function waitForFreshWindow(): Promise<void> {
-  const msIntoWindow = Date.now() % 30_000
-  await new Promise((resolve) => setTimeout(resolve, 30_000 - msIntoWindow + 1_500))
-}
+// ⚠ `totp()` / `waitForFreshWindow()` MOVED to `./support/totp` when
+// `fidelity.spec.ts` needed the same RFC-6238 implementation to reach an aal2
+// session for the A04–A07 captures. Two hand-rolled copies of a crypto routine
+// is how they drift, and a drifted TOTP fails as «رمز غير صحيح» — a message
+// that blames the credential and never the code that generated it.
 
 async function signInWithPassword(page: Page, email: string, password: string): Promise<void> {
   await page.goto('/admin/login')

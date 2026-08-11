@@ -81,6 +81,9 @@ export function OversightView({
   const [reasonCode, setReasonCode] = useState<string>(CANCEL_REASONS[0].code)
   const [reasonNote, setReasonNote] = useState('')
   const inFlight = useRef(false)
+  // Focused by the not-found state's «ابحث برقم الهاتف» — the button hands the
+  // admin an empty, focused box rather than only telling them what to type.
+  const searchRef = useRef<HTMLInputElement>(null)
 
   const push = (next: Record<string, string>) => {
     const params = new URLSearchParams()
@@ -124,6 +127,7 @@ export function OversightView({
           }}
         >
           <input
+            ref={searchRef}
             data-testid="oversight-search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -193,12 +197,45 @@ export function OversightView({
                 🔍
               </span>
               <span className="text-[16px] font-extrabold text-ih-neutral-800">
-                لا حجز يطابق البحث
+                لا حجز بهذا الرقم
               </span>
-              <span className="max-w-[460px] text-[13px] leading-[1.7] text-ih-neutral-600">
-                جرّب رقم هاتف المريض — يجد كل حجوزاته، بما فيها الملغاة. رقم الحجز يُقبل بأي صيغة
-                (IH-2026-12345 أو ih202612345).
+              <span className="max-w-[500px] text-[13px] leading-[1.7] text-ih-neutral-600">
+                تأكّد من الرقم كما أرسلناه للمريض، أو ابحث برقم هاتفه — الهاتف يجد كل حجوزاته حتى
+                الملغاة. رقم الحجز يُقبل بأي صيغة (<bdi dir="ltr">IH-2026-12345</bdi> أو{' '}
+                <bdi dir="ltr">ih202612345</bdi>).
               </span>
+              {/* ⚠ THE TWO WAYS OUT, which the build did not have. The frame
+                  draws both CTAs and SPEC-A06 says the not-found state "routes
+                  to phone lookup" — the built screen offered the sentence and
+                  no button, so «I have the patient on the line» ended at a
+                  paragraph. Found by reading the capture, not the markup (§9).
+                  Neither button is a new predicate: one clears the query back
+                  to today, the other hands the search box back with the ref
+                  removed so a phone number can be typed straight in. */}
+              <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
+                <Button
+                  size="md"
+                  data-testid="oversight-empty-phone"
+                  onClick={() => {
+                    setQuery('')
+                    push({ search: '' })
+                    searchRef.current?.focus()
+                  }}
+                >
+                  ابحث برقم الهاتف
+                </Button>
+                <Button
+                  size="md"
+                  variant="outline"
+                  data-testid="oversight-empty-today"
+                  onClick={() => {
+                    setQuery('')
+                    push({ search: '', provider: '', status: '' })
+                  }}
+                >
+                  حجوزات اليوم
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="overflow-x-auto rounded-xl border border-ih-neutral-200 bg-white shadow-sm">
@@ -468,8 +505,14 @@ function BookingDrawer({
                   >
                     {detail.commission.kind === 'actual' ? 'عمولة مستحقة' : 'عمولة متوقعة'}
                   </span>
+                  {/* ⚠ «ج.م», NOT a bare number. `formatPiastersEgpAr` returns
+                      the digits alone by contract — "the caller appends its own
+                      «ج.م», per the design" — and this caller did not, so the
+                      admin's money block read «١٨» with no unit while the frame
+                      draws «١٣٪ · ٤٩.٤٠ ج.م». CLAUDE.md §7 makes the unit
+                      non-negotiable; found by READING the A06 capture (§9). */}
                   <span className="text-[15px] font-extrabold tabular-nums text-ih-neutral-800">
-                    {formatPiastersEgpAr(detail.commission.commissionPiasters ?? 0)}
+                    {formatPiastersEgpAr(detail.commission.commissionPiasters ?? 0)} ج.م
                   </span>
                 </div>
                 <span className="text-[11.5px] text-ih-neutral-600">

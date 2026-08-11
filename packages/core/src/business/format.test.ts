@@ -1,10 +1,15 @@
-import { describe, expect, test } from 'vitest'
+import { describe, expect, it, test } from 'vitest'
 
 import { convertArabicDigits } from './phone'
 import {
+  AR_BOOKING,
+  AR_BRANCH,
+  AR_PROVIDER,
+  AR_SLOT,
   cairoWallClockToInstant,
   formatArabicDate,
   formatCairoIsoDate,
+  formatCountedAr,
   formatEGP,
   formatPiastersEgpAr,
   formatSlotTime,
@@ -156,5 +161,48 @@ describe('formatPiastersEgpAr — the commission statement money renderer', () =
   test('a non-finite amount THROWS rather than rendering NaN on an invoice', () => {
     expect(() => formatPiastersEgpAr(Number.NaN)).toThrow(/finite piaster/)
     expect(() => formatPiastersEgpAr(Number.POSITIVE_INFINITY)).toThrow(/finite piaster/)
+  })
+})
+
+describe('formatCountedAr — تمييز العدد', () => {
+  // The band boundaries are the whole point: the A04 dialog was written from a
+  // frame whose sample was ٦ (plural, correct) and shipped «٢٤ فروع» on live
+  // data, where the accusative is required.
+  it.each([
+    [0, '٠ فروع'],
+    [1, '١ فرع'],
+    [2, '٢ فرعان'],
+    [3, '٣ فروع'],
+    [6, '٦ فروع'],
+    [10, '١٠ فروع'],
+    [11, '١١ فرعاً'],
+    [24, '٢٤ فرعاً'],
+    [99, '٩٩ فرعاً'],
+    [100, '١٠٠ فرع'],
+    [101, '١٠١ فرع'],
+    [102, '١٠٢ فرعان'],
+    [111, '١١١ فرعاً'],
+    [200, '٢٠٠ فرع'],
+  ])('%i branches reads «%s»', (count, expected) => {
+    expect(formatCountedAr(count, AR_BRANCH)).toBe(expected)
+  })
+
+  it('agrees for every noun the admin portal counts', () => {
+    expect(formatCountedAr(14, AR_BOOKING)).toBe('١٤ حجزاً')
+    expect(formatCountedAr(3, AR_BOOKING)).toBe('٣ حجوزات')
+    expect(formatCountedAr(155, AR_SLOT)).toBe('١٥٥ موعداً')
+    expect(formatCountedAr(4, AR_PROVIDER)).toBe('٤ مزودين')
+    expect(formatCountedAr(1, AR_PROVIDER)).toBe('١ مزود')
+  })
+
+  // ⚠ `% 100`, not `% 10` — ١١١ is an accusative like ١١, and ١٠٠ is not.
+  it('reads the tail modulo 100, so 111 and 11 agree while 100 does not', () => {
+    expect(formatCountedAr(111, AR_BRANCH)).toBe('١١١ فرعاً')
+    expect(formatCountedAr(11, AR_BRANCH)).toBe('١١ فرعاً')
+    expect(formatCountedAr(100, AR_BRANCH)).toBe('١٠٠ فرع')
+  })
+
+  it.each([-1, 1.5, Number.NaN])('refuses %s rather than inventing a form', (count) => {
+    expect(() => formatCountedAr(count, AR_BRANCH)).toThrow(/non-negative integer/)
   })
 })

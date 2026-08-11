@@ -194,3 +194,87 @@ export function formatPiastersEgpAr(piasters: number): string {
 export function formatSlotTime(startsAt: Date, locale: SupportedLocale): string {
   return TIME_FORMATTERS[locale].format(startsAt)
 }
+
+/** The four forms an Arabic noun takes after a numeral. */
+export interface ArabicCountedNoun {
+  /** ١٠٠+ and the tail form: «فرع» */
+  singular: string
+  /** ٢: «فرعان» */
+  dual: string
+  /** ٣–١٠ and ٠: «فروع» */
+  plural: string
+  /** ١١–٩٩: «فرعاً» — the accusative singular (تمييز منصوب) */
+  accusative: string
+}
+
+/**
+ * A number and its noun, agreeing — «٣ فروع», «٢٤ فرعاً», «١٠٠ فرع».
+ *
+ * ⚠ WHY THIS IS A SHARED HELPER AND NOT A TEMPLATE STRING. Arabic changes the
+ * NOUN according to the number in front of it, and the rule flips three times
+ * inside the range these screens actually produce. The A04 confirm dialogs were
+ * written from frames whose sample numbers were ٦ and ٨ — both in the 3–10 band,
+ * where the plural «فروع» is correct — so the word was hard-coded. On live data
+ * the same dialog says «٢٤ فروع» and «إيقاف الخدمة في ٢٤ فروع», which is simply
+ * wrong; the correct form is «٢٤ فرعاً». Found by reading the A04 fidelity
+ * capture, not by reading the markup (§9).
+ *
+ * The rest of the admin portal already gets this right by hand — «٢٢ فرعاً بلا
+ * حساب نشط», «١٥٥ موعداً», «١٤ حجزاً قادماً» — which is exactly the problem: a
+ * rule everyone knows and applies from memory is a rule that will be missed
+ * again on the next screen. Once, in core, tested (CLAUDE.md §4).
+ *
+ * The rule (تمييز العدد), by `count % 100`:
+ *
+ * | count      | form                    | example      |
+ * | ---------- | ----------------------- | ------------ |
+ * | 0          | plural                  | ٠ فروع       |
+ * | 1          | singular                | فرع واحد → ١ فرع |
+ * | 2          | dual                    | ٢ فرعان      |
+ * | 3–10       | plural (جمع مجرور)      | ٦ فروع       |
+ * | 11–99      | accusative (مفرد منصوب) | ٢٤ فرعاً     |
+ * | 100+       | singular (مفرد مجرور)   | ١٠٠ فرع      |
+ *
+ * ⚠ It is `% 100`, not `% 10`: ١١١ takes the same form as ١١ («١١١ فرعاً»),
+ * while ١٠٠ and ٢٠٠ take the singular. Digits are rendered Arabic-Indic, so the
+ * caller does not also need `toArabicDigits`.
+ */
+export function formatCountedAr(count: number, noun: ArabicCountedNoun): string {
+  if (!Number.isInteger(count) || count < 0) {
+    throw new Error(`formatCountedAr expects a non-negative integer, got ${String(count)}`)
+  }
+  const digits = toArabicDigits(String(count))
+  const tail = count % 100
+  if (tail === 0) return `${digits} ${count === 0 ? noun.plural : noun.singular}`
+  if (tail === 1) return `${digits} ${noun.singular}`
+  if (tail === 2) return `${digits} ${noun.dual}`
+  if (tail <= 10) return `${digits} ${noun.plural}`
+  return `${digits} ${noun.accusative}`
+}
+
+/** The nouns these screens count. Kept beside the helper so a second screen
+ *  counting branches cannot invent a fifth spelling of «فرعاً». */
+export const AR_BRANCH: ArabicCountedNoun = {
+  singular: 'فرع',
+  dual: 'فرعان',
+  plural: 'فروع',
+  accusative: 'فرعاً',
+}
+export const AR_BOOKING: ArabicCountedNoun = {
+  singular: 'حجز',
+  dual: 'حجزان',
+  plural: 'حجوزات',
+  accusative: 'حجزاً',
+}
+export const AR_SLOT: ArabicCountedNoun = {
+  singular: 'موعد',
+  dual: 'موعدان',
+  plural: 'مواعيد',
+  accusative: 'موعداً',
+}
+export const AR_PROVIDER: ArabicCountedNoun = {
+  singular: 'مزود',
+  dual: 'مزودان',
+  plural: 'مزودين',
+  accusative: 'مزوداً',
+}

@@ -158,6 +158,40 @@ This batch is the exception that pays down a convention four sessions skipped �
 **it is not a new pattern.** A PR claiming fidelity ships its comparison
 screenshots (§9).
 
+### ✅ THE DEBT IS PAID — the A04–A07 captures, and the harness that can take them (2026-08-11, PR ①)
+
+**Sixteen captures across the four admin screens, all read, five defects fixed.**
+The blocker was mechanical, not editorial: `fidelity.spec.ts` could not obtain
+an `aal2` session, so «the admin screens can't be captured» had quietly become
+«the admin screens don't get captured». `supabase/seeds/007` now seeds a
+DEDICATED dev-only admin whose TOTP secret lives in the environment, and the
+harness computes the current six digits and drives the REAL login form. **No
+bypass, no auth weakening, no test-only branch** — the seed provisions an
+authenticator, exactly as scanning the QR into a phone would. Proven 6/6 from
+Node before a line of the harness was written, including that a WRONG code is
+still refused.
+
+**The scoreboard held. Five defects, every one found BY LOOKING:**
+
+| #   | what the capture showed                                                                                                                                                                                                             | fixed where                                     |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| 1   | The A06 drawer's commission read **«١٨»** — a bare number. CLAUDE.md §7 makes «ج.م» non-negotiable, and the frame draws «١٣٪ · ٤٩.٤٠ ج.م».                                                                                          | the call site (core returns digits by contract) |
+| 2   | The A07 card's commission read **«٣٣٠»** — the same omission on the same money                                                                                                                                                      | the call site                                   |
+| 3   | Confirm dialogs read **«٢٤ فروع»**. Arabic agreement flips three times inside the range these screens produce; the frames' samples were ٦ and ٨ (plural, correct), so the word was hard-coded and breaks at 11+.                    | `formatCountedAr` in **core**, +19 tests        |
+| 4   | A07's fill read **«٥.٦٪»** — a fractional percent with a **Latin** decimal point between Arabic-Indic digits. The frames draw whole percentages and core's own `summarizeDayAllocation` rounds.                                     | rounded at the one consumer that disagreed      |
+| 5   | Every A05 staff row showed a **«؟» avatar** and an em-dash name; the detail's `<h1>` was a bare «—». Seed 003 carried the name and wrote it to `auth.users` metadata, never to `provider_users.name` — the column the screen reads. | seed 003                                        |
+
+Plus one gap against the design AND against SPEC-A06's own wording: the
+not-found state promised to "route to phone lookup" and shipped a **paragraph
+with no buttons**. Both CTAs the frame draws are now there.
+
+⚠ **One suspected defect was NOT a defect, and checking is the point:** «نشر
+الخدمة» renders `destructive` red for a semantically positive action. The frame
+draws it that way deliberately — green is reserved for creation. Reading the
+design source before "fixing" it is what stopped a regression.
+
+**So §9 now says: per-PR capture has no exemption left.**
+
 ---
 
 ## 🎉 The admin portal — closing note (2026-08-10)
@@ -198,9 +232,10 @@ this?", and CI fails on drift.
 
 ### ⚠ What is NOT done, portal-wide
 
-1. **Fidelity screenshots were never captured for A04, A05, A06 or A07.** The
-   founder caught an RTL misalignment on the deployed preview that a capture
-   would have found; that is what the gap costs, and it is still open.
+1. ✅ ~~**Fidelity screenshots were never captured for A04, A05, A06 or A07.**~~
+   — **CLOSED 2026-08-11.** Sixteen captures, all read, five defects fixed (two
+   of them on MONEY, missing «ج.م»). The harness can reach an aal2 session now,
+   so §9's per-PR rule has no exemption left. See the Hardening entry.
 2. **The `admin-staff-accounts` Edge Function's GoTrue half is unproven** —
    `createUser`, the ban, the compensating delete. Before a real partner
    account exists.

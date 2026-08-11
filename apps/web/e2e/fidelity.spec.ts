@@ -1,4 +1,6 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
+
+import { totp, waitForUsableWindow } from './support/totp'
 
 // Design-fidelity capture. NOT an assertion suite — it exists so any PR
 // claiming design fidelity can prove it with comparison screenshots
@@ -9,6 +11,15 @@ import { expect, test } from '@playwright/test'
 //
 // 1366×768 is the desktop FLOOR from the DESIGN-02 brief ("old office
 // machines") — capture at the floor, because that is where layouts break.
+//
+// ⚠ THE ADMIN HALF NEEDS AN aal2 SESSION, AND GETS ONE BY LOGGING IN. For four
+// features this file had no admin captures at all, for exactly one reason: it
+// could not reach the admin portal, whose gate requires a TOTP factor. The
+// answer is NOT a bypass — it is an authenticator. `supabase/seeds/007` seeds a
+// dedicated dev-only admin with a known TOTP secret, and the block at the foot
+// of this file computes the current six digits and types them into the real
+// form, like a human reading a phone. Nothing in the gate knows this suite
+// exists. See §9 and the seed's header before changing any of it.
 
 const PROVIDER_EMAIL = process.env.PROVIDER_TEST_EMAIL ?? ''
 const PROVIDER_PASSWORD = process.env.PROVIDER_TEST_PASSWORD ?? ''
@@ -249,4 +260,357 @@ test('capture: branch profile with an inline validation error', async ({ page })
   await hideDevOverlay(page)
   await page.evaluate(() => document.fonts.ready)
   await page.screenshot({ path: `${P05_SHOT_DIR}/profile-error-build.png`, fullPage: false })
+})
+
+// ══════════════════════════════════════════════════════════════════════════
+// A04–A07 captures — the admin portal
+// ══════════════════════════════════════════════════════════════════════════
+//
+// Compare against, in `design/handoff/project/`:
+//   Admin - Service Catalog.dc.html     → a04-fidelity/
+//   Admin - Staff Accounts.dc.html      → a05-fidelity/
+//   Admin - Bookings Oversight.dc.html  → a06-fidelity/
+//   Admin - Ops Overview.dc.html        → a07-fidelity/
+//
+// ⚠ REQUIRES TWO SEEDS, and says so LOUDLY rather than skipping:
+//   supabase/seeds/007_admin_fidelity_account.sql   the admin + its authenticator
+//   supabase/seeds/008_fidelity_fixtures.sql        the draft service the
+//                                                   publish confirm needs
+// A skipped capture and a captured screen look identical in a summary line
+// (§9), and that is precisely how four features shipped with no admin captures
+// at all — so a missing fixture FAILS here.
+
+const FIDELITY_EMAIL = process.env.FIDELITY_ADMIN_EMAIL ?? ''
+const FIDELITY_PASSWORD = process.env.FIDELITY_ADMIN_PASSWORD ?? ''
+const FIDELITY_TOTP_SECRET = process.env.FIDELITY_ADMIN_TOTP_SECRET ?? ''
+const HAS_ADMIN_CREDS =
+  FIDELITY_EMAIL.length > 0 && FIDELITY_PASSWORD.length > 0 && FIDELITY_TOTP_SECRET.length > 0
+
+// ⚠ TRIPWIRES, not niceties — the same discipline as `admin.spec.ts`, for the
+// same reason and one more.
+//   · admin@instahealth.eg      is the FOUNDER's account.
+//   · admin-e2e@instahealth.eg  is the account `admin.spec.ts` RESETS to a
+//     pristine first-login state on every run. Pointing this harness there
+//     means one suite deleting the authenticator the other needs, and whichever
+//     ran second would fail for a reason naming neither.
+const FORBIDDEN_ADMINS = ['admin@instahealth.eg', 'admin-e2e@instahealth.eg']
+
+const A04_SHOT_DIR = '../../docs/design-briefs/a04-fidelity'
+const A05_SHOT_DIR = '../../docs/design-briefs/a05-fidelity'
+const A06_SHOT_DIR = '../../docs/design-briefs/a06-fidelity'
+const A07_SHOT_DIR = '../../docs/design-briefs/a07-fidelity'
+
+/** The REAL login, driven exactly as a person drives it: password, then the six
+ *  digits an authenticator would be showing right now. No bypass, no test-only
+ *  branch, nothing in the app aware this is a test. */
+async function signInAsFidelityAdmin(page: Page): Promise<void> {
+  await page.goto('/admin/login')
+  await page.getByTestId('admin-email').fill(FIDELITY_EMAIL)
+  await page.getByTestId('admin-password').fill(FIDELITY_PASSWORD)
+  await page.getByTestId('admin-login-submit').click()
+
+  // ⚠ ASSERT THE SIGN-IN rather than waiting for where it should land. When the
+  // password does not match what seed 007 hashed, every capture below dies as
+  // `Test timeout` pointing at a line about the TOTP screen — which names
+  // neither the credential nor the seed. admin.spec.ts learned this the
+  // expensive way; the lesson transfers verbatim.
+  const loginError = page.getByTestId('admin-login-error')
+  await expect
+    .poll(async () => (await loginError.isVisible()) || page.url().includes('/admin/login/'), {
+      timeout: 20_000,
+      message: 'admin sign-in neither errored nor navigated',
+    })
+    .toBeTruthy()
+  if (await loginError.isVisible()) {
+    throw new Error(
+      `Fidelity admin sign-in was REFUSED: "${await loginError.innerText()}". ` +
+        'Run supabase/seeds/007_admin_fidelity_account.sql with FIDELITY_ADMIN_PASSWORD ' +
+        'set to the value in apps/web/.env.local.',
+    )
+  }
+
+  // The gate must land on the TOTP step, not the change-password or enrollment
+  // screens. Landing anywhere else means seed 007's two flags are wrong, and
+  // saying so here beats a timeout on a testid that will never appear.
+  await page.waitForURL('**/admin/login/verify', { timeout: 20_000 })
+
+  // Only wait when the current 30s step is nearly over — a code that expires
+  // between the fill and the round trip is refused, and the message blames the
+  // code rather than the clock.
+  await waitForUsableWindow()
+  await page.getByTestId('admin-totp-input').fill(totp(FIDELITY_TOTP_SECRET))
+  await page.getByTestId('admin-verify-submit').click()
+
+  const verifyError = page.getByTestId('admin-verify-error')
+  await expect
+    .poll(async () => (await verifyError.isVisible()) || page.url().includes('/admin/overview'), {
+      timeout: 30_000,
+      message: 'TOTP verify neither errored nor navigated',
+    })
+    .toBeTruthy()
+  if (await verifyError.isVisible()) {
+    throw new Error(
+      `TOTP was REFUSED: "${await verifyError.innerText()}". FIDELITY_ADMIN_TOTP_SECRET does ` +
+        'not match the factor seed 007 wrote, or this machine clock has drifted.',
+    )
+  }
+  await expect(page.getByTestId('admin-shell')).toBeVisible({ timeout: 30_000 })
+}
+
+/** Fonts settled + the dev-tools disc hidden, then shoot. Every capture wants
+ *  both, and forgetting either is invisible until someone opens the image. */
+async function shoot(page: Page, path: string): Promise<void> {
+  await hideDevOverlay(page)
+  await page.evaluate(() => document.fonts.ready)
+  await page.screenshot({ path, fullPage: false })
+}
+
+test.describe('admin portal fidelity (A04–A07)', () => {
+  // ⚠ SERIAL, AND ONE LOGIN FOR THE WHOLE BLOCK. Supabase refuses a REPLAYED
+  // TOTP code, so N captures each signing in would need N distinct 30-second
+  // windows — thirteen captures, six and a half minutes of pure waiting, and a
+  // parallel worker would collide with its sibling inside one window anyway.
+  // One session, reused, is both faster and the only version that is correct.
+  test.describe.configure({ mode: 'serial' })
+
+  test.skip(
+    !HAS_ADMIN_CREDS,
+    'FIDELITY_ADMIN_EMAIL / FIDELITY_ADMIN_PASSWORD / FIDELITY_ADMIN_TOTP_SECRET not set — ' +
+      'see supabase/seeds/007_admin_fidelity_account.sql',
+  )
+
+  let page: Page
+
+  test.beforeAll(async ({ browser }) => {
+    if (FORBIDDEN_ADMINS.includes(FIDELITY_EMAIL.trim().toLowerCase())) {
+      throw new Error(
+        `REFUSING TO RUN: FIDELITY_ADMIN_EMAIL is ${FIDELITY_EMAIL}. That is either the ` +
+          'founder account or the one admin.spec.ts resets on every run. Point it at ' +
+          'admin-fidelity@instahealth.eg (supabase/seeds/007).',
+      )
+    }
+    const context = await browser.newContext({ viewport: { width: 1366, height: 768 } })
+    page = await context.newPage()
+    await signInAsFidelityAdmin(page)
+  })
+
+  test.afterAll(async () => {
+    await page?.context().close()
+  })
+
+  // ── A04 · Admin - Service Catalog ────────────────────────────────────────
+
+  test('A04 capture: the catalog list', async () => {
+    await page.goto('/admin/catalog')
+    await expect(page.getByTestId('catalog-table')).toBeVisible({ timeout: 60_000 })
+    await shoot(page, `${A04_SHOT_DIR}/catalog-list-build.png`)
+  })
+
+  test('A04 capture: the service detail, with its branch price table', async () => {
+    await page.goto('/admin/catalog')
+    await expect(page.getByTestId('catalog-table')).toBeVisible({ timeout: 60_000 })
+    await page.getByTestId('catalog-row').first().click()
+    await expect(page.getByTestId('admin-catalog-detail')).toBeVisible({ timeout: 60_000 })
+    await expect(page.getByTestId('catalog-price-table')).toBeVisible()
+    await shoot(page, `${A04_SHOT_DIR}/catalog-detail-build.png`)
+  })
+
+  test('A04 capture: the PUBLISH confirm', async () => {
+    // Needs a service that is not already published — every real one is, so
+    // seed 008 provides a draft that no patient can see (`is_active` is
+    // GENERATED from `status`). Fail loudly if it is absent: a silent skip here
+    // is how this capture went unmade four times.
+    await page.goto('/admin/catalog')
+    await expect(page.getByTestId('catalog-table')).toBeVisible({ timeout: 60_000 })
+    await page.getByTestId('catalog-search').fill('لقطات')
+    const draft = page.getByTestId('catalog-row').first()
+    await expect(
+      draft,
+      'seed 008_fidelity_fixtures.sql has not been run — no draft service to publish',
+    ).toBeVisible({ timeout: 30_000 })
+    await draft.click()
+    await expect(page.getByTestId('admin-catalog-detail')).toBeVisible({ timeout: 60_000 })
+    await page.getByTestId('catalog-status-change').first().click()
+    await expect(page.getByTestId('catalog-status-confirm')).toBeVisible({ timeout: 60_000 })
+    await shoot(page, `${A04_SHOT_DIR}/catalog-publish-confirm-build.png`)
+  })
+
+  test('A04 capture: the SUSPEND confirm', async () => {
+    await page.goto('/admin/catalog')
+    await expect(page.getByTestId('catalog-table')).toBeVisible({ timeout: 60_000 })
+    await page.getByTestId('catalog-row').first().click()
+    await expect(page.getByTestId('admin-catalog-detail')).toBeVisible({ timeout: 60_000 })
+    await page.getByTestId('catalog-status-change').first().click()
+    await expect(page.getByTestId('catalog-status-confirm')).toBeVisible({ timeout: 60_000 })
+    await shoot(page, `${A04_SHOT_DIR}/catalog-suspend-confirm-build.png`)
+  })
+
+  test('A04 capture: the CATEGORY flip confirm — «THE launch switch»', async () => {
+    await page.goto('/admin/catalog')
+    await expect(page.getByTestId('catalog-categories')).toBeVisible({ timeout: 60_000 })
+    await page.getByTestId('catalog-category-toggle').first().click()
+    await expect(page.getByTestId('catalog-category-confirm')).toBeVisible({ timeout: 60_000 })
+    await shoot(page, `${A04_SHOT_DIR}/catalog-category-confirm-build.png`)
+  })
+
+  test('A04 capture: the confirm dialog while its numbers are still in flight', async () => {
+    // ⚠ THE LOADING STATE IS A LATENCY WINDOW, so it is REPRODUCED rather than
+    // raced for (§9: "reproduce a latency window; do not widen a timeout to
+    // hide it"). The dialog numbers come from a server round trip triggered by
+    // a `router.replace`; delaying that request makes the state the design
+    // draws deterministic instead of a coin flip on a fast laptop.
+    await page.goto('/admin/catalog')
+    await expect(page.getByTestId('catalog-categories')).toBeVisible({ timeout: 60_000 })
+
+    // ⚠ `times: 1`, AND THE DELAYED REQUEST IS ALLOWED TO FINISH BEFORE THIS
+    // TEST ENDS. The first version screenshotted the loading dialog and
+    // returned immediately, leaving a 6-second navigation in flight. It landed
+    // during the NEXT capture — the A05 staff test then sat forever on
+    // `staff-disable-confirm` and failed with `element(s) not found`, a message
+    // about the staff screen produced entirely by the catalog screen. Two
+    // captures in this block share ONE page, so a test does not own the page
+    // only until its last assertion; it owns it until nothing it started is
+    // still running. Waiting for the resolved dialog is what makes that true.
+    await page.route(
+      '**/admin/catalog?*',
+      async (route) => {
+        await new Promise((resolve) => setTimeout(resolve, 6_000))
+        await route.continue()
+      },
+      { times: 1 },
+    )
+    try {
+      await page.getByTestId('catalog-category-toggle').first().click()
+      await expect(page.getByTestId('catalog-category-confirm-loading')).toBeVisible({
+        timeout: 30_000,
+      })
+      await shoot(page, `${A04_SHOT_DIR}/catalog-confirm-loading-build.png`)
+      // Let the window close on its own terms: the loading dialog must become
+      // the real one before this test hands the page over.
+      await expect(page.getByTestId('catalog-category-confirm')).toBeVisible({ timeout: 60_000 })
+    } finally {
+      await page.unrouteAll({ behavior: 'ignoreErrors' })
+    }
+  })
+
+  // ── A05 · Admin - Staff Accounts ─────────────────────────────────────────
+
+  test('A05 capture: the accounts list', async () => {
+    await page.goto('/admin/staff')
+    await expect(page.getByTestId('staff-table')).toBeVisible({ timeout: 60_000 })
+    await shoot(page, `${A05_SHOT_DIR}/staff-list-build.png`)
+  })
+
+  test('A05 capture: create, step 1 — the form', async () => {
+    await page.goto('/admin/staff')
+    await expect(page.getByTestId('staff-table')).toBeVisible({ timeout: 60_000 })
+    await page.getByTestId('staff-new').click()
+    await expect(page.getByTestId('staff-create-dialog')).toBeVisible({ timeout: 30_000 })
+    await page.getByTestId('staff-create-name').fill('منى عبد الرحمن')
+    await page.getByTestId('staff-create-email').fill('mona.fidelity@example.eg')
+    await shoot(page, `${A05_SHOT_DIR}/staff-create-step1-build.png`)
+  })
+
+  test('A05 capture: the account detail, with its audit trail', async () => {
+    await page.goto('/admin/staff')
+    await expect(page.getByTestId('staff-table')).toBeVisible({ timeout: 60_000 })
+    await page.getByTestId('staff-row').first().click()
+    await expect(page.getByTestId('admin-staff-detail')).toBeVisible({ timeout: 60_000 })
+    await shoot(page, `${A05_SHOT_DIR}/staff-detail-build.png`)
+  })
+
+  test('A05 capture: BOTH disable confirms — ordinary, and the last active account', async () => {
+    // ⚠ WHICH VARIANT RENDERS IS THE SERVER ANSWER, NOT THIS TEST GUESS.
+    // `isLastActiveAccount` comes from `preview_staff_disable`, so the harness
+    // opens the confirm for every account and files each capture under whatever
+    // the server decided — the same law as §1.4, applied to a screenshot.
+    await page.goto('/admin/staff')
+    await expect(page.getByTestId('staff-table')).toBeVisible({ timeout: 60_000 })
+    const total = await page.getByTestId('staff-row').count()
+
+    const captured = new Set<string>()
+    for (let index = 0; index < total && captured.size < 2; index += 1) {
+      await page.goto('/admin/staff')
+      await expect(page.getByTestId('staff-table')).toBeVisible({ timeout: 60_000 })
+      await page.getByTestId('staff-row').nth(index).click()
+      await expect(page.getByTestId('admin-staff-detail')).toBeVisible({ timeout: 60_000 })
+      if ((await page.getByTestId('staff-disable').count()) === 0) continue
+
+      await page.getByTestId('staff-disable').click()
+      await expect(page.getByTestId('staff-disable-confirm')).toBeVisible({ timeout: 60_000 })
+
+      // The escalated variant is the one carrying the warning banner.
+      const escalated = (await page.getByTestId('staff-disable-confirm-banner').count()) > 0
+      const variant = escalated ? 'last-active' : 'ordinary'
+      if (captured.has(variant)) continue
+      captured.add(variant)
+      await shoot(page, `${A05_SHOT_DIR}/staff-disable-${variant}-build.png`)
+    }
+
+    expect(
+      [...captured].sort(),
+      'both disable variants must be captured — dev has one branch with 2 active accounts ' +
+        '(ordinary) and one with 1 (escalated); if this fails the data changed',
+    ).toEqual(['last-active', 'ordinary'])
+  })
+
+  // ── A06 · Admin - Bookings Oversight ─────────────────────────────────────
+
+  test('A06 capture: the oversight list', async () => {
+    await page.goto('/admin/bookings')
+    await expect(page.getByTestId('oversight-table')).toBeVisible({ timeout: 60_000 })
+    await shoot(page, `${A06_SHOT_DIR}/oversight-list-build.png`)
+  })
+
+  test('A06 capture: the drawer and its money block', async () => {
+    await page.goto('/admin/bookings')
+    await expect(page.getByTestId('oversight-table')).toBeVisible({ timeout: 60_000 })
+    await page.getByTestId('oversight-row').first().click()
+    await expect(page.getByTestId('oversight-drawer')).toBeVisible({ timeout: 60_000 })
+    await expect(page.getByTestId('oversight-money')).toBeVisible()
+    await shoot(page, `${A06_SHOT_DIR}/oversight-drawer-build.png`)
+  })
+
+  test('A06 capture: the admin cancel confirm', async () => {
+    await page.goto('/admin/bookings')
+    await expect(page.getByTestId('oversight-table')).toBeVisible({ timeout: 60_000 })
+    const rows = page.getByTestId('oversight-row')
+    const total = await rows.count()
+    let opened = false
+    for (let index = 0; index < total; index += 1) {
+      await rows.nth(index).click()
+      await expect(page.getByTestId('oversight-drawer')).toBeVisible({ timeout: 60_000 })
+      if ((await page.getByTestId('oversight-cancel').count()) > 0) {
+        opened = true
+        break
+      }
+      await page.getByTestId('oversight-drawer-close').click()
+    }
+    expect(opened, 'no cancellable booking in the oversight list — reseed 004').toBe(true)
+
+    await page.getByTestId('oversight-cancel').click()
+    await expect(page.getByTestId('oversight-cancel-confirm')).toBeVisible({ timeout: 60_000 })
+    await shoot(page, `${A06_SHOT_DIR}/oversight-cancel-confirm-build.png`)
+  })
+
+  test('A06 capture: a reference nobody holds — the not-found guidance', async () => {
+    await page.goto('/admin/bookings')
+    await expect(page.getByTestId('oversight-table')).toBeVisible({ timeout: 60_000 })
+    await page.getByTestId('oversight-search').fill('IH-0000-00000')
+    await page.getByTestId('oversight-search-submit').click()
+    await expect(page.getByTestId('oversight-empty')).toBeVisible({ timeout: 60_000 })
+    await shoot(page, `${A06_SHOT_DIR}/oversight-not-found-build.png`)
+  })
+
+  // ── A07 · Admin - Ops Overview ───────────────────────────────────────────
+
+  test('A07 capture: the overview as it stands today', async () => {
+    await page.goto('/admin/overview')
+    await expect(page.getByTestId('admin-overview')).toBeVisible({ timeout: 60_000 })
+    await expect(page.getByTestId('overview-attention')).toBeVisible()
+    // Which of the two the panel is showing is a FACT ABOUT TODAY, not a choice
+    // — record it in the filename so the PR body cannot mislabel the capture.
+    const healthy = (await page.getByTestId('overview-healthy').count()) > 0
+    await shoot(page, `${A07_SHOT_DIR}/overview-${healthy ? 'healthy' : 'with-alerts'}-build.png`)
+  })
 })

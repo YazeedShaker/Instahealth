@@ -1,6 +1,12 @@
 'use client'
 
-import { formatPiastersEgpAr, toArabicDigits } from '@instahealth/core'
+import {
+  AR_SLOT,
+  formatCountedAr,
+  formatPiastersEgpAr,
+  toArabicDigits,
+  type ArabicCountedNoun,
+} from '@instahealth/core'
 import { resolveTokenCss } from '@instahealth/design-tokens'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -62,6 +68,34 @@ function StatCard({
   )
 }
 
+/** Counted noun PHRASES — the adjective agrees with the noun, and the noun's
+ *  form is already moving with the number, so the whole phrase is what gets
+ *  counted. See `formatCountedAr` in core for the rule and why it is shared. */
+const AR_ACTIVE_BRANCH: ArabicCountedNoun = {
+  singular: 'فرع نشط',
+  dual: 'فرعان نشطان',
+  plural: 'فروع نشطة',
+  accusative: 'فرعاً نشطاً',
+}
+const AR_OPEN_SLOT: ArabicCountedNoun = {
+  singular: 'موعد متاح',
+  dual: 'موعدان متاحان',
+  plural: 'مواعيد متاحة',
+  accusative: 'موعداً متاحاً',
+}
+const AR_UNSTAFFED_BRANCH: ArabicCountedNoun = {
+  singular: 'فرع بلا حساب نشط',
+  dual: 'فرعان بلا حساب نشط',
+  plural: 'فروع بلا حساب نشط',
+  accusative: 'فرعاً بلا حساب نشط',
+}
+const AR_UPCOMING_BOOKING: ArabicCountedNoun = {
+  singular: 'حجز قادم',
+  dual: 'حجزان قادمان',
+  plural: 'حجوزات قادمة',
+  accusative: 'حجزاً قادماً',
+}
+
 export function OverviewView({ overview }: { overview: OpsOverview }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -79,9 +113,7 @@ export function OverviewView({ overview }: { overview: OpsOverview }) {
         const result = await runSlotGenerationAction()
         if (!result.ok) setErrorAr(result.errorAr)
         else {
-          setNotice(
-            `تم التوليد — أُضيف ${toArabicDigits(String(result.slotsCreated ?? 0))} موعداً.`,
-          )
+          setNotice(`تم التوليد — أُضيف ${formatCountedAr(result.slotsCreated ?? 0, AR_SLOT)}.`)
           router.refresh()
         }
       } finally {
@@ -100,7 +132,7 @@ export function OverviewView({ overview }: { overview: OpsOverview }) {
       <AdminHeader
         title="نظرة عامة"
         displayName="مؤسِّس"
-        subtitle={`${toArabicDigits(String(network.activeBranches))} فرعاً نشطاً · ${toArabicDigits(String(network.openSlots))} موعداً متاحاً`}
+        subtitle={`${formatCountedAr(network.activeBranches, AR_ACTIVE_BRANCH)} · ${formatCountedAr(network.openSlots, AR_OPEN_SLOT)}`}
       />
 
       <main data-testid="admin-overview" className="min-h-0 flex-1 overflow-y-auto p-6">
@@ -140,8 +172,16 @@ export function OverviewView({ overview }: { overview: OpsOverview }) {
             <StatCard
               testId="overview-card-fill"
               label="إشغال الشبكة اليوم"
-              value={`${toArabicDigits(String(cards.fillPercent))}٪`}
-              sub={`${toArabicDigits(String(cards.bookedToday))} من ${toArabicDigits(String(cards.capacityToday))} موعداً`}
+              // ⚠ ROUNDED. `get_ops_overview` returns the ratio unrounded, so
+              // the card read «٥.٦٪» — with a LATIN decimal point between
+              // Arabic-Indic digits, since `toArabicDigits` maps digits only.
+              // The frames draw whole percentages («٦٢٪», «٧٩٪», «٠٪») and
+              // core's own `summarizeDayAllocation` rounds, so this is the one
+              // consumer that disagreed with both. Rounding here rather than in
+              // the function keeps the stored ratio exact for anything that
+              // later wants it.
+              value={`${toArabicDigits(String(Math.round(cards.fillPercent)))}٪`}
+              sub={`${toArabicDigits(String(cards.bookedToday))} من ${formatCountedAr(cards.capacityToday, AR_SLOT)}`}
             />
             <StatCard
               testId="overview-card-cancellations"
@@ -154,7 +194,7 @@ export function OverviewView({ overview }: { overview: OpsOverview }) {
             <StatCard
               testId="overview-card-commission"
               label="عمولة متوقعة — الشهر حتى اليوم"
-              value={formatPiastersEgpAr(cards.expectedCommissionPiasters)}
+              value={`${formatPiastersEgpAr(cards.expectedCommissionPiasters)} ج.م`}
               sub="تقدير مبدئي — ليست فاتورة ولا كشف حساب"
             />
           </div>
@@ -208,7 +248,7 @@ export function OverviewView({ overview }: { overview: OpsOverview }) {
               className="rounded-xl border border-ih-neutral-200 bg-white p-5 text-[13px] leading-[1.7] text-ih-neutral-600 shadow-sm"
             >
               {toArabicDigits(String(network.activeBranches))} فرعاً نشطاً ·{' '}
-              {toArabicDigits(String(network.openSlots))} موعداً متاحاً — لم يصل أول حجز بعد.
+              {formatCountedAr(network.openSlots, AR_OPEN_SLOT)} — لم يصل أول حجز بعد.
             </p>
           ) : null}
         </div>
@@ -271,13 +311,14 @@ function AlertRow({
       }
     }
     return {
-      title: `${toArabicDigits(String(alert.branches?.length ?? 0))} فرعاً بلا حساب نشط`,
+      title: formatCountedAr(alert.branches?.length ?? 0, AR_UNSTAFFED_BRANCH),
       detail: `${(alert.branches ?? [])
         .slice(0, 4)
         .map((b) => b.branchNameAr)
-        .join(' · ')} — الحجوزات تصل ولا أحد يفتح البوابة (${toArabicDigits(
-        String((alert.branches ?? []).reduce((sum, b) => sum + (b.upcomingBookings ?? 0), 0)),
-      )} حجزاً قادماً بلا متابعة).`,
+        .join(' · ')} — الحجوزات تصل ولا أحد يفتح البوابة (${formatCountedAr(
+        (alert.branches ?? []).reduce((sum, b) => sum + (b.upcomingBookings ?? 0), 0),
+        AR_UPCOMING_BOOKING,
+      )} بلا متابعة).`,
       action: (
         <Link
           href="/admin/staff"
