@@ -1,6 +1,22 @@
 {
   "tables": [
     {
+      "table": "admin_booking_history",
+      "policies": [
+        {
+          "roles": "PUBLIC",
+          "using": "(get_user_role() = 'admin'::text)",
+          "policy": "admin booking history: admin reads",
+          "command": "SELECT",
+          "withCheck": "-"
+        }
+      ],
+      "rlsForced": false,
+      "rlsEnabled": true,
+      "columnCount": 7,
+      "writableColumns": {}
+    },
+    {
       "table": "admin_lockouts",
       "policies": [],
       "rlsForced": false,
@@ -438,6 +454,13 @@
     },
     {
       "config": "search_path=public",
+      "signature": "admin_cancel_booking(uuid,text,text)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
       "signature": "admin_create_branch(uuid,text,text,text,numeric,numeric,integer)",
       "executeGrants": "authenticated,postgres,service_role",
       "securityDefiner": true,
@@ -470,6 +493,13 @@
       "executeGrants": "authenticated,postgres,service_role",
       "securityDefiner": true,
       "takesIdentityParameter": true
+    },
+    {
+      "config": "search_path=public",
+      "signature": "admin_run_slot_generation()",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
     },
     {
       "config": "search_path=public",
@@ -518,6 +548,13 @@
       "signature": "auto_close_stale_bookings()",
       "executeGrants": "postgres,service_role",
       "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "booking_commission_view(uuid)",
+      "executeGrants": "postgres,service_role",
+      "securityDefiner": false,
       "takesIdentityParameter": false
     },
     {
@@ -655,6 +692,20 @@
     },
     {
       "config": "search_path=public",
+      "signature": "get_admin_booking_detail(uuid)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "get_admin_bookings(text,uuid,text,date,date,integer,integer)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
       "signature": "get_branch_bookings_for_date(uuid,date,text,text,integer,integer)",
       "executeGrants": "authenticated,postgres,service_role",
       "securityDefiner": true,
@@ -677,6 +728,13 @@
     {
       "config": "search_path=public",
       "signature": "get_commission_statement_view(uuid,date,integer)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "get_ops_overview()",
       "executeGrants": "authenticated,postgres,service_role",
       "securityDefiner": true,
       "takesIdentityParameter": false
