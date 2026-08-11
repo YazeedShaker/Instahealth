@@ -6,10 +6,10 @@ import { useRouter } from 'next/navigation'
 import { useRef, useState, useTransition } from 'react'
 
 import {
-  CANCEL_REASONS,
   adminCancelBookingAction,
   type OversightActionResult,
 } from '../../app/admin/oversight-actions'
+import { CANCEL_REASONS } from '../../lib/oversight/cancel-reasons'
 import type { OversightDetail, OversightRow, ProviderOption } from '../../lib/oversight/bookings'
 import { Button } from '../ui/Button'
 import { AdminHeader } from './AdminHeader'

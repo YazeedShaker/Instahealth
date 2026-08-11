@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
+import { CANCEL_REASON_CODES } from '../../lib/oversight/cancel-reasons'
 import { createClient } from '../../lib/supabase/server'
 
 // A06 + A07 — the two writes the admin portal's last screens make.
@@ -16,17 +17,6 @@ export interface OversightActionResult {
   errorAr: string | null
   slotsCreated?: number
 }
-
-/** The frame's dropdown. Kept beside the action because the server rejects
- *  anything else — this list and the CHECK in `admin_cancel_booking` are the
- *  same list, and the server is the enforcement. */
-export const CANCEL_REASONS = [
-  { code: 'partner_unavailable', labelAr: 'الفرع غير متاح' },
-  { code: 'patient_request', labelAr: 'بطلب من المريض' },
-  { code: 'duplicate', labelAr: 'حجز مكرر' },
-  { code: 'test_booking', labelAr: 'حجز تجريبي' },
-  { code: 'other', labelAr: 'سبب آخر' },
-] as const
 
 const ERROR_AR: Record<string, string> = {
   not_authorized: 'لا تملك صلاحية هذا الإجراء.',
@@ -45,13 +35,7 @@ const toArabicError = (code?: string): string =>
 
 const cancelSchema = z.object({
   bookingId: z.string().uuid(),
-  reasonCode: z.enum([
-    'partner_unavailable',
-    'patient_request',
-    'duplicate',
-    'test_booking',
-    'other',
-  ]),
+  reasonCode: z.enum(CANCEL_REASON_CODES),
   reasonNote: z.string().trim().max(500).optional(),
 })
 
