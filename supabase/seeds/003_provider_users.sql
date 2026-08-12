@@ -92,8 +92,16 @@ ins_ident AS (
   ON CONFLICT (provider, provider_id) DO NOTHING
   RETURNING user_id
 )
-INSERT INTO provider_users (auth_user_id, provider_id, branch_ids, role, is_active)
-SELECT c.uid, c.provider_id, c.branch_ids, c.role, TRUE FROM creds c
+-- ⚠ `name` IS WRITTEN HERE, and used not to be. The seed already carried
+-- `full_name` and put it in `auth.users.raw_user_meta_data` — but A05's staff
+-- list reads `provider_users.name`, which stayed NULL. The consequence was only
+-- visible on screen: every row in «حسابات المزودين» rendered a «؟» avatar and
+-- an em-dash where the name goes, and the account detail's `<h1>` was a bare
+-- «—». The value existed the whole time and never reached the column the screen
+-- reads. Found in the A05 fidelity capture (ENGINEERING-WORKFLOW §9); nothing
+-- in `pnpm gate` could have seen it.
+INSERT INTO provider_users (auth_user_id, provider_id, branch_ids, role, name, is_active)
+SELECT c.uid, c.provider_id, c.branch_ids, c.role, c.full_name, TRUE FROM creds c
 ON CONFLICT (auth_user_id) DO UPDATE
   SET provider_id = EXCLUDED.provider_id, branch_ids = EXCLUDED.branch_ids,
-      role = EXCLUDED.role, is_active = TRUE;
+      role = EXCLUDED.role, name = EXCLUDED.name, is_active = TRUE;

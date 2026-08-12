@@ -1,14 +1,18 @@
 'use client'
 
 import {
+  AR_BRANCH,
+  AR_PROVIDER,
   BRANCH_OFFERING_AR,
   SERVICE_STATUS_AR,
   bulkPriceNudgeMessageAr,
+  formatCountedAr,
   formatPriceRangeEgpAr,
   nextServiceStatuses,
   priceNudgeMessageAr,
   resolveNudgeChannel,
   toArabicDigits,
+  type ArabicCountedNoun,
   type ServiceStatus,
 } from '@instahealth/core'
 import { resolveTokenCss } from '@instahealth/design-tokens'
@@ -92,6 +96,31 @@ function countsLine(counts: CatalogCounts): string {
     `${toArabicDigits(String(counts.draft))} مسودة`,
     `${toArabicDigits(String(counts.suspended))} موقوفة`,
   ].join(' · ')
+}
+
+/** ⚠ COUNTED NOUN *PHRASES*, not bare nouns. An Arabic adjective agrees with
+ *  its noun, and the noun's own form is already changing with the number — so
+ *  «٦ فروع مُسعِّرة» becomes «٢٤ فرعاً مُسعِّراً», not «٢٤ فرعاً مُسعِّرة». Counting
+ *  the phrase is what keeps the two in step; counting the noun and appending a
+ *  fixed adjective is the bug one level up. The generic nouns live in core
+ *  (`AR_BRANCH` and friends); this vocabulary is A04's copy. */
+const AR_PRICING_BRANCH: ArabicCountedNoun = {
+  singular: 'فرع مُسعِّر',
+  dual: 'فرعان مُسعِّران',
+  plural: 'فروع مُسعِّرة',
+  accusative: 'فرعاً مُسعِّراً',
+}
+const AR_LINKED_BRANCH: ArabicCountedNoun = {
+  singular: 'فرع مرتبط',
+  dual: 'فرعان مرتبطان',
+  plural: 'فروع مرتبطة',
+  accusative: 'فرعاً مرتبطاً',
+}
+const AR_OUTSTANDING_BOOKING: ArabicCountedNoun = {
+  singular: 'حجز قائم',
+  dual: 'حجزان قائمان',
+  plural: 'حجوزات قائمة',
+  accusative: 'حجزاً قائماً',
 }
 
 export function CatalogView({
@@ -540,7 +569,7 @@ function CategoryConfirm({
         },
         {
           label: 'عند مزودين',
-          value: `${toArabicDigits(String(preview.affectedProviders))} مزود · ${toArabicDigits(String(preview.affectedBranches))} فرع`,
+          value: `${formatCountedAr(preview.affectedProviders, AR_PROVIDER)} · ${formatCountedAr(preview.affectedBranches, AR_BRANCH)}`,
           tone: 'good',
         },
         {
@@ -563,7 +592,7 @@ function CategoryConfirm({
         },
         {
           label: 'عبر الشبكة',
-          value: `${toArabicDigits(String(preview.affectedProviders))} مزود · ${toArabicDigits(String(preview.affectedBranches))} فرع`,
+          value: `${formatCountedAr(preview.affectedProviders, AR_PROVIDER)} · ${formatCountedAr(preview.affectedBranches, AR_BRANCH)}`,
           tone: 'warn',
         },
         {
@@ -595,7 +624,7 @@ function CategoryConfirm({
       }
       confirmLabel={
         activating
-          ? `تفعيل ${preview.nameAr} في ${toArabicDigits(String(preview.affectedBranches))} فرعاً`
+          ? `تفعيل ${preview.nameAr} في ${formatCountedAr(preview.affectedBranches, AR_BRANCH)}`
           : `إيقاف ${preview.nameAr} في كل الشبكة`
       }
       confirmTestId="catalog-category-confirm-submit"
@@ -992,10 +1021,10 @@ function ServiceDetailScreen({
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ih-neutral-200 px-4.5 py-3.5">
               <div className="flex flex-col gap-0.5">
                 <h2 className="text-[14.5px] font-bold text-ih-neutral-800">
-                  الأسعار في الفروع — {toArabicDigits(String(pricing.branchCount))} فرعاً مرتبطاً
+                  الأسعار في الفروع — {formatCountedAr(pricing.branchCount, AR_LINKED_BRANCH)}
                 </h2>
                 <span className="text-[11.5px] text-ih-neutral-600">
-                  {toArabicDigits(String(pricing.pricedCount))} فروع مُسعِّرة ·{' '}
+                  {formatCountedAr(pricing.pricedCount, AR_PRICING_BRANCH)} ·{' '}
                   <span className="font-bold" style={{ color: resolveTokenCss('warning.text') }}>
                     {toArabicDigits(String(pricing.unpricedCount))} بلا سعر — لن تظهر عندها الخدمة
                   </span>
@@ -1291,12 +1320,12 @@ function StatusConfirm({
   const rows: ConfirmRow[] = publishing
     ? [
         {
-          label: `${toArabicDigits(String(preview.pricing.pricedCount))} فروع تظهر فيها الخدمة فوراً`,
+          label: `${formatCountedAr(preview.pricing.pricedCount, AR_BRANCH)} تظهر فيها الخدمة فوراً`,
           value: formatPriceRangeEgpAr(preview.pricing.minPriceEgp, preview.pricing.maxPriceEgp),
           tone: 'good',
         },
         {
-          label: `${toArabicDigits(String(preview.pricing.unpricedCount))} فروع لن تظهر — بلا سعر`,
+          label: `${formatCountedAr(preview.pricing.unpricedCount, AR_BRANCH)} لن تظهر — بلا سعر`,
           value: preview.pricing.unpricedNames.slice(0, 3).join(' · ') || '—',
           tone: 'warn',
         },
@@ -1317,12 +1346,12 @@ function StatusConfirm({
       ]
     : [
         {
-          label: `${toArabicDigits(String(preview.pricing.pricedCount))} فروع تختفي فيها الخدمة فوراً`,
-          value: `${toArabicDigits(String(preview.pricing.providerCount))} مزودين`,
+          label: `${formatCountedAr(preview.pricing.pricedCount, AR_BRANCH)} تختفي فيها الخدمة فوراً`,
+          value: formatCountedAr(preview.pricing.providerCount, AR_PROVIDER),
           tone: 'warn',
         },
         {
-          label: `${toArabicDigits(String(preview.outstandingBookings))} حجزاً قائماً لا تتأثر`,
+          label: `${formatCountedAr(preview.outstandingBookings, AR_OUTSTANDING_BOOKING)} لا تتأثر`,
           value: 'تُخدَم وتُحاسَب في كشوفها',
           tone: 'good',
         },
@@ -1355,8 +1384,8 @@ function StatusConfirm({
       }
       confirmLabel={
         publishing
-          ? `نشر في ${toArabicDigits(String(preview.pricing.pricedCount))} فروع الآن`
-          : `إيقاف الخدمة في ${toArabicDigits(String(preview.pricing.pricedCount))} فروع`
+          ? `نشر في ${formatCountedAr(preview.pricing.pricedCount, AR_BRANCH)} الآن`
+          : `إيقاف الخدمة في ${formatCountedAr(preview.pricing.pricedCount, AR_BRANCH)}`
       }
       confirmTestId="catalog-status-confirm-submit"
       pending={isPending}

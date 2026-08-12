@@ -676,6 +676,37 @@ claim. `apps/web/e2e/fidelity.spec.ts` is the capture harness — it writes to
 `docs/design-briefs/<feature>-fidelity/` at **1366×768**, the desktop floor from
 the DESIGN-02 brief, because that is where layouts break.
 
+- **⚠ THE HARNESS REACHES THE ADMIN PORTAL NOW, SO PER-PR CAPTURE HAS NO
+  EXEMPTION LEFT.** For four features the honest reason A04–A07 shipped
+  uncaptured was mechanical: the harness could not obtain an `aal2` session, and
+  «the admin screens can't be captured» slowly became «the admin screens don't
+  get captured». `supabase/seeds/007_admin_fidelity_account.sql` seeds a
+  DEDICATED dev-only admin whose TOTP secret lives in the environment, and the
+  suite computes the current six digits and drives the REAL `/admin/login` form
+  — password, then code, through the same gate as a human. **No bypass endpoint,
+  no test-only branch, nothing in `getAdminContext` aware the suite exists**; if
+  a future session is tempted to add "just a dev flag to skip TOTP", that flag is
+  the vulnerability and this seed is the alternative that already works.
+  Three rules that came out of building it:
+  ① **One login for the whole block.** Supabase refuses a REPLAYED TOTP code, so
+  N captures signing in separately need N distinct 30-second windows — and two
+  parallel workers inside one window collide. The admin captures are
+  `describe.configure({ mode: 'serial' })` over a single shared page.
+  ② **Point it at its OWN account.** `admin.spec.ts` RESETS the account it runs
+  against (deletes the authenticator); the fidelity harness needs one to exist.
+  Both suites carry an explicit refuse-to-run tripwire naming the forbidden
+  emails — the founder's, and each other's.
+  ③ **A capture that shares a page owns it until nothing it started is still
+  running.** The loading-state capture delays a request on purpose; returning
+  while that request was in flight let it land during the NEXT capture, which
+  then failed on a testid from a different screen. Wait for the state to
+  resolve before the test ends.
+  ⚠ **A missing fixture FAILS rather than skips.** The A04 publish confirm needs
+  a non-published service and every real one is published, so
+  `008_fidelity_fixtures.sql` seeds a draft — and the capture throws if it is
+  absent. A skipped capture and a captured screen look identical in a summary
+  line, which is how the debt accrued in the first place.
+
 Why this is a rule: P01's first dashboard build was written from the `.dc.html`
 by eye, looked plausible in an accessibility tree, and was visibly wrong the
 moment the founder opened it. Reading markup is not seeing a screen.

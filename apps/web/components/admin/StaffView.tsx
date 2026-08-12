@@ -1,6 +1,6 @@
 'use client'
 
-import { toArabicDigits } from '@instahealth/core'
+import { formatCountedAr, toArabicDigits, type ArabicCountedNoun } from '@instahealth/core'
 import { resolveTokenCss } from '@instahealth/design-tokens'
 import { useRouter } from 'next/navigation'
 import { useMemo, useRef, useState, useTransition } from 'react'
@@ -87,6 +87,27 @@ function countsLine(counts: StaffCounts): string {
     `${toArabicDigits(String(counts.neverUsed))} لم تُستخدم بعد`,
     `${toArabicDigits(String(counts.disabled))} معطّلة`,
   ].join(' · ')
+}
+
+/** Counted noun PHRASES — see `formatCountedAr` in core. The captures showed
+ *  «٠ حجزاً» on the escalated disable confirm, where zero takes the plural. */
+const AR_UPCOMING_BOOKING: ArabicCountedNoun = {
+  singular: 'حجز قادم',
+  dual: 'حجزان قادمان',
+  plural: 'حجوزات قادمة',
+  accusative: 'حجزاً قادماً',
+}
+const AR_EMPTY_SLOT: ArabicCountedNoun = {
+  singular: 'موعد فارغ',
+  dual: 'موعدان فارغان',
+  plural: 'مواعيد فارغة',
+  accusative: 'موعداً فارغاً',
+}
+const AR_ACTIVE_ACCOUNT: ArabicCountedNoun = {
+  singular: 'حساب نشط',
+  dual: 'حسابان نشطان',
+  plural: 'حسابات نشطة',
+  accusative: 'حساباً نشطاً',
 }
 
 export function StaffView({
@@ -924,7 +945,7 @@ function DisableConfirm({
     const rows: ConfirmRow[] = [
       {
         label: 'حجوزات قادمة ستصل بلا متابعة',
-        value: `${toArabicDigits(String(preview.upcomingBookings))} حجزاً`,
+        value: formatCountedAr(preview.upcomingBookings, AR_UPCOMING_BOOKING),
         tone: 'warn',
         emphasise: true,
       },
@@ -939,7 +960,7 @@ function DisableConfirm({
           ]),
       {
         label: 'مواعيد فارغة تبقى قابلة للحجز',
-        value: `${toArabicDigits(String(preview.openSlots))} موعداً`,
+        value: formatCountedAr(preview.openSlots, AR_EMPTY_SLOT),
         tone: 'neutral',
       },
       {
@@ -955,7 +976,7 @@ function DisableConfirm({
         title="لن يتمكن أحد في هذا الفرع من رؤية الحجوزات"
         body="الحجوزات الجديدة ستستمر بالوصول إلى الفرع دون أي متابعة: لا أحد يفتح البوابة، ولا أحد يستقبل المريض في موعده. الفرع يبقى ظاهراً للمرضى وقابلاً للحجز — التعطيل لا يوقف الحجز."
         rows={rows}
-        acknowledgement={`أفهم أن ${branch} سيبقى قابلاً للحجز بلا أي متابعة، وأن ${toArabicDigits(String(preview.upcomingBookings))} حجوزات قادمة قد تصل دون أن يراها أحد.`}
+        acknowledgement={`أفهم أن ${branch} سيبقى قابلاً للحجز بلا أي متابعة، وأن ${formatCountedAr(preview.upcomingBookings, AR_UPCOMING_BOOKING)} قد تصل دون أن يراها أحد.`}
         confirmLabel="تعطيل وترك الفرع بلا متابعة"
         confirmTestId="staff-disable-confirm-submit"
         pending={isPending}
@@ -972,13 +993,13 @@ function DisableConfirm({
       tone: preview.hasOpenSession ? 'warn' : 'neutral',
     },
     {
-      label: `${branch} يبقى بـ ${toArabicDigits(String(preview.activeAccountsRemaining))} حساباً نشطاً`,
+      label: `${branch} يبقى بـ ${formatCountedAr(preview.activeAccountsRemaining, AR_ACTIVE_ACCOUNT)}`,
       value: preview.otherAccounts[0]?.nameAr ?? '—',
       tone: 'warn',
     },
     {
       label: 'حجوزات الفرع لا تتأثر',
-      value: `${toArabicDigits(String(preview.upcomingBookings))} حجزاً قادماً تُخدَم كما هي`,
+      value: `${formatCountedAr(preview.upcomingBookings, AR_UPCOMING_BOOKING)} تُخدَم كما هي`,
       tone: 'good',
     },
   ]
