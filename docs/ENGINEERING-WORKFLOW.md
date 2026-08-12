@@ -644,6 +644,26 @@ a full crawl`. It is benign and self-healing. To silence it, delete
 
 - Platform imports (react / react-native / next / expo\*) are lint-ERRORS in
   core — the rule is enforced, don't fight it, move the code instead.
+- **⚠ `toArabicDigits` MAPS DIGITS AND NOTHING ELSE — every fractional number
+  needs its SEPARATOR handled too.** `toArabicDigits(String(5.6))` returns
+  «٥.٦»: Arabic-Indic numerals around a **Latin** period. The Arabic decimal
+  mark is U+066B «٫» and the thousands separator is U+066C «٬», which
+  `formatPiastersEgpAr` has used since A02 — with a comment explaining why —
+  while every other caller has had to remember it independently.
+  Nobody remembered. It shipped on A07's «إشغال الشبكة اليوم» as «٥.٦٪» (found
+  by reading the fidelity capture, fixed 2026-08-11), and then **immediately
+  recurred in F08's brand-new `formatRatingAr`** the next day, in code written
+  by the same session that had just fixed the first one. Its unit test caught
+  that second instance before anything rendered, which is the only reason there
+  is one story here instead of two.
+  The lesson is not "remember the separator" — that has now failed twice. It is
+  that **a formatter which cannot produce a correct fractional number on its own
+  is a trap with a per-caller tax.** If a third instance appears, stop patching
+  callers and give core a `formatDecimalAr`; do NOT widen `toArabicDigits`
+  itself, because it is also applied to times, refs and ISO-ish strings where
+  rewriting a `.` would corrupt the value.
+  Same family as the counted-noun bug in the same batch («٢٤ فروع»): a rule
+  everyone knows, applied from memory, at N call sites.
 - Money math in integer piasters; missing/invalid commission rate THROWS.
 - All date/time logic pinned to `Africa/Cairo` with `now` injected — tests
   use January dates (stable UTC+2, no DST ambiguity).
