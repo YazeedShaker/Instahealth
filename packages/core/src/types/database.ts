@@ -1548,6 +1548,14 @@ export type Database = {
           total_count: number
         }[]
       }
+      get_branch_review_summary: {
+        Args: { p_branch_id: string }
+        Returns: Json
+      }
+      get_branch_reviews: {
+        Args: { p_branch_id: string; p_limit?: number; p_offset?: number }
+        Returns: Json
+      }
       get_branch_services_for_editor: {
         Args: { p_branch_id: string }
         Returns: {
@@ -1607,6 +1615,14 @@ export type Database = {
       }
       get_provider_branch_ids: { Args: never; Returns: string[] }
       get_provider_login_state: { Args: never; Returns: Json }
+      get_provider_review_summary: {
+        Args: {
+          p_exclude_branch_id?: string
+          p_limit?: number
+          p_provider_id: string
+        }
+        Returns: Json
+      }
       get_provider_staff_accounts: { Args: never; Returns: Json }
       get_provider_staff_detail: {
         Args: { p_provider_user_id: string }

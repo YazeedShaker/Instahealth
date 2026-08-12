@@ -743,6 +743,20 @@
     },
     {
       "config": "search_path=public",
+      "signature": "get_branch_review_summary(uuid)",
+      "executeGrants": "anon,authenticated,postgres,service_role",
+      "securityDefiner": false,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "get_branch_reviews(uuid,integer,integer)",
+      "executeGrants": "anon,authenticated,postgres,service_role",
+      "securityDefiner": false,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
       "signature": "get_branch_services_for_editor(uuid)",
       "executeGrants": "authenticated,postgres,service_role",
       "securityDefiner": true,
@@ -795,6 +809,13 @@
       "signature": "get_provider_login_state()",
       "executeGrants": "authenticated,postgres,service_role",
       "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "get_provider_review_summary(uuid,uuid,integer)",
+      "executeGrants": "anon,authenticated,postgres,service_role",
+      "securityDefiner": false,
       "takesIdentityParameter": false
     },
     {
