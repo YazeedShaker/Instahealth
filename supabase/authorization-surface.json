@@ -289,6 +289,22 @@
       "writableColumns": {}
     },
     {
+      "table": "review_moderation_history",
+      "policies": [
+        {
+          "roles": "PUBLIC",
+          "using": "(get_user_role() = 'admin'::text)",
+          "policy": "review moderation history: admin read",
+          "command": "SELECT",
+          "withCheck": "-"
+        }
+      ],
+      "rlsForced": false,
+      "rlsEnabled": true,
+      "columnCount": 7,
+      "writableColumns": {}
+    },
+    {
       "table": "reviews",
       "policies": [
         {
@@ -301,7 +317,7 @@
       ],
       "rlsForced": false,
       "rlsEnabled": true,
-      "columnCount": 10,
+      "columnCount": 11,
       "writableColumns": {}
     },
     {
@@ -510,6 +526,13 @@
     },
     {
       "config": "search_path=public",
+      "signature": "admin_set_review_hidden(uuid,boolean,text,text)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
       "signature": "admin_set_service_status(uuid,text)",
       "executeGrants": "authenticated,postgres,service_role",
       "securityDefiner": true,
@@ -622,6 +645,13 @@
     },
     {
       "config": "search_path=public",
+      "signature": "compose_review_display_name(text)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": false,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
       "signature": "compute_commission_draft(uuid,date)",
       "executeGrants": "authenticated,postgres,service_role",
       "securityDefiner": true,
@@ -728,6 +758,13 @@
     {
       "config": "search_path=public",
       "signature": "get_commission_statement_view(uuid,date,integer)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "get_my_review(uuid)",
       "executeGrants": "authenticated,postgres,service_role",
       "securityDefiner": true,
       "takesIdentityParameter": false
@@ -873,10 +910,10 @@
       "takesIdentityParameter": true
     },
     {
-      "config": "-",
+      "config": "search_path=public",
       "signature": "recalculate_branch_rating()",
-      "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
-      "securityDefiner": false,
+      "executeGrants": "postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {
@@ -919,6 +956,13 @@
       "signature": "set_updated_at()",
       "executeGrants": "PUBLIC,anon,authenticated,postgres,service_role",
       "securityDefiner": false,
+      "takesIdentityParameter": false
+    },
+    {
+      "config": "search_path=public",
+      "signature": "submit_review(uuid,integer,text)",
+      "executeGrants": "authenticated,postgres,service_role",
+      "securityDefiner": true,
       "takesIdentityParameter": false
     },
     {

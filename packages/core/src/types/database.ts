@@ -965,12 +965,51 @@ export type Database = {
           },
         ]
       }
+      review_moderation_history: {
+        Row: {
+          action: string
+          changed_at: string
+          changed_by: string | null
+          id: string
+          reason_code: string | null
+          reason_note: string | null
+          review_id: string
+        }
+        Insert: {
+          action: string
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          reason_code?: string | null
+          reason_note?: string | null
+          review_id: string
+        }
+        Update: {
+          action?: string
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          reason_code?: string | null
+          reason_note?: string | null
+          review_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_moderation_history_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews: {
         Row: {
           booking_id: string
           branch_id: string
           comment: string | null
           created_at: string | null
+          display_name: string | null
           id: string
           is_flagged: boolean | null
           is_verified: boolean | null
@@ -983,6 +1022,7 @@ export type Database = {
           branch_id: string
           comment?: string | null
           created_at?: string | null
+          display_name?: string | null
           id?: string
           is_flagged?: boolean | null
           is_verified?: boolean | null
@@ -995,6 +1035,7 @@ export type Database = {
           branch_id?: string
           comment?: string | null
           created_at?: string | null
+          display_name?: string | null
           id?: string
           is_flagged?: boolean | null
           is_verified?: boolean | null
@@ -1349,6 +1390,15 @@ export type Database = {
         Args: { p_category_id: string; p_is_active: boolean }
         Returns: Json
       }
+      admin_set_review_hidden: {
+        Args: {
+          p_hidden: boolean
+          p_reason_code?: string
+          p_reason_note?: string
+          p_review_id: string
+        }
+        Returns: Json
+      }
       admin_set_service_status: {
         Args: { p_service_id: string; p_to_status: string }
         Returns: Json
@@ -1409,6 +1459,10 @@ export type Database = {
       }
       complete_admin_password_change: { Args: never; Returns: Json }
       complete_provider_password_change: { Args: never; Returns: Json }
+      compose_review_display_name: {
+        Args: { p_full_name: string }
+        Returns: string
+      }
       compute_commission_draft: {
         Args: { p_month: string; p_provider_id: string }
         Returns: Json
@@ -1525,6 +1579,7 @@ export type Database = {
         Args: { p_month: string; p_provider_id: string; p_version?: number }
         Returns: Json
       }
+      get_my_review: { Args: { p_booking_id: string }; Returns: Json }
       get_ops_overview: { Args: never; Returns: Json }
       get_patient_bookings: {
         Args: never
@@ -1604,6 +1659,10 @@ export type Database = {
           p_percent: number
           p_provider_id: string
         }
+        Returns: Json
+      }
+      submit_review: {
+        Args: { p_booking_id: string; p_comment?: string; p_rating: number }
         Returns: Json
       }
       transition_statement: {
