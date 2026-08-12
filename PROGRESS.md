@@ -260,6 +260,61 @@ engineering tasks.
 
 ## Shipped
 
+### 2026-08-12 · FIX — every Card drew a near-BLACK border, and the favicon was still Next's
+
+**The founder reported the branch-details page as «the UI is not right».** It was
+not a P05 problem, exactly like the Card background before it.
+
+`CARD.borderColor` was `'border.base'`. `resolveTokenCss` kebab-joins, so that
+asked for `var(--ih-border-base)` — **a variable tokens.css does not define**
+(it defines `--ih-border`). An undefined variable makes the whole declaration
+invalid, and `border-color` then falls back to its CSS initial value,
+`currentColor` — so every Card outlined itself in the inherited TEXT colour.
+`CARD_SECTIONS.dividerColor` had the same ref, so every card divider did too.
+
+Measured on `/dashboard/profile` against the design frame, rendered side by side:
+
+|                 | build                                         | design                                  |
+| --------------- | --------------------------------------------- | --------------------------------------- |
+| card border     | `1px rgb(17, 28, 33)` (#111C21, text.primary) | `1px rgb(224, 229, 232)` (#E0E5E8)      |
+| card background | `rgb(255, 255, 255)`                          | `rgb(255, 255, 255)` ✅ already correct |
+| page background | `rgb(238, 241, 243)`                          | `rgb(238, 241, 243)` ✅ already correct |
+
+⚠ **THE BACKGROUNDS WERE FINE.** The reported diagnosis («the container
+background should be white») did not match what was rendering — measuring first
+is what found the real cause, and «fixing» the background would have changed a
+correct value and left the actual defect in place.
+
+**⚠ THIS IS THE THIRD TIME A DEAD TOKEN REF HAS SHIPPED, so it now has a guard.**
+`surface.base` (2026-08-11, every Card transparent) and `border.base` +
+`dividerColor` (this one) share one root cause: **`tokens.ts` declares
+`surface.base` and `border.base`; `tokens.css` emits neither.** The TS token tree
+and the CSS variables disagree on naming and the resolver trusts the TS side, so
+a dead ref survives review, typecheck, lint and every string-comparing test.
+`components.test.ts` now reads tokens.css as the runtime truth and fails on any
+ref that cannot resolve against it. **Proven by reintroducing the bug** — the
+test names the dead variable — and by a `refs.size > 20` assertion so a broken
+regex cannot make it vacuous.
+
+Blast radius, and the evidence: **26 of the 27 committed fidelity captures
+changed.** One line in the contract.
+
+**Also: the favicon was still the Next.js scaffold's**, added by SETUP-01 on
+2026-07-22 and never replaced — the brand mark only arrived on 07-29. Now
+generated from `public/brand/mark-color.svg`, the same file `<Logo>` renders, so
+the tab icon and the on-screen logo cannot drift: `icon.svg` (what modern
+browsers use), `favicon.ico` at 16/32/48 (crawlers and older clients still hit
+the root path), `apple-icon.png` at 180 rendered OPAQUE (iOS composites onto a
+white plate and a transparent PNG can render black), and Expo web's own
+`favicon.png`.
+
+⚠ **The mobile APP icons are still Expo's stock artwork** — `icon.png`,
+`splash-icon.png` and the three Android adaptive layers are all
+`react-logo`/`expo-logo` descendants from the scaffold. That is a store-
+submission blocker and it is NOT fixed here: an app icon needs design judgment
+about safe zones and the adaptive foreground/background split, not a mark
+scaled by a script.
+
 ### 2026-08-11 · F08 (data layer) — the review write path, moderation & the aggregate
 
 **The last open policy gap in the schema is closed, and it turned out to be a

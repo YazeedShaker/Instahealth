@@ -1,4 +1,7 @@
-import { describe, expect, test } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+
+import { describe, expect, it, test } from 'vitest'
 
 import {
   ALERTS,
@@ -173,5 +176,68 @@ describe('token resolution', () => {
       expect(resolveTokenCss(ref)).toBeTruthy()
       expect(() => resolveTokenNative(ref)).not.toThrow()
     }
+  })
+})
+
+describe('⚠ every token ref must resolve to a variable tokens.css actually defines', () => {
+  // THE GUARD FOR A BUG THAT SHIPPED TWICE.
+  //
+  // `resolveTokenCss` kebab-joins a dotted ref into `var(--ih-…)`. It cannot
+  // know whether that variable exists, and an undefined CSS variable is NOT an
+  // error — the browser drops the whole declaration and the property falls back
+  // to its initial value. So a typo in a token ref is invisible in review, in
+  // typecheck, in lint, and in every unit test that only checks the string.
+  //
+  // It has cost this project two defects with the same root cause:
+  //   · `CARD.background = 'surface.base'`   → var(--ih-surface-base) undefined
+  //     → background dropped → EVERY base Card painted transparent, showing the
+  //     page grey instead of white (found 2026-08-11).
+  //   · `CARD.borderColor = 'border.base'`   → var(--ih-border-base) undefined
+  //     → border-color fell back to `currentColor` → EVERY Card and every card
+  //     divider drew a near-black outline (found 2026-08-12, by the founder).
+  //
+  // Both were `.base` suffixes that `tokens.ts` declares and `tokens.css` does
+  // not emit. This test reads the CSS as the source of runtime truth and fails
+  // on any ref that cannot resolve against it.
+  const cssPath = resolve(__dirname, 'tokens.css')
+  const css = readFileSync(cssPath, 'utf8')
+  const defined = new Set(Array.from(css.matchAll(/--ih-[a-z0-9-]+/g), (match) => match[0]))
+
+  /** Every dotted string literal in the contract — the shape a token ref takes.
+   *
+   * ⚠ COMMENTS ARE STRIPPED FIRST. The contract's comments deliberately QUOTE
+   * the dead refs («'surface.base' asked for var(--ih-surface-base)…») so the
+   * next reader understands what went wrong — and scanning prose made this test
+   * fail on its own documentation. It must read code. */
+  const contract = readFileSync(resolve(__dirname, 'components.ts'), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\/\/.*$/gm, '')
+  const refs = new Set(
+    Array.from(
+      contract.matchAll(/'([a-z][a-zA-Z0-9]*(?:\.[a-zA-Z0-9]+)+)'/g),
+      (match) => match[1] as string,
+    ),
+  )
+
+  it('finds refs to check, so a broken regex cannot make this vacuous', () => {
+    // ⚠ A test that checks nothing passes. If the literal shape ever changes,
+    // this is what says so instead of quietly going green.
+    expect(refs.size).toBeGreaterThan(20)
+    expect(defined.size).toBeGreaterThan(40)
+  })
+
+  it('resolves every ref in components.ts against tokens.css', () => {
+    const dead: string[] = []
+    for (const ref of refs) {
+      const variable = resolveTokenCss(ref as Parameters<typeof resolveTokenCss>[0])
+      // Literals (hex, rgba, 'none', 'transparent') are not variable refs.
+      if (!variable.startsWith('var(')) continue
+      const name = variable.slice(4, -1)
+      if (!defined.has(name)) dead.push(`${ref} → ${name}`)
+    }
+    expect(
+      dead,
+      `dead token refs — these render as the CSS initial value:\n${dead.join('\n')}`,
+    ).toEqual([])
   })
 })
