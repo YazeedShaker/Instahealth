@@ -1,12 +1,13 @@
 'use client'
 
-import { formatPiastersEgpAr, isolateLtr, toArabicDigits } from '@instahealth/core'
+import { formatPiastersEgpAr, isolateLtr, starGlyphs, toArabicDigits } from '@instahealth/core'
 import { resolveTokenCss } from '@instahealth/design-tokens'
 import { useRouter } from 'next/navigation'
 import { useRef, useState, useTransition } from 'react'
 
 import {
   adminCancelBookingAction,
+  setReviewHiddenAction,
   type OversightActionResult,
 } from '../../app/admin/oversight-actions'
 import { CANCEL_REASONS } from '../../lib/oversight/cancel-reasons'
@@ -281,6 +282,15 @@ export function OversightView({
           isPending={isPending}
           onClose={() => push({ booking: '' })}
           onCancelRequest={() => setCancelOpen(true)}
+          onToggleReview={(reviewId, hidden) =>
+            run(() =>
+              setReviewHiddenAction({
+                reviewId,
+                hidden,
+                reasonCode: hidden ? 'admin_moderation' : undefined,
+              }),
+            )
+          }
         />
       ) : null}
 
@@ -361,11 +371,15 @@ function BookingDrawer({
   isPending,
   onClose,
   onCancelRequest,
+  onToggleReview,
 }: {
   detail: OversightDetail
   isPending: boolean
   onClose: () => void
   onCancelRequest: () => void
+  /** F08 — raised to the parent, which owns `run` and the in-flight ref. The
+   *  drawer stays presentational, exactly as it is for cancel. */
+  onToggleReview: (reviewId: string, hidden: boolean) => void
 }) {
   const canCancel = !['cancelled', 'completed'].includes(detail.status)
 
@@ -478,6 +492,69 @@ function BookingDrawer({
                 </span>
               </div>
             )}
+          </section>
+        ) : null}
+
+        {/* ── F08 · the review, and the only moderation control in v1 ──────
+            ⚠ HIDING IS NOT DELETING, and the copy says so. The row stays, the
+            audit trail records who and why, and restoring puts it back in the
+            branch average immediately — the aggregate trigger counts published
+            rows only, so both directions move the star the patient sees.
+            ⚠ The author is NOT notified (v1 truth, SPEC-F08 §A.3). */}
+        {detail.review !== null ? (
+          <section data-testid="oversight-review" className="border-t border-ih-neutral-200 p-5">
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <h3 className="text-[13px] font-bold text-ih-neutral-800">تقييم المريض</h3>
+              <span
+                data-testid={`oversight-review-${detail.review.isPublished ? 'published' : 'hidden'}`}
+                className="whitespace-nowrap rounded-full px-2.5 py-[3px] text-[11px] font-bold"
+                style={{
+                  color: resolveTokenCss(detail.review.isPublished ? 'primary.700' : 'neutral.600'),
+                  background: resolveTokenCss(
+                    detail.review.isPublished ? 'success.bg' : 'neutral.100',
+                  ),
+                }}
+              >
+                {detail.review.isPublished ? 'ظاهر للمرضى' : 'مخفي — لا يظهر ولا يُحتسب'}
+              </span>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center gap-2">
+                <span
+                  className="text-[14px]"
+                  style={{ color: resolveTokenCss('semantic.warning') }}
+                  aria-label={`${detail.review.rating} من ٥`}
+                >
+                  {starGlyphs(detail.review.rating)}
+                </span>
+                <span className="text-[12px] text-ih-neutral-600">
+                  {detail.review.displayName ?? 'مريض'}
+                </span>
+              </div>
+              <p className="text-[12.5px] leading-[1.7] text-ih-neutral-700">
+                {detail.review.comment === null || detail.review.comment.length === 0
+                  ? 'قيّم بالنجوم بلا تعليق.'
+                  : detail.review.comment}
+              </p>
+              <div className="mt-1 flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant={detail.review.isPublished ? 'destructive' : 'primary'}
+                  data-testid="oversight-review-toggle"
+                  disabled={isPending}
+                  onClick={() =>
+                    onToggleReview(detail.review!.reviewId, detail.review!.isPublished)
+                  }
+                >
+                  {detail.review.isPublished ? 'إخفاء التقييم' : 'إعادة إظهار التقييم'}
+                </Button>
+                <span className="text-[11.5px] text-ih-neutral-500">
+                  {detail.review.isPublished
+                    ? 'يختفي من صفحة الفرع ومن المتوسط فوراً. لا يُحذف، ولا يُخطر صاحبه.'
+                    : 'يعود إلى صفحة الفرع وإلى المتوسط فوراً.'}
+                </span>
+              </div>
+            </div>
           </section>
         ) : null}
 

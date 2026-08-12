@@ -33,6 +33,7 @@ import { FlowCtaBar } from '../../../components/booking/FlowCtaBar'
 import { PreparationStrip } from '../../../components/branch/PreparationStrip'
 import { PrimaryButton } from '../../../components/ui/PrimaryButton'
 import { addBookingToCalendar, type AddToCalendarResult } from '../../../features/booking/calendar'
+import { useMyReview } from '../../../features/reviews/queries'
 import { cancelBooking } from '../../../features/bookings/api'
 import { MY_BOOKINGS_QUERY_KEY, useMyBookings } from '../../../features/bookings/queries'
 import { useUserLocation } from '../../../features/home/useUserLocation'
@@ -89,6 +90,10 @@ export default function BookingDetailScreen() {
   )
 
   const booking = (bookingsQuery.data ?? []).find((entry) => entry.id === id) ?? null
+
+  // Asked only for a completed booking — the label on the CTA is the server's
+  // answer about whether a review already exists, not a local guess.
+  const myReview = useMyReview(id, booking?.status === 'completed').data ?? null
 
   if (bookingsQuery.isPending) {
     return (
@@ -392,6 +397,31 @@ export default function BookingDetailScreen() {
           </View>
         ) : null}
       </ScrollView>
+
+      {/* F08 — the review entry point. Only a COMPLETED booking gets it, which
+          is the same predicate `submit_review` enforces: completed is
+          human-marked by definition (a system close goes to no_show), so it
+          means someone at the desk witnessed the visit.
+          ⚠ The label follows `get_my_review`, not local state — a patient who
+          already rated sees «تقييمك» and lands on the given-rating state, and a
+          patient whose review was HIDDEN also sees «تقييمك» rather than being
+          offered a prompt the UNIQUE constraint would refuse. */}
+      {booking.status === 'completed' ? (
+        <FlowCtaBar>
+          <Pressable
+            testID="booking-detail-rate"
+            accessibilityRole="button"
+            accessibilityLabel={myReview?.found === true ? 'تقييمك لهذه الزيارة' : 'قيّم زيارتك'}
+            onPress={() => router.push(`/(app)/rate/${booking.id}`)}
+            className="h-[52px] w-full items-center justify-center rounded-ih-sm"
+            style={{ backgroundColor: colors.primary[400] }}
+          >
+            <Text className="font-arabic-semibold text-base text-white">
+              {myReview?.found === true ? 'تقييمك لهذه الزيارة' : 'قيّم زيارتك'}
+            </Text>
+          </Pressable>
+        </FlowCtaBar>
+      ) : null}
 
       {/* The cancel affordance disappears once the appointment is past or the
           booking is already closed — `isBookingCancellable` is the same

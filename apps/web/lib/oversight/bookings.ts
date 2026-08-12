@@ -60,6 +60,21 @@ export interface OversightDetail {
     changedAt: string
     who: string
   }[]
+  /** F08 — the patient's review of this visit, if one exists. NULL for a
+   *  booking that was never completed or never rated. */
+  review: BookingReview | null
+}
+
+/** ⚠ `isPublished` is the ADMIN's view of the dial, and the admin is the only
+ *  reader who can see a hidden review at all — that is the entire point of the
+ *  moderation surface. Patients get `is_flagged = false` rows only. */
+export interface BookingReview {
+  reviewId: string
+  rating: number
+  comment: string | null
+  displayName: string | null
+  isPublished: boolean
+  createdAt: string
 }
 
 export interface OpsAlert {
@@ -121,7 +136,35 @@ export async function fetchAdminBookingDetail(bookingId: string): Promise<Oversi
   })
   if (error) throw error
   const result = data as unknown as OversightDetail
-  return result?.found === true ? result : null
+  if (result?.found !== true) return null
+
+  // ⚠ A SEPARATE READ, NOT A CHANGE TO THE RPC. `get_admin_booking_detail` is
+  // A06's contract and several assertions depend on its shape; a review is an
+  // independent fact about the booking, and the admin SELECT policy already
+  // lets it through INCLUDING hidden rows («reviews: public read unflagged»
+  // ends with `OR get_user_role() = 'admin'`). Fetching it here keeps F08 from
+  // reshaping a proven function.
+  const { data: review, error: reviewError } = await supabase
+    .from('reviews')
+    .select('id, rating, comment, display_name, is_flagged, created_at')
+    .eq('booking_id', bookingId)
+    .maybeSingle()
+  if (reviewError) throw reviewError
+
+  return {
+    ...result,
+    review:
+      review === null
+        ? null
+        : {
+            reviewId: review.id,
+            rating: review.rating,
+            comment: review.comment,
+            displayName: review.display_name,
+            isPublished: review.is_flagged !== true,
+            createdAt: review.created_at ?? new Date().toISOString(),
+          },
+  }
 }
 
 export async function fetchOpsOverview(): Promise<OpsOverview> {

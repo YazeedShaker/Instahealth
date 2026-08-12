@@ -1,3 +1,5 @@
+import { toArabicDigits } from './format'
+
 // F08 — the shared half of reviews: what the server can refuse, and what the
 // patient reads when it does.
 //
@@ -68,4 +70,51 @@ export function hasPublishedRating(
   reviewCount: number | null | undefined,
 ): boolean {
   return (reviewCount ?? 0) > 0 && rating !== null && rating !== undefined
+}
+
+// ── Display vocabulary ──────────────────────────────────────────────────────
+
+/** The live label under the star picker — the frame shows «أربع نجوم — جيدة»
+ *  for four, which is the only rung it draws.
+ *
+ * ⚠ THE OTHER FOUR RUNGS ARE COMPOSED, NOT TRANSCRIBED. The addendum gives one
+ * data point and the picker needs five, so the ladder is built to match its
+ * register (a plain count, an em-dash, one adjective) and flagged for the
+ * founder in EXPORT.md alongside the thanks state. If the bundle is revised
+ * with real copy, this is the one place it changes. */
+const STAR_LADDER_AR: Record<1 | 2 | 3 | 4 | 5, string> = {
+  1: 'نجمة واحدة — سيئة',
+  2: 'نجمتان — دون المتوقع',
+  3: 'ثلاث نجوم — مقبولة',
+  4: 'أربع نجوم — جيدة',
+  5: 'خمس نجوم — ممتازة',
+}
+
+/** `null` until the patient has picked — the label is absent, not "zero stars". */
+export function starLabelAr(rating: number | null | undefined): string | null {
+  if (rating === null || rating === undefined) return null
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) return null
+  return STAR_LADDER_AR[rating as 1 | 2 | 3 | 4 | 5]
+}
+
+/** «★★★★☆» — filled then hollow, which is how the frame draws a partial score.
+ *  Never a half star: the design has no glyph for one. */
+export function starGlyphs(rating: number): string {
+  const filled = Math.max(0, Math.min(5, Math.round(rating)))
+  return '★'.repeat(filled) + '☆'.repeat(5 - filled)
+}
+
+/** The average, formatted as the frame draws it — one decimal, Arabic-Indic.
+ *  Returns null when there is nothing to average, so the caller renders the
+ *  zero state rather than a number.
+ *
+ * ⚠ THE DECIMAL MARK IS U+066B «٫», NOT AN ASCII PERIOD. `toArabicDigits` maps
+ * digits only, so `(4.6).toFixed(1)` comes through as «٤.٦» — Arabic-Indic
+ * numerals around a Latin separator. That is the exact defect the A07 fill
+ * percentage shipped with and PR #58 fixed; `formatPiastersEgpAr` has used the
+ * Arabic mark since A02 for the same reason. The test above is what caught it
+ * here before anyone saw a screen. */
+export function formatRatingAr(average: number | null | undefined): string | null {
+  if (average === null || average === undefined) return null
+  return toArabicDigits(average.toFixed(1)).replace('.', '٫')
 }

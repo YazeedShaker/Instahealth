@@ -8,6 +8,7 @@ import { BranchInfoHeader } from '../../../components/branch/BranchInfoHeader'
 import { BranchPhotoHeader } from '../../../components/branch/BranchPhotoHeader'
 import { BranchProfileSkeleton } from '../../../components/branch/BranchProfileSkeleton'
 import { PreparationStrip } from '../../../components/branch/PreparationStrip'
+import { ReviewsSection } from '../../../components/reviews/ReviewsSection'
 import { ServicesSection } from '../../../components/branch/ServicesSection'
 import { SlotsPreviewStrip } from '../../../components/branch/SlotsPreviewStrip'
 import { StickyBookingBar } from '../../../components/branch/StickyBookingBar'
@@ -136,6 +137,17 @@ export default function BranchProfileScreen() {
             </Text>
           ) : null}
         </View>
+
+        {/* F08 — «التقييمات». Last section before the sticky CTA: a patient
+            chooses services first and reads opinions to confirm, not to start.
+            The section owns its own frame choice (A when there are reviews,
+            C when there are none), so nothing here has to know which. */}
+        <ReviewsSection
+          branchId={branch.id}
+          providerId={branch.providerId}
+          providerNameAr={branch.providerNameAr}
+          now={now}
+        />
       </ScrollView>
       <StickyBookingBar summary={summary} onBook={() => router.push('/(app)/booking/slot')} />
     </View>

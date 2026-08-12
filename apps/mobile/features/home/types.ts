@@ -8,7 +8,8 @@ export interface HomeBranch {
   lat: number | null
   lng: number | null
   hours: BranchHours | null
-  rating: number
+  /** NULL means no published reviews — see BranchProfile.rating. */
+  rating: number | null
   reviewCount: number
   /** ACTIVE category slugs this branch actually serves (labs/scans/…). */
   categorySlugs: string[]

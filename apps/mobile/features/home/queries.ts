@@ -48,7 +48,7 @@ export function useHomeBranches() {
           lat: branch.lat,
           lng: branch.lng,
           hours: parseBranchHours(branch.operating_hours),
-          rating: branch.rating ?? 0,
+          rating: branch.rating,
           reviewCount: branch.review_count ?? 0,
           categorySlugs,
         }

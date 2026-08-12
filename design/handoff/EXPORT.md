@@ -60,6 +60,21 @@ rather than copying pixel values out of the prototype — the prototype is one
 rendering of the system, the contract is the system. Hand-copying values is how
 P01's first dashboard build drifted from the design.
 
+## ⚠ Revisions the BUILD is owed — flag for the next export
+
+The bundle is the design source, but it is not infallible and it is not always
+current. These are places where the spec or a ratified decision has overtaken
+it, recorded per workflow §1.5 («when a spec and a design bundle disagree, the
+spec wins and the bundle gets flagged for revision») rather than silently
+resolved in code.
+
+| frame                                 | what is missing or stale                                                                                                                                                                                  | how the build resolved it                                                                                                                                                                                                                   |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Reviews Display Addendum**, frame B | **No thanks / success state is drawn at all.** The prompt has a submit button and no post-submit frame — no «شكراً», no confirmation, nothing. SPEC-F08 §B.1 requires one («submit once → thanks state»). | Composed from the component contract under the §9 exception, founder ruling 2026-08-12. It renders in the SAME component as the prompt with the state as a prop, so no element type changes at that position — the A01 recovery-codes trap. |
+| **Reviews Display Addendum**, frame B | The live star label is drawn for **four stars only** («أربع نجوم — جيدة»); the picker needs five rungs.                                                                                                   | The other four are composed to match its register and live in one place, `STAR_LADDER_AR` in `packages/core/src/business/reviews.ts`. Replace there if the bundle is revised.                                                               |
+| **Reviews Display Addendum**, frame C | The zero state quotes a **provider-level average** («مختبرات النيل تحمل ٤.٧ من ٥ في فروعها الأخرى»), a figure with no column in the schema.                                                               | Computed at query time by `get_provider_review_summary` — the weighted mean of review ROWS across the provider's other branches, never stored (founder ruling 2026-08-12).                                                                  |
+| **Admin - Bookings Oversight**        | Draws five booking states and has **no `arrived` state**; it labels completion «مكتمل».                                                                                                                   | The build ships «وصل» / «تمت الخدمة» from DECISION-booking-outcome-lifecycle, which post-dates the frame. The spec wins; **this frame needs re-drawing.**                                                                                   |
+
 ## Export log
 
 | Date       | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |

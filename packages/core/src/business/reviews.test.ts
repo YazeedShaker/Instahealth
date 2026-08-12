@@ -4,7 +4,10 @@ import {
   REVIEW_COMMENT_MAX_LENGTH_SERVER,
   REVIEW_ERROR_AR,
   describeReviewError,
+  formatRatingAr,
   hasPublishedRating,
+  starGlyphs,
+  starLabelAr,
   type ReviewErrorCode,
 } from './reviews'
 import { REVIEW_COMMENT_MAX_LENGTH } from '../schemas/review.schema'
@@ -67,5 +70,37 @@ describe('hasPublishedRating — «لا نجمة كاذبة ولا صفر مخي
     // COUNT rather than on truthiness of the rating — `rating > 0` would hide a
     // legitimate low score if the scale ever changed.
     expect(hasPublishedRating(0, 5)).toBe(true)
+  })
+})
+
+describe('the star vocabulary', () => {
+  it('labels every rung, and nothing else', () => {
+    expect(starLabelAr(4)).toBe('أربع نجوم — جيدة') // the one rung the frame draws
+    expect(starLabelAr(1)).toBe('نجمة واحدة — سيئة')
+    expect(starLabelAr(5)).toBe('خمس نجوم — ممتازة')
+    // ⚠ null, not «صفر نجوم» — before a pick the label is ABSENT.
+    for (const value of [null, undefined, 0, 6, 3.5]) {
+      expect(starLabelAr(value as number | null)).toBeNull()
+    }
+  })
+
+  it('renders filled-then-hollow, never a half star', () => {
+    expect(starGlyphs(5)).toBe('★★★★★')
+    expect(starGlyphs(4)).toBe('★★★★☆')
+    expect(starGlyphs(1)).toBe('★☆☆☆☆')
+    // An average is a decimal; the frame has no half-star glyph, so it rounds.
+    expect(starGlyphs(4.6)).toBe('★★★★★')
+    expect(starGlyphs(4.4)).toBe('★★★★☆')
+    // Out of range cannot produce a string of the wrong length.
+    expect(starGlyphs(0)).toHaveLength(5)
+    expect(starGlyphs(99)).toBe('★★★★★')
+  })
+
+  it('formats the average the way the frame draws it — one decimal, Arabic-Indic', () => {
+    expect(formatRatingAr(4.6)).toBe('٤٫٦')
+    expect(formatRatingAr(5)).toBe('٥٫٠')
+    // ⚠ null in, null out — the caller must render the zero state, not «٠٫٠».
+    expect(formatRatingAr(null)).toBeNull()
+    expect(formatRatingAr(undefined)).toBeNull()
   })
 })
