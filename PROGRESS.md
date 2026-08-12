@@ -308,6 +308,38 @@ the root path), `apple-icon.png` at 180 rendered OPAQUE (iOS composites onto a
 white plate and a transparent PNG can render black), and Expo web's own
 `favicon.png`.
 
+**And the web build no longer depends on Google being reachable.** `layout.tsx`
+used `next/font/google`, which downloads Cairo and Atkinson from
+`fonts.gstatic.com` **at build time**. That fetch failed on a CI runner while
+this very PR was in flight, turning the build red with a webpack error that
+names nothing about networking until four screens down:
+
+```
+NextFontError: Failed to fetch `Cairo` from Google Fonts.
+```
+
+Nothing in the diff caused it and a re-run went green — the worst shape a
+failure can have: non-deterministic, unrelated to the change, and paid for
+twice. It would fail a **production deploy** identically, and Arabic is the
+product's primary script, so a build that cannot reach Google is a build that
+cannot ship the app's typeface. `tokens.css` already carried the intent —
+«No remote @import here — keeps builds hermetic» — which `layout.tsx` was
+quietly violating.
+
+Now `next/font/local`, with the files vendored from the `@expo-google-fonts/*`
+packages **both apps already depend on** — so web and mobile render the SAME
+bytes rather than one pulling a Google subset and the other a package TTF. Both
+are SIL OFL; the licences sit beside them. Cairo 300 was declared and never used
+anywhere in the app, so it is not vendored.
+
+Verified in the browser rather than assumed: **zero requests to
+gstatic/googleapis**, all seven faces served from `/_next/static/media/`, and
+Arabic measurably rendering in the real face (487px vs 366px for a forced serif
+fallback — identical widths would have meant a silent fallback). Cost: 294 KB
+transferred, immutably cached, on a desktop staff tool. All seven weights are
+preloaded; splitting the primary weights from the rest is available if that ever
+matters.
+
 ⚠ **The mobile APP icons are still Expo's stock artwork** — `icon.png`,
 `splash-icon.png` and the three Android adaptive layers are all
 `react-logo`/`expo-logo` descendants from the scaffold. That is a store-
