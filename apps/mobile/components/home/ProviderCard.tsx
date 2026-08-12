@@ -1,7 +1,9 @@
 import {
   formatDistanceAr,
+  formatRatingAr,
   getFirstAvailableSlotLabel,
   getOpenStatus,
+  hasPublishedRating,
   toArabicDigits,
 } from '@instahealth/core'
 import { colors } from '@instahealth/design-tokens'
@@ -55,11 +57,11 @@ export function ProviderCard({ branch, firstSlot, now }: ProviderCardProps) {
             </View>
           </View>
         </View>
-        {branch.reviewCount > 0 ? (
+        {hasPublishedRating(branch.rating, branch.reviewCount) ? (
           <View className="flex-row items-center gap-1">
             <Text style={{ color: colors.semantic.warning, fontSize: 14 }}>★</Text>
             <Text className="font-arabic-bold text-sm text-ih-neutral-800">
-              {toArabicDigits(branch.rating.toFixed(1))}
+              {formatRatingAr(branch.rating)}
             </Text>
             <Text className="font-arabic text-xs text-ih-neutral-500">
               ({toArabicDigits(String(branch.reviewCount))} تقييم)

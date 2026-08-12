@@ -36,7 +36,7 @@ export function useBranchProfile(branchId: string | undefined) {
           .from('branches')
           .select(
             `id, name_ar, address_ar, district, phone, lat, lng, operating_hours,
-             rating, review_count, photos, is_active,
+             rating, review_count, photos, is_active, provider_id,
              provider:providers!inner(name_ar, is_active),
              branch_services(id, price, is_available,
                service:services!inner(id, name_ar, name_en, category_id, is_active,
@@ -107,6 +107,7 @@ export function useBranchProfile(branchId: string | undefined) {
       return {
         id: branch.id,
         nameAr: branch.name_ar,
+        providerId: branch.provider_id,
         providerNameAr: branch.provider.name_ar,
         addressAr: branch.address_ar,
         district: branch.district,
@@ -114,7 +115,7 @@ export function useBranchProfile(branchId: string | undefined) {
         lat: branch.lat,
         lng: branch.lng,
         hours: parseBranchHours(branch.operating_hours),
-        rating: branch.rating ?? 0,
+        rating: branch.rating,
         reviewCount: branch.review_count ?? 0,
         photos: branch.photos ?? [],
         categorySlugs: [...new Set(services.map((service) => service.categorySlug))],

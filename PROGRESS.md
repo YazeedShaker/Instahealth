@@ -260,6 +260,79 @@ engineering tasks.
 
 ## Shipped
 
+### 2026-08-11 · F08 (data layer) — the review write path, moderation & the aggregate
+
+**The last open policy gap in the schema is closed, and it turned out to be a
+different gap than everyone thought.**
+
+⚠ **THREE OF THE SPEC'S FOUR PREMISES WERE WRONG.** The audit ran first, as
+SPEC-F08 instructs, and found:
+
+| the premise                                                                    | the reality                                                                                                                                                                                                                                                            |
+| ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| «`reviews` still carries patient INSERT/UPDATE policies that are COLUMN-BLIND» | **They were dropped on 2026-08-03** (migration `20260803160517`), with four siblings. There was no door to close — there was no door at all                                                                                                                            |
+| «`reviews` has NO admin write policy»                                          | **True**, and it stays that way. Moderation is a SECURITY DEFINER writer, not a policy                                                                                                                                                                                 |
+| «aggregates get a DEFINER trigger recomputing on insert/hide/restore»          | **The trigger already existed** since the first migration — but SECURITY INVOKER with no pinned `search_path`, so its `UPDATE branches` was subject to the caller's RLS and would have silently touched ZERO rows. It worked only because nothing wrote reviews at all |
+| the «published/hidden flag» and the composed display name                      | **Neither had a column** (§5a②)                                                                                                                                                                                                                                        |
+
+**What shipped** (migration `20260811183000`, 42 migrations total):
+
+- **`submit_review(booking_id, rating, comment)`** — SECURITY DEFINER, its own
+  authorization check, **no user id and no branch id parameters**: both are
+  derived from the booking, which is matched on `auth.uid()`. Prefer deleting
+  the parameter to validating it (§5) — with no channel to carry the lie,
+  impersonation is impossible by construction.
+- **`admin_set_review_hidden(...)`** — the moderation path that did not exist.
+  Role-checked, idempotent, writes a `review_moderation_history` row with
+  `changed_by` **derived**, never passed.
+- **`get_my_review(booking_id)`** — ⚠ without it the prompt lies. The SELECT
+  policy hides flagged rows from everyone but an admin, so a patient whose
+  review was moderated would be offered the prompt again and the
+  `UNIQUE(booking_id)` constraint would refuse the submission. §1.4 applied to
+  moderation.
+- **`reviews.display_name`** — the frame promises exactly how the name appears
+  («هالة ف.»), so the promise is MATERIALISED at insert. A live join to
+  `users.name_ar` would let a later profile edit silently rewrite a published
+  byline.
+- **The aggregate hardened** — DEFINER + pinned `search_path`, and ⚠ its
+  inherited `PUBLIC,anon` EXECUTE grant REVOKED. Making it DEFINER without that
+  would have left it _worse_ than before: a SECURITY DEFINER function reachable
+  with the public anon key is the `confirm_booking` shape exactly.
+- **`REVOKE INSERT, UPDATE ON reviews FROM anon, authenticated`** — the policies
+  were gone but the GRANTS were not, so one future permissive policy reopened
+  every column including `is_flagged`, `is_verified` and `rating`. A grant is a
+  ceiling a policy can never raise.
+
+**⚠ THE HIDE SWITCH IS `is_flagged`, AND THERE IS DELIBERATELY NO SECOND
+BOOLEAN.** `published ≡ is_flagged = FALSE`. Two columns that must agree is the
+single most repeated mistake in this schema, and the two consumers that already
+existed — the SELECT policy and the aggregate trigger — key off it and already
+agree. **If v2 adds patient reporting, "reported" needs its OWN column.**
+
+**Verified: 41/41 against live dev** (`scripts/verify-f08-reviews.mjs`) — the
+whole eligibility matrix, aggregates across insert → hide → restore, name
+composition, the moderation refusal for a non-admin, hidden-absent-from-patient
+reads, and three `42501`s proving the revoked grants bite. One transaction,
+rolled back, residue re-checked from a separate connection. Authorization
+surface regenerated and hand-edited: **19 → 18 standing items**, because the
+trigger's anon-executability is gone.
+
+**⚠ WHAT IS NOT IN THIS PR: the screens (SPEC-F08 §B).** This is the data layer
+only, following the A03 and A04+A05 precedent. The mobile prompt, the branch
+profile's reviews section, the zero state and the A06 drawer surface are all
+outstanding — see the hand-off in the PR body. **So F08 is NOT done and v1 is
+NOT feature-complete yet.**
+
+Two things the screens will hit, both found in the audit and neither solvable in
+SQL alone:
+
+1. **The zero-state frame quotes a PROVIDER-level average** («مختبرات النيل
+   تحمل ٤.٧ من ٥ في فروعها الأخرى») and there is no `providers.rating` column.
+   That is a computed read, and it is §5a② again.
+2. **The addendum draws no thanks/success state** for the prompt, though the
+   spec requires one. Spec wins over the bundle (§1.5) — **the bundle needs
+   revision**, and the state gets composed from the component contract.
+
 ### 2026-08-10 · A06 + A07 — Bookings oversight & the ops overview (web, admin)
 
 **🎉 THE ADMIN PORTAL IS COMPLETE.** Every sidebar surface is live; there is no

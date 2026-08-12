@@ -2,8 +2,10 @@ import {
   DAY_LABELS_AR,
   formatDayHoursAr,
   formatDistanceAr,
+  formatRatingAr,
   getCairoDayKey,
   getOpenStatus,
+  hasPublishedRating,
   toArabicDigits,
   WEEK_DAY_ORDER,
 } from '@instahealth/core'
@@ -56,11 +58,11 @@ export function BranchInfoHeader({ branch, distanceKm, now }: BranchInfoHeaderPr
       </View>
 
       <View className="flex-row flex-wrap items-center gap-4">
-        {branch.reviewCount > 0 ? (
+        {hasPublishedRating(branch.rating, branch.reviewCount) ? (
           <View className="flex-row items-center gap-1">
             <Text style={{ color: colors.semantic.warning, fontSize: 14 }}>★</Text>
             <Text className="font-arabic-bold text-[13px] text-ih-neutral-800">
-              {toArabicDigits(branch.rating.toFixed(1))}
+              {formatRatingAr(branch.rating)}
             </Text>
             <Text className="font-arabic text-[13px] text-ih-neutral-600">
               ({toArabicDigits(String(branch.reviewCount))} تقييم)
