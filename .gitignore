@@ -38,3 +38,13 @@ apps/mobile/android/
 Pre-docs/
 Implementation Docs/
 UI screens/
+
+# ⚠ THE BRAND BUNDLE IS NOT COMMITTED — founder's standing instruction.
+# It is 1.6MB of design-tool HTML with an inlined React runtime, and it was
+# swept in once by `git add design/brand` (a DIRECTORY add has the same effect
+# as `git add -A` for untracked files, which is the mistake this line prevents
+# recurring). CodeQL scanned it and raised five alerts — an xss-through-dom and
+# four cross-window-information-leak — none of them our code.
+# `design/brand/BRAND.md` is the committed extract; read the bundle for anything
+# it does not cover.
+design/brand/InstaHealth Brand Assets.html
