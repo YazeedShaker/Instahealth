@@ -125,7 +125,22 @@ export const BUTTON_BASE = {
 export const CARD = {
   borderRadius: 12,
   borderWidth: 1,
-  borderColor: 'border.base',
+  // ⚠ `border`, NOT `border.base` — THE TWIN OF THE BACKGROUND BUG BELOW, and
+  // it survived that fix because only `background` was corrected. The resolver
+  // kebab-joins, so 'border.base' asked for `var(--ih-border-base)`, which
+  // tokens.css does not define (it defines `--ih-border`). An undefined
+  // variable makes the whole declaration invalid, and `border-color` then falls
+  // back to its CSS initial value — `currentColor` — so every Card drew a
+  // near-BLACK outline in the inherited text colour instead of a pale grey one.
+  // Measured on /dashboard/profile against the design frame:
+  //   build  → border 1px rgb(17, 28, 33)     (#111C21, text.primary)
+  //   design → border 1px rgb(224, 229, 232)  (#E0E5E8, --ih-border)
+  // ⚠ `tokens.ts` DOES declare `border.base` and `surface.base`; `tokens.css`
+  // emits neither. The TS tree and the CSS variables disagree on naming and the
+  // resolver trusts the TS side, which is why both halves of this bug looked
+  // correct in review. `components.test.ts` now fails on any ref that does not
+  // resolve to a variable tokens.css actually defines.
+  borderColor: 'border',
   padding: 20, // 1.25rem
   // ⚠ `surface`, NOT `surface.base`. resolveTokenCss kebab-joins the ref, so
   // 'surface.base' asked for `var(--ih-surface-base)` — A VARIABLE THAT DOES NOT
@@ -400,7 +415,9 @@ export const CARD_SECTIONS = {
   bodyPaddingX: 20,
   footerPaddingY: 14,
   footerPaddingX: 20,
-  dividerColor: 'border.base',
+  // Same dead ref as CARD.borderColor above — every card-section divider was
+  // drawing in `currentColor` too.
+  dividerColor: 'border',
   footerBackground: 'neutral.50',
 } as const
 
