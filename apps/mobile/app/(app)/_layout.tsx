@@ -82,6 +82,28 @@ export default function AppLayout() {
           flow layout renders both. Tab bar stays hidden so the two stacked
           CTAs own the bottom of the screen, as designed. */}
       <Tabs.Screen name="confirmation" options={{ href: null, tabBarStyle: { display: 'none' } }} />
+      {/* ⚠ F08's TWO ROUTES, AND THE REASON THIS BLOCK EXISTS AT ALL.
+          Expo Router registers EVERY file under this group as a tab unless the
+          layout says otherwise — so `rate/[bookingId]` and `reviews/[branchId]`
+          shipped as two extra tab buttons carrying their RAW ROUTE NAMES,
+          untranslated, in a bar the design says holds exactly four
+          destinations. Adding a screen is therefore also a routing decision,
+          and forgetting it is silent: nothing in typecheck, lint or the web E2E
+          can see a tab bar. `apps/mobile/features/navigation/tabRoutes.test.ts`
+          is the net — it fails if a route file is neither one of the four tabs
+          nor registered here.
+
+          Rating a visit is a full-screen TASK — one purpose, its own back
+          affordance, a commitment — so the tab bar is HIDDEN, the same rule
+          that hides it for the booking flow and for delete-account. */}
+      <Tabs.Screen
+        name="rate/[bookingId]"
+        options={{ href: null, tabBarStyle: { display: 'none' } }}
+      />
+      {/* The full reviews list is a pushed DETAIL under the branch profile, not
+          a task: the patient is still browsing, and `branch/[id]` above keeps
+          its tab bar for exactly that reason. Same treatment. */}
+      <Tabs.Screen name="reviews/[branchId]" options={{ href: null }} />
     </Tabs>
   )
 }
