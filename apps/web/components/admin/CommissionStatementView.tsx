@@ -459,6 +459,11 @@ export function CommissionStatementView({
       {/* ── body ─────────────────────────────────────────────────────────── */}
       <div data-print="scroll" className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto p-6">
         {/* A header the paper needs and the screen already has in its chrome. */}
+        {/* ⚠ THE PAPER'S OWN HEADER. SPEC-A02 requires the export to carry the
+            issue stamp, the version and the excluded-bookings note — «both
+            carrying issue stamp, version, and the excluded-...». Version and
+            status were here; the ISSUE STAMP was not, so a printed statement
+            could not be told apart from another issue of the same version. */}
         <div data-print="title" className="hidden">
           <strong>
             كشف العمولة — {provider?.nameAr} — {formatStatementMonthAr(view.month)}
@@ -466,6 +471,11 @@ export function CommissionStatementView({
               ? ` — الإصدار ${toArabicDigits(String(view.statement.version))} — ${STATEMENT_STATUS_CHIP[status].label}`
               : ' — مسودة'}
           </strong>
+          {view.statement?.issuedAt ? (
+            <span data-testid="print-issue-stamp" style={{ display: 'block', fontSize: 11 }}>
+              صدر في {formatStamp(view.statement.issuedAt)}
+            </span>
+          ) : null}
         </div>
 
         {errorAr ? (

@@ -17,7 +17,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   android: {
     package: 'com.instahealth.app',
     adaptiveIcon: {
-      backgroundColor: '#FFFFFF',
+      // ⚠ Brand teal, not white. `backgroundImage` wins when both are set, but
+      // this is the fallback a launcher uses if the image cannot be decoded —
+      // and white would put a WHITE ring on a WHITE field, i.e. an invisible
+      // icon. `#028090` is the bundle's app-icon field colour.
+      backgroundColor: '#028090',
       foregroundImage: './assets/images/android-icon-foreground.png',
       backgroundImage: './assets/images/android-icon-background.png',
       monochromeImage: './assets/images/android-icon-monochrome.png',
@@ -35,9 +39,19 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       'expo-splash-screen',
       {
-        backgroundColor: '#02C39A',
+        // ⚠ `#028090`, not the mint `#02C39A`. The bundle's splash specimen is
+        // `LogoStacked tone="white"` on `#028090`, and the white lockup is what
+        // `splash-icon.png` now contains — the mint field was left over from the
+        // scaffold and would put a white-on-mint lockup at 1.9:1.
+        backgroundColor: '#028090',
         image: './assets/images/splash-icon.png',
-        imageWidth: 76,
+        // ⚠ INVENTED, AND FLAGGED. The bundle routes splash to LogoStacked but
+        // states NO size, no safe area and no dark variant — see BRAND.md's
+        // "what the bundle does not specify". 320 renders the lockup at roughly
+        // 160pt on a phone, which clears the 56px stacked minimum with room to
+        // spare. ⚠ ONLY A DEV BUILD CAN CONFIRM THIS VISUALLY — Expo Go shows
+        // its own splash, never the app's.
+        imageWidth: 320,
       },
     ],
     'expo-font',
