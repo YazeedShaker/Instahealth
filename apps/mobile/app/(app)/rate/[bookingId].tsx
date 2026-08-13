@@ -9,8 +9,10 @@ import { colors } from '@instahealth/design-tokens'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useState } from 'react'
 import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { StarPicker } from '../../../components/reviews/StarPicker'
+import { ScreenHeader } from '../../../components/ui/ScreenHeader'
 import { useMyBookings } from '../../../features/bookings/queries'
 import { useMyReview, useSubmitReview } from '../../../features/reviews/queries'
 
@@ -65,157 +67,168 @@ export default function RateVisitScreen() {
 
   if (bookingsQuery.isPending || myReviewQuery.isPending) {
     return (
-      <View className="flex-1 items-center justify-center bg-ih-neutral-50">
-        <ActivityIndicator />
-      </View>
+      <SafeAreaView className="flex-1 bg-ih-neutral-50" edges={['top']}>
+        <ScreenHeader title="تقييم الزيارة" fallbackHref="/(app)/bookings" testID="rate" />
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator />
+        </View>
+      </SafeAreaView>
     )
   }
 
   const alreadyReviewed = mine?.found === true
 
   return (
-    <ScrollView className="flex-1 bg-ih-neutral-50" contentContainerClassName="p-4">
-      <View className="overflow-hidden rounded-2xl border border-ih-neutral-200 bg-white">
-        <View className="gap-1 p-4" style={{ backgroundColor: colors.primary[700] }}>
-          <Text className="font-arabic-bold text-[16px] text-white">
-            {submitted || alreadyReviewed ? 'شكراً لتقييمك' : 'كيف كانت زيارتك؟'}
-          </Text>
-          <Text
-            className="font-arabic text-[12.5px] leading-[1.6]"
-            style={{ color: 'rgba(255,255,255,0.85)' }}
-          >
-            {booking === null
-              ? '—'
-              : `${booking.branchNameAr} · ${formatArabicDate(new Date(booking.slotDate))} ${formatTimeShortAr(booking.slotTime)}`}
-          </Text>
-        </View>
-
-        {submitted || alreadyReviewed ? (
-          // ── The thanks / already-rated state ────────────────────────────
-          // ⚠ ONE COMPONENT, NOT TWO. Rendering a different element TYPE after
-          // the submit is exactly what destroyed A01's recovery codes: React
-          // unmounts the old instance at that position. The state is a PROP of
-          // the same tree, so the type never changes (§9).
-          <View testID="review-thanks" className="items-center gap-3 p-6">
-            <Text
-              className="text-[28px]"
-              accessibilityElementsHidden
-              importantForAccessibility="no"
-            >
-              ✅
-            </Text>
-            <Text className="text-center font-arabic text-[13px] leading-[1.75] text-ih-neutral-600">
-              {submitted
-                ? 'وصلنا تقييمك ويظهر الآن في صفحة الفرع. التقييم يُرسَل مرة واحدة لكل زيارة ولا يمكن تعديله.'
-                : 'قيّمت هذه الزيارة من قبل. التقييم يُرسَل مرة واحدة لكل زيارة ولا يمكن تعديله.'}
+    // ⚠ SafeAreaView + header. This screen shipped as a bare ScrollView, so on
+    // a notched device its card ran UNDER the status bar and it had no back
+    // affordance of its own — it relied on the tab bar that should never have
+    // been there. `edges={['top']}` only: the tab bar is hidden for this route
+    // and the CTA owns the bottom, exactly as on `confirmation`.
+    <SafeAreaView className="flex-1 bg-ih-neutral-50" edges={['top']}>
+      <ScreenHeader title="تقييم الزيارة" fallbackHref="/(app)/bookings" testID="rate" />
+      <ScrollView contentContainerStyle={{ padding: 20, gap: 14 }}>
+        <View className="overflow-hidden rounded-2xl border border-ih-neutral-200 bg-white">
+          <View className="gap-1 p-4" style={{ backgroundColor: colors.primary[700] }}>
+            <Text className="font-arabic-bold text-[16px] text-white">
+              {submitted || alreadyReviewed ? 'شكراً لتقييمك' : 'كيف كانت زيارتك؟'}
             </Text>
             <Text
-              testID="review-given-rating"
-              className="text-[18px]"
-              style={{ color: colors.semantic.warning, letterSpacing: 1 }}
-              accessibilityLabel={`قيّمت بـ ${rating ?? mine?.rating ?? 0} من ٥`}
+              className="font-arabic text-[12.5px] leading-[1.6]"
+              style={{ color: 'rgba(255,255,255,0.85)' }}
             >
-              {starGlyphs(rating ?? mine?.rating ?? 0)}
+              {booking === null
+                ? '—'
+                : `${booking.branchNameAr} · ${formatArabicDate(new Date(booking.slotDate))} ${formatTimeShortAr(booking.slotTime)}`}
             </Text>
-            <Pressable
-              testID="review-done"
-              accessibilityRole="button"
-              onPress={() => router.back()}
-              className="mt-1 items-center justify-center rounded-lg px-6 py-3"
-              style={{ backgroundColor: colors.primary[400] }}
-            >
-              <Text className="font-arabic-bold text-[14px] text-white">تمام</Text>
-            </Pressable>
           </View>
-        ) : (
-          // ── The prompt ──────────────────────────────────────────────────
-          <View className="gap-4 px-4 py-5">
-            <StarPicker value={rating} onChange={setRating} />
 
-            <View className="gap-1.5">
-              <Text className="font-arabic text-[12.5px] font-semibold text-ih-neutral-700">
-                تعليق <Text className="font-arabic text-ih-neutral-500">(اختياري)</Text>
-              </Text>
-              <TextInput
-                testID="review-comment"
-                value={comment}
-                onChangeText={setComment}
-                // The server enforces the same 500 too — this is the courtesy,
-                // not the rule (CLAUDE.md §8).
-                maxLength={REVIEW_COMMENT_MAX_LENGTH}
-                multiline
-                textAlignVertical="top"
-                placeholder="ما الذي أعجبك أو ما الذي يمكن أن يكون أفضل؟"
-                placeholderTextColor={colors.neutral[400]}
-                className="min-h-[88px] rounded-lg border-[1.5px] border-ih-neutral-200 bg-white p-3 font-arabic text-[13.5px] leading-[1.7] text-ih-neutral-800"
-              />
-            </View>
-
-            {/* The name-preview line: the promise the stored `display_name`
-                keeps. It says exactly how the byline will read, and the writer
-                composes that string once at insert so a later profile edit
-                cannot rewrite a published review. */}
-            <View className="flex-row items-start gap-2 rounded-lg border border-ih-neutral-200 bg-ih-neutral-50 px-3 py-2.5">
+          {submitted || alreadyReviewed ? (
+            // ── The thanks / already-rated state ────────────────────────────
+            // ⚠ ONE COMPONENT, NOT TWO. Rendering a different element TYPE after
+            // the submit is exactly what destroyed A01's recovery codes: React
+            // unmounts the old instance at that position. The state is a PROP of
+            // the same tree, so the type never changes (§9).
+            <View testID="review-thanks" className="items-center gap-3 p-6">
               <Text
-                className="text-[13px]"
+                className="text-[28px]"
                 accessibilityElementsHidden
                 importantForAccessibility="no"
               >
-                ℹ
+                ✅
               </Text>
-              <Text className="flex-1 font-arabic text-[11.5px] leading-[1.65] text-ih-neutral-600">
-                يظهر تقييمك باسمك الأول وأول حرف من اسم العائلة، مع الخدمة والتاريخ. رقم هاتفك لا
-                يظهر أبداً.
+              <Text className="text-center font-arabic text-[13px] leading-[1.75] text-ih-neutral-600">
+                {submitted
+                  ? 'وصلنا تقييمك ويظهر الآن في صفحة الفرع. التقييم يُرسَل مرة واحدة لكل زيارة ولا يمكن تعديله.'
+                  : 'قيّمت هذه الزيارة من قبل. التقييم يُرسَل مرة واحدة لكل زيارة ولا يمكن تعديله.'}
               </Text>
-            </View>
-
-            {errorAr !== null ? (
               <Text
-                testID="review-error"
-                accessibilityRole="alert"
-                className="rounded-lg px-3 py-2.5 font-arabic text-[12.5px]"
+                testID="review-given-rating"
+                className="text-[18px]"
+                style={{ color: colors.semantic.warning, letterSpacing: 1 }}
+                accessibilityLabel={`قيّمت بـ ${rating ?? mine?.rating ?? 0} من ٥`}
+              >
+                {starGlyphs(rating ?? mine?.rating ?? 0)}
+              </Text>
+              <Pressable
+                testID="review-done"
+                accessibilityRole="button"
+                onPress={() => router.back()}
+                className="mt-1 items-center justify-center rounded-lg px-6 py-3"
+                style={{ backgroundColor: colors.primary[400] }}
+              >
+                <Text className="font-arabic-bold text-[14px] text-white">تمام</Text>
+              </Pressable>
+            </View>
+          ) : (
+            // ── The prompt ──────────────────────────────────────────────────
+            <View className="gap-4 px-4 py-5">
+              <StarPicker value={rating} onChange={setRating} />
+
+              <View className="gap-1.5">
+                <Text className="font-arabic text-[12.5px] font-semibold text-ih-neutral-700">
+                  تعليق <Text className="font-arabic text-ih-neutral-500">(اختياري)</Text>
+                </Text>
+                <TextInput
+                  testID="review-comment"
+                  value={comment}
+                  onChangeText={setComment}
+                  // The server enforces the same 500 too — this is the courtesy,
+                  // not the rule (CLAUDE.md §8).
+                  maxLength={REVIEW_COMMENT_MAX_LENGTH}
+                  multiline
+                  textAlignVertical="top"
+                  placeholder="ما الذي أعجبك أو ما الذي يمكن أن يكون أفضل؟"
+                  placeholderTextColor={colors.neutral[400]}
+                  className="min-h-[88px] rounded-lg border-[1.5px] border-ih-neutral-200 bg-white p-3 font-arabic text-[13.5px] leading-[1.7] text-ih-neutral-800"
+                />
+              </View>
+
+              {/* The name-preview line: the promise the stored `display_name`
+                keeps. It says exactly how the byline will read, and the writer
+                composes that string once at insert so a later profile edit
+                cannot rewrite a published review. */}
+              <View className="flex-row items-start gap-2 rounded-lg border border-ih-neutral-200 bg-ih-neutral-50 px-3 py-2.5">
+                <Text
+                  className="text-[13px]"
+                  accessibilityElementsHidden
+                  importantForAccessibility="no"
+                >
+                  ℹ
+                </Text>
+                <Text className="flex-1 font-arabic text-[11.5px] leading-[1.65] text-ih-neutral-600">
+                  يظهر تقييمك باسمك الأول وأول حرف من اسم العائلة، مع الخدمة والتاريخ. رقم هاتفك لا
+                  يظهر أبداً.
+                </Text>
+              </View>
+
+              {errorAr !== null ? (
+                <Text
+                  testID="review-error"
+                  accessibilityRole="alert"
+                  className="rounded-lg px-3 py-2.5 font-arabic text-[12.5px]"
+                  style={{
+                    backgroundColor: colors.semantic.warningBg,
+                    color: colors.semantic.warningText,
+                  }}
+                >
+                  {errorAr}
+                </Text>
+              ) : null}
+
+              <Pressable
+                testID="review-submit"
+                accessibilityRole="button"
+                accessibilityState={{ disabled: rating === null || submitReview.isPending }}
+                disabled={rating === null || submitReview.isPending}
+                onPress={onSubmit}
+                className="h-[52px] items-center justify-center rounded-lg"
                 style={{
-                  backgroundColor: colors.semantic.warningBg,
-                  color: colors.semantic.warningText,
+                  backgroundColor: colors.primary[400],
+                  opacity: rating === null || submitReview.isPending ? 0.45 : 1,
                 }}
               >
-                {errorAr}
-              </Text>
-            ) : null}
+                <Text className="font-arabic-bold text-[16px] text-white">
+                  {submitReview.isPending ? 'يُرسل…' : 'إرسال التقييم'}
+                </Text>
+              </Pressable>
 
-            <Pressable
-              testID="review-submit"
-              accessibilityRole="button"
-              accessibilityState={{ disabled: rating === null || submitReview.isPending }}
-              disabled={rating === null || submitReview.isPending}
-              onPress={onSubmit}
-              className="h-[52px] items-center justify-center rounded-lg"
-              style={{
-                backgroundColor: colors.primary[400],
-                opacity: rating === null || submitReview.isPending ? 0.45 : 1,
-              }}
-            >
-              <Text className="font-arabic-bold text-[16px] text-white">
-                {submitReview.isPending ? 'يُرسل…' : 'إرسال التقييم'}
-              </Text>
-            </Pressable>
+              <Pressable
+                testID="review-later"
+                accessibilityRole="button"
+                onPress={() => router.back()}
+              >
+                <Text className="text-center font-arabic text-[12.5px] font-semibold text-ih-neutral-500">
+                  ليس الآن
+                </Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
 
-            <Pressable
-              testID="review-later"
-              accessibilityRole="button"
-              onPress={() => router.back()}
-            >
-              <Text className="text-center font-arabic text-[12.5px] font-semibold text-ih-neutral-500">
-                ليس الآن
-              </Text>
-            </Pressable>
-          </View>
-        )}
-      </View>
-
-      <Text className="mt-3 text-center font-arabic text-[11.5px] leading-[1.7] text-ih-neutral-500">
-        يُطلب التقييم مرة واحدة لكل زيارة مكتملة، ولا يُكرَّر إن تجاهله المريض.
-      </Text>
-    </ScrollView>
+        <Text className="mt-3 text-center font-arabic text-[11.5px] leading-[1.7] text-ih-neutral-500">
+          يُطلب التقييم مرة واحدة لكل زيارة مكتملة، ولا يُكرَّر إن تجاهله المريض.
+        </Text>
+      </ScrollView>
+    </SafeAreaView>
   )
 }
