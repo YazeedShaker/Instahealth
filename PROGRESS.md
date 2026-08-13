@@ -260,6 +260,55 @@ engineering tasks.
 
 ## Shipped
 
+### 2026-08-13 · FIX — the route leak, and the class of bug it belongs to
+
+**F08's device pass found two raw route names sitting in the patient app's tab
+bar.** `rate/[bookingId]` and `reviews/[branchId]` rendered as tab BUTTONS,
+untranslated, in a bar the design says holds exactly four destinations.
+
+**⚠ THE ROOT CAUSE IS THAT ADDING A SCREEN IS ALSO A ROUTING DECISION.** Expo
+Router registers EVERY file under `app/(app)/` as a tab unless that group's
+`_layout.tsx` says otherwise — `href: null` is how a layout says «routable, but
+not a tab». Every earlier screen was registered; F08's two were not, and nothing
+said so. Fixed per the ruling: the rating screen is a full-screen TASK (tab bar
+hidden, like the booking flow and delete-account); the reviews list is a pushed
+DETAIL under the branch profile (tab bar visible, like `branch/[id]`).
+
+**⚠ AND THE OBVIOUS GUARD WOULD NOT HAVE WORKED.** `apps/mobile`'s `test:e2e`
+script is
+
+```
+node -e "console.log('Maestro E2E runs against a dev build …')"
+```
+
+— it prints a sentence and exits 0. The CI job installs Maestro, prebuilds iOS,
+then runs that, so **«E2E Mobile (Maestro)» has been green on every PR while
+asserting nothing.** A Maestro-only guard would have been a checkmark, not a
+net. The Maestro flow is written (`e2e/tab-bar.test.yaml`) and becomes real when
+SETUP-02 wires the runner; what holds the line TODAY is a static test,
+`features/navigation/tabRoutes.test.ts`, which walks the route files and fails
+if any is neither one of the four tabs nor explicitly `href: null`. **Proven by
+removing a registration** — it names the leaked route and prints the fix.
+
+That is the durable lesson: **the leak's root cause is a missing DECLARATION,
+which is statically checkable, even though its SYMPTOM is a rendered tab bar,
+which is not.** When a bug is invisible to every automated layer, check whether
+its cause is visible somewhere the symptom is not.
+
+Also in the same pass: the three review screens had no `SafeAreaView` and no
+header — their content ran under the status bar on a notched device, and the
+rating screen had no back affordance of its own because it was leaning on the
+tab bar that should never have been there. The shared pattern is now
+`components/ui/ScreenHeader.tsx` rather than a fourth hand-copy. The A06 drawer's
+hide-review consequence moved onto its own line ABOVE the destructive button,
+and the P02 drawer gained the patient's published review, read-only — no
+moderation in the provider portal, «empty means absent» for hidden or missing
+ones.
+
+⚠ **Owed: before/after screenshots on a notched device.** There is no simulator
+in this environment, so the safe-area fix is argued from the code and the
+standard it now shares, not shown.
+
 ### 2026-08-12 · FIX — every Card drew a near-BLACK border, and the favicon was still Next's
 
 **The founder reported the branch-details page as «the UI is not right».** It was
