@@ -391,6 +391,46 @@ test.describe('provider dashboard — booking detail drawer (P02)', () => {
     )
   })
 
+  // ⚠ F08 — the desk sees the review, and CANNOT act on it. The absence of a
+  // control is the assertion here, the same way A06's drawer is tested for the
+  // absence of «تسجيل الوصول»: the two-portal authority split is exactly the
+  // kind of thing that erodes quietly, so each portal's drawer asserts what the
+  // OTHER one owns is missing.
+  test('the drawer shows a published review read-only — and offers no moderation', async ({
+    page,
+  }) => {
+    const rows = page.getByTestId(/^booking-row-/)
+    test.skip((await rows.count()) === 0, 'no bookings today at Town — seed one to exercise this')
+
+    const total = await rows.count()
+    let found = false
+    for (let index = 0; index < total; index += 1) {
+      await rows.nth(index).click()
+      await expect(page.getByTestId('booking-drawer')).toBeVisible()
+      if ((await page.getByTestId('drawer-review').count()) > 0) {
+        found = true
+        break
+      }
+      await page.getByTestId('drawer-close').click()
+    }
+
+    // «Empty means absent» — a day with no reviewed booking renders no section
+    // anywhere, which is the correct outcome and not a skip-worthy failure.
+    if (!found) {
+      for (const row of await rows.all()) {
+        await row.click()
+        await expect(page.getByTestId('drawer-review')).toHaveCount(0)
+        await page.getByTestId('drawer-close').click()
+      }
+      return
+    }
+
+    await expect(page.getByTestId('drawer-review-stars')).toBeVisible()
+    // ⚠ NO moderation in the provider portal — hiding and restoring belong to
+    // the admin drawer alone.
+    await expect(page.getByTestId('oversight-review-toggle')).toHaveCount(0)
+  })
+
   test('a row opens the drawer and the list stays LIVE behind it', async ({ page }) => {
     const rows = page.getByTestId(/^booking-row-/)
     test.skip((await rows.count()) === 0, 'no bookings today at Town — seed one to exercise this')

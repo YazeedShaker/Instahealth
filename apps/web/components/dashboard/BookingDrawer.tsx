@@ -11,6 +11,7 @@ import {
   getPrimaryOutcomeAction,
   isAutoClosed,
   isAwaitingCashCollection,
+  starGlyphs,
   toArabicDigits,
   toSelectedServices,
   type BookingOutcome,
@@ -20,6 +21,7 @@ import { STATUS_BADGES, STATUS_BADGE_BASE } from '@instahealth/design-tokens'
 import { useEffect } from 'react'
 
 import { Button } from '../ui/Button'
+import { useBookingReview } from '../../hooks/useBookingReview'
 import { PreparationStrip } from './PreparationStrip'
 
 // The booking-detail drawer from `Provider Dashboard - Booking Detail.dc.html`.
@@ -76,6 +78,8 @@ export function BookingDrawer({
   // different instructions for the same visit.
   const prep = computePreparationNotes(toSelectedServices(booking.services))
   const history = getBookingHistory(booking)
+  // Published reviews only — see the hook. Null for every booking without one.
+  const review = useBookingReview(booking.id)
   const dateLabel = formatArabicDate(new Date(`${booking.slotDate}T12:00:00Z`))
   // Empty means absent: a branch with no declared duration shows NO line.
   const durationLabel = formatServiceDurationAr(serviceDurationMinutes)
@@ -517,6 +521,61 @@ export function BookingDrawer({
               </div>
               <div style={{ fontSize: 13, lineHeight: 1.6, color: 'var(--ih-neutral-700)' }}>
                 {booking.patientNotes}
+              </div>
+            </div>
+          ) : null}
+
+          {/* ── the patient's review, read-only (F08) ─────────────────────
+              ⚠ NO MODERATION HERE. The desk sees exactly what the branch page
+              shows a patient — stars, words, the public display name — and
+              nothing more. Hiding and restoring live in the admin drawer, the
+              same two-portal split that keeps «تسجيل الوصول» out of the
+              admin's. And «empty means absent»: a booking with no review, or
+              one an admin has hidden, renders NO section rather than an empty
+              one that invites a question. */}
+          {review !== null ? (
+            <div
+              data-testid="drawer-review"
+              style={{ display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ih-neutral-500)' }}>
+                تقييم المريض
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 6,
+                  padding: '12px 14px',
+                  borderRadius: 12,
+                  border: '1px solid var(--ih-border)',
+                  background: 'var(--ih-neutral-0)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span
+                    data-testid="drawer-review-stars"
+                    style={{ fontSize: 14, color: 'var(--ih-warning)' }}
+                    aria-label={`${review.rating} من ٥`}
+                  >
+                    {starGlyphs(review.rating)}
+                  </span>
+                  <span style={{ fontSize: 12, color: 'var(--ih-neutral-600)' }}>
+                    {review.displayName}
+                  </span>
+                </div>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: 12.5,
+                    lineHeight: 1.7,
+                    color: 'var(--ih-neutral-700)',
+                  }}
+                >
+                  {review.comment === null || review.comment.length === 0
+                    ? 'قيّم بالنجوم بلا تعليق.'
+                    : review.comment}
+                </p>
               </div>
             </div>
           ) : null}

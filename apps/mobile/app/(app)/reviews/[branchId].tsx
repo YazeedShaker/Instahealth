@@ -1,9 +1,11 @@
 import { toArabicDigits } from '@instahealth/core'
-import { useLocalSearchParams, useRouter } from 'expo-router'
+import { useLocalSearchParams } from 'expo-router'
 import { useMemo, useState } from 'react'
 import { ActivityIndicator, FlatList, Pressable, Text, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { ReviewCard } from '../../../components/reviews/ReviewCard'
+import { ScreenHeader } from '../../../components/ui/ScreenHeader'
 import { useBranchReviewSummary, useBranchReviews } from '../../../features/reviews/queries'
 import type { BranchReview } from '../../../features/reviews/types'
 
@@ -19,7 +21,6 @@ const PAGE_SIZE = 20
 
 export default function BranchReviewsScreen() {
   const { branchId } = useLocalSearchParams<{ branchId: string }>()
-  const router = useRouter()
   const now = useMemo(() => new Date(), [])
   const [pages, setPages] = useState(1)
 
@@ -34,23 +35,24 @@ export default function BranchReviewsScreen() {
   const hasMore = reviews.length < total
 
   return (
-    <View className="flex-1 bg-ih-neutral-50">
-      <View className="flex-row items-center gap-3 border-b border-ih-neutral-200 bg-white px-5 py-3.5">
-        <Pressable
-          testID="reviews-back"
-          accessibilityRole="button"
-          accessibilityLabel="رجوع"
-          onPress={() => router.back()}
-        >
-          <Text className="font-arabic text-[13px] text-ih-primary-600">◂ رجوع</Text>
-        </Pressable>
-        <Text className="flex-1 font-arabic-bold text-[17px] text-ih-neutral-800">التقييمات</Text>
-        {summaryQuery.isSuccess ? (
-          <Text testID="reviews-total" className="font-arabic text-[12px] text-ih-neutral-500">
-            {toArabicDigits(String(total))} تقييماً
-          </Text>
-        ) : null}
-      </View>
+    // ⚠ SafeAreaView, and the SHARED header. This screen had a hand-rolled
+    // header row with a text-only «◂ رجوع» — below the 44px tap floor every
+    // other screen honours — and no top inset at all, so it sat under the
+    // status bar. The tab bar stays visible here (this is a pushed DETAIL under
+    // the branch profile, not a task), which is why only the top edge is inset.
+    <SafeAreaView className="flex-1 bg-ih-neutral-50" edges={['top']}>
+      <ScreenHeader
+        title="التقييمات"
+        fallbackHref="/(app)/home"
+        testID="reviews"
+        trailing={
+          summaryQuery.isSuccess ? (
+            <Text testID="reviews-total" className="font-arabic text-[12px] text-ih-neutral-500">
+              {toArabicDigits(String(total))} تقييماً
+            </Text>
+          ) : null
+        }
+      />
 
       {reviewsQuery.isPending ? (
         <View className="items-center py-10">
@@ -99,6 +101,6 @@ export default function BranchReviewsScreen() {
           }
         />
       )}
-    </View>
+    </SafeAreaView>
   )
 }

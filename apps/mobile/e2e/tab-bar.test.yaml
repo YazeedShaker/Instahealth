@@ -1,0 +1,82 @@
+# Maestro — the tab bar holds EXACTLY the four destinations.
+#
+# ⚠ WHY THIS FLOW EXISTS: F08 shipped `rate/[bookingId]` and `reviews/[branchId]`
+# as tab buttons carrying their raw route names, because Expo Router registers
+# every file in a Tabs group unless the layout says otherwise. Nothing in
+# typecheck, lint or the web E2E can see a tab bar — it was found on a device.
+#
+# ⚠ AND THIS FLOW CANNOT CATCH IT YET. `apps/mobile`'s `test:e2e` script
+# currently prints a sentence and exits 0, so the "E2E Mobile (Maestro)" CI job
+# installs Maestro, prebuilds iOS, and asserts nothing. Until SETUP-02 wires the
+# runner, the net that actually holds is the STATIC one:
+#   apps/mobile/features/navigation/tabRoutes.test.ts
+# which fails on a missing `href: null` and runs in CI today. This flow is the
+# device-level confirmation of the same rule, ready for the day the runner lands.
+appId: com.instahealth.app
+---
+- clearState
+- launchApp
+
+# Sign in with the static test number — the same one every other flow uses.
+- tapOn:
+    id: 'welcome-start'
+- tapOn:
+    id: 'phone-input'
+- inputText: '01000000001'
+- tapOn:
+    id: 'phone-next'
+- tapOn:
+    id: 'otp-input'
+- inputText: '123456'
+- tapOn:
+    id: 'otp-verify'
+
+# ── The four destinations, by their Arabic labels ──────────────────────────
+- assertVisible: 'الرئيسية'
+- assertVisible: 'البحث'
+- assertVisible: 'حجوزاتي'
+- assertVisible: 'حسابي'
+
+# ── And NOTHING else. These are the raw route names that leaked; asserting
+#    their ABSENCE is the actual regression test, because a leak shows the
+#    route name verbatim.
+- assertNotVisible: 'rate/[bookingId]'
+- assertNotVisible: 'reviews/[branchId]'
+- assertNotVisible: 'branch/[id]'
+- assertNotVisible: 'confirmation'
+- assertNotVisible: 'edit-name'
+- assertNotVisible: 'delete-account'
+- assertNotVisible: 'booking'
+
+# ── The tab bar is HIDDEN on a full-screen task ────────────────────────────
+# Rating a visit is a commitment with its own back affordance, so the bar goes
+# away — the same rule as the booking flow and delete-account.
+- tapOn: 'حجوزاتي'
+- runFlow:
+    when:
+      visible:
+        id: 'booking-detail-rate'
+    commands:
+      - tapOn:
+          id: 'booking-detail-rate'
+      - assertVisible:
+          id: 'rate-back'
+      - assertNotVisible: 'الرئيسية'
+      - assertNotVisible: 'حسابي'
+      - tapOn:
+          id: 'rate-back'
+
+# ── …and VISIBLE on a pushed detail ────────────────────────────────────────
+# The full reviews list is browsing, not a task, so the bar stays — the same
+# treatment `branch/[id]` gets.
+- tapOn: 'الرئيسية'
+- runFlow:
+    when:
+      visible:
+        id: 'reviews-see-all'
+    commands:
+      - tapOn:
+          id: 'reviews-see-all'
+      - assertVisible:
+          id: 'reviews-back'
+      - assertVisible: 'الرئيسية'
