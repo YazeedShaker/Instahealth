@@ -75,13 +75,25 @@ describe('the (app) tab group registers every route it can render', () => {
   })
 
   it('every NON-tab route is explicitly hidden with href: null', () => {
+    // ⚠ NO REGEX BUILT FROM A FILENAME. The first version interpolated the route
+    // name into `new RegExp(...)` and escaped only `[` and `]` — enough for
+    // `[bookingId]`, wrong for any other metacharacter. CodeQL flagged it as
+    // incomplete sanitization and was right about the fragility, even though a
+    // test reading its own repo is not a security boundary: a route file named
+    // `foo(bar).tsx` would have matched NOTHING and the guard would have PASSED.
+    // A guard that goes quiet on an unusual input is the worst kind.
+    //
+    // The layout is parsed ONCE with a static regex; names compare as strings.
+    const declarations = new Map<string, string>()
+    for (const match of layout.matchAll(/<Tabs\.Screen\s+name="([^"]+)"([\s\S]*?)\/>/g)) {
+      declarations.set(match[1] as string, match[2] as string)
+    }
+
     const leaked = routes
       .filter((route) => !EXPECTED_TABS.includes(route as (typeof EXPECTED_TABS)[number]))
       .filter((route) => {
-        const declaration = new RegExp(
-          `name="${route.replace(/[[\]]/g, '\\$&')}"[\\s\\S]{0,220}?/>`,
-        ).exec(layout)
-        return declaration === null || !declaration[0].includes('href: null')
+        const options = declarations.get(route)
+        return options === undefined || !options.includes('href: null')
       })
 
     expect(
