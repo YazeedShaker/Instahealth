@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router'
 import { Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
+import { LogoHorizontal } from '../../components/brand/Logo'
 import { PrimaryButton } from '../../components/ui/PrimaryButton'
 import { useAuthStore } from '../../features/auth/store'
 
@@ -13,17 +14,14 @@ export default function Welcome() {
   return (
     <SafeAreaView className="flex-1 bg-ih-neutral-0">
       <View className="flex-1 px-6 pb-5 pt-4">
-        {/* Logo row */}
-        <View className="flex-row items-center gap-2.5 pt-2">
-          <View className="h-10 w-10 items-center justify-center rounded-ih-md bg-ih-primary-600">
-            <Text className="text-xl text-white">♥</Text>
-          </View>
-          <View style={{ direction: 'ltr' }}>
-            <Text className="font-arabic-bold text-[22px]">
-              <Text className="text-ih-neutral-800">Insta</Text>
-              <Text className="text-ih-primary-400">Health</Text>
-            </Text>
-          </View>
+        {/* ⚠ THE REAL LOCKUP, not a hand-set one. What stood here broke three
+            brand rules at once: a ♥ glyph in place of the mark, «InstaHealth»
+            set in CAIRO (`font-arabic-bold`) when the Latin wordmark is
+            Atkinson Hyperlegible Bold, and a two-tone word colour that is not
+            one of the four approved tones. The bundle's own "Don't" list is
+            explicit — «never rebuild a lockup by setting the type yourself». */}
+        <View className="flex-row pt-2">
+          <LogoHorizontal tone="color" size={40} />
         </View>
 
         {/* Hero + copy */}
