@@ -194,7 +194,18 @@ body {
   display: none;
 }
 
-@media (max-width: 859px), (max-width: 1023px) and (pointer: coarse) {
+/* ⚠ `screen and` — THE GUARD MUST NEVER FIRE ON PAPER, and it did.
+   When a page is printed the browser lays out at the PAPER width, not the
+   screen's: A4 portrait is 210mm = 8.27in × 96 = ~794 CSS px, which is BELOW
+   the 859px floor below. So every print of the dashboard or the admin portal
+   hid the real content and rendered the "this is a desktop tool" card instead —
+   the founder's exported commission-statement PDF is a picture of the guard at
+   the statement's own URL.
+   Scoping both conditions to `screen` exempts print globally rather than
+   per-page, so a surface that becomes printable later inherits the fix. The
+   base `[data-too-narrow] { display: none }` above already keeps the notice out
+   of print; this stops the shell being hidden alongside it. */
+@media screen and (max-width: 859px), screen and (max-width: 1023px) and (pointer: coarse) {
   [data-desk-only] {
     display: none !important;
   }
