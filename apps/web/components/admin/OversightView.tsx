@@ -579,23 +579,32 @@ function BookingDrawer({
                   ? 'قيّم بالنجوم بلا تعليق.'
                   : detail.review.comment}
               </p>
-              <div className="mt-1 flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant={detail.review.isPublished ? 'destructive' : 'primary'}
-                  data-testid="oversight-review-toggle"
-                  disabled={isPending}
-                  onClick={() =>
-                    onToggleReview(detail.review!.reviewId, detail.review!.isPublished)
-                  }
-                >
-                  {detail.review.isPublished ? 'إخفاء التقييم' : 'إعادة إظهار التقييم'}
-                </Button>
-                <span className="text-[11.5px] text-ih-neutral-500">
+              {/* ⚠ THE CONSEQUENCE GOES ABOVE THE BUTTON, ON ITS OWN LINE.
+                  It was squeezed beside the button, where a destructive action's
+                  explanation competes with the control for the same horizontal
+                  space and gets read second — or not at all. Every consequential
+                  control in this portal states its consequence FIRST and in full
+                  (the ConsequentialConfirm anatomy is the same idea at dialog
+                  scale: banner, then title, then the numbers, then the CTA). */}
+              <div className="mt-1 flex flex-col gap-2">
+                <span className="text-[11.5px] leading-[1.6] text-ih-neutral-600">
                   {detail.review.isPublished
                     ? 'يختفي من صفحة الفرع ومن المتوسط فوراً. لا يُحذف، ولا يُخطر صاحبه.'
                     : 'يعود إلى صفحة الفرع وإلى المتوسط فوراً.'}
                 </span>
+                <div>
+                  <Button
+                    size="sm"
+                    variant={detail.review.isPublished ? 'destructive' : 'primary'}
+                    data-testid="oversight-review-toggle"
+                    disabled={isPending}
+                    onClick={() =>
+                      onToggleReview(detail.review!.reviewId, detail.review!.isPublished)
+                    }
+                  >
+                    {detail.review.isPublished ? 'إخفاء التقييم' : 'إعادة إظهار التقييم'}
+                  </Button>
+                </div>
               </div>
             </div>
           </section>
