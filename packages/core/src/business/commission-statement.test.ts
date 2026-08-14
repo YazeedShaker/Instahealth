@@ -105,8 +105,19 @@ describe('buildCommissionStatementCsv — paper agrees with screen', () => {
   test('the excluded FOOTNOTE is printed even though the row is already listed', () => {
     // The design makes this explicit: the footnote prints in full at the bottom
     // of every export, whether or not the rows are shown on screen.
-    expect(csv).toContain('حجوزات أُغلقت تلقائياً — غير محتسبة')
+    expect(csv).toContain('الحجوزات المُغلقة تلقائياً — غير محتسبة')
     expect(csv).toContain('مهلة الـ٢٤ ساعة')
+  })
+
+  // ⚠ THE COUNT CELLS AGREE WITH THEIR COUNT. Both were fixed strings —
+  // «… حجوزات» for the commissionable total and «… حجز» for the excluded one —
+  // so each was wrong for some count, and the on-screen twin printed
+  // «١ حجوزات أُغلقت تلقائياً» on the first sheet that ever rendered it.
+  test('the counted cells inflect with their count, phrase and all', () => {
+    // This fixture has 2 commissionable and 1 excluded.
+    expect(csv).toContain('٢ حجزان')
+    expect(csv).toContain('١ حجز أُغلق تلقائياً')
+    expect(csv).not.toContain('١ حجوزات')
   })
 
   test('each counted row carries both the Arabic display figure and raw piasters', () => {

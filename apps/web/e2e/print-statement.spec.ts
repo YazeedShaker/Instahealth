@@ -67,6 +67,26 @@ test.describe('commission statement — print', () => {
     await page.emulateMedia({ media: null })
   })
 
+  // ⚠ THE FIXTURE PROVIDER, AND WHY THE ISSUED BRANCH IS NO LONGER CONDITIONAL.
+  //
+  // This assertion used to be wrapped in `if (isIssued)` and NEVER RAN: dev held
+  // zero issued statements, and the only two providers are Town Hospital and
+  // Saridar Labs. Issuing for either would mint a versioned, timestamped
+  // commission document against the placeholder 12% rate nobody has signed — a
+  // money artifact with a real partner's name on it, created to turn a test
+  // green. That was refused, and the refusal was right.
+  //
+  // THE RULE, now recorded in `supabase/seeds/009`'s header and in PROGRESS:
+  //   money artifacts for REAL partners only from SIGNED rates;
+  //   fixtures carry the test burden.
+  //
+  // Seed 009 provides a disposable `eeee…` provider — inactive branch, 10%
+  // fixture rate, four completed cash bookings and one system-closed no-show —
+  // whose statement is issued in dev. The branch is exercised against numbers
+  // that belong to nobody.
+  const FIXTURE_PROVIDER = 'eeee0000-0000-4000-8000-000000000001'
+  const FIXTURE_MONTH = '2026-07-01'
+
   test('the printed sheet carries the issue stamp, the version and the excluded note', async ({
     page,
   }) => {
@@ -80,32 +100,45 @@ test.describe('commission statement — print', () => {
     await page.getByTestId('admin-verify-submit').click()
     await page.waitForURL('**/admin/overview', { timeout: 30_000 })
 
-    await page.goto('/admin/commissions')
+    await page.goto(`/admin/commissions?provider=${FIXTURE_PROVIDER}&month=${FIXTURE_MONTH}`)
     await expect(page.getByTestId('statement-provider')).toBeVisible({ timeout: 60_000 })
+
+    // ⚠ A FIXTURE TRIPWIRE THAT DOES NOT SKIP. A missing seed must be one loud
+    // red naming the file, not a quietly-skipped assertion — the whole reason
+    // this branch went unexercised for a full feature is that "not applicable"
+    // and "passing" look identical in a summary line (§9).
+    //
+    // ⚠⚠ AND THE DISCRIMINATOR IS «الإصدار», *NOT* THE ABSENCE OF «مسودة».
+    // This branch was previously guarded by `const isIssued =
+    // !text.includes('مسودة')`, which CANNOT BE TRUE FOR AN ISSUED STATEMENT:
+    // `STATEMENT_STATUS_CHIP.issued.label` IS «مسودة», deliberately, because in
+    // the founder's language مسودة means NOT YET SENT rather than not yet
+    // issued (frame D draws a re-issued v2 as «● مسودة» beside its «أُصدرت في»
+    // stamp). So the guard was false for BOTH states, and seeding a statement
+    // alone would not have woken this branch up — the predicate had to be fixed
+    // too. Two independent reasons one assertion never ran.
+    const title = page.locator('[data-print="title"]')
+    await expect(
+      title,
+      'the fixture statement is missing — run supabase/seeds/009_commission_fixture_provider.sql, then issue it',
+    ).toContainText('الإصدار', { timeout: 30_000 })
+
     await page.emulateMedia({ media: 'print' })
 
-    const title = page.locator('[data-print="title"]')
-    const text = await title.innerText()
-
     // ⚠ SPEC-A02: "Export: CSV + print stylesheet, both carrying issue stamp,
-    // version, and the excluded-bookings" note. An ISSUED statement must show
-    // all three; a draft has no stamp and no version, and saying so is the
-    // honest branch rather than skipping.
-    const isIssued = !text.includes('مسودة')
-    if (isIssued) {
-      await expect(title, 'an issued sheet names its version').toContainText('الإصدار')
-      await expect(
-        page.getByTestId('print-issue-stamp'),
-        'an issued sheet carries its issue stamp',
-      ).toBeVisible()
-    }
+    // version, and the excluded-bookings note." All three, UNCONDITIONALLY.
+    await expect(title, 'an issued sheet names its version').toContainText('الإصدار')
+    await expect(
+      page.getByTestId('print-issue-stamp'),
+      'an issued sheet carries its issue stamp',
+    ).toBeVisible()
 
-    // The excluded strip is "never hidden, per the ruling" — so if there are
-    // excluded bookings at all, they must reach the paper.
-    const banner = page.getByTestId('statement-excluded-banner')
-    if ((await banner.count()) > 0) {
-      await expect(banner, 'excluded bookings must be stated on paper').toBeVisible()
-    }
+    // The excluded strip is "never hidden, per the ruling", and the fixture
+    // seeds exactly one system-closed no-show so this cannot be vacuous.
+    await expect(
+      page.getByTestId('statement-excluded-banner'),
+      'the excluded booking must be stated on paper',
+    ).toBeVisible()
 
     // ── The artefacts ──────────────────────────────────────────────────────
     // A PNG beside the PDF, at A4 landscape's own pixel size (297×210mm at
@@ -114,12 +147,12 @@ test.describe('commission statement — print', () => {
     // and §9's rule is that the capture only helps if someone looks.
     await page.setViewportSize({ width: 1123, height: 794 })
     await page.screenshot({
-      path: '../../docs/design-briefs/a02-fidelity/statement-print.png',
+      path: '../../docs/design-briefs/a02-fidelity/statement-print-issued.png',
       fullPage: true,
     })
 
     await page.pdf({
-      path: '../../docs/design-briefs/a02-fidelity/statement-print.pdf',
+      path: '../../docs/design-briefs/a02-fidelity/statement-print-issued.pdf',
       format: 'A4',
       landscape: true,
       printBackground: true,

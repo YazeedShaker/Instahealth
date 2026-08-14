@@ -1,3 +1,4 @@
+import { isValidEmail } from '../schemas/email.schema'
 import { toArabicDigits } from './format'
 import { normalizeEgyptianPhone } from './phone'
 
@@ -146,7 +147,10 @@ export function mailtoNudgeUrl(
 ): string | null {
   if (email === null || email === undefined || email.trim() === '') return null
   const address = email.trim()
-  if (!address.includes('@')) return null
+  // THE rule, not a fifth opinion. `includes('@')` here would hand the founder
+  // a mailto: link built from an address no mail client can send to — the same
+  // "looks fine, fails later" shape as the login form's version of it.
+  if (!isValidEmail(address)) return null
   return `mailto:${address}?subject=${encodeURIComponent(subjectAr)}&body=${encodeURIComponent(bodyAr)}`
 }
 

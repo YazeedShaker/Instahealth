@@ -299,6 +299,7 @@ const A04_SHOT_DIR = '../../docs/design-briefs/a04-fidelity'
 const A05_SHOT_DIR = '../../docs/design-briefs/a05-fidelity'
 const A06_SHOT_DIR = '../../docs/design-briefs/a06-fidelity'
 const A07_SHOT_DIR = '../../docs/design-briefs/a07-fidelity'
+const LOADING_SHOT_DIR = '../../docs/design-briefs/loading-fidelity'
 
 /** The REAL login, driven exactly as a person drives it: password, then the six
  *  digits an authenticator would be showing right now. No bypass, no test-only
@@ -613,4 +614,57 @@ test.describe('admin portal fidelity (A04–A07)', () => {
     const healthy = (await page.getByTestId('overview-healthy').count()) > 0
     await shoot(page, `${A07_SHOT_DIR}/overview-${healthy ? 'healthy' : 'with-alerts'}-build.png`)
   })
+
+  // ── The admin portal's loading states ────────────────────────────────────
+  // Seven `force-dynamic` screens had NO `loading.tsx` at all, so every
+  // navigation sat on the previous screen until the server answered. These
+  // capture the skeletons that now cover that window.
+  //
+  // ⚠ A LOADING STATE IS A LATENCY WINDOW: it is REPRODUCED, never raced for
+  // (§9). The RSC payload for the target route is delayed on purpose so the
+  // skeleton is deterministic rather than a coin flip on a fast laptop.
+  //
+  // ⚠ AND THE DELAYED REQUEST IS ALLOWED TO LAND BEFORE EACH TEST RETURNS —
+  // these captures share ONE page with everything above, and the A04 lesson is
+  // that a capture owns the page until nothing it started is still running.
+  const LOADING_ROUTES = [
+    { path: '/admin/overview', settled: 'admin-overview' },
+    { path: '/admin/bookings', settled: 'oversight-table' },
+    { path: '/admin/catalog', settled: 'catalog-table' },
+    { path: '/admin/staff', settled: 'admin-staff' },
+    { path: '/admin/providers', settled: 'admin-network' },
+    { path: '/admin/commissions', settled: 'admin-header' },
+    // ⚠ NO `/admin/analytics`. It carries `force-dynamic` but awaits NOTHING —
+    // it is a static «قريباً» page — so it has no loading window to capture.
+    // The first pass gave it a `loading.tsx` anyway and the capture came back
+    // showing the fully loaded screen under a filename claiming otherwise. A
+    // skeleton for a screen that never waits is a lie in both directions.
+  ] as const
+
+  for (const route of LOADING_ROUTES) {
+    const name = route.path.split('/').pop() as string
+    test(`loading capture: ${name} while its data is still in flight`, async () => {
+      // Start somewhere else so the navigation is a real client-side one.
+      await page.goto('/admin/overview')
+      await expect(page.getByTestId('admin-header')).toBeVisible({ timeout: 60_000 })
+
+      await page.route(
+        `**${route.path}*`,
+        async (r) => {
+          await new Promise((resolve) => setTimeout(resolve, 6_000))
+          await r.continue()
+        },
+        { times: 1 },
+      )
+      try {
+        await page.goto(route.path, { waitUntil: 'commit' })
+        await expect(page.getByTestId('admin-loading')).toBeVisible({ timeout: 30_000 })
+        await shoot(page, `${LOADING_SHOT_DIR}/${name}-loading-build.png`)
+        // Hand the page over only once the real screen has replaced the shell.
+        await expect(page.getByTestId(route.settled)).toBeVisible({ timeout: 60_000 })
+      } finally {
+        await page.unrouteAll({ behavior: 'ignoreErrors' })
+      }
+    })
+  }
 })

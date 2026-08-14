@@ -945,6 +945,25 @@ Two more, both found while capturing P02's screenshots:
   and never re-ran a fresh enrollment. **Re-verify a fix from the state the bug
   starts in, not the state the bug left behind** — reset the fixture first.
 
+- **⚠ THE IN-APP BROWSER PANE RETURNS STALE `getComputedStyle` WHEN IT IS NOT
+  DISPLAYED — the DOM stays true, the PIXELS do not.** A pane that is not
+  compositing frames also stops recomputing style, and it says so only for
+  `screenshot` ("the Browser pane is not displayed"). Everything else answers
+  cheerfully with values from the last time it painted. Measuring an inline
+  `border-color: var(--ih-error)` came back as the NEUTRAL colour, which reads
+  exactly like the dead-token-ref bug that has now shipped three times (a
+  `tokens.ts` ref `tokens.css` never emits), so the obvious conclusion was the
+  wrong one and cost several attempts.
+  **The tell is a value nothing in the page could produce:** setting
+  `el.style.borderColor = '#ff0000'` from the console and reading back
+  `rgb(224, 229, 232)`, and `border-width: 1.5px` computing as `1.33333px`. One
+  literal that fails to apply proves the reading is frozen, and it is a
+  two-second check.
+  What stays trustworthy: the accessibility tree, `getAttribute('style')`,
+  textContent, and every ARIA attribute — so behaviour and wiring can be
+  verified there. What does not: `getComputedStyle`, and therefore every colour,
+  size and spacing claim. **Take those in Playwright**, which drives a real
+  browser and is what §9 asks for anyway.
 - **Read the screenshot you just captured.** The first P02 drawer capture looked
   fine in the accessibility tree but showed the scrim confined to `<main>`, with
   the sidebar and header undimmed — the design anchors both to the root shell.

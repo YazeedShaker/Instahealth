@@ -1,7 +1,13 @@
 'use client'
 
-import { formatCountedAr, toArabicDigits, type ArabicCountedNoun } from '@instahealth/core'
-import { resolveTokenCss } from '@instahealth/design-tokens'
+import {
+  emailFieldErrorKey,
+  formatCountedAr,
+  getErrorMessage,
+  toArabicDigits,
+  type ArabicCountedNoun,
+} from '@instahealth/core'
+import { INPUT_ERROR, INPUT_HELP, resolveTokenCss } from '@instahealth/design-tokens'
 import { useRouter } from 'next/navigation'
 import { useMemo, useRef, useState, useTransition } from 'react'
 
@@ -573,8 +579,17 @@ function CreateAccountDialog({
 }) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [emailTouched, setEmailTouched] = useState(false)
   const [branchId, setBranchId] = useState(branches[0]?.branchId ?? '')
-  const ready = name.trim().length >= 2 && email.trim().includes('@') && branchId !== ''
+
+  // ⚠ Same defect as the provider login form, same fix: `includes('@')` only
+  // disabled the button and said nothing, so «إنشاء» sat dead with no reason
+  // while the Edge Function behind it would have answered `invalid_email`.
+  // One rule from core now drives the button, the message and the server.
+  const emailErrorKey = emailFieldErrorKey(email, emailTouched)
+  const emailErrorAr = emailErrorKey === null ? null : getErrorMessage(emailErrorKey, 'ar')
+  const ready =
+    name.trim().length >= 2 && emailFieldErrorKey(email, true) === null && branchId !== ''
 
   return (
     <div
@@ -619,9 +634,33 @@ function CreateAccountDialog({
                 type="email"
                 data-testid="staff-create-email"
                 value={email}
+                aria-invalid={emailErrorAr !== null || undefined}
                 onChange={(event) => setEmail(event.target.value)}
+                onBlur={() => setEmailTouched(true)}
                 className="min-h-[44px] rounded-lg border-[1.5px] border-ih-neutral-200 px-3 text-start text-[14px]"
+                style={
+                  emailErrorAr === null
+                    ? undefined
+                    : {
+                        borderColor: resolveTokenCss(INPUT_ERROR.borderColor),
+                        background: resolveTokenCss(INPUT_ERROR.background),
+                      }
+                }
               />
+              {emailErrorAr !== null ? (
+                <span
+                  role="alert"
+                  data-testid="staff-create-email-error"
+                  className="flex items-center gap-1.5"
+                  style={{
+                    fontSize: INPUT_HELP.fontSize,
+                    fontWeight: INPUT_HELP.errorFontWeight,
+                    color: INPUT_HELP.errorColor,
+                  }}
+                >
+                  <span aria-hidden="true">⚠</span> {emailErrorAr}
+                </span>
+              ) : null}
             </label>
           </div>
 

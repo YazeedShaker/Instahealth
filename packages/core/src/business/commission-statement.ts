@@ -11,7 +11,7 @@
 //     deletion;
 //   · a superseded version exports marked as such.
 
-import { formatPiastersEgpAr } from './format'
+import { AR_BOOKING, AR_BOOKING_AUTOCLOSED, formatCountedAr, formatPiastersEgpAr } from './format'
 
 export type StatementMethod = 'cash' | 'prepaid'
 export type StatementEventKind = 'payment' | 'completion' | 'excluded'
@@ -188,7 +188,7 @@ export function buildCommissionStatementCsv(input: CommissionStatementExport): s
       formatPiastersEgpAr(input.totals.gmvPiasters),
       '',
       formatPiastersEgpAr(input.totals.commissionTotalPiasters),
-      `${toArabicYear(String(input.totals.commissionableCount))} حجوزات`,
+      formatCountedAr(input.totals.commissionableCount, AR_BOOKING),
       '',
       input.totals.gmvPiasters,
       input.totals.commissionTotalPiasters,
@@ -201,8 +201,11 @@ export function buildCommissionStatementCsv(input: CommissionStatementExport): s
   rows.push(csvRow([]))
   rows.push(
     csvRow([
-      'حجوزات أُغلقت تلقائياً — غير محتسبة',
-      `${toArabicYear(String(input.totals.excludedCount))} حجز`,
+      // Same counted-phrase fix as the on-screen banner: these two cells said
+      // «حجوزات … أُغلقت» and «حجز» from fixed strings, so one of them was
+      // always wrong for some count.
+      'الحجوزات المُغلقة تلقائياً — غير محتسبة',
+      formatCountedAr(input.totals.excludedCount, AR_BOOKING_AUTOCLOSED),
       formatPiastersEgpAr(input.totals.excludedAmountPiasters),
       'أغلقها النظام بعد مهلة الـ٢٤ ساعة دون تأكيد وصول — لا عمولة عليها، وليست جزءاً من أي رقم أعلاه',
     ]),

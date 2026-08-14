@@ -40,8 +40,13 @@ export function useBranchHoldsRealtime(branchId: string | null) {
     const teardown = () => {
       if (retryTimer !== null) clearTimeout(retryTimer)
       retryTimer = null
-      if (activeChannel !== null) void supabase.removeChannel(activeChannel)
+      // ⚠ NULL IT FIRST. `removeChannel` closes the channel, which fires the
+      // subscribe callback with CLOSED *synchronously* — and now that CLOSED
+      // schedules a retry, a teardown that still held a reference would
+      // re-enter itself and remove the same channel twice.
+      const dead = activeChannel
       activeChannel = null
+      if (dead !== null) void supabase.removeChannel(dead)
     }
 
     const scheduleRetry = () => {
@@ -78,7 +83,15 @@ export function useBranchHoldsRealtime(branchId: string | null) {
             refetchAvailability() // catch up on anything missed while joining
             return
           }
-          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          // ⚠ `CLOSED` BELONGS IN THIS LIST, AND ITS ABSENCE WAS THE HOLE.
+          // This hook was already "hardened with a retry" and still died
+          // permanently on the most ordinary failure there is — a phone losing
+          // signal — because a dropped socket reports CLOSED, not CHANNEL_ERROR.
+          // Measured on the web twin, which shares this library and had the
+          // same gap: offline → `state=CLOSED chan=closed`, then nothing ever
+          // again. Retrying on the two loud states while ignoring the quiet one
+          // is how a fallback that looks present turns out never to run.
+          if (status === 'CLOSED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
             logDev(`channel ${status} for branch-holds:${branchId}`, err?.message)
             teardown()
             scheduleRetry()
