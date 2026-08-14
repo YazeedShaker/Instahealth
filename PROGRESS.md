@@ -396,6 +396,26 @@ were fixed strings and therefore each wrong for some count.
 **Counts:** core 506 unit tests (was 500), 0 skipped. 11 email E2E, 2
 connection-dot E2E, 2 print E2E, 6 admin loading captures. `pnpm gate` green.
 
+⚠ **TWO THINGS THE FIXTURE PROVIDER BROKE, BOTH IN CI, BOTH WORTH KEEPING.**
+① `admin.spec.ts` clicked `network-provider-row.first()` to assert a REAL
+partner's placeholder rate — and `.first()` silently meant "whoever sorts
+first", which stopped being a launch partner the moment seed 009 added
+«مزود تجريبي» (ز precedes س and ع, so the fixture sorts ahead of both Town and
+Saridar). Measured row order is now
+`مزود تجريبي | مستشفى تاون | معامل ساريدار`. The test now NAMES the partner it
+means. **A seed is a shared fixture, and adding one is an edit to every test
+that reads the same list positionally.**
+② The poll test observes two 60s windows, so it is 130s long against Playwright's
+120s default and failed with `Test timeout of 120000ms exceeded`. Its budget is
+now explicit — shortening the window to fit would let a single interval boundary
+decide the result.
+
+⚠ **AND `print-statement.spec.ts` STILL SKIPS IN CI** — 2 skipped, unchanged by
+this PR. CI sets `PROVIDER_TEST_*` and `ADMIN_TEST_*` but **not**
+`FIDELITY_ADMIN_*`, so the issued-print assertions this PR just un-blocked are
+verified LOCALLY only. Wiring those three secrets into the e2e-web job is the
+one-line follow-up that makes the branch guarded everywhere, not just here.
+
 ### 2026-08-13 · FIX — the route leak, and the class of bug it belongs to
 
 **F08's device pass found two raw route names sitting in the patient app's tab

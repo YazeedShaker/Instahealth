@@ -72,6 +72,14 @@ test.describe('the connection dot tracks the socket, both directions', () => {
     page,
     context,
   }) => {
+    // ⚠ THIS TEST IS SLOWER THAN THE SUITE'S TIMEOUT, ON PURPOSE. POLL_MS is
+    // 60s, and the claim is about two consecutive windows — so the observation
+    // window alone is 130s against CI's 120s default, and the first run failed
+    // with `waitForTimeout: Test timeout of 120000ms exceeded`. Widening the
+    // budget for one measurement whose duration is fixed by the product's own
+    // interval is the honest move; shortening the window to fit would let a
+    // single interval boundary decide the result.
+    test.setTimeout(300_000)
     // ⚠ Only the WEBSOCKET is killed, not the network. `setOffline(true)` would
     // stop the poll from LANDING too, which proves nothing about whether it was
     // attempted — and the claim under test is that the poll is independent of

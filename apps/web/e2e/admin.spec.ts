@@ -649,7 +649,19 @@ test.describe('admin portal — auth & shell (A01)', () => {
     // The reserved branch-override column is present and empty, per the frame.
     await expect(page.getByText('عمود «نسبة الفرع» محجوز')).toBeVisible()
 
-    await page.getByTestId('network-provider-row').first().click()
+    // ⚠ NAMED, NOT `.first()`. This assertion is about a REAL launch partner's
+    // placeholder rate, and `.first()` silently meant "whoever sorts first" —
+    // which stopped being a launch partner the moment `supabase/seeds/009`
+    // added a fixture provider, «مزود تجريبي», that sorts ahead of both
+    // (ز precedes س and ع). The test then opened a provider with a real
+    // fixture rate and found no placeholder, failing in CI for a reason that
+    // had nothing to do with the screen. A test that means "Town Hospital"
+    // should say so.
+    await page
+      .getByTestId('network-provider-row')
+      .filter({ hasText: 'مستشفى تاون' })
+      .first()
+      .click()
     await page.waitForURL(/\/admin\/providers\?provider=/)
     await expect(page.getByTestId('network-rate-editor')).toBeVisible({ timeout: 30_000 })
     await expect(page.getByTestId('network-current-rate')).toContainText('السارية الآن')
