@@ -1,7 +1,11 @@
 'use client'
 
 import {
+  AR_BOOKING_AUTOCLOSED,
+  AR_BOOKING_EXCLUDED,
   buildCommissionStatementCsv,
+  AR_BOOKING,
+  formatCountedAr,
   formatPiastersEgpAr,
   formatStatementDayAr,
   formatStatementMonthAr,
@@ -601,7 +605,12 @@ export function CommissionStatementView({
         {totals.excludedCount > 0 ? (
           <Banner
             tone="excluded"
-            title={`${toArabicDigits(String(totals.excludedCount))} حجوزات أُغلقت تلقائياً — غير محتسبة (${formatPiastersEgpAr(totals.excludedAmountPiasters)} ج.م)`}
+            // ⚠ `formatCountedAr` with the INFLECTED PHRASE, not `${digits}
+            // حجوزات أُغلقت`. This read «١ حجوزات أُغلقت تلقائياً» on the first
+            // sheet that ever rendered it — plural noun and plural verb against
+            // a count of one. Agreement runs across the phrase, so the phrase
+            // is what gets counted (core's `AR_BOOKING_AUTOCLOSED`).
+            title={`${formatCountedAr(totals.excludedCount, AR_BOOKING_AUTOCLOSED)} — غير محتسبة (${formatPiastersEgpAr(totals.excludedAmountPiasters)} ج.م)`}
             body="أغلقها النظام بعد مهلة الـ٢٤ ساعة دون تأكيد وصول — لا عمولة عليها، وليست جزءاً من أي رقم أعلاه"
             testId="statement-excluded-banner"
             action={
@@ -763,12 +772,16 @@ export function CommissionStatementView({
                   color: resolveTokenCss('primary.700'),
                 }}
               >
+                {/* Both counts inflect. «٤ حجوزات» happened to be right for
+                    this fixture and «١ مستثناة» was not — a fixed plural is
+                    correct only for counts 3–10, which is exactly what makes
+                    this class of bug survive the sample it was written from. */}
                 {isSettled ? 'الإجمالي المُسوّى' : 'الإجمالي المحتسب'} —{' '}
-                {toArabicDigits(String(totals.commissionableCount))} حجوزات
+                {formatCountedAr(totals.commissionableCount, AR_BOOKING)}
                 {totals.excludedCount > 0 ? (
                   <span className="font-semibold text-ih-neutral-600">
                     {' '}
-                    ({toArabicDigits(String(totals.excludedCount))} مستثناة غير محتسبة)
+                    ({formatCountedAr(totals.excludedCount, AR_BOOKING_EXCLUDED)} غير محتسبة)
                   </span>
                 ) : null}
               </span>

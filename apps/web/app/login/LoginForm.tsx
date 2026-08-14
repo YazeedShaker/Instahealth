@@ -1,5 +1,6 @@
 'use client'
 
+import { emailFieldErrorKey, getErrorMessage } from '@instahealth/core'
 import { useActionState, useId, useState } from 'react'
 import { useFormStatus } from 'react-dom'
 
@@ -27,14 +28,24 @@ function SubmitButton({ disabled }: { disabled: boolean }) {
 export function LoginForm({ next }: { next: string }) {
   const [state, formAction] = useActionState<LoginState, FormData>(signIn, { errorAr: null })
   const [email, setEmail] = useState('')
+  const [emailTouched, setEmailTouched] = useState(false)
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [remember, setRemember] = useState(false)
   const emailId = useId()
   const passwordId = useId()
 
-  // Same predicate as the design's mock.
-  const cannotSubmit = !email.includes('@') || password.length < 4
+  // ⚠ THE OLD PREDICATE WAS `!email.includes('@')`, AND IT MADE THE TWO
+  // FAILURES HIDE EACH OTHER. It only DISABLED the button and rendered nothing,
+  // so a malformed address produced silence rather than a reason — and because
+  // the form then never submitted, `type="email"`'s own native bubble never
+  // fired either. Now the rule is core's, so the button, the message under the
+  // field and the server action all hold the SAME opinion (§1.4).
+  const emailErrorKey = emailFieldErrorKey(email, emailTouched)
+  const emailErrorAr = emailErrorKey === null ? null : getErrorMessage(emailErrorKey, 'ar')
+  // The button reads the rule directly rather than the message: an untouched
+  // empty field shows nothing but must still not be submittable.
+  const cannotSubmit = emailFieldErrorKey(email, true) !== null || password.length < 4
 
   return (
     <form action={formAction} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -50,7 +61,11 @@ export function LoginForm({ next }: { next: string }) {
         label="البريد الإلكتروني"
         placeholder="reception@saridarlabs.com"
         value={email}
+        error={emailErrorAr}
         onChange={(event) => setEmail(event.target.value)}
+        // Blur is the moment the user has finished their attempt. Validating on
+        // every keystroke would call `r` wrong on the way to a real address.
+        onBlur={() => setEmailTouched(true)}
       />
 
       <Input

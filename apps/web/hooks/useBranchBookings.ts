@@ -55,6 +55,9 @@ const POLL_MS = 60_000
  * queries and paint a dozen times. Trailing edge, so the refetch reflects the
  * LAST event rather than the first. */
 const REFRESH_DEBOUNCE_MS = 400
+/** How long to wait before re-attempting a dropped realtime join. Matches the
+ *  mobile twin's `RETRY_DELAY_MS` on purpose — one recovery cadence. */
+const REJOIN_DELAY_MS = 5_000
 
 export interface BranchBookingsState {
   bookings: BranchBooking[]
@@ -239,17 +242,57 @@ export function useBranchBookings({
   // say whether the changed booking belongs to the day on screen. Any branch
   // event therefore invalidates the VIEWED scope and the database answers.
   // (Upgrade path if event volume ever makes this heavy: add the date.)
+  // ⚠ THE CHANNEL DID NOT REJOIN AFTER A DROP, AND THE DOT WAS THE ONLY HONEST
+  // PART OF IT. Measured with `context.setOffline(true)` on a real page:
+  //
+  //   subscribe state=SUBSCRIBED  chan=joined  socket=true
+  //   --- offline ---
+  //   subscribe state=CLOSED      chan=closed  socket=true
+  //   --- online again ---
+  //   (nothing: no socket, no callback, for 90s — dot stuck on «غير متصل»)
+  //
+  // So `setIsConnected(state === 'SUBSCRIBED')` was reporting correctly in BOTH
+  // directions — it is the reconnection underneath that never happened. A desk
+  // that loses its network for two seconds fell back to the 60s poll FOREVER,
+  // until someone reloaded the page, and the only sign was a grey dot nobody is
+  // watching. The poll makes that survivable rather than broken, which is
+  // exactly why it had gone unnoticed.
+  //
+  // ⚠ `CLOSED` IS THE STATE A NETWORK DROP PRODUCES — not `CHANNEL_ERROR`. The
+  // mobile twin (`apps/mobile/features/booking/realtime.ts`) was already
+  // hardened with a retry, and still had this hole, because it retries on
+  // CHANNEL_ERROR/TIMED_OUT only. Both are fixed in this PR; keep them in step.
   useEffect(() => {
     let cancelled = false
     let debounceTimer: ReturnType<typeof setTimeout> | null = null
+    let retryTimer: ReturnType<typeof setTimeout> | null = null
+    let channel: ReturnType<typeof supabase.channel> | null = null
 
-    const channel = supabase.channel(`branch-bookings:${branchId}`, {
-      config: { private: true },
-    })
+    const scheduleRejoin = () => {
+      if (cancelled || retryTimer !== null) return
+      retryTimer = setTimeout(() => {
+        retryTimer = null
+        void join()
+      }, REJOIN_DELAY_MS)
+    }
 
-    const setup = async () => {
+    const dropChannel = () => {
+      if (channel === null) return
+      const dead = channel
+      channel = null // null FIRST: removeChannel fires CLOSED synchronously.
+      void supabase.removeChannel(dead)
+    }
+
+    const join = async () => {
+      if (cancelled) return
+      // A private channel authorizes against the user JWT, and the token that
+      // was valid when the tab loaded may have been refreshed since. Re-set it
+      // on every attempt rather than only the first.
       await supabase.realtime.setAuth()
-      channel
+      if (cancelled) return
+
+      channel = supabase
+        .channel(`branch-bookings:${branchId}`, { config: { private: true } })
         .on('broadcast', { event: 'bookings_changed' }, () => {
           if (debounceTimer !== null) clearTimeout(debounceTimer)
           debounceTimer = setTimeout(() => {
@@ -259,14 +302,43 @@ export function useBranchBookings({
         .subscribe((state) => {
           if (cancelled) return
           setIsConnected(state === 'SUBSCRIBED')
+          if (state === 'SUBSCRIBED') {
+            // ⚠ CATCH UP. Broadcasts sent while the socket was down are gone —
+            // they are not queued — so a rejoin without a refetch leaves the
+            // desk on rows up to a poll-interval old while the dot says «متصل».
+            // §1.4 again: the screen may not assert a state the server does not
+            // hold, and «متصل» is itself such an assertion.
+            void refreshRef.current()
+            return
+          }
+          if (state === 'CLOSED' || state === 'CHANNEL_ERROR' || state === 'TIMED_OUT') {
+            dropChannel()
+            scheduleRejoin()
+          }
         })
     }
-    void setup()
+
+    void join()
+
+    // The retry alone recovers within REJOIN_DELAY_MS, but the browser knows
+    // the moment the network is back and there is no reason to make the desk
+    // wait for a timer that is mostly going to fire into a dead network.
+    const onOnline = () => {
+      if (retryTimer !== null) {
+        clearTimeout(retryTimer)
+        retryTimer = null
+      }
+      dropChannel()
+      void join()
+    }
+    window.addEventListener('online', onOnline)
 
     return () => {
       cancelled = true
+      window.removeEventListener('online', onOnline)
       if (debounceTimer !== null) clearTimeout(debounceTimer)
-      void supabase.removeChannel(channel)
+      if (retryTimer !== null) clearTimeout(retryTimer)
+      dropChannel()
     }
   }, [supabase, branchId])
 

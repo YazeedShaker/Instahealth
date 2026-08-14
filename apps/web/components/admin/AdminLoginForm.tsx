@@ -1,6 +1,8 @@
 'use client'
 
-import { useActionState } from 'react'
+import { emailFieldErrorKey, getErrorMessage } from '@instahealth/core'
+import { INPUT_ERROR, INPUT_HELP, resolveTokenCss } from '@instahealth/design-tokens'
+import { useActionState, useState } from 'react'
 import { useFormStatus } from 'react-dom'
 
 import { adminSignIn, type AdminAuthState } from '../../app/admin/actions'
@@ -17,6 +19,17 @@ export function AdminLoginForm({
   afterReset?: boolean
 }) {
   const [state, formAction] = useActionState(adminSignIn, INITIAL)
+  const [email, setEmail] = useState('')
+  const [emailTouched, setEmailTouched] = useState(false)
+
+  // This form was the least broken of the three — it has no disabled-submit
+  // predicate, so `type="email" required` DID surface a native bubble. But a
+  // browser bubble is the one error message in the product that is neither
+  // Arabic nor ours, and the server's answer to a malformed address is the
+  // deliberately vague «بيانات الدخول غير صحيحة» (correct for a login form —
+  // it must not confirm which half was wrong). So the field says it here.
+  const emailErrorKey = emailFieldErrorKey(email, emailTouched)
+  const emailErrorAr = emailErrorKey === null ? null : getErrorMessage(emailErrorKey, 'ar')
 
   return (
     <form action={formAction} className="flex flex-col gap-3.5">
@@ -50,9 +63,37 @@ export function AdminLoginForm({
           required
           autoComplete="username"
           data-testid="admin-email"
+          value={email}
+          aria-invalid={emailErrorAr !== null || undefined}
+          aria-describedby={emailErrorAr !== null ? 'admin-email-error' : undefined}
+          onChange={(event) => setEmail(event.target.value)}
+          onBlur={() => setEmailTouched(true)}
           className="min-h-[48px] w-full rounded-lg border-[1.5px] border-ih-neutral-200 bg-white px-3.5 text-left text-[15px] text-ih-neutral-800 outline-none focus:border-ih-primary-400"
-          style={{ fontFamily: 'var(--font-atkinson), sans-serif' }}
+          style={{
+            fontFamily: 'var(--font-atkinson), sans-serif',
+            ...(emailErrorAr === null
+              ? null
+              : {
+                  borderColor: resolveTokenCss(INPUT_ERROR.borderColor),
+                  background: resolveTokenCss(INPUT_ERROR.background),
+                }),
+          }}
         />
+        {emailErrorAr !== null ? (
+          <span
+            id="admin-email-error"
+            role="alert"
+            data-testid="admin-email-error"
+            className="flex items-center gap-1.5"
+            style={{
+              fontSize: INPUT_HELP.fontSize,
+              fontWeight: INPUT_HELP.errorFontWeight,
+              color: INPUT_HELP.errorColor,
+            }}
+          >
+            <span aria-hidden="true">⚠</span> {emailErrorAr}
+          </span>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-[7px]">

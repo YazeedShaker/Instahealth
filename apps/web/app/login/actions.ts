@@ -1,5 +1,6 @@
 'use server'
 
+import { emailSchema } from '@instahealth/core'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 
@@ -7,8 +8,13 @@ import { getLoginErrorMessageAr, toLoginErrorKey } from '../../lib/auth/errors'
 import { createClient } from '../../lib/supabase/server'
 
 // Zod at the boundary (CLAUDE.md §8) — the action never trusts the form.
+// ⚠ `emailSchema` FROM CORE, not a local `z.string().email()`. The form's
+// submit button and this parse have to hold the same opinion (§1.4), and the
+// only way they cannot drift is by being the same object. It also normalizes
+// (trim + lowercase), so a desk typing `Reception@SaridarLabs.com` reaches
+// GoTrue as the address the account was actually created with.
 const loginSchema = z.object({
-  email: z.string().email(),
+  email: emailSchema,
   password: z.string().min(1),
   next: z.string().optional(),
 })

@@ -1,7 +1,7 @@
 'use client'
 
-import { INPUT_BASE, resolveTokenCss } from '@instahealth/design-tokens'
-import { useState, type InputHTMLAttributes, type ReactNode } from 'react'
+import { INPUT_BASE, INPUT_ERROR, INPUT_HELP, resolveTokenCss } from '@instahealth/design-tokens'
+import { useId, useState, type InputHTMLAttributes, type ReactNode } from 'react'
 
 // Thin shell over the shared contract. Focus state is local because the
 // contract stores a focus colour, not a `:focus` rule — the same spec drives
@@ -12,10 +12,38 @@ interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'classN
   labelAside?: ReactNode
   /** Sits inside the field on the inline-end side, e.g. a reveal toggle. */
   trailing?: ReactNode
+  /**
+   * Resolved Arabic copy, or null when the field is fine. The shell does not
+   * validate — it renders a verdict someone else reached, so the SAME rule can
+   * drive the field, the submit button and the server action.
+   *
+   * ⚠ NOT A NEW VISUAL. `INPUT_ERROR` (field border + tint) and `INPUT_HELP`
+   * (⚠ + the AA `#991B1B` from the Alert spec) are contract entries the Branch
+   * Details handoff introduced and `BranchProfileView` already renders; this
+   * moves them into the shared shell so every field errors identically instead
+   * of the fourth screen hand-copying the third.
+   */
+  error?: string | null
+  /** Quiet guidance under the field, shown only while there is no error. */
+  helper?: string
+  /** Declared explicitly so the error message can derive `<testid>-error`. */
+  'data-testid'?: string
 }
 
-export function Input({ label, labelAside, trailing, id, style, ...rest }: InputProps) {
+export function Input({
+  label,
+  labelAside,
+  trailing,
+  error = null,
+  helper,
+  id,
+  style,
+  'data-testid': testId,
+  ...rest
+}: InputProps) {
   const [focused, setFocused] = useState(false)
+  const messageId = useId()
+  const invalid = error !== null
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: INPUT_BASE.gap }}>
@@ -38,6 +66,9 @@ export function Input({ label, labelAside, trailing, id, style, ...rest }: Input
         <input
           {...rest}
           id={id}
+          data-testid={testId}
+          aria-invalid={invalid || undefined}
+          aria-describedby={invalid || helper !== undefined ? messageId : undefined}
           onFocus={(event) => {
             setFocused(true)
             rest.onFocus?.(event)
@@ -59,11 +90,17 @@ export function Input({ label, labelAside, trailing, id, style, ...rest }: Input
             ...(trailing ? { paddingLeft: 52 } : null),
             borderWidth: INPUT_BASE.borderWidth,
             borderStyle: 'solid',
+            // ⚠ The error border OUTRANKS focus. A field the user is currently
+            // fixing is exactly the one that must keep saying it is wrong.
             borderColor: resolveTokenCss(
-              focused ? INPUT_BASE.focusBorderColor : INPUT_BASE.borderColor,
+              invalid
+                ? INPUT_ERROR.borderColor
+                : focused
+                  ? INPUT_BASE.focusBorderColor
+                  : INPUT_BASE.borderColor,
             ),
             borderRadius: INPUT_BASE.borderRadius,
-            background: resolveTokenCss(INPUT_BASE.background),
+            background: resolveTokenCss(invalid ? INPUT_ERROR.background : INPUT_BASE.background),
             color: resolveTokenCss(INPUT_BASE.color),
             fontSize: INPUT_BASE.fontSize,
             fontFamily: 'var(--font-atkinson), sans-serif',
@@ -77,6 +114,32 @@ export function Input({ label, labelAside, trailing, id, style, ...rest }: Input
           <div style={{ position: 'absolute', left: 6, display: 'flex' }}>{trailing}</div>
         ) : null}
       </div>
+      {/* `role="alert"` so the message is ANNOUNCED, not merely drawn — the
+          whole defect being fixed here is a form that failed silently. */}
+      {invalid ? (
+        <span
+          id={messageId}
+          role="alert"
+          data-testid={testId === undefined ? undefined : `${testId}-error`}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            fontSize: INPUT_HELP.fontSize,
+            fontWeight: INPUT_HELP.errorFontWeight,
+            color: INPUT_HELP.errorColor,
+          }}
+        >
+          <span aria-hidden="true">⚠</span> {error}
+        </span>
+      ) : helper !== undefined ? (
+        <span
+          id={messageId}
+          style={{ fontSize: INPUT_HELP.fontSize, color: resolveTokenCss(INPUT_HELP.color) }}
+        >
+          {helper}
+        </span>
+      ) : null}
     </div>
   )
 }

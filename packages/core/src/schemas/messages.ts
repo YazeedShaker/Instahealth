@@ -74,6 +74,18 @@ export const errorMessages = {
     ar: 'العنوان طويل جداً (الحد الأقصى ٥٠٠ حرف)',
     en: 'Address is too long (max 500 characters)',
   },
+  // Both are field-level copy: they render UNDER the input the user is typing
+  // in, so they name the field's fault rather than the form's. «صيغة البريد غير
+  // صحيحة» (the Edge Function's wording) reads as a verdict on a submitted
+  // form; this reads as an instruction on a field.
+  'email.required': {
+    ar: 'أدخل البريد الإلكتروني',
+    en: 'Enter the email address',
+  },
+  'email.invalid': {
+    ar: 'أدخل بريداً إلكترونياً صحيحاً (مثال: reception@saridarlabs.com)',
+    en: 'Enter a valid email address (e.g. reception@saridarlabs.com)',
+  },
   'common.uuid.invalid': {
     ar: 'معرّف غير صالح',
     en: 'Invalid identifier',

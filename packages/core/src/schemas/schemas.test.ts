@@ -4,6 +4,7 @@ import { otpRequestSchema, otpVerifySchema } from './auth.schema'
 import { confirmBookingSchema, serviceSelectionSchema, slotChoiceSchema } from './booking.schema'
 import { branchProfileSchema } from './branchProfile.schema'
 import { coordinatesSchema, paginationSchema, uuidSchema } from './common.schema'
+import { emailFieldErrorKey, emailSchema, isBlankEmail, isValidEmail } from './email.schema'
 import { errorMessages, getErrorMessage } from './messages'
 import { settlePaymentRequestSchema } from './payment.schema'
 import { phoneSchema } from './phone.schema'
@@ -169,6 +170,90 @@ describe('bilingual messages', () => {
 
   test('unknown keys fall back to the key itself', () => {
     expect(getErrorMessage('nope.missing', 'en')).toBe('nope.missing')
+  })
+})
+
+describe('emailSchema', () => {
+  test('a real partner address parses and normalizes', () => {
+    expect(emailSchema.parse('reception@saridarlabs.com')).toBe('reception@saridarlabs.com')
+    expect(emailSchema.parse('  Reception@SaridarLabs.com  ')).toBe('reception@saridarlabs.com')
+  })
+
+  test('blank yields email.required, malformed yields email.invalid', () => {
+    expect(firstMessage(emailSchema.safeParse(''))).toBe('email.required')
+    expect(firstMessage(emailSchema.safeParse('   '))).toBe('email.required')
+    expect(firstMessage(emailSchema.safeParse('no-at-sign'))).toBe('email.invalid')
+  })
+
+  // ⚠ THE REGRESSION THAT MATTERS. Each of these was ACCEPTED by the
+  // `includes('@')` predicate that guarded the login form and the staff
+  // dialog, and REFUSED by the server action behind them — so the desk got a
+  // disabled-then-generic-failure with no reason attached. The list is the
+  // measured divergence, not a guess at one.
+  test.each([
+    'a@b',
+    'a@b.c',
+    '@saridarlabs.com',
+    'reception@',
+    'reception@@saridarlabs.com',
+    'reception saridar@labs.com',
+    'reception@saridarlabs',
+    'a@.com',
+    'a@b..com',
+  ])('rejects %j, which includes("@") accepted', (input) => {
+    expect(input.includes('@')).toBe(true) // the old predicate said yes…
+    expect(isValidEmail(input)).toBe(false) // …and the rule says no.
+  })
+
+  test.each(['reception@saridarlabs.com', 'a@b.co', 'reception@sub.saridarlabs.com'])(
+    'accepts %j',
+    (input) => {
+      expect(isValidEmail(input)).toBe(true)
+    },
+  )
+
+  test('isValidEmail is total over null and undefined', () => {
+    expect(isValidEmail(null)).toBe(false)
+    expect(isValidEmail(undefined)).toBe(false)
+  })
+
+  test('isBlankEmail separates "not yet answered" from "wrong"', () => {
+    expect(isBlankEmail('')).toBe(true)
+    expect(isBlankEmail('   ')).toBe(true)
+    expect(isBlankEmail(null)).toBe(true)
+    expect(isBlankEmail(undefined)).toBe(true)
+    expect(isBlankEmail('a@b.co')).toBe(false)
+  })
+})
+
+describe('emailFieldErrorKey', () => {
+  test('an untouched empty field is silent, a touched one asks', () => {
+    expect(emailFieldErrorKey('', false)).toBeNull()
+    expect(emailFieldErrorKey('   ', false)).toBeNull()
+    expect(emailFieldErrorKey('', true)).toBe('email.required')
+  })
+
+  // An address is malformed at every keystroke on the way to being valid.
+  test.each(['r', 're', 'reception@', 'reception@saridarlabs'])(
+    'stays silent on %j while the field is untouched',
+    (partial) => {
+      expect(emailFieldErrorKey(partial, false)).toBeNull()
+      expect(emailFieldErrorKey(partial, true)).toBe('email.invalid')
+    },
+  )
+
+  test('the submit predicate refuses an untouched empty field that shows no message', () => {
+    expect(emailFieldErrorKey('', false)).toBeNull() // nothing rendered…
+    expect(emailFieldErrorKey('', true)).toBe('email.required') // …but not submittable.
+  })
+
+  test('valid is silent', () => {
+    expect(emailFieldErrorKey('reception@saridarlabs.com', true)).toBeNull()
+  })
+
+  test('both keys resolve to Arabic copy', () => {
+    expect(getErrorMessage('email.required', 'ar')).toBe('أدخل البريد الإلكتروني')
+    expect(getErrorMessage('email.invalid', 'ar')).toContain('بريداً إلكترونياً صحيحاً')
   })
 })
 

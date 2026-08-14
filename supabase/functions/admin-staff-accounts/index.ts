@@ -66,8 +66,23 @@ function generateTempPassword(providerNameEn: string | null): string {
   return `${prefix}-${chars.slice(0, 4).join('')}-${chars.slice(4).join('')}`
 }
 
+// MIRRORS core packages/core/src/schemas/email.schema.ts emailSchema
+//
+// ⚠ THE OLD REGEX HERE DISAGREED WITH THE SERVER ACTION THAT CALLS THIS
+// FUNCTION. `/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/` accepted `a@b..com` and
+// `حجز@مستشفى.مصر`; the `staff-actions.ts` zod parse in front of it rejected
+// both. Two rules, one of them unreachable — the classic mirror drift §7 warns
+// about, and the reason a mirror must name its authority.
+//
+// This is zod 3.25's own email pattern, character for character, so the copy
+// and the original cannot disagree. Edge Functions are standalone Deno modules
+// and CANNOT import packages/core, which is why this is a copy at all. If core
+// changes the rule, change it here in the SAME PR — `emailSchema`'s unit tests
+// are the authority this must match.
+const EMAIL_PATTERN = /^(?!\.)(?!.*\.\.)([A-Z0-9_'+\-.]*)[A-Z0-9_+-]@([A-Z0-9][A-Z0-9\-]*\.)+[A-Z]{2,}$/i
+
 const isEmail = (value: unknown): value is string =>
-  typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value.trim())
+  typeof value === 'string' && EMAIL_PATTERN.test(value.trim().toLowerCase())
 
 const isUuid = (value: unknown): value is string =>
   typeof value === 'string' &&

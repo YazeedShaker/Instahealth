@@ -9,6 +9,7 @@ import {
   cairoWallClockToInstant,
   formatArabicDate,
   formatCairoIsoDate,
+  AR_BOOKING_AUTOCLOSED,
   formatCountedAr,
   formatEGP,
   formatPiastersEgpAr,
@@ -193,6 +194,20 @@ describe('formatCountedAr — تمييز العدد', () => {
     expect(formatCountedAr(155, AR_SLOT)).toBe('١٥٥ موعداً')
     expect(formatCountedAr(4, AR_PROVIDER)).toBe('٤ مزودين')
     expect(formatCountedAr(1, AR_PROVIDER)).toBe('١ مزود')
+  })
+
+  // ⚠ THE VERB AGREES TOO. The statement's excluded banner printed
+  // «١ حجوزات أُغلقت تلقائياً» — plural noun AND plural verb against a count of
+  // one — on the very first sheet that ever rendered it. Fixing only the noun
+  // would have left «١ حجز أُغلقت تلقائياً», which is wrong in a quieter way,
+  // so the whole PHRASE is what gets counted.
+  it('inflects the whole phrase, verb included, for auto-closed bookings', () => {
+    expect(formatCountedAr(1, AR_BOOKING_AUTOCLOSED)).toBe('١ حجز أُغلق تلقائياً')
+    expect(formatCountedAr(2, AR_BOOKING_AUTOCLOSED)).toBe('٢ حجزان أُغلقا تلقائياً')
+    expect(formatCountedAr(5, AR_BOOKING_AUTOCLOSED)).toBe('٥ حجوزات أُغلقت تلقائياً')
+    expect(formatCountedAr(11, AR_BOOKING_AUTOCLOSED)).toBe('١١ حجزاً أُغلق تلقائياً')
+    // The regression itself, stated as the thing that must never come back.
+    expect(formatCountedAr(1, AR_BOOKING_AUTOCLOSED)).not.toContain('حجوزات')
   })
 
   // ⚠ `% 100`, not `% 10` — ١١١ is an accusative like ١١, and ١٠٠ is not.

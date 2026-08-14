@@ -1,5 +1,6 @@
 'use server'
 
+import { emailSchema } from '@instahealth/core'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -97,9 +98,12 @@ async function callEdge(body: Record<string, unknown>): Promise<StaffActionResul
 
 const uuid = z.string().uuid()
 
+// `emailSchema` from core — the same rule the dialog's «إنشاء» button reads,
+// and the same one the `admin-staff-accounts` Edge Function now mirrors. Those
+// three used to be three DIFFERENT rules (§1.4).
 const createSchema = z.object({
   name: z.string().trim().min(2),
-  email: z.string().trim().email(),
+  email: emailSchema,
   branchId: uuid,
 })
 

@@ -1,5 +1,6 @@
 'use server'
 
+import { emailSchema } from '@instahealth/core'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 
@@ -24,8 +25,10 @@ export interface AdminAuthState {
   lockedUntil?: string | null
 }
 
+// `emailSchema` from core — one rule shared with the form (§1.4). See the note
+// in app/login/actions.ts for why this is not a local `z.string().email()`.
 const credentialsSchema = z.object({
-  email: z.string().email(),
+  email: emailSchema,
   password: z.string().min(1),
 })
 

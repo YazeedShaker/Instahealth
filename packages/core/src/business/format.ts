@@ -266,6 +266,35 @@ export const AR_BOOKING: ArabicCountedNoun = {
   plural: 'حجوزات',
   accusative: 'حجزاً',
 }
+/** ⚠ A COUNTED **PHRASE**, NOT A COUNTED NOUN — and that is the whole point.
+ *
+ *  The commission statement's excluded-bookings banner read
+ *  «١ حجوزات أُغلقت تلقائياً»: the count was 1, the noun was plural AND the
+ *  verb was plural. Arabic agreement runs across the entire phrase, so fixing
+ *  only the noun would have produced «١ حجز أُغلقت تلقائياً» — still wrong, in
+ *  a way that is harder to notice.
+ *
+ *  It survived because the banner had NEVER RENDERED: it needs an issued
+ *  statement with an excluded booking, and dev had zero issued statements until
+ *  `supabase/seeds/009` existed. Found by reading the first printed sheet.
+ *
+ *  Declaring the inflected phrase as the "noun" is the whole trick —
+ *  `formatCountedAr` needs no change, and the four forms sit together where a
+ *  reviewer can see them agree. */
+export const AR_BOOKING_AUTOCLOSED: ArabicCountedNoun = {
+  singular: 'حجز أُغلق تلقائياً',
+  dual: 'حجزان أُغلقا تلقائياً',
+  plural: 'حجوزات أُغلقت تلقائياً',
+  accusative: 'حجزاً أُغلق تلقائياً',
+}
+/** «١ مستثناة» → «١ حجز مستثنى». Same phrase-level agreement as
+ *  [AR_BOOKING_AUTOCLOSED], for the statement's totals row. */
+export const AR_BOOKING_EXCLUDED: ArabicCountedNoun = {
+  singular: 'حجز مستثنى',
+  dual: 'حجزان مستثنيان',
+  plural: 'حجوزات مستثناة',
+  accusative: 'حجزاً مستثنى',
+}
 export const AR_SLOT: ArabicCountedNoun = {
   singular: 'موعد',
   dual: 'موعدان',

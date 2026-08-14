@@ -260,6 +260,162 @@ engineering tasks.
 
 ## Shipped
 
+### 2026-08-13 · FIX — email validation was decorative, the dot was honest but the socket never came back, and the issued statement finally printed
+
+Four things, one PR. Three of them were found by measuring something that had
+been asserted, and each measurement contradicted the assertion.
+
+#### ① Email validation — five predicates, no two the same
+
+Typing a malformed email on the provider dashboard showed NO error, and the
+diagnosis («`!email.includes('@')` only DISABLES the button and renders nothing,
+so `type="email"`'s native bubble never fires either — the two failures hide
+each other») was exactly right. What the audit added was the SCOPE: there were
+**five** independent answers to "is this an email", and they disagreed.
+
+| input            | `includes('@')` ×2 | `z.string().email()` ×3 | Edge fn regex |
+| ---------------- | ------------------ | ----------------------- | ------------- |
+| `a@b`            | ✅                 | ❌                      | ❌            |
+| `a@b..com`       | ✅                 | ❌                      | **✅**        |
+| `حجز@مستشفى.مصر` | ✅                 | ❌                      | **✅**        |
+
+The client accepted **10 of 15** malformed inputs the server rejected. And the
+`admin-staff-accounts` Edge Function disagreed with `staff-actions.ts`, the very
+server action that calls it — mirror drift (§7), invisible because the stricter
+side happened to run first.
+
+`packages/core/src/schemas/email.schema.ts` is now THE rule, consumed by all
+three forms, all three server actions, `mailtoNudgeUrl`, and mirrored
+character-for-character into the Edge Function (zod's own pattern, so the copy
+cannot drift). The inline error uses the EXISTING `INPUT_ERROR`/`INPUT_HELP`
+contract entries — moved into the shared `Input` shell rather than hand-copied
+onto a fourth screen.
+
+⚠ **THE RULE IS ZOD'S, DELIBERATELY, AND THAT WAS CHECKED AGAINST LIVE DATA
+FIRST.** All three server actions already enforced it, so adopting it tightens
+the CLIENT to match the server and changes what the server accepts by nothing.
+All 6 real accounts in `auth.users` pass (ASCII, lowercase, trimmed) — verified
+before choosing it, because inventing a stricter regex here would have been a
+new way to lock a partner out of their own dashboard.
+
+Proven: 11 E2E, of which **9 fail on the pre-fix code** (stashed the fix and
+re-ran). Every address in the refusal list contains an `@`, so none of them
+would have failed for the trivial reason.
+
+#### ② The connection dot — the dot was honest; realtime was not
+
+The audit was run in both directions and found something worse than a wrong dot.
+
+```
+subscribe state=SUBSCRIBED  chan=joined  socket=true
+--- offline ---
+subscribe state=CLOSED      chan=closed  socket=true
+--- online again ---
+(nothing: no socket, no callback, for 90s)
+```
+
+`setIsConnected(state === 'SUBSCRIBED')` reports correctly in BOTH directions.
+**The channel simply never rejoined.** A desk that lost its network for two
+seconds fell back to the 60s poll FOREVER, until someone reloaded the page —
+and the only sign was a grey dot nobody watches.
+
+⚠ **THE STATE A NETWORK DROP PRODUCES IS `CLOSED`, NOT `CHANNEL_ERROR`.** The
+mobile twin (`features/booking/realtime.ts`) was already "hardened with a retry"
+after a silent-failure hunt and had the IDENTICAL hole, because it retried on
+`CHANNEL_ERROR`/`TIMED_OUT` only. Both fixed here; keep them in step. Also fixed
+a teardown re-entrancy hazard — `removeChannel` fires CLOSED synchronously, so
+the reference must be nulled BEFORE removing or teardown re-enters itself.
+
+The rejoin does a **catch-up refetch**: broadcasts sent while the socket was
+down are not queued, so reconnecting without refetching leaves the desk on stale
+rows while the dot says «متصل» — §1.4 applied to time.
+
+The banked finding is re-confirmed on the wire rather than from source:
+**3 polls landed in 130s** with the socket down, so «كل دقيقة» is honest.
+
+⚠ One draft assertion was DELETED for passing: it asserted the dot stays
+«غير متصل», which was true only because of the bug. A regression test that
+guards the defect is worse than none.
+
+#### ③ Loading indicators — the admin portal had none at all
+
+The partner portal had 5 `loading.tsx`; the admin portal had **zero across all
+seven data screens**, every one `force-dynamic` and fetching server-side before
+first paint. `AdminSkeleton.tsx` reuses the dashboard's `Shimmer` — no second
+shimmer to keep in step.
+
+Two defects found by READING the captures (§9), not by writing them:
+
+- **A shimmer on the page background is invisible.** `.ih-shimmer` sweeps
+  between `--ih-neutral-100` and `--ih-neutral-50`, and the admin shell's
+  background IS `--ih-neutral-100`. The toolbar skeleton — the only one not
+  inside a white card — rendered as a bare grey gap. It now mirrors the real
+  control's border, which is what makes a placeholder read as a control.
+- **`/admin/analytics` got a `loading.tsx` it must not have.** It carries
+  `force-dynamic` but awaits NOTHING — it is a static «قريباً» page — and the
+  capture came back showing the fully loaded screen under a filename claiming
+  otherwise. Removed. A skeleton for a screen that never waits is a lie.
+
+#### ④ The print issue-stamp — and the rule that governs it
+
+⚠⚠ **MONEY ARTIFACTS FOR REAL PARTNERS ARE PRODUCED ONLY FROM SIGNED RATES.
+FIXTURES CARRY THE TEST BURDEN.** Recorded here and in the header of
+`supabase/seeds/009_commission_fixture_provider.sql`.
+
+The print stylesheet's ISSUED branch was asserted and had never run: dev held
+zero issued statements, and issuing one for Town or Saridar would have minted a
+versioned, timestamped commission document against the placeholder 12% rate
+nobody has signed. Refusing that was correct. Seed 009 is the alternative — a
+disposable `eeee…` provider, **active provider / INACTIVE branch** so the
+founder can select it on the commissions screen while no patient can reach it,
+at a fixture rate of **10%, deliberately not 12%**, so a number lifted from a
+fixture screenshot is visibly wrong rather than plausibly right.
+
+⚠ **SEEDING IT WOULD NOT HAVE BEEN ENOUGH.** The branch was guarded by
+`const isIssued = !text.includes('مسودة')` — which **cannot be true for an
+issued statement**, because `STATEMENT_STATUS_CHIP.issued.label` IS «مسودة», on
+purpose (frame D draws a re-issued v2 as «● مسودة» beside its «أُصدرت في»
+stamp: in the founder's language مسودة means NOT YET SENT). Two independent
+reasons one assertion never ran, and only fixing both wakes it up. The
+discriminator is «الإصدار». The branch is now unconditional with a tripwire that
+FAILS rather than skips, naming the seed.
+
+Issued and verified: v1, GMV ٢٬١٩٥٫٥٠, commission ٢١٩٫٥٥ at 10%, 4
+commissionable + 1 excluded, 5 frozen lines. PDF + PNG at A4 landscape
+(1123×794) in `docs/design-briefs/a02-fidelity/statement-print-issued.*`.
+
+⚠ **AND READING THAT SHEET FOUND A COUNTED-NOUN BUG, THE THIRD INSTANCE.** The
+excluded banner printed «**١ حجوزات أُغلقت تلقائياً**» — plural noun AND plural
+verb against a count of one — on the very first sheet that ever rendered it.
+Fixing only the noun would have left «١ حجز أُغلقت تلقائياً», wrong in a quieter
+way, so **the whole PHRASE is what gets counted**: `AR_BOOKING_AUTOCLOSED` and
+`AR_BOOKING_EXCLUDED` declare all four inflected forms and `formatCountedAr`
+needs no change. Same fix applied to the CSV export's two count cells, which
+were fixed strings and therefore each wrong for some count.
+
+**Counts:** core 506 unit tests (was 500), 0 skipped. 11 email E2E, 2
+connection-dot E2E, 2 print E2E, 6 admin loading captures. `pnpm gate` green.
+
+⚠ **TWO THINGS THE FIXTURE PROVIDER BROKE, BOTH IN CI, BOTH WORTH KEEPING.**
+① `admin.spec.ts` clicked `network-provider-row.first()` to assert a REAL
+partner's placeholder rate — and `.first()` silently meant "whoever sorts
+first", which stopped being a launch partner the moment seed 009 added
+«مزود تجريبي» (ز precedes س and ع, so the fixture sorts ahead of both Town and
+Saridar). Measured row order is now
+`مزود تجريبي | مستشفى تاون | معامل ساريدار`. The test now NAMES the partner it
+means. **A seed is a shared fixture, and adding one is an edit to every test
+that reads the same list positionally.**
+② The poll test observes two 60s windows, so it is 130s long against Playwright's
+120s default and failed with `Test timeout of 120000ms exceeded`. Its budget is
+now explicit — shortening the window to fit would let a single interval boundary
+decide the result.
+
+⚠ **AND `print-statement.spec.ts` STILL SKIPS IN CI** — 2 skipped, unchanged by
+this PR. CI sets `PROVIDER_TEST_*` and `ADMIN_TEST_*` but **not**
+`FIDELITY_ADMIN_*`, so the issued-print assertions this PR just un-blocked are
+verified LOCALLY only. Wiring those three secrets into the e2e-web job is the
+one-line follow-up that makes the branch guarded everywhere, not just here.
+
 ### 2026-08-13 · FIX — the route leak, and the class of bug it belongs to
 
 **F08's device pass found two raw route names sitting in the patient app's tab
