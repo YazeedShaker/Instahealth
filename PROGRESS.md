@@ -260,6 +260,78 @@ engineering tasks.
 
 ## Shipped
 
+### 2026-09-13 · SECURITY — two critical Next.js RCEs, and the 22 highs behind them
+
+**`pnpm gate` had been failing at `audit` on main**, discovered while finishing
+ADDR-01: the feature branch added zero dependencies and failed identically, so
+the cause was advisories published in the month since 2026-08-13, not a diff.
+
+**The headline: two CRITICAL Next.js unauthenticated-RCE advisories** against
+the deployed provider and admin portals — `GHSA-p293-qw3h-jr36` (windows-hosted
+server) and `GHSA-2xp9-vwfh-vxw4` (Image Optimization). `next@15.5.21` was
+installed; both are patched in `>=15.5.24`. Bumped `next` **and**
+`eslint-config-next` (they version in lockstep) to **15.5.25**.
+
+⚠ **AND THAT ALONE DID NOT MAKE THE GATE GREEN — the criticals were the visible
+part.** Clearing them left **22 unignored highs**, every one a TRANSITIVE
+build/test-time package rather than anything the apps ship:
+
+| package          | had    | patched | pulled by                                 |
+| ---------------- | ------ | ------- | ----------------------------------------- |
+| `@xmldom/xmldom` | 0.9.10 | ≥0.9.12 | expo → @expo/cli → config-plugins → plist |
+| `sharp`          | 0.35.3 | ≥0.35.4 | next itself                               |
+| `js-yaml` (3.x)  | 3.15.1 | ≥3.15.2 | react-native → babel-jest → istanbul      |
+| `js-yaml` (4.x)  | 4.3.1  | ≥4.3.2  | expo → @expo/cli → @expo/xcpretty         |
+
+`sharp` and both `js-yaml` majors already had a `pnpm.overrides` entry whose
+FLOOR was simply one patch too low — `^0.35.0`, `^3.15.1`, `^4.3.1`. Raising the
+floors upgrades them.
+
+⚠ **`@xmldom/xmldom` NEEDED NO OVERRIDE, AND FORCING ONE BROKE THE BUILD.** The
+first attempt pinned `^0.9.12`, the local gate passed, and CI went red on a step
+no local gate runs — and on Windows CANNOT run, because `expo prebuild --platform
+ios` is macOS/Linux-only:
+
+```
+✖ Prebuild failed
+TypeError: withIosInfoPlistBaseMod: DOMParser.parseFromString:
+  the provided mimeType "undefined" is not valid.
+    at DOMParser.parseFromString (@xmldom/xmldom@0.9.12/lib/dom-parser.js:225)
+    at Object.parse (@expo/plist@0.4.9/build/parse.js:69)
+```
+
+Confirmed from the installed source rather than from the stack trace alone:
+`@expo/plist@0.4.9` calls `.parseFromString(xml)` with NO mimeType, and 0.9.12
+made that argument REQUIRED where 0.9.10 documented it as optional, defaulting
+to `application/xml`. The override had force-upgraded a package whose caller
+cannot use the patched version.
+
+Removing the override and letting the lockfile re-resolve fixed the build **and**
+the advisories: the vulnerable 0.9.10 is gone from the tree entirely,
+`@expo/plist` keeps the 0.8.15 it is compatible with, and 0.9.12 serves the
+packages whose own ranges already allowed it. **The right fix was to stop
+overriding, not to override harder** — and `ignoreGhsas` was never touched.
+
+⚠ **AND THE MAESTRO JOB CAUGHT IT — which refines the dead-alarm finding filed
+the same week.** That job never runs a FLOW, and that remains true. But its
+`expo prebuild` step is REAL, and it is the only thing in the pipeline that
+exercises the Expo config-plugin chain; it went red here on a genuine
+regression. So «asserts nothing» is too strong: the flow execution is dead, the
+prebuild is a live smoke test, and a Windows dev machine cannot reproduce it
+locally. The §4 entry lives on the ADDR-01 branch and is corrected there to say
+exactly that — it is not part of this diff.
+
+⚠ **NOTHING WAS ADDED TO `ignoreGhsas`.** The ignore list exists for advisories
+with no remedy; using it here would have laundered a real RCE on a deployed
+portal into a green checkmark — the same shape as the Maestro dead alarm
+documented the same week. `24 high + 2 critical` → **`8 known, none unignored
+≥ high`**, which is the state the gate held before the incident.
+
+Verified beyond the build, because a framework bump can change runtime
+behaviour a compile cannot see: `pnpm gate` green end to end (628 unit tests),
+plus the web E2E smoke and the full email-validation suite — **13 passed** — so
+the app boots, routes and both login forms still work on 15.5.25.
+
 ### 2026-08-13 · FIX — email validation was decorative, the dot was honest but the socket never came back, and the issued statement finally printed
 
 Four things, one PR. Three of them were found by measuring something that had
