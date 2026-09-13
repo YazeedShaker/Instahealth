@@ -283,10 +283,43 @@ build/test-time package rather than anything the apps ship:
 | `js-yaml` (3.x)  | 3.15.1 | ≥3.15.2 | react-native → babel-jest → istanbul      |
 | `js-yaml` (4.x)  | 4.3.1  | ≥4.3.2  | expo → @expo/cli → @expo/xcpretty         |
 
-All four are **patch-level**, and three already had a `pnpm.overrides` entry
-whose FLOOR was simply one patch too low — `sharp: ^0.35.0`,
-`js-yaml@3: ^3.15.1`, `js-yaml@4: ^4.3.1`. Raising the floors (and adding
-`@xmldom/xmldom`) upgrades the vulnerable packages.
+`sharp` and both `js-yaml` majors already had a `pnpm.overrides` entry whose
+FLOOR was simply one patch too low — `^0.35.0`, `^3.15.1`, `^4.3.1`. Raising the
+floors upgrades them.
+
+⚠ **`@xmldom/xmldom` NEEDED NO OVERRIDE, AND FORCING ONE BROKE THE BUILD.** The
+first attempt pinned `^0.9.12`, the local gate passed, and CI went red on a step
+no local gate runs — and on Windows CANNOT run, because `expo prebuild --platform
+ios` is macOS/Linux-only:
+
+```
+✖ Prebuild failed
+TypeError: withIosInfoPlistBaseMod: DOMParser.parseFromString:
+  the provided mimeType "undefined" is not valid.
+    at DOMParser.parseFromString (@xmldom/xmldom@0.9.12/lib/dom-parser.js:225)
+    at Object.parse (@expo/plist@0.4.9/build/parse.js:69)
+```
+
+Confirmed from the installed source rather than from the stack trace alone:
+`@expo/plist@0.4.9` calls `.parseFromString(xml)` with NO mimeType, and 0.9.12
+made that argument REQUIRED where 0.9.10 documented it as optional, defaulting
+to `application/xml`. The override had force-upgraded a package whose caller
+cannot use the patched version.
+
+Removing the override and letting the lockfile re-resolve fixed the build **and**
+the advisories: the vulnerable 0.9.10 is gone from the tree entirely,
+`@expo/plist` keeps the 0.8.15 it is compatible with, and 0.9.12 serves the
+packages whose own ranges already allowed it. **The right fix was to stop
+overriding, not to override harder** — and `ignoreGhsas` was never touched.
+
+⚠ **AND THE MAESTRO JOB CAUGHT IT — which refines the dead-alarm finding filed
+the same week.** That job never runs a FLOW, and that remains true. But its
+`expo prebuild` step is REAL, and it is the only thing in the pipeline that
+exercises the Expo config-plugin chain; it went red here on a genuine
+regression. So «asserts nothing» is too strong: the flow execution is dead, the
+prebuild is a live smoke test, and a Windows dev machine cannot reproduce it
+locally. The §4 entry lives on the ADDR-01 branch and is corrected there to say
+exactly that — it is not part of this diff.
 
 ⚠ **NOTHING WAS ADDED TO `ignoreGhsas`.** The ignore list exists for advisories
 with no remedy; using it here would have laundered a real RCE on a deployed
