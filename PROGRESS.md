@@ -276,12 +276,12 @@ installed; both are patched in `>=15.5.24`. Bumped `next` **and**
 part.** Clearing them left **22 unignored highs**, every one a TRANSITIVE
 build/test-time package rather than anything the apps ship:
 
-| package           | had     | patched   | pulled by                                  |
-| ----------------- | ------- | --------- | ------------------------------------------ |
-| `@xmldom/xmldom`  | 0.9.10  | ≥0.9.12   | expo → @expo/cli → config-plugins → plist  |
-| `sharp`           | 0.35.3  | ≥0.35.4   | next itself                                |
-| `js-yaml` (3.x)   | 3.15.1  | ≥3.15.2   | react-native → babel-jest → istanbul       |
-| `js-yaml` (4.x)   | 4.3.1   | ≥4.3.2    | expo → @expo/cli → @expo/xcpretty          |
+| package          | had    | patched | pulled by                                 |
+| ---------------- | ------ | ------- | ----------------------------------------- |
+| `@xmldom/xmldom` | 0.9.10 | ≥0.9.12 | expo → @expo/cli → config-plugins → plist |
+| `sharp`          | 0.35.3 | ≥0.35.4 | next itself                               |
+| `js-yaml` (3.x)  | 3.15.1 | ≥3.15.2 | react-native → babel-jest → istanbul      |
+| `js-yaml` (4.x)  | 4.3.1  | ≥4.3.2  | expo → @expo/cli → @expo/xcpretty         |
 
 All four are **patch-level**, and three already had a `pnpm.overrides` entry
 whose FLOOR was simply one patch too low — `sharp: ^0.35.0`,
