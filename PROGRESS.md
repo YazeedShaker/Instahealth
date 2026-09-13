@@ -260,6 +260,45 @@ engineering tasks.
 
 ## Shipped
 
+### 2026-09-13 · SECURITY — two critical Next.js RCEs, and the 22 highs behind them
+
+**`pnpm gate` had been failing at `audit` on main**, discovered while finishing
+ADDR-01: the feature branch added zero dependencies and failed identically, so
+the cause was advisories published in the month since 2026-08-13, not a diff.
+
+**The headline: two CRITICAL Next.js unauthenticated-RCE advisories** against
+the deployed provider and admin portals — `GHSA-p293-qw3h-jr36` (windows-hosted
+server) and `GHSA-2xp9-vwfh-vxw4` (Image Optimization). `next@15.5.21` was
+installed; both are patched in `>=15.5.24`. Bumped `next` **and**
+`eslint-config-next` (they version in lockstep) to **15.5.25**.
+
+⚠ **AND THAT ALONE DID NOT MAKE THE GATE GREEN — the criticals were the visible
+part.** Clearing them left **22 unignored highs**, every one a TRANSITIVE
+build/test-time package rather than anything the apps ship:
+
+| package           | had     | patched   | pulled by                                  |
+| ----------------- | ------- | --------- | ------------------------------------------ |
+| `@xmldom/xmldom`  | 0.9.10  | ≥0.9.12   | expo → @expo/cli → config-plugins → plist  |
+| `sharp`           | 0.35.3  | ≥0.35.4   | next itself                                |
+| `js-yaml` (3.x)   | 3.15.1  | ≥3.15.2   | react-native → babel-jest → istanbul       |
+| `js-yaml` (4.x)   | 4.3.1   | ≥4.3.2    | expo → @expo/cli → @expo/xcpretty          |
+
+All four are **patch-level**, and three already had a `pnpm.overrides` entry
+whose FLOOR was simply one patch too low — `sharp: ^0.35.0`,
+`js-yaml@3: ^3.15.1`, `js-yaml@4: ^4.3.1`. Raising the floors (and adding
+`@xmldom/xmldom`) upgrades the vulnerable packages.
+
+⚠ **NOTHING WAS ADDED TO `ignoreGhsas`.** The ignore list exists for advisories
+with no remedy; using it here would have laundered a real RCE on a deployed
+portal into a green checkmark — the same shape as the Maestro dead alarm
+documented the same week. `24 high + 2 critical` → **`8 known, none unignored
+≥ high`**, which is the state the gate held before the incident.
+
+Verified beyond the build, because a framework bump can change runtime
+behaviour a compile cannot see: `pnpm gate` green end to end (628 unit tests),
+plus the web E2E smoke and the full email-validation suite — **13 passed** — so
+the app boots, routes and both login forms still work on 15.5.25.
+
 ### 2026-08-13 · FIX — email validation was decorative, the dot was honest but the socket never came back, and the issued statement finally printed
 
 Four things, one PR. Three of them were found by measuring something that had
